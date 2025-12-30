@@ -89,7 +89,8 @@ class Oscilloscope {
   /**
    * Estimate frequency using zero-crossing method
    * Counts zero-crossings in the buffer and calculates frequency
-   * Note: Counts only negative-to-positive crossings, so one crossing = one cycle
+   * Note: Each complete cycle has two zero-crossings (positive-to-negative and negative-to-positive).
+   *       This method counts only negative-to-positive crossings, so one crossing represents one cycle.
    */
   private estimateFrequencyZeroCrossing(data: Float32Array): number {
     if (!this.audioContext) return 0;
@@ -159,15 +160,19 @@ class Oscilloscope {
     const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
     this.analyser.getByteFrequencyData(frequencyData);
     
-    // Find the bin with maximum magnitude
-    let maxMagnitude = 0;
-    let maxBin = 0;
+    // Calculate bin range for our frequency limits
+    const binFrequency = sampleRate / this.analyser.fftSize;
+    const minBin = Math.max(1, Math.floor(this.MIN_FREQUENCY_HZ / binFrequency));
+    const maxBinIndex = Math.min(frequencyData.length, Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency));
     
-    // Start from bin 1 to avoid DC component
-    for (let i = 1; i < frequencyData.length; i++) {
+    // Find the bin with maximum magnitude within the frequency range
+    let maxMagnitude = 0;
+    let peakBin = 0;
+    
+    for (let i = minBin; i < maxBinIndex; i++) {
       if (frequencyData[i] > maxMagnitude) {
         maxMagnitude = frequencyData[i];
-        maxBin = i;
+        peakBin = i;
       }
     }
     
@@ -175,9 +180,7 @@ class Oscilloscope {
     if (maxMagnitude < this.FFT_MAGNITUDE_THRESHOLD) return 0;
     
     // Convert bin to frequency
-    // Each bin represents (sampleRate / fftSize) Hz
-    const binFrequency = sampleRate / (this.analyser.fftSize);
-    return maxBin * binFrequency;
+    return peakBin * binFrequency;
   }
 
   /**
