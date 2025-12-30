@@ -609,12 +609,17 @@ class Oscilloscope {
       }
     }
 
-    // Apply decay only when current peak is lower than previous peak
-    // This prevents amplitude from shrinking during constant input
-    if (peak < this.previousPeak) {
-      peak = Math.max(peak, this.previousPeak * this.peakDecay);
+    // Update peak tracking with decay for smooth transitions
+    // Only decay when the current peak is significantly lower (rising signals update immediately)
+    if (peak >= this.previousPeak) {
+      // Signal is rising or sustained - update immediately without decay
+      this.previousPeak = peak;
+    } else {
+      // Signal is falling - apply decay to smooth the transition
+      this.previousPeak = Math.max(peak, this.previousPeak * this.peakDecay);
+      // Use the decayed previous peak as the effective peak for gain calculation
+      peak = this.previousPeak;
     }
-    this.previousPeak = peak;
 
     // Calculate target gain (aim for TARGET_AMPLITUDE_RATIO of canvas height to avoid clipping)
     if (peak > this.minPeakThreshold) {
