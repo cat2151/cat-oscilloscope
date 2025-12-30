@@ -610,7 +610,7 @@ class Oscilloscope {
     }
 
     // Update peak tracking with decay for smooth transitions
-    // Only decay when the current peak is significantly lower (rising signals update immediately)
+    // Only decay when the current peak is lower (rising or sustained signals update immediately)
     if (peak >= this.previousPeak) {
       // Signal is rising or sustained - update immediately without decay
       this.previousPeak = peak;
