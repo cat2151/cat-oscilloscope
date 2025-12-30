@@ -29,6 +29,9 @@ class Oscilloscope {
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private fftDisplayEnabled = true;
+  private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
+  private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
+  private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -92,6 +95,7 @@ class Oscilloscope {
     this.analyser = null;
     this.dataArray = null;
     this.frequencyData = null;
+    this.frequencyHistory = []; // Clear frequency history on stop
   }
 
   /**
@@ -210,19 +214,85 @@ class Oscilloscope {
   }
 
   /**
+   * Smooth frequency estimate using mode (most frequent value) with tolerance
+   * This prevents rapid oscillation between harmonics (e.g., fundamental vs 2x harmonic)
+   * when their magnitudes are similar.
+   */
+  private smoothFrequencyEstimate(rawFrequency: number): number {
+    // If no valid frequency detected, clear history and return 0
+    if (rawFrequency === 0) {
+      this.frequencyHistory = [];
+      return 0;
+    }
+
+    // Add new frequency to history
+    this.frequencyHistory.push(rawFrequency);
+    
+    // Keep only the most recent estimates (circular buffer behavior)
+    if (this.frequencyHistory.length > this.FREQUENCY_HISTORY_SIZE) {
+      this.frequencyHistory.shift();
+    }
+
+    // If we don't have enough history yet, return the raw frequency
+    if (this.frequencyHistory.length < 3) {
+      return rawFrequency;
+    }
+
+    // Find mode (most frequent value) within a tolerance
+    // Group similar frequencies together (within tolerance)
+    const frequencyGroups: { center: number; count: number; sum: number }[] = [];
+
+    for (const freq of this.frequencyHistory) {
+      let foundGroup = false;
+      for (const group of frequencyGroups) {
+        const relDiff = Math.abs(freq - group.center) / group.center;
+        if (relDiff <= this.FREQUENCY_GROUPING_TOLERANCE) {
+          group.count++;
+          group.sum += freq;
+          group.center = group.sum / group.count; // Update center to average
+          foundGroup = true;
+          break;
+        }
+      }
+      if (!foundGroup) {
+        frequencyGroups.push({ center: freq, count: 1, sum: freq });
+      }
+    }
+
+    // Find the group with the highest count
+    let maxCount = 0;
+    let modeFrequency = rawFrequency;
+    for (const group of frequencyGroups) {
+      if (group.count > maxCount) {
+        maxCount = group.count;
+        modeFrequency = group.center;
+      }
+    }
+
+    return modeFrequency;
+  }
+
+  /**
    * Estimate frequency based on selected method
    */
   private estimateFrequency(data: Float32Array): number {
+    let rawFrequency: number;
     switch (this.frequencyEstimationMethod) {
       case 'zero-crossing':
-        return this.estimateFrequencyZeroCrossing(data);
+        rawFrequency = this.estimateFrequencyZeroCrossing(data);
+        break;
       case 'autocorrelation':
-        return this.estimateFrequencyAutocorrelation(data);
+        rawFrequency = this.estimateFrequencyAutocorrelation(data);
+        break;
       case 'fft':
-        return this.estimateFrequencyFFT(data);
+        rawFrequency = this.estimateFrequencyFFT(data);
+        break;
       default:
-        return 0;
+        rawFrequency = 0;
     }
+    
+    // Apply temporal smoothing to prevent oscillation between harmonics
+    return this.smoothFrequencyEstimate(rawFrequency);
   }
 
   /**
@@ -671,6 +741,8 @@ class Oscilloscope {
 
   setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft'): void {
     this.frequencyEstimationMethod = method;
+    // Clear frequency history when changing methods to avoid mixing estimates from different algorithms
+    this.frequencyHistory = [];
   }
 
   getFrequencyEstimationMethod(): string {
