@@ -19,7 +19,7 @@ class Oscilloscope {
   private readonly MAX_GAIN = 20.0; // Maximum gain to prevent excessive amplification
   private readonly GAIN_SMOOTHING_FACTOR = 0.1; // Interpolation speed for smooth gain transitions
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
-  private noiseGateEnabled = false;
+  private noiseGateEnabled = true;
   private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'zero-crossing';
   private estimatedFrequency = 0;
@@ -28,7 +28,7 @@ class Oscilloscope {
   private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
-  private fftDisplayEnabled = false;
+  private fftDisplayEnabled = true;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
