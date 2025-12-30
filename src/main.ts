@@ -567,18 +567,16 @@ class Oscilloscope {
     }
 
     // Check if current gain would cause clipping (waveform exceeding display boundaries)
-    // The drawing code uses: y = centerY - (value * baseAmplitude * currentGain)
-    // Maximum offset occurs at peak value, so clipping happens when: peak * currentGain > 1.0
-    // (since baseAmplitude is already factored in during drawing)
+    // The drawing code multiplies peak values by (canvas.height/2 * currentGain)
+    // Clipping occurs when this product exceeds canvas.height/2, i.e., when peak * currentGain > 1.0
     const wouldClip = peak > this.minPeakThreshold && (peak * this.currentGain) > 1.0;
 
     if (wouldClip) {
       // Immediately reduce gain to fit within display range
-      // Use CLIPPING_SAFETY_FACTOR to ensure waveform fits comfortably within boundaries
-      this.currentGain = this.CLIPPING_SAFETY_FACTOR / peak;
-      // Clamp to reasonable range
-      this.currentGain = Math.min(Math.max(this.currentGain, this.MIN_GAIN), this.MAX_GAIN);
-      // Also update target gain to match to avoid oscillation
+      // Calculate ideal gain with safety factor
+      const idealGain = this.CLIPPING_SAFETY_FACTOR / peak;
+      // Apply clamping to both current and target for consistency
+      this.currentGain = Math.min(Math.max(idealGain, this.MIN_GAIN), this.MAX_GAIN);
       this.targetGain = this.currentGain;
     } else {
       // Smooth gain adjustment (interpolate towards target) only when not clipping
