@@ -123,6 +123,8 @@ class Oscilloscope {
       if (secondZeroCross === -1) {
         // Only one zero-cross found, display from there
         this.drawWaveform(this.dataArray, firstZeroCross, this.dataArray.length);
+        // Draw zero-cross line at the first zero-cross point
+        this.drawZeroCrossLine(firstZeroCross, firstZeroCross, this.dataArray.length);
       } else {
         // Calculate display range with some padding before and after zero-crosses
         const beforePadding = 20; // samples before first zero-cross
@@ -132,6 +134,8 @@ class Oscilloscope {
         const endIndex = Math.min(this.dataArray.length, secondZeroCross + afterPadding);
         
         this.drawWaveform(this.dataArray, startIndex, endIndex);
+        // Draw zero-cross line at the first zero-cross point
+        this.drawZeroCrossLine(firstZeroCross, startIndex, endIndex);
       }
     }
 
@@ -197,6 +201,27 @@ class Oscilloscope {
       }
     }
 
+    this.ctx.stroke();
+  }
+
+  /**
+   * Draw a vertical line at the zero-cross point
+   */
+  private drawZeroCrossLine(zeroCrossIndex: number, startIndex: number, endIndex: number): void {
+    const dataLength = endIndex - startIndex;
+    if (dataLength <= 0) return;
+
+    // Calculate the x position of the zero-cross point in canvas coordinates
+    const relativeIndex = zeroCrossIndex - startIndex;
+    const sliceWidth = this.canvas.width / dataLength;
+    const x = relativeIndex * sliceWidth;
+
+    // Draw a vertical line in red to mark the zero-cross point
+    this.ctx.strokeStyle = '#ff0000';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, 0);
+    this.ctx.lineTo(x, this.canvas.height);
     this.ctx.stroke();
   }
 
