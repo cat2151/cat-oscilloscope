@@ -33,6 +33,9 @@ class Oscilloscope {
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
+  // Zero-crossing temporal stability
+  private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
+  private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -97,6 +100,7 @@ class Oscilloscope {
     this.dataArray = null;
     this.frequencyData = null;
     this.frequencyHistory = []; // Clear frequency history on stop
+    this.previousZeroCrossIndex = null; // Reset zero-crossing tracking on stop
   }
 
   /**
@@ -321,6 +325,63 @@ class Oscilloscope {
     return this.findZeroCross(data, searchStart);
   }
 
+  /**
+   * Find a stable zero-crossing position with temporal continuity
+   * This prevents rapid switching between different waveform patterns
+   */
+  private findStableZeroCross(data: Float32Array, estimatedCycleLength: number): number {
+    // If we have a previous zero-crossing position and frequency estimate
+    if (this.previousZeroCrossIndex !== null && estimatedCycleLength > 0) {
+      if (!this.audioContext) {
+        // No audio context, reset and fall back to full search
+        this.previousZeroCrossIndex = null;
+      } else {
+        // Calculate expected position relative to the start of the current buffer.
+        // Each call to getFloatTimeDomainData returns a snapshot, so we only use
+        // the previous index as a hint within the current buffer's bounds.
+        let expectedIndex = this.previousZeroCrossIndex;
+        
+        // If the previous index is out of range for the current buffer, reset.
+        if (expectedIndex < 0 || expectedIndex >= data.length) {
+          this.previousZeroCrossIndex = null;
+        } else {
+          // Define search range around expected position
+          const searchTolerance = estimatedCycleLength * this.ZERO_CROSS_SEARCH_TOLERANCE_CYCLES;
+          const searchStart = Math.max(0, Math.floor(expectedIndex - searchTolerance));
+          const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
+          
+          // Search for zero-crossing nearest to expected position
+          let bestZeroCross = -1;
+          let bestDistance = Infinity;
+          
+          // Ensure we don't access out of bounds when checking data[i + 1]
+          for (let i = searchStart; i < searchEnd && i < data.length - 1; i++) {
+            if (data[i] <= 0 && data[i + 1] > 0) {
+              const distance = Math.abs(i - expectedIndex);
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                bestZeroCross = i;
+              }
+            }
+          }
+          
+          // If we found a zero-crossing near expected position, use it
+          if (bestZeroCross !== -1) {
+            this.previousZeroCrossIndex = bestZeroCross;
+            return bestZeroCross;
+          }
+        }
+      }
+    }
+    
+    // No previous position or search failed - find first zero-crossing
+    const zeroCross = this.findZeroCross(data, 0);
+    if (zeroCross !== -1) {
+      this.previousZeroCrossIndex = zeroCross;
+    }
+    return zeroCross;
+  }
+
   private render(): void {
     if (!this.isRunning || !this.analyser || !this.dataArray) {
       return;
@@ -393,40 +454,37 @@ class Oscilloscope {
     // Find the next zero-cross to determine cycle length
     const nextZeroCross = this.findNextZeroCross(data, estimationZeroCross);
     
+    let cycleLength: number;
     if (nextZeroCross === -1) {
-      // Only one zero-cross found, display from there to end
-      return {
-        startIndex: estimationZeroCross,
-        endIndex: data.length,
-        firstZeroCross: estimationZeroCross,
-      };
+      // Only one zero-cross found, estimate from frequency if available
+      if (this.estimatedFrequency > 0 && this.audioContext) {
+        cycleLength = Math.floor(this.audioContext.sampleRate / this.estimatedFrequency);
+      } else {
+        // No frequency info, display from found zero-cross to end
+        return {
+          startIndex: estimationZeroCross,
+          endIndex: data.length,
+          firstZeroCross: estimationZeroCross,
+        };
+      }
+    } else {
+      cycleLength = nextZeroCross - estimationZeroCross;
     }
 
-    // Calculate cycle length and required padding
-    const cycleLength = nextZeroCross - estimationZeroCross;
-    const rawPhasePadding = Math.floor(cycleLength / 16); // π/8 of one cycle (2π / 16 = π/8)
-    // Sanity check: don't allow padding to exceed half the buffer size
-    const maxPhasePadding = Math.floor(data.length / 2);
-    const phasePadding = Math.min(rawPhasePadding, maxPhasePadding);
+    // Use stable zero-crossing detection to prevent rapid pattern switching
+    const firstZeroCross = this.findStableZeroCross(data, cycleLength);
     
-    // Find a zero-cross point that has enough space before it for padding
-    // Start searching from phasePadding + 1 to ensure we have room for -π/8 phase
-    const searchStart = Math.min(phasePadding + 1, data.length - 1);
-    let firstZeroCross = this.findZeroCross(data, searchStart);
     if (firstZeroCross === -1) {
-      // Fallback: use estimation zero-cross if it has enough padding
-      if (estimationZeroCross >= phasePadding) {
-        firstZeroCross = estimationZeroCross;
-      } else if (nextZeroCross >= phasePadding) {
-        // If estimation doesn't have enough padding, try next zero-cross
-        firstZeroCross = nextZeroCross;
-      } else {
-        // Last resort: use estimation and clamp startIndex to 0
-        firstZeroCross = estimationZeroCross;
-      }
+      return null; // No stable zero-cross found
     }
     
     const secondZeroCross = this.findNextZeroCross(data, firstZeroCross);
+
+    // Calculate phase padding
+    const rawPhasePadding = Math.floor(cycleLength / 16); // π/8 of one cycle (2π / 16 = π/8)
+    const maxPhasePadding = Math.floor(data.length / 2);
+    const phasePadding = Math.min(rawPhasePadding, maxPhasePadding);
+    
     if (secondZeroCross === -1) {
       // Only one suitable zero-cross found, display from there to end
       return {
@@ -437,7 +495,6 @@ class Oscilloscope {
     }
 
     // Display from phase -π/8 to phase 2π+π/8
-    // Use Math.max to handle edge cases where firstZeroCross might still be < phasePadding
     const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
     
