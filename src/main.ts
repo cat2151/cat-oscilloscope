@@ -89,8 +89,9 @@ class Oscilloscope {
   /**
    * Estimate frequency using zero-crossing method
    * Counts zero-crossings in the buffer and calculates frequency
-   * Note: Each complete cycle has two zero-crossings (positive-to-negative and negative-to-positive).
-   *       This method counts only negative-to-positive crossings, so one crossing represents one cycle.
+   * Note: A complete sine wave cycle crosses zero twice: once going up (negative-to-positive)
+   *       and once going down (positive-to-negative). By counting only one direction,
+   *       we get one count per complete cycle.
    */
   private estimateFrequencyZeroCrossing(data: Float32Array): number {
     if (!this.audioContext) return 0;
@@ -109,7 +110,10 @@ class Oscilloscope {
     // Each cycle has one zero-crossing (negative to positive)
     // Frequency = (number of cycles) / (time duration)
     const duration = data.length / sampleRate;
-    return zeroCrossCount / duration;
+    const frequency = zeroCrossCount / duration;
+    
+    // Apply frequency range filtering for consistency with other methods
+    return (frequency >= this.MIN_FREQUENCY_HZ && frequency <= this.MAX_FREQUENCY_HZ) ? frequency : 0;
   }
 
   /**
