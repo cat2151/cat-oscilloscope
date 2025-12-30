@@ -204,11 +204,6 @@ class Oscilloscope {
    * Estimate frequency based on selected method
    */
   private estimateFrequency(data: Float32Array): number {
-    // Check if signal is above noise gate
-    if (!this.isSignalAboveNoiseGate(data)) {
-      return 0;
-    }
-    
     switch (this.frequencyEstimationMethod) {
       case 'zero-crossing':
         return this.estimateFrequencyZeroCrossing(data);
@@ -256,7 +251,10 @@ class Oscilloscope {
     // but getFloatTimeDomainData expects ArrayBuffer. This works at runtime.
     this.analyser.getFloatTimeDomainData(this.dataArray);
 
-    // Estimate frequency
+    // Apply noise gate to input signal (modifies dataArray in place)
+    this.applyNoiseGate(this.dataArray);
+
+    // Estimate frequency (now works on gated signal)
     this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
     // Clear canvas
@@ -391,11 +389,13 @@ class Oscilloscope {
   }
 
   /**
-   * Check if the signal is above the noise gate threshold
+   * Apply noise gate to the signal data
+   * If the signal RMS is below the threshold, zero out all samples
+   * This modifies the data array in place
    */
-  private isSignalAboveNoiseGate(data: Float32Array): boolean {
+  private applyNoiseGate(data: Float32Array): void {
     if (!this.noiseGateEnabled) {
-      return true; // If noise gate is disabled, always pass through
+      return; // If noise gate is disabled, don't modify the signal
     }
 
     // Calculate RMS (Root Mean Square) of the entire buffer for noise gate detection
@@ -410,15 +410,18 @@ class Oscilloscope {
       samplesProcessed++;
     }
     
-    // If no samples were processed (e.g., empty buffer), treat as below noise gate
+    // If no samples were processed (e.g., empty buffer), zero out the signal
     if (samplesProcessed === 0) {
-      return false;
+      data.fill(0);
+      return;
     }
     
     const rms = Math.sqrt(sumSquares / samplesProcessed);
     
-    // Compare RMS against threshold
-    return rms >= this.noiseGateThreshold;
+    // If RMS is below threshold, zero out all samples (gate closed)
+    if (rms < this.noiseGateThreshold) {
+      data.fill(0);
+    }
   }
 
   /**
@@ -426,13 +429,6 @@ class Oscilloscope {
    */
   private calculateAutoGain(data: Float32Array, startIndex: number, endIndex: number): void {
     if (!this.autoGainEnabled) {
-      this.targetGain = 1.0;
-      return;
-    }
-
-    // Check noise gate before auto gain calculation
-    // If signal is below noise gate threshold, skip auto gain to prevent amplifying noise
-    if (!this.isSignalAboveNoiseGate(data)) {
       this.targetGain = 1.0;
       return;
     }
