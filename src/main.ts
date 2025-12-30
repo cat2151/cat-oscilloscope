@@ -130,11 +130,10 @@ class Oscilloscope {
         // One cycle is from firstZeroCross to secondZeroCross
         // Display from phase -π/8 to phase 2π+π/8
         const cycleLength = secondZeroCross - firstZeroCross;
-        const beforePadding = Math.floor(cycleLength / 8); // π/8 of one cycle
-        const afterPadding = Math.floor(cycleLength / 8);  // π/8 of one cycle
+        const phasePadding = Math.floor(cycleLength / 8); // π/8 of one cycle
         
-        const startIndex = Math.max(0, firstZeroCross - beforePadding);
-        const endIndex = Math.min(this.dataArray.length, secondZeroCross + afterPadding);
+        const startIndex = Math.max(0, firstZeroCross - phasePadding);
+        const endIndex = Math.min(this.dataArray.length, secondZeroCross + phasePadding);
         
         this.drawWaveform(this.dataArray, startIndex, endIndex);
         // Draw zero-cross lines at both zero-cross points
