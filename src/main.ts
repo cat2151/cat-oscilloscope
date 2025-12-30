@@ -29,6 +29,9 @@ class Oscilloscope {
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private fftDisplayEnabled = true;
+  private readonly FREQUENCY_HISTORY_SIZE = 5; // Number of recent frequency estimates to keep for smoothing
+  private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
+  private readonly FREQUENCY_CHANGE_THRESHOLD_RATIO = 0.15; // 15% threshold for significant frequency change
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -92,6 +95,7 @@ class Oscilloscope {
     this.analyser = null;
     this.dataArray = null;
     this.frequencyData = null;
+    this.frequencyHistory = []; // Clear frequency history on stop
   }
 
   /**
@@ -210,19 +214,86 @@ class Oscilloscope {
   }
 
   /**
+   * Smooth frequency estimate using median filter and change threshold
+   * This prevents rapid oscillation between harmonics (e.g., fundamental vs 2x harmonic)
+   * when their magnitudes are similar.
+   */
+  private smoothFrequencyEstimate(rawFrequency: number): number {
+    // If no valid frequency detected, clear history and return 0
+    if (rawFrequency === 0) {
+      this.frequencyHistory = [];
+      return 0;
+    }
+
+    // Add new frequency to history
+    this.frequencyHistory.push(rawFrequency);
+    
+    // Keep only the most recent estimates (circular buffer behavior)
+    if (this.frequencyHistory.length > this.FREQUENCY_HISTORY_SIZE) {
+      this.frequencyHistory.shift();
+    }
+
+    // If we don't have enough history yet, return the raw frequency
+    if (this.frequencyHistory.length < 3) {
+      return rawFrequency;
+    }
+
+    // Calculate median of recent frequencies for smoothing
+    // Median filter is more robust against outliers than mean
+    const sortedHistory = [...this.frequencyHistory].sort((a, b) => a - b);
+    const medianIndex = Math.floor(sortedHistory.length / 2);
+    const medianFrequency = sortedHistory.length % 2 === 0
+      ? (sortedHistory[medianIndex - 1] + sortedHistory[medianIndex]) / 2
+      : sortedHistory[medianIndex];
+
+    // Check if the raw frequency represents a significant change from the median
+    // Only accept large jumps if they're consistent (not a single outlier)
+    const relativeChange = Math.abs(rawFrequency - medianFrequency) / medianFrequency;
+    
+    if (relativeChange > this.FREQUENCY_CHANGE_THRESHOLD_RATIO) {
+      // Significant change detected - check if this is consistent with recent trend
+      // Count how many recent samples support this new frequency range
+      const recentSamples = this.frequencyHistory.slice(-3); // Last 3 samples
+      let supportCount = 0;
+      
+      for (const sample of recentSamples) {
+        const sampleChange = Math.abs(sample - medianFrequency) / medianFrequency;
+        if (sampleChange > this.FREQUENCY_CHANGE_THRESHOLD_RATIO * 0.5) {
+          supportCount++;
+        }
+      }
+      
+      // If at least 2 out of 3 recent samples show significant change, accept it
+      // Otherwise, stick with the smoothed median
+      if (supportCount >= 2) {
+        return medianFrequency;
+      }
+    }
+
+    return medianFrequency;
+  }
+
+  /**
    * Estimate frequency based on selected method
    */
   private estimateFrequency(data: Float32Array): number {
+    let rawFrequency: number;
     switch (this.frequencyEstimationMethod) {
       case 'zero-crossing':
-        return this.estimateFrequencyZeroCrossing(data);
+        rawFrequency = this.estimateFrequencyZeroCrossing(data);
+        break;
       case 'autocorrelation':
-        return this.estimateFrequencyAutocorrelation(data);
+        rawFrequency = this.estimateFrequencyAutocorrelation(data);
+        break;
       case 'fft':
-        return this.estimateFrequencyFFT(data);
+        rawFrequency = this.estimateFrequencyFFT(data);
+        break;
       default:
-        return 0;
+        rawFrequency = 0;
     }
+    
+    // Apply temporal smoothing to prevent oscillation between harmonics
+    return this.smoothFrequencyEstimate(rawFrequency);
   }
 
   /**
@@ -671,6 +742,8 @@ class Oscilloscope {
 
   setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft'): void {
     this.frequencyEstimationMethod = method;
+    // Clear frequency history when changing methods to avoid mixing estimates from different algorithms
+    this.frequencyHistory = [];
   }
 
   getFrequencyEstimationMethod(): string {
