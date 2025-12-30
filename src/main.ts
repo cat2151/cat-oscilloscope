@@ -10,7 +10,8 @@ class Oscilloscope {
   private autoGainEnabled = true;
   private currentGain = 1.0;
   private targetGain = 1.0;
-  private peakDecay = 0.95; // Peak value decay factor per frame
+  private peakDecay = 0.95; // Decay factor for peak tracking between frames (0.95 = 5% decay per frame)
+  private previousPeak = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -254,7 +255,8 @@ class Oscilloscope {
     }
 
     // Apply decay to smooth out rapid changes
-    peak = Math.max(peak, this.targetGain * this.peakDecay);
+    peak = Math.max(peak, this.previousPeak * this.peakDecay);
+    this.previousPeak = peak;
 
     // Calculate target gain (aim for 80% of canvas height to avoid clipping)
     const targetAmplitude = 0.8;
@@ -341,6 +343,7 @@ class Oscilloscope {
       // Reset gain to 1.0 when disabled
       this.currentGain = 1.0;
       this.targetGain = 1.0;
+      this.previousPeak = 0;
     }
   }
 
