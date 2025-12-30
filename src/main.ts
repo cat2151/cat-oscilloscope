@@ -19,6 +19,7 @@ class Oscilloscope {
   private readonly MAX_GAIN = 20.0; // Maximum gain to prevent excessive amplification
   private readonly GAIN_SMOOTHING_FACTOR = 0.1; // Interpolation speed for smooth gain transitions
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
+  private readonly CLIPPING_SAFETY_FACTOR = 0.95; // Safety margin for immediate gain reduction when clipping (95% of max)
   private noiseGateEnabled = true;
   private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'autocorrelation';
@@ -565,8 +566,22 @@ class Oscilloscope {
       this.targetGain = Math.min(Math.max(this.targetGain, this.MIN_GAIN), this.MAX_GAIN);
     }
 
-    // Smooth gain adjustment (interpolate towards target)
-    this.currentGain += (this.targetGain - this.currentGain) * this.GAIN_SMOOTHING_FACTOR;
+    // Check if current gain would cause clipping (waveform exceeding display boundaries)
+    // The drawing code multiplies peak values by (canvas.height/2 * currentGain)
+    // Clipping occurs when this product exceeds canvas.height/2, i.e., when peak * currentGain > 1.0
+    const wouldClip = peak > this.minPeakThreshold && (peak * this.currentGain) > 1.0;
+
+    if (wouldClip) {
+      // Immediately reduce gain to fit within display range
+      // Calculate ideal gain with safety factor
+      const idealGain = this.CLIPPING_SAFETY_FACTOR / peak;
+      // Apply clamping to both current and target for consistency
+      this.currentGain = Math.min(Math.max(idealGain, this.MIN_GAIN), this.MAX_GAIN);
+      this.targetGain = this.currentGain;
+    } else {
+      // Smooth gain adjustment (interpolate towards target) only when not clipping
+      this.currentGain += (this.targetGain - this.currentGain) * this.GAIN_SMOOTHING_FACTOR;
+    }
   }
 
   private drawWaveform(data: Float32Array, startIndex: number, endIndex: number): void {
