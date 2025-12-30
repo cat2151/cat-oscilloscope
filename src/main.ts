@@ -266,12 +266,14 @@ class Oscilloscope {
     let sumSquares = 0;
     const sampleCount = Math.min(data.length, this.MAX_SAMPLES_TO_CHECK);
     const stride = Math.max(1, Math.floor(data.length / sampleCount));
+    let samplesProcessed = 0;
     
     for (let i = 0; i < data.length; i += stride) {
       sumSquares += data[i] * data[i];
+      samplesProcessed++;
     }
     
-    const rms = Math.sqrt(sumSquares / Math.ceil(data.length / stride));
+    const rms = Math.sqrt(sumSquares / samplesProcessed);
     
     // Compare RMS against threshold
     return rms >= this.noiseGateThreshold;
@@ -428,8 +430,26 @@ const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTML
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 
-if (!canvas || !startButton || !autoGainCheckbox || !noiseGateCheckbox || !noiseGateThreshold || !thresholdValue || !statusElement) {
-  throw new Error('Required DOM elements not found');
+// Validate all required DOM elements
+const requiredElements = [
+  { element: canvas, name: 'canvas' },
+  { element: startButton, name: 'startButton' },
+  { element: autoGainCheckbox, name: 'autoGainCheckbox' },
+  { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
+  { element: noiseGateThreshold, name: 'noiseGateThreshold' },
+  { element: thresholdValue, name: 'thresholdValue' },
+  { element: statusElement, name: 'status' },
+];
+
+for (const { element, name } of requiredElements) {
+  if (!element) {
+    throw new Error(`Required DOM element not found: ${name}`);
+  }
+}
+
+// Helper function to convert slider value (0-100) to threshold (0.00-1.00)
+function sliderValueToThreshold(sliderValue: string): number {
+  return parseFloat(sliderValue) / 100;
 }
 
 const oscilloscope = new Oscilloscope(canvas);
@@ -439,7 +459,7 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
 // Synchronize noise gate controls
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
-oscilloscope.setNoiseGateThreshold(parseFloat(noiseGateThreshold.value) / 100);
+oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
 
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
@@ -453,7 +473,7 @@ noiseGateCheckbox.addEventListener('change', () => {
 
 // Noise gate threshold slider handler
 noiseGateThreshold.addEventListener('input', () => {
-  const threshold = parseFloat(noiseGateThreshold.value) / 100;
+  const threshold = sliderValueToThreshold(noiseGateThreshold.value);
   oscilloscope.setNoiseGateThreshold(threshold);
   thresholdValue.textContent = threshold.toFixed(2);
 });
