@@ -15,8 +15,8 @@ class MockAudioContext {
   
   createAnalyser() {
     const analyser = {
-      fftSize: 2048,
-      frequencyBinCount: 1024,
+      fftSize: 4096,
+      frequencyBinCount: 2048,
       smoothingTimeConstant: 0,
       connect: vi.fn(),
       disconnect: vi.fn(),
@@ -27,9 +27,9 @@ class MockAudioContext {
         }
       }),
       getByteFrequencyData: vi.fn((array: Uint8Array) => {
-        // Fill with some frequency data
+        // Fill with deterministic frequency data for reproducible tests
         for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 255);
+          array[i] = i % 256;
         }
       }),
     };
