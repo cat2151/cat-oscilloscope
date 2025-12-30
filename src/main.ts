@@ -31,6 +31,7 @@ class Oscilloscope {
   private fftDisplayEnabled = true;
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
+  private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -238,18 +239,14 @@ class Oscilloscope {
     }
 
     // Find mode (most frequent value) within a tolerance
-    // Group similar frequencies together (within 5% tolerance)
-    const tolerance = 0.05;
+    // Group similar frequencies together (within tolerance)
     const frequencyGroups: { center: number; count: number; sum: number }[] = [];
 
     for (const freq of this.frequencyHistory) {
       let foundGroup = false;
       for (const group of frequencyGroups) {
-        // Safety check: avoid division by zero (should not occur due to early return check)
-        if (group.center === 0) continue;
-        
         const relDiff = Math.abs(freq - group.center) / group.center;
-        if (relDiff <= tolerance) {
+        if (relDiff <= this.FREQUENCY_GROUPING_TOLERANCE) {
           group.count++;
           group.sum += freq;
           group.center = group.sum / group.count; // Update center to average
