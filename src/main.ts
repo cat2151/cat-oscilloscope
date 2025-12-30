@@ -834,6 +834,10 @@ class Oscilloscope {
   getFFTDisplayEnabled(): boolean {
     return this.fftDisplayEnabled;
   }
+
+  getCurrentGain(): number {
+    return this.currentGain;
+  }
 }
 
 // Main application logic
@@ -847,6 +851,7 @@ const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElem
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
+const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 
 // Validate all required DOM elements
 const requiredElements = [
@@ -860,6 +865,7 @@ const requiredElements = [
   { element: statusElement, name: 'status' },
   { element: frequencyMethod, name: 'frequencyMethod' },
   { element: frequencyValue, name: 'frequencyValue' },
+  { element: gainValue, name: 'gainValue' },
 ];
 
 for (const { element, name } of requiredElements) {
@@ -932,6 +938,10 @@ function startFrequencyDisplay(): void {
       } else {
         frequencyValue.textContent = '--- Hz';
       }
+      
+      // Update gain display
+      const gain = oscilloscope.getCurrentGain();
+      gainValue.textContent = `${gain.toFixed(2)}x`;
     }, 100); // Update every 100ms (10 Hz)
   }
 }
@@ -941,6 +951,7 @@ function stopFrequencyDisplay(): void {
     clearInterval(frequencyUpdateInterval);
     frequencyUpdateInterval = null;
     frequencyValue.textContent = '--- Hz';
+    gainValue.textContent = '---x';
   }
 }
 
