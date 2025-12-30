@@ -41,6 +41,8 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     button {
@@ -100,6 +102,31 @@
         title="Automatically adjusts waveform amplitude to optimize visibility"
       >
       <span>Auto Gain</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="noiseGateCheckbox"
+        style="cursor: pointer;"
+        aria-label="Enable noise gate to suppress low-level signals"
+        title="Enable noise gate to suppress low-level signals"
+      >
+      <span>Noise Gate</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Threshold:</span>
+      <input
+        type="range"
+        id="noiseGateThreshold"
+        min="0"
+        max="100"
+        value="1"
+        step="0.1"
+        style="width: 150px;"
+        aria-label="Noise gate threshold level"
+        title="Adjust noise gate threshold"
+      >
+      <span id="thresholdValue" style="min-width: 45px; font-family: monospace;">0.01</span>
     </label>
     <span id="status">Click Start to begin</span>
   </div>

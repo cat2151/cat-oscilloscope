@@ -18,6 +18,8 @@ class Oscilloscope {
   private readonly MAX_GAIN = 20.0; // Maximum gain to prevent excessive amplification
   private readonly GAIN_SMOOTHING_FACTOR = 0.1; // Interpolation speed for smooth gain transitions
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
+  private noiseGateEnabled = false;
+  private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -120,6 +122,13 @@ class Oscilloscope {
 
     // Draw grid
     this.drawGrid();
+
+    // Check noise gate
+    if (!this.isSignalAboveNoiseGate(this.dataArray)) {
+      // Signal is below noise gate threshold - draw only the grid
+      this.animationId = requestAnimationFrame(() => this.render());
+      return;
+    }
 
     // Calculate display range and draw waveform with zero-cross indicators
     const displayRange = this.calculateDisplayRange(this.dataArray);
@@ -246,6 +255,29 @@ class Oscilloscope {
   }
 
   /**
+   * Check if the signal is above the noise gate threshold
+   */
+  private isSignalAboveNoiseGate(data: Float32Array): boolean {
+    if (!this.noiseGateEnabled) {
+      return true; // If noise gate is disabled, always pass through
+    }
+
+    // Calculate RMS (Root Mean Square) of the entire buffer for noise gate detection
+    let sumSquares = 0;
+    const sampleCount = Math.min(data.length, this.MAX_SAMPLES_TO_CHECK);
+    const stride = Math.max(1, Math.floor(data.length / sampleCount));
+    
+    for (let i = 0; i < data.length; i += stride) {
+      sumSquares += data[i] * data[i];
+    }
+    
+    const rms = Math.sqrt(sumSquares / Math.ceil(data.length / stride));
+    
+    // Compare RMS against threshold
+    return rms >= this.noiseGateThreshold;
+  }
+
+  /**
    * Calculate optimal gain based on waveform peak
    */
   private calculateAutoGain(data: Float32Array, startIndex: number, endIndex: number): void {
@@ -368,15 +400,35 @@ class Oscilloscope {
   getAutoGainEnabled(): boolean {
     return this.autoGainEnabled;
   }
+
+  setNoiseGate(enabled: boolean): void {
+    this.noiseGateEnabled = enabled;
+  }
+
+  getNoiseGateEnabled(): boolean {
+    return this.noiseGateEnabled;
+  }
+
+  setNoiseGateThreshold(threshold: number): void {
+    // Clamp threshold between 0 and 1
+    this.noiseGateThreshold = Math.min(Math.max(threshold, 0), 1);
+  }
+
+  getNoiseGateThreshold(): number {
+    return this.noiseGateThreshold;
+  }
 }
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
+const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
+const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
+const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 
-if (!canvas || !startButton || !autoGainCheckbox || !statusElement) {
+if (!canvas || !startButton || !autoGainCheckbox || !noiseGateCheckbox || !noiseGateThreshold || !thresholdValue || !statusElement) {
   throw new Error('Required DOM elements not found');
 }
 
@@ -385,9 +437,25 @@ const oscilloscope = new Oscilloscope(canvas);
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
 oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
+// Synchronize noise gate controls
+oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+oscilloscope.setNoiseGateThreshold(parseFloat(noiseGateThreshold.value) / 100);
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
+});
+
+// Noise gate checkbox handler
+noiseGateCheckbox.addEventListener('change', () => {
+  oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+});
+
+// Noise gate threshold slider handler
+noiseGateThreshold.addEventListener('input', () => {
+  const threshold = parseFloat(noiseGateThreshold.value) / 100;
+  oscilloscope.setNoiseGateThreshold(threshold);
+  thresholdValue.textContent = threshold.toFixed(2);
 });
 
 startButton.addEventListener('click', async () => {
