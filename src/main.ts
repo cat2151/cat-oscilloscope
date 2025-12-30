@@ -21,7 +21,7 @@ class Oscilloscope {
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
   private noiseGateEnabled = true;
   private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
-  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'zero-crossing';
+  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'autocorrelation';
   private estimatedFrequency = 0;
   private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
   private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
