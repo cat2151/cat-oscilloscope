@@ -101,3 +101,5 @@ npm run preview
 ## ライセンス
 
 MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
+
+*Big Brother is listening to you. Now the cat does.* 🐱
