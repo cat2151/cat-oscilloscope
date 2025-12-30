@@ -22,6 +22,9 @@ class Oscilloscope {
   private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'zero-crossing';
   private estimatedFrequency = 0;
+  private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
+  private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
+  private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -86,6 +89,7 @@ class Oscilloscope {
   /**
    * Estimate frequency using zero-crossing method
    * Counts zero-crossings in the buffer and calculates frequency
+   * Note: Counts only negative-to-positive crossings, so one crossing = one cycle
    */
   private estimateFrequencyZeroCrossing(data: Float32Array): number {
     if (!this.audioContext) return 0;
@@ -93,9 +97,10 @@ class Oscilloscope {
     const sampleRate = this.audioContext.sampleRate;
     let zeroCrossCount = 0;
     
-    // Count zero-crossings (negative to positive)
+    // Count zero-crossings (negative to positive only)
+    // Use strict inequality to avoid counting multiple times when signal is at zero
     for (let i = 0; i < data.length - 1; i++) {
-      if (data[i] <= 0 && data[i + 1] > 0) {
+      if (data[i] < 0 && data[i + 1] > 0) {
         zeroCrossCount++;
       }
     }
@@ -114,8 +119,8 @@ class Oscilloscope {
     if (!this.audioContext) return 0;
     
     const sampleRate = this.audioContext.sampleRate;
-    const minPeriod = Math.floor(sampleRate / 1000); // Min 1000 Hz
-    const maxPeriod = Math.floor(sampleRate / 50);   // Max 50 Hz
+    const minPeriod = Math.floor(sampleRate / this.MAX_FREQUENCY_HZ);
+    const maxPeriod = Math.floor(sampleRate / this.MIN_FREQUENCY_HZ);
     
     let bestCorrelation = 0;
     let bestPeriod = 0;
@@ -166,7 +171,8 @@ class Oscilloscope {
       }
     }
     
-    if (maxMagnitude < 10) return 0; // Threshold to avoid noise
+    // Threshold to avoid noise (Uint8Array range is 0-255)
+    if (maxMagnitude < this.FFT_MAGNITUDE_THRESHOLD) return 0;
     
     // Convert bin to frequency
     // Each bin represents (sampleRate / fftSize) Hz
