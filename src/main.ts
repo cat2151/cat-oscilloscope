@@ -261,9 +261,15 @@ class Oscilloscope {
     const stride = Math.max(1, Math.floor(data.length / sampleCount));
     let samplesProcessed = 0;
     
-    for (let i = 0; i < data.length; i += stride) {
+    // Sample at most `sampleCount` points from the buffer
+    for (let i = 0; i < data.length && samplesProcessed < sampleCount; i += stride) {
       sumSquares += data[i] * data[i];
       samplesProcessed++;
+    }
+    
+    // If no samples were processed (e.g., empty buffer), treat as below noise gate
+    if (samplesProcessed === 0) {
+      return false;
     }
     
     const rms = Math.sqrt(sumSquares / samplesProcessed);
@@ -449,7 +455,13 @@ for (const { element, name } of requiredElements) {
 
 // Helper function to convert slider value (0-100) to threshold (0.00-1.00)
 function sliderValueToThreshold(sliderValue: string): number {
-  return parseFloat(sliderValue) / 100;
+  const value = parseFloat(sliderValue);
+  
+  if (Number.isNaN(value)) {
+    throw new Error(`Invalid slider value for noise gate threshold: "${sliderValue}"`);
+  }
+  
+  return value / 100;
 }
 
 const oscilloscope = new Oscilloscope(canvas);
