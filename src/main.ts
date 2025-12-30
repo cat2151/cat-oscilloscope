@@ -460,6 +460,7 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 // Synchronize noise gate controls
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
 oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
+thresholdValue.textContent = sliderValueToThreshold(noiseGateThreshold.value).toFixed(2);
 
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
