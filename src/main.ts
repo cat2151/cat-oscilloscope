@@ -26,6 +26,9 @@ class Oscilloscope {
   private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
   private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
   private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
+  private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
+  private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
+  private fftDisplayEnabled = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -263,6 +266,14 @@ class Oscilloscope {
     // Estimate frequency (now works on gated signal)
     this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
+    // Get frequency data for FFT display
+    // When using FFT-based frequency estimation, estimateFrequencyFFT() is responsible
+    // for filling this.frequencyData to avoid redundant analyser.getByteFrequencyData() calls.
+    if (this.frequencyData && this.frequencyEstimationMethod !== 'fft') {
+      // @ts-ignore - Web Audio API type definitions issue
+      this.analyser.getByteFrequencyData(this.frequencyData);
+    }
+
     // Clear canvas
     this.ctx.fillStyle = '#000000';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -281,6 +292,11 @@ class Oscilloscope {
     } else {
       // No zero-cross found, draw entire buffer
       this.drawWaveform(this.dataArray, 0, this.dataArray.length);
+    }
+
+    // Draw FFT spectrum overlay if enabled
+    if (this.fftDisplayEnabled) {
+      this.drawFFTOverlay();
     }
 
     // Continue rendering
@@ -543,6 +559,81 @@ class Oscilloscope {
     this.ctx.restore();
   }
 
+  /**
+   * Draw FFT spectrum overlay in bottom-left corner of canvas
+   */
+  private drawFFTOverlay(): void {
+    if (!this.frequencyData || !this.audioContext || !this.analyser) {
+      return;
+    }
+
+    const sampleRate = this.audioContext.sampleRate;
+    const binFrequency = sampleRate / this.analyser.fftSize;
+
+    // Overlay dimensions (bottom-left corner, approximately 1/3 of canvas)
+    const overlayWidth = Math.floor(this.canvas.width * 0.35);
+    const overlayHeight = Math.floor(this.canvas.height * 0.35);
+    const overlayX = 10; // 10px from left edge
+    const overlayY = this.canvas.height - overlayHeight - 10; // 10px from bottom edge
+
+    // Draw semi-transparent background
+    this.ctx.save();
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
+
+    // Draw border
+    this.ctx.strokeStyle = '#00aaff';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(overlayX, overlayY, overlayWidth, overlayHeight);
+
+    // Draw spectrum bars (only up to MAX_FREQUENCY_HZ)
+    const maxBin = Math.min(
+      this.frequencyData.length,
+      Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency)
+    );
+    const barWidth = overlayWidth / maxBin;
+
+    this.ctx.fillStyle = '#00aaff';
+    for (let i = 0; i < maxBin; i++) {
+      const magnitude = this.frequencyData[i];
+      const barHeight = (magnitude / 255) * overlayHeight * this.FFT_OVERLAY_HEIGHT_RATIO;
+      const x = overlayX + i * barWidth;
+      const y = overlayY + overlayHeight - barHeight;
+
+      this.ctx.fillRect(x, y, Math.max(barWidth - 1, this.FFT_MIN_BAR_WIDTH), barHeight);
+    }
+
+    // Draw fundamental frequency marker
+    // Only draw if frequency is within displayable range to avoid marker outside overlay bounds
+    if (this.estimatedFrequency > 0 && this.estimatedFrequency <= this.MAX_FREQUENCY_HZ) {
+      const frequencyBin = this.estimatedFrequency / binFrequency;
+      const markerX = overlayX + frequencyBin * barWidth;
+
+      this.ctx.strokeStyle = '#ff00ff';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(markerX, overlayY);
+      this.ctx.lineTo(markerX, overlayY + overlayHeight);
+      this.ctx.stroke();
+
+      // Draw frequency label
+      this.ctx.fillStyle = '#ff00ff';
+      this.ctx.font = 'bold 12px Arial';
+      const label = `${this.estimatedFrequency.toFixed(1)} Hz`;
+      const textWidth = this.ctx.measureText(label).width;
+      
+      // Position label to avoid going off canvas
+      let labelX = markerX + 3;
+      if (labelX + textWidth > overlayX + overlayWidth - 5) {
+        labelX = markerX - textWidth - 3;
+      }
+      
+      this.ctx.fillText(label, labelX, overlayY + 15);
+    }
+
+    this.ctx.restore();
+  }
+
   getIsRunning(): boolean {
     return this.isRunning;
   }
@@ -589,6 +680,14 @@ class Oscilloscope {
   getEstimatedFrequency(): number {
     return this.estimatedFrequency;
   }
+
+  setFFTDisplay(enabled: boolean): void {
+    this.fftDisplayEnabled = enabled;
+  }
+
+  getFFTDisplayEnabled(): boolean {
+    return this.fftDisplayEnabled;
+  }
 }
 
 // Main application logic
@@ -596,6 +695,7 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
 const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
+const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -608,6 +708,7 @@ const requiredElements = [
   { element: startButton, name: 'startButton' },
   { element: autoGainCheckbox, name: 'autoGainCheckbox' },
   { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
+  { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -642,6 +743,9 @@ oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
 oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
 thresholdValue.textContent = sliderValueToThreshold(noiseGateThreshold.value).toFixed(2);
 
+// Synchronize FFT display control
+oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -650,6 +754,11 @@ autoGainCheckbox.addEventListener('change', () => {
 // Noise gate checkbox handler
 noiseGateCheckbox.addEventListener('change', () => {
   oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+});
+
+// FFT display checkbox handler
+fftDisplayCheckbox.addEventListener('change', () => {
+  oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 });
 
 // Noise gate threshold slider handler
