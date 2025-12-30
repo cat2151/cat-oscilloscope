@@ -57,6 +57,28 @@ npm run build
 npm run preview
 ```
 
+### テスト
+
+テストを実行：
+
+```bash
+npm test
+```
+
+カバレッジレポートを生成：
+
+```bash
+npm run test:coverage
+```
+
+テストUIを起動：
+
+```bash
+npm run test:ui
+```
+
+詳細は [TESTING.md](TESTING.md) を参照してください。
+
 ## 仕組み
 
 ### ゼロクロス検出アルゴリズム
