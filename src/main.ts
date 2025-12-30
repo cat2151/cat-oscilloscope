@@ -941,11 +941,7 @@ function startFrequencyDisplay(): void {
       
       // Update gain display
       const gain = oscilloscope.getCurrentGain();
-      if (gain > 0) {
-        gainValue.textContent = `${gain.toFixed(2)}x`;
-      } else {
-        gainValue.textContent = '---x';
-      }
+      gainValue.textContent = `${gain.toFixed(2)}x`;
     }, 100); // Update every 100ms (10 Hz)
   }
 }
