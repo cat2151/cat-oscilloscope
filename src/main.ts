@@ -285,7 +285,6 @@ class Oscilloscope {
     // If signal is below noise gate threshold, skip auto gain to prevent amplifying noise
     if (!this.isSignalAboveNoiseGate(data)) {
       this.targetGain = 1.0;
-      this.currentGain = 1.0;
       return;
     }
 
