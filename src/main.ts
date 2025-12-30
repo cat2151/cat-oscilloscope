@@ -35,9 +35,7 @@ class Oscilloscope {
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
   // Zero-crossing temporal stability
   private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
-  private previousZeroCrossTimestamp: number = 0; // Timestamp of previous frame (ms)
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
-  private readonly ZERO_CROSS_MAX_POSITION_JUMP = 0.25; // Maximum jump as fraction of buffer length before reset
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -332,66 +330,47 @@ class Oscilloscope {
    * This prevents rapid switching between different waveform patterns
    */
   private findStableZeroCross(data: Float32Array, estimatedCycleLength: number): number {
-    const currentTimestamp = performance.now();
-    
     // If we have a previous zero-crossing position and frequency estimate
     if (this.previousZeroCrossIndex !== null && estimatedCycleLength > 0) {
-      // Calculate elapsed time since last frame
-      const elapsedMs = currentTimestamp - this.previousZeroCrossTimestamp;
-      const elapsedSeconds = elapsedMs / 1000;
-      
-      // Calculate how many samples the zero-crossing should have advanced
       if (!this.audioContext) {
         // No audio context, reset and fall back to full search
         this.previousZeroCrossIndex = null;
       } else {
-        const samplesPerSecond = this.audioContext.sampleRate;
-        const expectedAdvancement = elapsedSeconds * samplesPerSecond;
-      
-      // Calculate expected position relative to start of current buffer
-      // Note: Audio buffers contain sequential samples, not circular buffers
-      // The expected position should wrap within the buffer bounds
-      let expectedIndex = expectedAdvancement;
-      
-      // If expected position exceeds buffer, this suggests we've wrapped around
-      // or the buffer has shifted - reset to search from start
-      const maxJump = data.length * this.ZERO_CROSS_MAX_POSITION_JUMP;
-      if (expectedAdvancement > maxJump) {
-        // Large jump detected, reset tracking
-        this.previousZeroCrossIndex = null;
-      } else {
-        // Clamp expected index to buffer boundaries
-        if (expectedIndex >= data.length) {
-          expectedIndex = expectedIndex % data.length;
-        }
+        // Calculate expected position relative to the start of the current buffer.
+        // Each call to getFloatTimeDomainData returns a snapshot, so we only use
+        // the previous index as a hint within the current buffer's bounds.
+        let expectedIndex = this.previousZeroCrossIndex;
         
-        // Define search range around expected position
-        const searchTolerance = estimatedCycleLength * this.ZERO_CROSS_SEARCH_TOLERANCE_CYCLES;
-        const searchStart = Math.max(0, Math.floor(expectedIndex - searchTolerance));
-        const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
-        
-        // Search for zero-crossing nearest to expected position
-        let bestZeroCross = -1;
-        let bestDistance = Infinity;
-        
-        // Ensure we don't access out of bounds when checking data[i + 1]
-        for (let i = searchStart; i < searchEnd && i < data.length - 1; i++) {
-          if (data[i] <= 0 && data[i + 1] > 0) {
-            const distance = Math.abs(i - expectedIndex);
-            if (distance < bestDistance) {
-              bestDistance = distance;
-              bestZeroCross = i;
+        // If the previous index is out of range for the current buffer, reset.
+        if (expectedIndex < 0 || expectedIndex >= data.length) {
+          this.previousZeroCrossIndex = null;
+        } else {
+          // Define search range around expected position
+          const searchTolerance = estimatedCycleLength * this.ZERO_CROSS_SEARCH_TOLERANCE_CYCLES;
+          const searchStart = Math.max(0, Math.floor(expectedIndex - searchTolerance));
+          const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
+          
+          // Search for zero-crossing nearest to expected position
+          let bestZeroCross = -1;
+          let bestDistance = Infinity;
+          
+          // Ensure we don't access out of bounds when checking data[i + 1]
+          for (let i = searchStart; i < searchEnd && i < data.length - 1; i++) {
+            if (data[i] <= 0 && data[i + 1] > 0) {
+              const distance = Math.abs(i - expectedIndex);
+              if (distance < bestDistance) {
+                bestDistance = distance;
+                bestZeroCross = i;
+              }
             }
           }
+          
+          // If we found a zero-crossing near expected position, use it
+          if (bestZeroCross !== -1) {
+            this.previousZeroCrossIndex = bestZeroCross;
+            return bestZeroCross;
+          }
         }
-        
-        // If we found a zero-crossing near expected position, use it
-        if (bestZeroCross !== -1) {
-          this.previousZeroCrossIndex = bestZeroCross;
-          this.previousZeroCrossTimestamp = currentTimestamp;
-          return bestZeroCross;
-        }
-      }
       }
     }
     
@@ -399,7 +378,6 @@ class Oscilloscope {
     const zeroCross = this.findZeroCross(data, 0);
     if (zeroCross !== -1) {
       this.previousZeroCrossIndex = zeroCross;
-      this.previousZeroCrossTimestamp = currentTimestamp;
     }
     return zeroCross;
   }
