@@ -341,11 +341,17 @@ class Oscilloscope {
       const elapsedSeconds = elapsedMs / 1000;
       
       // Calculate how many samples the zero-crossing should have advanced
-      const samplesPerSecond = this.audioContext?.sampleRate || 48000;
-      const expectedAdvancement = elapsedSeconds * samplesPerSecond;
+      if (!this.audioContext) {
+        // No audio context, reset and fall back to full search
+        this.previousZeroCrossIndex = null;
+      } else {
+        const samplesPerSecond = this.audioContext.sampleRate;
+        const expectedAdvancement = elapsedSeconds * samplesPerSecond;
       
-      // Calculate expected position (wrapping around buffer if needed)
-      let expectedIndex = this.previousZeroCrossIndex + expectedAdvancement;
+      // Calculate expected position relative to start of current buffer
+      // Note: Audio buffers contain sequential samples, not circular buffers
+      // The expected position should wrap within the buffer bounds
+      let expectedIndex = expectedAdvancement;
       
       // If expected position exceeds buffer, this suggests we've wrapped around
       // or the buffer has shifted - reset to search from start
@@ -354,8 +360,10 @@ class Oscilloscope {
         // Large jump detected, reset tracking
         this.previousZeroCrossIndex = null;
       } else {
-        // Wrap expected index to buffer boundaries
-        expectedIndex = expectedIndex % data.length;
+        // Clamp expected index to buffer boundaries
+        if (expectedIndex >= data.length) {
+          expectedIndex = expectedIndex % data.length;
+        }
         
         // Define search range around expected position
         const searchTolerance = estimatedCycleLength * this.ZERO_CROSS_SEARCH_TOLERANCE_CYCLES;
@@ -366,7 +374,8 @@ class Oscilloscope {
         let bestZeroCross = -1;
         let bestDistance = Infinity;
         
-        for (let i = searchStart; i < searchEnd; i++) {
+        // Ensure we don't access out of bounds when checking data[i + 1]
+        for (let i = searchStart; i < searchEnd && i < data.length - 1; i++) {
           if (data[i] <= 0 && data[i + 1] > 0) {
             const distance = Math.abs(i - expectedIndex);
             if (distance < bestDistance) {
@@ -382,6 +391,7 @@ class Oscilloscope {
           this.previousZeroCrossTimestamp = currentTimestamp;
           return bestZeroCross;
         }
+      }
       }
     }
     
