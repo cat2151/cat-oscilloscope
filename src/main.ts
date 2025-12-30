@@ -123,13 +123,6 @@ class Oscilloscope {
     // Draw grid
     this.drawGrid();
 
-    // Check noise gate
-    if (!this.isSignalAboveNoiseGate(this.dataArray)) {
-      // Signal is below noise gate threshold - draw only the grid
-      this.animationId = requestAnimationFrame(() => this.render());
-      return;
-    }
-
     // Calculate display range and draw waveform with zero-cross indicators
     const displayRange = this.calculateDisplayRange(this.dataArray);
     if (displayRange) {
@@ -285,6 +278,14 @@ class Oscilloscope {
   private calculateAutoGain(data: Float32Array, startIndex: number, endIndex: number): void {
     if (!this.autoGainEnabled) {
       this.targetGain = 1.0;
+      return;
+    }
+
+    // Check noise gate before auto gain calculation
+    // If signal is below noise gate threshold, skip auto gain to prevent amplifying noise
+    if (!this.isSignalAboveNoiseGate(data)) {
+      this.targetGain = 1.0;
+      this.currentGain = 1.0;
       return;
     }
 
