@@ -103,8 +103,8 @@ class Oscilloscope {
     // but getFloatTimeDomainData expects ArrayBuffer. This works at runtime.
     this.analyser.getFloatTimeDomainData(this.dataArray);
 
-    // Find the first zero-cross point
-    const firstZeroCross = this.findZeroCross(this.dataArray, 0);
+    // Find the first zero-cross point to estimate cycle length
+    const initialZeroCross = this.findZeroCross(this.dataArray, 0);
     
     // Clear canvas
     this.ctx.fillStyle = '#000000';
@@ -113,32 +113,46 @@ class Oscilloscope {
     // Draw grid
     this.drawGrid();
 
-    if (firstZeroCross === -1) {
+    if (initialZeroCross === -1) {
       // No zero-cross found, draw from beginning
       this.drawWaveform(this.dataArray, 0, this.dataArray.length);
     } else {
-      // Find the next zero-cross to determine the range to display
-      const secondZeroCross = this.findNextZeroCross(this.dataArray, firstZeroCross);
+      // Find the next zero-cross to determine cycle length
+      const nextZeroCross = this.findNextZeroCross(this.dataArray, initialZeroCross);
       
-      if (secondZeroCross === -1) {
+      if (nextZeroCross === -1) {
         // Only one zero-cross found, display from there
-        this.drawWaveform(this.dataArray, firstZeroCross, this.dataArray.length);
+        this.drawWaveform(this.dataArray, initialZeroCross, this.dataArray.length);
         // Draw zero-cross line at the first zero-cross point
-        this.drawZeroCrossLine(firstZeroCross, firstZeroCross, this.dataArray.length);
+        this.drawZeroCrossLine(initialZeroCross, initialZeroCross, this.dataArray.length);
       } else {
-        // Calculate display range with padding based on phase
-        // One cycle is from firstZeroCross to secondZeroCross
-        // Display from phase -π/8 to phase 2π+π/8
-        const cycleLength = secondZeroCross - firstZeroCross;
+        // Calculate cycle length and required padding
+        const cycleLength = nextZeroCross - initialZeroCross;
         const phasePadding = Math.floor(cycleLength / 8); // π/8 of one cycle
         
-        const startIndex = Math.max(0, firstZeroCross - phasePadding);
-        const endIndex = Math.min(this.dataArray.length, secondZeroCross + phasePadding);
+        // Find a zero-cross point that has enough space before it for padding
+        // Start searching from phasePadding to ensure we have room for -π/8 phase
+        let firstZeroCross = this.findZeroCross(this.dataArray, phasePadding);
+        if (firstZeroCross === -1) {
+          // Fallback to initial zero-cross if no suitable one found
+          firstZeroCross = initialZeroCross;
+        }
         
-        this.drawWaveform(this.dataArray, startIndex, endIndex);
-        // Draw zero-cross lines at both zero-cross points
-        this.drawZeroCrossLine(firstZeroCross, startIndex, endIndex);
-        this.drawZeroCrossLine(secondZeroCross, startIndex, endIndex);
+        const secondZeroCross = this.findNextZeroCross(this.dataArray, firstZeroCross);
+        if (secondZeroCross === -1) {
+          // Fallback: display from first zero-cross to end
+          this.drawWaveform(this.dataArray, firstZeroCross, this.dataArray.length);
+          this.drawZeroCrossLine(firstZeroCross, firstZeroCross, this.dataArray.length);
+        } else {
+          // Display from phase -π/8 to phase 2π+π/8
+          const startIndex = firstZeroCross - phasePadding;
+          const endIndex = Math.min(this.dataArray.length, secondZeroCross + phasePadding);
+          
+          this.drawWaveform(this.dataArray, startIndex, endIndex);
+          // Draw zero-cross lines at both zero-cross points
+          this.drawZeroCrossLine(firstZeroCross, startIndex, endIndex);
+          this.drawZeroCrossLine(secondZeroCross, startIndex, endIndex);
+        }
       }
     }
 
