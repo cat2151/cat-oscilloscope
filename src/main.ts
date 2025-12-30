@@ -26,6 +26,8 @@ class Oscilloscope {
   private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
   private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
   private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
+  private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
+  private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private fftDisplayEnabled = false;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -264,8 +266,8 @@ class Oscilloscope {
     // Estimate frequency (now works on gated signal)
     this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
-    // Get frequency data for FFT display if enabled
-    if (this.fftDisplayEnabled && this.frequencyData) {
+    // Get frequency data for FFT display (always fetch for smooth toggle experience)
+    if (this.frequencyData) {
       // @ts-ignore - Web Audio API type definitions issue
       this.analyser.getByteFrequencyData(this.frequencyData);
     }
@@ -592,11 +594,11 @@ class Oscilloscope {
     this.ctx.fillStyle = '#00aaff';
     for (let i = 0; i < maxBin; i++) {
       const magnitude = this.frequencyData[i];
-      const barHeight = (magnitude / 255) * overlayHeight * 0.9;
+      const barHeight = (magnitude / 255) * overlayHeight * this.FFT_OVERLAY_HEIGHT_RATIO;
       const x = overlayX + i * barWidth;
       const y = overlayY + overlayHeight - barHeight;
 
-      this.ctx.fillRect(x, y, Math.max(barWidth - 1, 1), barHeight);
+      this.ctx.fillRect(x, y, Math.max(barWidth - 1, this.FFT_MIN_BAR_WIDTH), barHeight);
     }
 
     // Draw fundamental frequency marker
