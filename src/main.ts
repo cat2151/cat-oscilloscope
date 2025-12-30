@@ -263,6 +263,12 @@ class Oscilloscope {
     // Estimate frequency (now works on gated signal)
     this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
+    // Get frequency data for spectrum display
+    if (this.frequencyData) {
+      // @ts-ignore - Web Audio API type definitions issue
+      this.analyser.getByteFrequencyData(this.frequencyData);
+    }
+
     // Clear canvas
     this.ctx.fillStyle = '#000000';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -282,6 +288,9 @@ class Oscilloscope {
       // No zero-cross found, draw entire buffer
       this.drawWaveform(this.dataArray, 0, this.dataArray.length);
     }
+
+    // Draw spectrum
+    this.drawSpectrum();
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
@@ -385,12 +394,12 @@ class Oscilloscope {
 
     this.ctx.stroke();
 
-    // Center line (zero line)
+    // Center line (zero line) for waveform section
     this.ctx.strokeStyle = '#444444';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    this.ctx.moveTo(0, this.canvas.height / 2);
-    this.ctx.lineTo(this.canvas.width, this.canvas.height / 2);
+    this.ctx.moveTo(0, this.canvas.height / 4);
+    this.ctx.lineTo(this.canvas.width, this.canvas.height / 4);
     this.ctx.stroke();
   }
 
@@ -493,15 +502,17 @@ class Oscilloscope {
     this.ctx.beginPath();
 
     const sliceWidth = this.canvas.width / dataLength;
-    const centerY = this.canvas.height / 2;
-    const baseAmplitude = this.canvas.height / 2;
+    // Use only top half of canvas for waveform
+    const waveformHeight = this.canvas.height / 2;
+    const centerY = waveformHeight / 2;
+    const baseAmplitude = waveformHeight / 2;
     const amplitude = baseAmplitude * this.currentGain;
 
     for (let i = 0; i < dataLength; i++) {
       const dataIndex = startIndex + i;
       const value = data[dataIndex];
       const rawY = centerY - (value * amplitude);
-      const y = Math.min(this.canvas.height, Math.max(0, rawY));
+      const y = Math.min(waveformHeight, Math.max(0, rawY));
       const x = i * sliceWidth;
 
       if (i === 0) {
@@ -531,16 +542,81 @@ class Oscilloscope {
     const sliceWidth = this.canvas.width / dataLength;
     const x = relativeIndex * sliceWidth;
 
-    // Draw a vertical line in red to mark the zero-cross point
+    // Draw a vertical line in red to mark the zero-cross point (only in waveform section)
     // Save and restore canvas state to avoid side effects
     this.ctx.save();
     this.ctx.strokeStyle = '#ff0000';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, this.canvas.height);
+    this.ctx.lineTo(x, this.canvas.height / 2);
     this.ctx.stroke();
     this.ctx.restore();
+  }
+
+  /**
+   * Draw FFT spectrum in the bottom half of the canvas
+   */
+  private drawSpectrum(): void {
+    if (!this.frequencyData || !this.audioContext || !this.analyser) {
+      return;
+    }
+
+    const spectrumHeight = this.canvas.height / 2;
+    const spectrumTop = this.canvas.height / 2;
+    const sampleRate = this.audioContext.sampleRate;
+    const binFrequency = sampleRate / this.analyser.fftSize;
+
+    // Draw separator line
+    this.ctx.save();
+    this.ctx.strokeStyle = '#444444';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, spectrumTop);
+    this.ctx.lineTo(this.canvas.width, spectrumTop);
+    this.ctx.stroke();
+    this.ctx.restore();
+
+    // Draw spectrum bars (only up to MAX_FREQUENCY_HZ for relevance)
+    const maxBin = Math.min(
+      this.frequencyData.length,
+      Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency)
+    );
+    const barWidth = this.canvas.width / maxBin;
+
+    this.ctx.fillStyle = '#00aaff';
+    for (let i = 0; i < maxBin; i++) {
+      const magnitude = this.frequencyData[i];
+      const barHeight = (magnitude / 255) * spectrumHeight;
+      const x = i * barWidth;
+      const y = this.canvas.height - barHeight;
+
+      this.ctx.fillRect(x, y, barWidth - 1, barHeight);
+    }
+
+    // Draw fundamental frequency marker
+    if (this.estimatedFrequency > 0) {
+      const frequencyBin = this.estimatedFrequency / binFrequency;
+      const markerX = frequencyBin * barWidth;
+
+      this.ctx.save();
+      this.ctx.strokeStyle = '#ff00ff';
+      this.ctx.lineWidth = 3;
+      this.ctx.beginPath();
+      this.ctx.moveTo(markerX, spectrumTop);
+      this.ctx.lineTo(markerX, this.canvas.height);
+      this.ctx.stroke();
+
+      // Draw frequency label
+      this.ctx.fillStyle = '#ff00ff';
+      this.ctx.font = 'bold 14px Arial';
+      this.ctx.fillText(
+        `${this.estimatedFrequency.toFixed(1)} Hz`,
+        markerX + 5,
+        spectrumTop + 20
+      );
+      this.ctx.restore();
+    }
   }
 
   getIsRunning(): boolean {
