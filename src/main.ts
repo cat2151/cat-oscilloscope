@@ -12,6 +12,7 @@ class Oscilloscope {
   private targetGain = 1.0;
   private peakDecay = 0.95; // Decay factor for peak tracking between frames (0.95 = 5% decay per frame)
   private previousPeak = 0;
+  private readonly minPeakThreshold = 0.01; // Minimum peak to avoid division by very small numbers
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -255,12 +256,13 @@ class Oscilloscope {
     }
 
     // Apply decay to smooth out rapid changes
+    // Use max so peaks can increase immediately but decay slowly
     peak = Math.max(peak, this.previousPeak * this.peakDecay);
     this.previousPeak = peak;
 
     // Calculate target gain (aim for 80% of canvas height to avoid clipping)
     const targetAmplitude = 0.8;
-    if (peak > 0.01) { // Avoid division by very small numbers
+    if (peak > this.minPeakThreshold) {
       this.targetGain = targetAmplitude / peak;
       // Clamp gain to reasonable range
       this.targetGain = Math.min(Math.max(this.targetGain, 0.5), 20.0);
