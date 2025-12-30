@@ -4,6 +4,7 @@ class Oscilloscope {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private dataArray: Float32Array | null = null;
+  private frequencyData: Uint8Array | null = null;
   private animationId: number | null = null;
   private isRunning = false;
   private mediaStream: MediaStream | null = null;
@@ -20,6 +21,11 @@ class Oscilloscope {
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
   private noiseGateEnabled = false;
   private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
+  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'zero-crossing';
+  private estimatedFrequency = 0;
+  private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
+  private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
+  private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -51,6 +57,9 @@ class Oscilloscope {
       const bufferLength = this.analyser.fftSize;
       this.dataArray = new Float32Array(bufferLength);
       
+      // Create frequency data array for FFT
+      this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+      
       this.isRunning = true;
       this.render();
     } catch (error) {
@@ -79,6 +88,137 @@ class Oscilloscope {
     }
     this.analyser = null;
     this.dataArray = null;
+    this.frequencyData = null;
+  }
+
+  /**
+   * Estimate frequency using zero-crossing method
+   * Counts zero-crossings in the buffer and calculates frequency
+   * Note: A complete sine wave cycle crosses zero twice: once going up (negative-to-positive)
+   *       and once going down (positive-to-negative). By counting only one direction,
+   *       we get one count per complete cycle.
+   */
+  private estimateFrequencyZeroCrossing(data: Float32Array): number {
+    if (!this.audioContext) return 0;
+    
+    const sampleRate = this.audioContext.sampleRate;
+    let zeroCrossCount = 0;
+    
+    // Count zero-crossings (negative to positive only)
+    // Use strict inequality to avoid counting multiple times when signal is at zero
+    for (let i = 0; i < data.length - 1; i++) {
+      if (data[i] < 0 && data[i + 1] > 0) {
+        zeroCrossCount++;
+      }
+    }
+    
+    // Each cycle has one zero-crossing (negative to positive)
+    // Frequency = (number of cycles) / (time duration)
+    const duration = data.length / sampleRate;
+    const frequency = zeroCrossCount / duration;
+    
+    // Apply frequency range filtering for consistency with other methods
+    return (frequency >= this.MIN_FREQUENCY_HZ && frequency <= this.MAX_FREQUENCY_HZ) ? frequency : 0;
+  }
+
+  /**
+   * Estimate frequency using autocorrelation method
+   * Finds the period by correlating the signal with itself
+   */
+  private estimateFrequencyAutocorrelation(data: Float32Array): number {
+    if (!this.audioContext) return 0;
+    
+    const sampleRate = this.audioContext.sampleRate;
+    const minPeriod = Math.floor(sampleRate / this.MAX_FREQUENCY_HZ);
+    const maxPeriod = Math.floor(sampleRate / this.MIN_FREQUENCY_HZ);
+    
+    // Precompute total signal energy (lag-0 autocorrelation)
+    let totalEnergy = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = data[i];
+      totalEnergy += v * v;
+    }
+    if (totalEnergy === 0) {
+      return 0;
+    }
+    
+    let bestCorrelation = 0;
+    let bestPeriod = 0;
+    
+    // Calculate autocorrelation for different lags
+    for (let lag = minPeriod; lag < Math.min(maxPeriod, data.length / 2); lag++) {
+      let correlation = 0;
+      
+      for (let i = 0; i < data.length - lag; i++) {
+        correlation += data[i] * data[i + lag];
+      }
+      
+      // Normalize by total energy to get correlation coefficient
+      const normalizedCorrelation = correlation / totalEnergy;
+      
+      if (normalizedCorrelation > bestCorrelation) {
+        bestCorrelation = normalizedCorrelation;
+        bestPeriod = lag;
+      }
+    }
+    
+    if (bestPeriod === 0) return 0;
+    return sampleRate / bestPeriod;
+  }
+
+  /**
+   * Estimate frequency using FFT method
+   * Finds the peak in the frequency spectrum
+   */
+  private estimateFrequencyFFT(_data: Float32Array): number {
+    if (!this.audioContext || !this.analyser || !this.frequencyData) return 0;
+    
+    const sampleRate = this.audioContext.sampleRate;
+    // @ts-ignore - Web Audio API type definitions issue
+    this.analyser.getByteFrequencyData(this.frequencyData);
+    
+    // Calculate bin range for our frequency limits
+    const binFrequency = sampleRate / this.analyser.fftSize;
+    const minBin = Math.max(1, Math.floor(this.MIN_FREQUENCY_HZ / binFrequency));
+    const maxBin = Math.min(this.frequencyData.length, Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency));
+    
+    // Find the bin with maximum magnitude within the frequency range
+    let maxMagnitude = 0;
+    let peakBin = 0;
+    
+    for (let i = minBin; i < maxBin; i++) {
+      if (this.frequencyData[i] > maxMagnitude) {
+        maxMagnitude = this.frequencyData[i];
+        peakBin = i;
+      }
+    }
+    
+    // Threshold to avoid noise (Uint8Array range is 0-255)
+    if (maxMagnitude < this.FFT_MAGNITUDE_THRESHOLD) return 0;
+    
+    // Convert bin to frequency
+    return peakBin * binFrequency;
+  }
+
+  /**
+   * Estimate frequency based on selected method
+   */
+  private estimateFrequency(data: Float32Array): number {
+    // Check if signal is above noise gate
+    if (!this.isSignalAboveNoiseGate(data)) {
+      return 0;
+    }
+    
+    switch (this.frequencyEstimationMethod) {
+      case 'zero-crossing':
+        return this.estimateFrequencyZeroCrossing(data);
+      case 'autocorrelation':
+        return this.estimateFrequencyAutocorrelation(data);
+      case 'fft':
+        return this.estimateFrequencyFFT(data);
+      default:
+        return 0;
+    }
   }
 
   /**
@@ -115,6 +255,9 @@ class Oscilloscope {
     // @ts-ignore - Web Audio API type definitions issue: Float32Array constructor creates ArrayBufferLike
     // but getFloatTimeDomainData expects ArrayBuffer. This works at runtime.
     this.analyser.getFloatTimeDomainData(this.dataArray);
+
+    // Estimate frequency
+    this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
     // Clear canvas
     this.ctx.fillStyle = '#000000';
@@ -425,6 +568,18 @@ class Oscilloscope {
   getNoiseGateThreshold(): number {
     return this.noiseGateThreshold;
   }
+
+  setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft'): void {
+    this.frequencyEstimationMethod = method;
+  }
+
+  getFrequencyEstimationMethod(): string {
+    return this.frequencyEstimationMethod;
+  }
+
+  getEstimatedFrequency(): number {
+    return this.estimatedFrequency;
+  }
 }
 
 // Main application logic
@@ -435,6 +590,8 @@ const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLIn
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
+const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
+const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 
 // Validate all required DOM elements
 const requiredElements = [
@@ -445,6 +602,8 @@ const requiredElements = [
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
+  { element: frequencyMethod, name: 'frequencyMethod' },
+  { element: frequencyValue, name: 'frequencyValue' },
 ];
 
 for (const { element, name } of requiredElements) {
@@ -491,6 +650,36 @@ noiseGateThreshold.addEventListener('input', () => {
   thresholdValue.textContent = threshold.toFixed(2);
 });
 
+// Frequency estimation method selector handler
+frequencyMethod.addEventListener('change', () => {
+  const method = frequencyMethod.value as 'zero-crossing' | 'autocorrelation' | 'fft';
+  oscilloscope.setFrequencyEstimationMethod(method);
+});
+
+// Update frequency display periodically
+let frequencyUpdateInterval: number | null = null;
+
+function startFrequencyDisplay(): void {
+  if (frequencyUpdateInterval === null) {
+    frequencyUpdateInterval = window.setInterval(() => {
+      const frequency = oscilloscope.getEstimatedFrequency();
+      if (frequency > 0) {
+        frequencyValue.textContent = `${frequency.toFixed(1)} Hz`;
+      } else {
+        frequencyValue.textContent = '--- Hz';
+      }
+    }, 100); // Update every 100ms (10 Hz)
+  }
+}
+
+function stopFrequencyDisplay(): void {
+  if (frequencyUpdateInterval !== null) {
+    clearInterval(frequencyUpdateInterval);
+    frequencyUpdateInterval = null;
+    frequencyValue.textContent = '--- Hz';
+  }
+}
+
 startButton.addEventListener('click', async () => {
   if (!oscilloscope.getIsRunning()) {
     try {
@@ -502,6 +691,7 @@ startButton.addEventListener('click', async () => {
       startButton.textContent = 'Stop';
       startButton.disabled = false;
       statusElement.textContent = 'Running - Microphone active';
+      startFrequencyDisplay();
     } catch (error) {
       console.error('Failed to start oscilloscope:', error);
       statusElement.textContent = 'Error: Could not access microphone';
@@ -509,6 +699,7 @@ startButton.addEventListener('click', async () => {
     }
   } else {
     try {
+      stopFrequencyDisplay();
       await oscilloscope.stop();
       startButton.textContent = 'Start';
       statusElement.textContent = 'Stopped';
