@@ -211,6 +211,11 @@ class Oscilloscope {
     const dataLength = endIndex - startIndex;
     if (dataLength <= 0) return;
 
+    // Check if zero-cross point is within the displayed range
+    if (zeroCrossIndex < startIndex || zeroCrossIndex >= endIndex) {
+      return;
+    }
+
     // Calculate the x position of the zero-cross point in canvas coordinates
     const relativeIndex = zeroCrossIndex - startIndex;
     const sliceWidth = this.canvas.width / dataLength;
