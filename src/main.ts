@@ -103,9 +103,6 @@ class Oscilloscope {
     // but getFloatTimeDomainData expects ArrayBuffer. This works at runtime.
     this.analyser.getFloatTimeDomainData(this.dataArray);
 
-    // Find the first zero-cross point
-    const firstZeroCross = this.findZeroCross(this.dataArray, 0);
-    
     // Clear canvas
     this.ctx.fillStyle = '#000000';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -113,30 +110,96 @@ class Oscilloscope {
     // Draw grid
     this.drawGrid();
 
-    if (firstZeroCross === -1) {
-      // No zero-cross found, draw from beginning
-      this.drawWaveform(this.dataArray, 0, this.dataArray.length);
-    } else {
-      // Find the next zero-cross to determine the range to display
-      const secondZeroCross = this.findNextZeroCross(this.dataArray, firstZeroCross);
-      
-      if (secondZeroCross === -1) {
-        // Only one zero-cross found, display from there
-        this.drawWaveform(this.dataArray, firstZeroCross, this.dataArray.length);
-      } else {
-        // Calculate display range with some padding before and after zero-crosses
-        const beforePadding = 20; // samples before first zero-cross
-        const afterPadding = 20;  // samples after second zero-cross
-        
-        const startIndex = Math.max(0, firstZeroCross - beforePadding);
-        const endIndex = Math.min(this.dataArray.length, secondZeroCross + afterPadding);
-        
-        this.drawWaveform(this.dataArray, startIndex, endIndex);
+    // Calculate display range and draw waveform with zero-cross indicators
+    const displayRange = this.calculateDisplayRange(this.dataArray);
+    if (displayRange) {
+      this.drawWaveform(this.dataArray, displayRange.startIndex, displayRange.endIndex);
+      this.drawZeroCrossLine(displayRange.firstZeroCross, displayRange.startIndex, displayRange.endIndex);
+      if (displayRange.secondZeroCross !== undefined) {
+        this.drawZeroCrossLine(displayRange.secondZeroCross, displayRange.startIndex, displayRange.endIndex);
       }
+    } else {
+      // No zero-cross found, draw entire buffer
+      this.drawWaveform(this.dataArray, 0, this.dataArray.length);
     }
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
+  }
+
+  /**
+   * Calculate the optimal display range for the waveform with zero-cross padding
+   */
+  private calculateDisplayRange(data: Float32Array): {
+    startIndex: number;
+    endIndex: number;
+    firstZeroCross: number;
+    secondZeroCross?: number;
+  } | null {
+    // Find the first zero-cross point to estimate cycle length
+    const estimationZeroCross = this.findZeroCross(data, 0);
+    
+    if (estimationZeroCross === -1) {
+      return null; // No zero-cross found
+    }
+
+    // Find the next zero-cross to determine cycle length
+    const nextZeroCross = this.findNextZeroCross(data, estimationZeroCross);
+    
+    if (nextZeroCross === -1) {
+      // Only one zero-cross found, display from there to end
+      return {
+        startIndex: estimationZeroCross,
+        endIndex: data.length,
+        firstZeroCross: estimationZeroCross,
+      };
+    }
+
+    // Calculate cycle length and required padding
+    const cycleLength = nextZeroCross - estimationZeroCross;
+    const rawPhasePadding = Math.floor(cycleLength / 16); // π/8 of one cycle (2π / 16 = π/8)
+    // Sanity check: don't allow padding to exceed half the buffer size
+    const maxPhasePadding = Math.floor(data.length / 2);
+    const phasePadding = Math.min(rawPhasePadding, maxPhasePadding);
+    
+    // Find a zero-cross point that has enough space before it for padding
+    // Start searching from phasePadding + 1 to ensure we have room for -π/8 phase
+    const searchStart = Math.min(phasePadding + 1, data.length - 1);
+    let firstZeroCross = this.findZeroCross(data, searchStart);
+    if (firstZeroCross === -1) {
+      // Fallback: use estimation zero-cross if it has enough padding
+      if (estimationZeroCross >= phasePadding) {
+        firstZeroCross = estimationZeroCross;
+      } else if (nextZeroCross >= phasePadding) {
+        // If estimation doesn't have enough padding, try next zero-cross
+        firstZeroCross = nextZeroCross;
+      } else {
+        // Last resort: use estimation and clamp startIndex to 0
+        firstZeroCross = estimationZeroCross;
+      }
+    }
+    
+    const secondZeroCross = this.findNextZeroCross(data, firstZeroCross);
+    if (secondZeroCross === -1) {
+      // Only one suitable zero-cross found, display from there to end
+      return {
+        startIndex: Math.max(0, firstZeroCross - phasePadding),
+        endIndex: data.length,
+        firstZeroCross: firstZeroCross,
+      };
+    }
+
+    // Display from phase -π/8 to phase 2π+π/8
+    // Use Math.max to handle edge cases where firstZeroCross might still be < phasePadding
+    const startIndex = Math.max(0, firstZeroCross - phasePadding);
+    const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
+    
+    return {
+      startIndex,
+      endIndex,
+      firstZeroCross,
+      secondZeroCross,
+    };
   }
 
   private drawGrid(): void {
@@ -198,6 +261,35 @@ class Oscilloscope {
     }
 
     this.ctx.stroke();
+  }
+
+  /**
+   * Draw a vertical line at the zero-cross point
+   */
+  private drawZeroCrossLine(zeroCrossIndex: number, startIndex: number, endIndex: number): void {
+    const dataLength = endIndex - startIndex;
+    if (dataLength <= 0) return;
+
+    // Check if zero-cross point is within the displayed range
+    if (zeroCrossIndex < startIndex || zeroCrossIndex >= endIndex) {
+      return;
+    }
+
+    // Calculate the x position of the zero-cross point in canvas coordinates
+    const relativeIndex = zeroCrossIndex - startIndex;
+    const sliceWidth = this.canvas.width / dataLength;
+    const x = relativeIndex * sliceWidth;
+
+    // Draw a vertical line in red to mark the zero-cross point
+    // Save and restore canvas state to avoid side effects
+    this.ctx.save();
+    this.ctx.strokeStyle = '#ff0000';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, 0);
+    this.ctx.lineTo(x, this.canvas.height);
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   getIsRunning(): boolean {
