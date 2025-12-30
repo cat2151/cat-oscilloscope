@@ -29,7 +29,7 @@ class Oscilloscope {
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private fftDisplayEnabled = true;
-  private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing (odd number for cleaner median)
+  private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
 
   constructor(canvas: HTMLCanvasElement) {
@@ -245,6 +245,9 @@ class Oscilloscope {
     for (const freq of this.frequencyHistory) {
       let foundGroup = false;
       for (const group of frequencyGroups) {
+        // Safety check: avoid division by zero (should not occur due to early return check)
+        if (group.center === 0) continue;
+        
         const relDiff = Math.abs(freq - group.center) / group.center;
         if (relDiff <= tolerance) {
           group.count++;
