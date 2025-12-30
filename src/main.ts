@@ -29,9 +29,8 @@ class Oscilloscope {
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private fftDisplayEnabled = true;
-  private readonly FREQUENCY_HISTORY_SIZE = 5; // Number of recent frequency estimates to keep for smoothing
+  private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing (odd number for cleaner median)
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
-  private readonly FREQUENCY_CHANGE_THRESHOLD_RATIO = 0.15; // 15% threshold for significant frequency change
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -214,7 +213,7 @@ class Oscilloscope {
   }
 
   /**
-   * Smooth frequency estimate using median filter and change threshold
+   * Smooth frequency estimate using mode (most frequent value) with tolerance
    * This prevents rapid oscillation between harmonics (e.g., fundamental vs 2x harmonic)
    * when their magnitudes are similar.
    */
@@ -238,39 +237,39 @@ class Oscilloscope {
       return rawFrequency;
     }
 
-    // Calculate median of recent frequencies for smoothing
-    // Median filter is more robust against outliers than mean
-    const sortedHistory = [...this.frequencyHistory].sort((a, b) => a - b);
-    const medianIndex = Math.floor(sortedHistory.length / 2);
-    const medianFrequency = sortedHistory.length % 2 === 0
-      ? (sortedHistory[medianIndex - 1] + sortedHistory[medianIndex]) / 2
-      : sortedHistory[medianIndex];
+    // Find mode (most frequent value) within a tolerance
+    // Group similar frequencies together (within 5% tolerance)
+    const tolerance = 0.05;
+    const frequencyGroups: { center: number; count: number; sum: number }[] = [];
 
-    // Check if the raw frequency represents a significant change from the median
-    // Only accept large jumps if they're consistent (not a single outlier)
-    const relativeChange = Math.abs(rawFrequency - medianFrequency) / medianFrequency;
-    
-    if (relativeChange > this.FREQUENCY_CHANGE_THRESHOLD_RATIO) {
-      // Significant change detected - check if this is consistent with recent trend
-      // Count how many recent samples support this new frequency range
-      const recentSamples = this.frequencyHistory.slice(-3); // Last 3 samples
-      let supportCount = 0;
-      
-      for (const sample of recentSamples) {
-        const sampleChange = Math.abs(sample - medianFrequency) / medianFrequency;
-        if (sampleChange > this.FREQUENCY_CHANGE_THRESHOLD_RATIO * 0.5) {
-          supportCount++;
+    for (const freq of this.frequencyHistory) {
+      let foundGroup = false;
+      for (const group of frequencyGroups) {
+        const relDiff = Math.abs(freq - group.center) / group.center;
+        if (relDiff <= tolerance) {
+          group.count++;
+          group.sum += freq;
+          group.center = group.sum / group.count; // Update center to average
+          foundGroup = true;
+          break;
         }
       }
-      
-      // If at least 2 out of 3 recent samples show significant change, accept it
-      // Otherwise, stick with the smoothed median
-      if (supportCount >= 2) {
-        return medianFrequency;
+      if (!foundGroup) {
+        frequencyGroups.push({ center: freq, count: 1, sum: freq });
       }
     }
 
-    return medianFrequency;
+    // Find the group with the highest count
+    let maxCount = 0;
+    let modeFrequency = rawFrequency;
+    for (const group of frequencyGroups) {
+      if (group.count > maxCount) {
+        maxCount = group.count;
+        modeFrequency = group.center;
+      }
+    }
+
+    return modeFrequency;
   }
 
   /**
