@@ -145,7 +145,8 @@ class Oscilloscope {
           this.drawZeroCrossLine(firstZeroCross, firstZeroCross, this.dataArray.length);
         } else {
           // Display from phase -π/8 to phase 2π+π/8
-          const startIndex = firstZeroCross - phasePadding;
+          // Ensure startIndex doesn't go negative if firstZeroCross < phasePadding
+          const startIndex = Math.max(0, firstZeroCross - phasePadding);
           const endIndex = Math.min(this.dataArray.length, secondZeroCross + phasePadding);
           
           this.drawWaveform(this.dataArray, startIndex, endIndex);
