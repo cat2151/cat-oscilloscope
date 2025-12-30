@@ -565,8 +565,24 @@ class Oscilloscope {
       this.targetGain = Math.min(Math.max(this.targetGain, this.MIN_GAIN), this.MAX_GAIN);
     }
 
-    // Smooth gain adjustment (interpolate towards target)
-    this.currentGain += (this.targetGain - this.currentGain) * this.GAIN_SMOOTHING_FACTOR;
+    // Check if current gain would cause clipping (waveform exceeding display boundaries)
+    // If the waveform with current gain exceeds canvas boundaries, immediately reduce gain
+    const baseAmplitude = this.canvas.height / 2;
+    const currentAmplitude = peak * this.currentGain;
+    const wouldClip = currentAmplitude > baseAmplitude;
+
+    if (wouldClip) {
+      // Immediately reduce gain to fit within display range
+      // Use 0.95 factor to ensure waveform fits comfortably within boundaries
+      this.currentGain = (baseAmplitude * 0.95) / peak;
+      // Clamp to reasonable range
+      this.currentGain = Math.min(Math.max(this.currentGain, this.MIN_GAIN), this.MAX_GAIN);
+      // Also update target gain to match to avoid oscillation
+      this.targetGain = this.currentGain;
+    } else {
+      // Smooth gain adjustment (interpolate towards target) only when not clipping
+      this.currentGain += (this.targetGain - this.currentGain) * this.GAIN_SMOOTHING_FACTOR;
+    }
   }
 
   private drawWaveform(data: Float32Array, startIndex: number, endIndex: number): void {
