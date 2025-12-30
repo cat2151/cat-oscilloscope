@@ -170,8 +170,14 @@ class Oscilloscope {
    * Estimate frequency using FFT method
    * Finds the peak in the frequency spectrum
    */
-  private estimateFrequencyFFT(_data: Float32Array): number {
+  private estimateFrequencyFFT(data: Float32Array): number {
     if (!this.audioContext || !this.analyser || !this.frequencyData) return 0;
+    
+    // Check noise gate using the time-domain data (even though FFT uses frequency domain)
+    // This ensures consistent behavior across all frequency estimation methods
+    if (!this.isSignalAboveNoiseGate(data)) {
+      return 0;
+    }
     
     const sampleRate = this.audioContext.sampleRate;
     // @ts-ignore - Web Audio API type definitions issue
@@ -389,13 +395,12 @@ class Oscilloscope {
   }
 
   /**
-   * Apply noise gate to the signal data
-   * If the signal RMS is below the threshold, zero out all samples
-   * This modifies the data array in place
+   * Check if signal passes the noise gate threshold
+   * Returns true if noise gate is disabled or signal RMS is above threshold
    */
-  private applyNoiseGate(data: Float32Array): void {
+  private isSignalAboveNoiseGate(data: Float32Array): boolean {
     if (!this.noiseGateEnabled) {
-      return; // If noise gate is disabled, don't modify the signal
+      return true; // If noise gate is disabled, always pass
     }
 
     // Calculate RMS (Root Mean Square) of the entire buffer for noise gate detection
@@ -410,16 +415,24 @@ class Oscilloscope {
       samplesProcessed++;
     }
     
-    // If no samples were processed (e.g., empty buffer), zero out the signal
+    // If no samples were processed (e.g., empty buffer), treat as below gate
     if (samplesProcessed === 0) {
-      data.fill(0);
-      return;
+      return false;
     }
     
     const rms = Math.sqrt(sumSquares / samplesProcessed);
     
-    // If RMS is below threshold, zero out all samples (gate closed)
-    if (rms < this.noiseGateThreshold) {
+    // Check if RMS is above threshold
+    return rms >= this.noiseGateThreshold;
+  }
+
+  /**
+   * Apply noise gate to the signal data
+   * If the signal RMS is below the threshold, zero out all samples
+   * This modifies the data array in place
+   */
+  private applyNoiseGate(data: Float32Array): void {
+    if (!this.isSignalAboveNoiseGate(data)) {
       data.fill(0);
     }
   }
