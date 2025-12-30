@@ -3,7 +3,7 @@ class Oscilloscope {
   private ctx: CanvasRenderingContext2D;
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
-  private dataArray: Float32Array<ArrayBuffer> | null = null;
+  private dataArray: Float32Array | null = null;
   private animationId: number | null = null;
   private isRunning = false;
 
@@ -35,7 +35,7 @@ class Oscilloscope {
       
       // Create data array for time domain data
       const bufferLength = this.analyser.fftSize;
-      this.dataArray = new Float32Array(bufferLength) as Float32Array<ArrayBuffer>;
+      this.dataArray = new Float32Array(bufferLength);
       
       this.isRunning = true;
       this.render();
@@ -62,7 +62,7 @@ class Oscilloscope {
   /**
    * Find zero-cross point where signal crosses from negative to positive
    */
-  private findZeroCross(data: Float32Array<ArrayBuffer>, startIndex: number = 0): number {
+  private findZeroCross(data: Float32Array, startIndex: number = 0): number {
     for (let i = startIndex; i < data.length - 1; i++) {
       // Look for transition from negative (or zero) to positive
       if (data[i] <= 0 && data[i + 1] > 0) {
@@ -75,7 +75,7 @@ class Oscilloscope {
   /**
    * Find the next zero-cross point after the given index
    */
-  private findNextZeroCross(data: Float32Array<ArrayBuffer>, startIndex: number): number {
+  private findNextZeroCross(data: Float32Array, startIndex: number): number {
     // Start searching a bit ahead to ensure we get the next cycle
     const searchStart = startIndex + 10;
     if (searchStart >= data.length) {
@@ -90,7 +90,7 @@ class Oscilloscope {
     }
 
     // Get waveform data
-    this.analyser.getFloatTimeDomainData(this.dataArray);
+    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
 
     // Find the first zero-cross point
     const firstZeroCross = this.findZeroCross(this.dataArray, 0);
@@ -161,7 +161,7 @@ class Oscilloscope {
     this.ctx.stroke();
   }
 
-  private drawWaveform(data: Float32Array<ArrayBuffer>, startIndex: number, endIndex: number): void {
+  private drawWaveform(data: Float32Array, startIndex: number, endIndex: number): void {
     const dataLength = endIndex - startIndex;
     if (dataLength <= 0) return;
 
