@@ -6,6 +6,7 @@ class Oscilloscope {
   private dataArray: Float32Array | null = null;
   private animationId: number | null = null;
   private isRunning = false;
+  private mediaStream: MediaStream | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -19,11 +20,11 @@ class Oscilloscope {
   async start(): Promise<void> {
     try {
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // Set up Web Audio API
       this.audioContext = new AudioContext();
-      const source = this.audioContext.createMediaStreamSource(stream);
+      const source = this.audioContext.createMediaStreamSource(this.mediaStream);
       
       // Create analyser node with high resolution
       this.analyser = this.audioContext.createAnalyser();
@@ -45,14 +46,22 @@ class Oscilloscope {
     }
   }
 
-  stop(): void {
+  async stop(): Promise<void> {
     this.isRunning = false;
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream = null;
+    }
     if (this.audioContext) {
-      this.audioContext.close();
+      try {
+        await this.audioContext.close();
+      } catch (error) {
+        console.error('Error closing AudioContext:', error);
+      }
       this.audioContext = null;
     }
     this.analyser = null;
@@ -76,8 +85,8 @@ class Oscilloscope {
    * Find the next zero-cross point after the given index
    */
   private findNextZeroCross(data: Float32Array, startIndex: number): number {
-    // Start searching a bit ahead to ensure we get the next cycle
-    const searchStart = startIndex + 10;
+    // Start searching from the next sample to find the next cycle
+    const searchStart = startIndex + 1;
     if (searchStart >= data.length) {
       return -1;
     }
@@ -90,7 +99,9 @@ class Oscilloscope {
     }
 
     // Get waveform data
-    this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
+    // @ts-ignore - Web Audio API type definitions issue: Float32Array constructor creates ArrayBufferLike
+    // but getFloatTimeDomainData expects ArrayBuffer. This works at runtime.
+    this.analyser.getFloatTimeDomainData(this.dataArray);
 
     // Find the first zero-cross point
     const firstZeroCross = this.findZeroCross(this.dataArray, 0);
@@ -131,26 +142,25 @@ class Oscilloscope {
   private drawGrid(): void {
     this.ctx.strokeStyle = '#222222';
     this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
 
     // Horizontal lines
     const horizontalLines = 5;
     for (let i = 0; i <= horizontalLines; i++) {
       const y = (this.canvas.height / horizontalLines) * i;
-      this.ctx.beginPath();
       this.ctx.moveTo(0, y);
       this.ctx.lineTo(this.canvas.width, y);
-      this.ctx.stroke();
     }
 
     // Vertical lines
     const verticalLines = 10;
     for (let i = 0; i <= verticalLines; i++) {
       const x = (this.canvas.width / verticalLines) * i;
-      this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
       this.ctx.lineTo(x, this.canvas.height);
-      this.ctx.stroke();
     }
+
+    this.ctx.stroke();
 
     // Center line (zero line)
     this.ctx.strokeStyle = '#444444';
@@ -176,7 +186,8 @@ class Oscilloscope {
     for (let i = 0; i < dataLength; i++) {
       const dataIndex = startIndex + i;
       const value = data[dataIndex];
-      const y = centerY - (value * amplitude);
+      const rawY = centerY - (value * amplitude);
+      const y = Math.min(this.canvas.height, Math.max(0, rawY));
       const x = i * sliceWidth;
 
       if (i === 0) {
@@ -220,11 +231,16 @@ startButton.addEventListener('click', async () => {
       console.error('Failed to start oscilloscope:', error);
       statusElement.textContent = 'Error: Could not access microphone';
       startButton.disabled = false;
-      alert('Failed to access microphone. Please ensure you have granted microphone permissions.');
     }
   } else {
-    oscilloscope.stop();
-    startButton.textContent = 'Start';
-    statusElement.textContent = 'Stopped';
+    try {
+      await oscilloscope.stop();
+      startButton.textContent = 'Start';
+      statusElement.textContent = 'Stopped';
+    } catch (error) {
+      console.error('Failed to stop oscilloscope:', error);
+      statusElement.textContent = 'Stopped (with errors)';
+      startButton.textContent = 'Start';
+    }
   }
 });

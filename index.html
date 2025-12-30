@@ -81,13 +81,19 @@
 </head>
 <body>
   <h1>Cat Oscilloscope</h1>
-  <canvas id="canvas" width="800" height="400"></canvas>
+  <canvas
+    id="canvas"
+    width="800"
+    height="400"
+    aria-label="Oscilloscope waveform visualization canvas for microphone audio"
+    aria-describedby="oscilloscopeDescription"
+  ></canvas>
   <div id="controls">
     <button id="startButton">Start</button>
     <span id="status">Click Start to begin</span>
   </div>
   <div class="info">
-    <p>This oscilloscope visualizes audio from your microphone with zero-cross detection for stable waveform display.</p>
+    <p id="oscilloscopeDescription">This oscilloscope visualizes audio from your microphone with zero-cross detection for stable waveform display.</p>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
