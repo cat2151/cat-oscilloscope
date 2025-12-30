@@ -170,9 +170,12 @@ class Oscilloscope {
       // Fallback: use estimation zero-cross if it has enough padding
       if (estimationZeroCross >= phasePadding) {
         firstZeroCross = estimationZeroCross;
-      } else {
-        // If still not enough padding, use the next suitable zero-cross
+      } else if (nextZeroCross >= phasePadding) {
+        // If estimation doesn't have enough padding, try next zero-cross
         firstZeroCross = nextZeroCross;
+      } else {
+        // Last resort: use estimation and clamp startIndex to 0
+        firstZeroCross = estimationZeroCross;
       }
     }
     
@@ -187,7 +190,8 @@ class Oscilloscope {
     }
 
     // Display from phase -π/8 to phase 2π+π/8
-    const startIndex = firstZeroCross - phasePadding; // No Math.max needed, we ensured firstZeroCross >= phasePadding
+    // Use Math.max to handle edge cases where firstZeroCross might still be < phasePadding
+    const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
     
     return {
