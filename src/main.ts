@@ -266,8 +266,10 @@ class Oscilloscope {
     // Estimate frequency (now works on gated signal)
     this.estimatedFrequency = this.estimateFrequency(this.dataArray);
 
-    // Get frequency data for FFT display (always fetch for smooth toggle experience)
-    if (this.frequencyData) {
+    // Get frequency data for FFT display
+    // When using FFT-based frequency estimation, estimateFrequencyFFT() is responsible
+    // for filling this.frequencyData to avoid redundant analyser.getByteFrequencyData() calls.
+    if (this.frequencyData && this.frequencyEstimationMethod !== 'fft') {
       // @ts-ignore - Web Audio API type definitions issue
       this.analyser.getByteFrequencyData(this.frequencyData);
     }
@@ -602,7 +604,8 @@ class Oscilloscope {
     }
 
     // Draw fundamental frequency marker
-    if (this.estimatedFrequency > 0) {
+    // Only draw if frequency is within displayable range to avoid marker outside overlay bounds
+    if (this.estimatedFrequency > 0 && this.estimatedFrequency <= this.MAX_FREQUENCY_HZ) {
       const frequencyBin = this.estimatedFrequency / binFrequency;
       const markerX = overlayX + frequencyBin * barWidth;
 
