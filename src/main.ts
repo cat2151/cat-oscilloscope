@@ -13,6 +13,11 @@ class Oscilloscope {
   private peakDecay = 0.95; // Decay factor for peak tracking between frames (0.95 = 5% decay per frame)
   private previousPeak = 0;
   private readonly minPeakThreshold = 0.01; // Minimum peak to avoid division by very small numbers
+  private readonly TARGET_AMPLITUDE_RATIO = 0.8; // Target 80% of canvas height to avoid clipping
+  private readonly MIN_GAIN = 0.5; // Minimum gain to prevent excessive attenuation
+  private readonly MAX_GAIN = 20.0; // Maximum gain to prevent excessive amplification
+  private readonly GAIN_SMOOTHING_FACTOR = 0.1; // Interpolation speed for smooth gain transitions
+  private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -250,9 +255,22 @@ class Oscilloscope {
     }
 
     // Find the peak amplitude in the displayed range
+    // To keep this efficient even with large ranges, sample with a stride
+    // so that we inspect at most a fixed number of points per frame.
     let peak = 0;
-    for (let i = startIndex; i < endIndex; i++) {
-      peak = Math.max(peak, Math.abs(data[i]));
+    const clampedStart = Math.max(0, startIndex);
+    const clampedEnd = Math.min(data.length, endIndex);
+    const rangeLength = Math.max(0, clampedEnd - clampedStart);
+
+    if (rangeLength > 0) {
+      const stride = Math.max(1, Math.floor(rangeLength / this.MAX_SAMPLES_TO_CHECK));
+
+      for (let i = clampedStart; i < clampedEnd; i += stride) {
+        const value = Math.abs(data[i]);
+        if (value > peak) {
+          peak = value;
+        }
+      }
     }
 
     // Apply decay to smooth out rapid changes
@@ -260,17 +278,15 @@ class Oscilloscope {
     peak = Math.max(peak, this.previousPeak * this.peakDecay);
     this.previousPeak = peak;
 
-    // Calculate target gain (aim for 80% of canvas height to avoid clipping)
-    const targetAmplitude = 0.8;
+    // Calculate target gain (aim for TARGET_AMPLITUDE_RATIO of canvas height to avoid clipping)
     if (peak > this.minPeakThreshold) {
-      this.targetGain = targetAmplitude / peak;
+      this.targetGain = this.TARGET_AMPLITUDE_RATIO / peak;
       // Clamp gain to reasonable range
-      this.targetGain = Math.min(Math.max(this.targetGain, 0.5), 20.0);
+      this.targetGain = Math.min(Math.max(this.targetGain, this.MIN_GAIN), this.MAX_GAIN);
     }
 
     // Smooth gain adjustment (interpolate towards target)
-    const smoothingFactor = 0.1;
-    this.currentGain += (this.targetGain - this.currentGain) * smoothingFactor;
+    this.currentGain += (this.targetGain - this.currentGain) * this.GAIN_SMOOTHING_FACTOR;
   }
 
   private drawWaveform(data: Float32Array, startIndex: number, endIndex: number): void {
@@ -365,6 +381,9 @@ if (!canvas || !startButton || !autoGainCheckbox || !statusElement) {
 }
 
 const oscilloscope = new Oscilloscope(canvas);
+
+// Synchronize checkbox state with oscilloscope's autoGainEnabled
+oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
