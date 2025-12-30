@@ -126,16 +126,20 @@ class Oscilloscope {
         // Draw zero-cross line at the first zero-cross point
         this.drawZeroCrossLine(firstZeroCross, firstZeroCross, this.dataArray.length);
       } else {
-        // Calculate display range with some padding before and after zero-crosses
-        const beforePadding = 20; // samples before first zero-cross
-        const afterPadding = 20;  // samples after second zero-cross
+        // Calculate display range with padding based on phase
+        // One cycle is from firstZeroCross to secondZeroCross
+        // Display from phase -π/8 to phase 2π+π/8
+        const cycleLength = secondZeroCross - firstZeroCross;
+        const beforePadding = Math.floor(cycleLength / 8); // π/8 of one cycle
+        const afterPadding = Math.floor(cycleLength / 8);  // π/8 of one cycle
         
         const startIndex = Math.max(0, firstZeroCross - beforePadding);
         const endIndex = Math.min(this.dataArray.length, secondZeroCross + afterPadding);
         
         this.drawWaveform(this.dataArray, startIndex, endIndex);
-        // Draw zero-cross line at the first zero-cross point
+        // Draw zero-cross lines at both zero-cross points
         this.drawZeroCrossLine(firstZeroCross, startIndex, endIndex);
+        this.drawZeroCrossLine(secondZeroCross, startIndex, endIndex);
       }
     }
 
