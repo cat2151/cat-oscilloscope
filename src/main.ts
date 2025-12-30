@@ -4,6 +4,7 @@ class Oscilloscope {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private dataArray: Float32Array | null = null;
+  private frequencyData: Uint8Array | null = null;
   private animationId: number | null = null;
   private isRunning = false;
   private mediaStream: MediaStream | null = null;
@@ -56,6 +57,9 @@ class Oscilloscope {
       const bufferLength = this.analyser.fftSize;
       this.dataArray = new Float32Array(bufferLength);
       
+      // Create frequency data array for FFT
+      this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+      
       this.isRunning = true;
       this.render();
     } catch (error) {
@@ -84,6 +88,7 @@ class Oscilloscope {
     }
     this.analyser = null;
     this.dataArray = null;
+    this.frequencyData = null;
   }
 
   /**
@@ -127,21 +132,29 @@ class Oscilloscope {
     const minPeriod = Math.floor(sampleRate / this.MAX_FREQUENCY_HZ);
     const maxPeriod = Math.floor(sampleRate / this.MIN_FREQUENCY_HZ);
     
+    // Precompute total signal energy (lag-0 autocorrelation)
+    let totalEnergy = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = data[i];
+      totalEnergy += v * v;
+    }
+    if (totalEnergy === 0) {
+      return 0;
+    }
+    
     let bestCorrelation = 0;
     let bestPeriod = 0;
     
     // Calculate autocorrelation for different lags
     for (let lag = minPeriod; lag < Math.min(maxPeriod, data.length / 2); lag++) {
       let correlation = 0;
-      let energy = 0;
       
       for (let i = 0; i < data.length - lag; i++) {
         correlation += data[i] * data[i + lag];
-        energy += data[i] * data[i];
       }
       
-      // Normalize by energy to get correlation coefficient
-      const normalizedCorrelation = energy > 0 ? correlation / energy : 0;
+      // Normalize by total energy to get correlation coefficient
+      const normalizedCorrelation = correlation / totalEnergy;
       
       if (normalizedCorrelation > bestCorrelation) {
         bestCorrelation = normalizedCorrelation;
@@ -158,24 +171,24 @@ class Oscilloscope {
    * Finds the peak in the frequency spectrum
    */
   private estimateFrequencyFFT(_data: Float32Array): number {
-    if (!this.audioContext || !this.analyser) return 0;
+    if (!this.audioContext || !this.analyser || !this.frequencyData) return 0;
     
     const sampleRate = this.audioContext.sampleRate;
-    const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
-    this.analyser.getByteFrequencyData(frequencyData);
+    // @ts-ignore - Web Audio API type definitions issue
+    this.analyser.getByteFrequencyData(this.frequencyData);
     
     // Calculate bin range for our frequency limits
     const binFrequency = sampleRate / this.analyser.fftSize;
     const minBin = Math.max(1, Math.floor(this.MIN_FREQUENCY_HZ / binFrequency));
-    const maxBinIndex = Math.min(frequencyData.length, Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency));
+    const maxBin = Math.min(this.frequencyData.length, Math.ceil(this.MAX_FREQUENCY_HZ / binFrequency));
     
     // Find the bin with maximum magnitude within the frequency range
     let maxMagnitude = 0;
     let peakBin = 0;
     
-    for (let i = minBin; i < maxBinIndex; i++) {
-      if (frequencyData[i] > maxMagnitude) {
-        maxMagnitude = frequencyData[i];
+    for (let i = minBin; i < maxBin; i++) {
+      if (this.frequencyData[i] > maxMagnitude) {
+        maxMagnitude = this.frequencyData[i];
         peakBin = i;
       }
     }

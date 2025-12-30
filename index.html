@@ -133,7 +133,7 @@
   <div id="frequencyDisplay" style="margin-top: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
     <label style="display: flex; align-items: center; gap: 10px;">
       <span>Frequency Estimation:</span>
-      <select id="frequencyMethod" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;">
+      <select id="frequencyMethod" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select frequency estimation method">
         <option value="zero-crossing">Zero-Crossing</option>
         <option value="autocorrelation">Autocorrelation</option>
         <option value="fft">FFT</option>
@@ -141,7 +141,7 @@
     </label>
     <div style="display: flex; align-items: center; gap: 10px;">
       <span style="font-weight: bold;">Frequency:</span>
-      <span id="frequencyValue" style="min-width: 100px; font-family: monospace; font-size: 18px; color: #00ff00;">--- Hz</span>
+      <span id="frequencyValue" style="min-width: 100px; font-family: monospace; font-size: 18px; color: #00ff00;" aria-live="polite">--- Hz</span>
     </div>
   </div>
   <div class="info">
