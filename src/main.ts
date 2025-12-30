@@ -7,6 +7,10 @@ class Oscilloscope {
   private animationId: number | null = null;
   private isRunning = false;
   private mediaStream: MediaStream | null = null;
+  private autoGainEnabled = true;
+  private currentGain = 1.0;
+  private targetGain = 1.0;
+  private peakDecay = 0.95; // Peak value decay factor per frame
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -234,9 +238,43 @@ class Oscilloscope {
     this.ctx.stroke();
   }
 
+  /**
+   * Calculate optimal gain based on waveform peak
+   */
+  private calculateAutoGain(data: Float32Array, startIndex: number, endIndex: number): void {
+    if (!this.autoGainEnabled) {
+      this.targetGain = 1.0;
+      return;
+    }
+
+    // Find the peak amplitude in the displayed range
+    let peak = 0;
+    for (let i = startIndex; i < endIndex; i++) {
+      peak = Math.max(peak, Math.abs(data[i]));
+    }
+
+    // Apply decay to smooth out rapid changes
+    peak = Math.max(peak, this.targetGain * this.peakDecay);
+
+    // Calculate target gain (aim for 80% of canvas height to avoid clipping)
+    const targetAmplitude = 0.8;
+    if (peak > 0.01) { // Avoid division by very small numbers
+      this.targetGain = targetAmplitude / peak;
+      // Clamp gain to reasonable range
+      this.targetGain = Math.min(Math.max(this.targetGain, 0.5), 20.0);
+    }
+
+    // Smooth gain adjustment (interpolate towards target)
+    const smoothingFactor = 0.1;
+    this.currentGain += (this.targetGain - this.currentGain) * smoothingFactor;
+  }
+
   private drawWaveform(data: Float32Array, startIndex: number, endIndex: number): void {
     const dataLength = endIndex - startIndex;
     if (dataLength <= 0) return;
+
+    // Calculate auto gain before drawing
+    this.calculateAutoGain(data, startIndex, endIndex);
 
     this.ctx.strokeStyle = '#00ff00';
     this.ctx.lineWidth = 2;
@@ -244,7 +282,8 @@ class Oscilloscope {
 
     const sliceWidth = this.canvas.width / dataLength;
     const centerY = this.canvas.height / 2;
-    const amplitude = this.canvas.height / 2;
+    const baseAmplitude = this.canvas.height / 2;
+    const amplitude = baseAmplitude * this.currentGain;
 
     for (let i = 0; i < dataLength; i++) {
       const dataIndex = startIndex + i;
@@ -295,18 +334,37 @@ class Oscilloscope {
   getIsRunning(): boolean {
     return this.isRunning;
   }
+
+  setAutoGain(enabled: boolean): void {
+    this.autoGainEnabled = enabled;
+    if (!enabled) {
+      // Reset gain to 1.0 when disabled
+      this.currentGain = 1.0;
+      this.targetGain = 1.0;
+    }
+  }
+
+  getAutoGainEnabled(): boolean {
+    return this.autoGainEnabled;
+  }
 }
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
+const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 
-if (!canvas || !startButton || !statusElement) {
+if (!canvas || !startButton || !autoGainCheckbox || !statusElement) {
   throw new Error('Required DOM elements not found');
 }
 
 const oscilloscope = new Oscilloscope(canvas);
+
+// Auto gain checkbox handler
+autoGainCheckbox.addEventListener('change', () => {
+  oscilloscope.setAutoGain(autoGainCheckbox.checked);
+});
 
 startButton.addEventListener('click', async () => {
   if (!oscilloscope.getIsRunning()) {
