@@ -14,7 +14,7 @@ export class GainController {
   private readonly minPeakThreshold = 0.01; // Minimum peak to avoid division by very small numbers
   private readonly TARGET_AMPLITUDE_RATIO = 0.8; // Target 80% of canvas height to avoid clipping
   private readonly MIN_GAIN = 0.5; // Minimum gain to prevent excessive attenuation
-  private readonly MAX_GAIN = 20.0; // Maximum gain to prevent excessive amplification
+  private readonly MAX_GAIN = 99.0; // Maximum gain to prevent excessive amplification
   private readonly GAIN_SMOOTHING_FACTOR = 0.1; // Interpolation speed for smooth gain transitions
   private readonly MAX_SAMPLES_TO_CHECK = 512; // Maximum samples to check for peak detection (performance optimization)
   private readonly CLIPPING_SAFETY_FACTOR = 0.95; // Safety margin for immediate gain reduction when clipping (95% of max)

@@ -274,9 +274,9 @@ describe('Algorithm-Specific Tests', () => {
       const gain = oscilloscope.getCurrentGain();
       
       // Based on Oscilloscope class constants:
-      // MIN_GAIN = 0.5, MAX_GAIN = 20.0
+      // MIN_GAIN = 0.5, MAX_GAIN = 99.0
       expect(gain).toBeGreaterThanOrEqual(0.5);
-      expect(gain).toBeLessThanOrEqual(20.0);
+      expect(gain).toBeLessThanOrEqual(99.0);
     });
   });
 
