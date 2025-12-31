@@ -42,14 +42,15 @@ function dbToAmplitude(db: number): number {
 }
 
 // Helper function to convert slider value (-60 to 0) to threshold amplitude (0.001-1.00)
-function sliderValueToThreshold(sliderValue: string): number {
+// Returns both dB and amplitude to avoid redundant parsing
+function sliderValueToThreshold(sliderValue: string): { db: number; amplitude: number } {
   const db = parseFloat(sliderValue);
   
   if (Number.isNaN(db)) {
     throw new Error(`Invalid slider value for noise gate threshold: "${sliderValue}"`);
   }
   
-  return dbToAmplitude(db);
+  return { db, amplitude: dbToAmplitude(db) };
 }
 
 const oscilloscope = new Oscilloscope(canvas);
@@ -59,11 +60,10 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
 // Synchronize noise gate controls
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
-oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
+const initialThreshold = sliderValueToThreshold(noiseGateThreshold.value);
+oscilloscope.setNoiseGateThreshold(initialThreshold.amplitude);
 // Display dB value with amplitude in parentheses
-const amplitude = sliderValueToThreshold(noiseGateThreshold.value);
-const db = parseFloat(noiseGateThreshold.value);
-thresholdValue.textContent = `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
+thresholdValue.textContent = `${initialThreshold.db.toFixed(0)} dB (${initialThreshold.amplitude.toFixed(3)})`;
 
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
@@ -86,10 +86,9 @@ fftDisplayCheckbox.addEventListener('change', () => {
 // Noise gate threshold slider handler
 noiseGateThreshold.addEventListener('input', () => {
   const threshold = sliderValueToThreshold(noiseGateThreshold.value);
-  oscilloscope.setNoiseGateThreshold(threshold);
+  oscilloscope.setNoiseGateThreshold(threshold.amplitude);
   // Display dB value with amplitude in parentheses
-  const db = parseFloat(noiseGateThreshold.value);
-  thresholdValue.textContent = `${db.toFixed(0)} dB (${threshold.toFixed(3)})`;
+  thresholdValue.textContent = `${threshold.db.toFixed(0)} dB (${threshold.amplitude.toFixed(3)})`;
 });
 
 // Frequency estimation method selector handler
