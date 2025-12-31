@@ -1,5 +1,3 @@
-import { GainController } from './GainController';
-
 /**
  * FrequencyEstimator handles frequency detection using various algorithms
  * Responsible for:
@@ -17,8 +15,6 @@ export class FrequencyEstimator {
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
-
-  constructor(private gainController: GainController) {}
 
   /**
    * Estimate frequency using zero-crossing method
@@ -88,9 +84,9 @@ export class FrequencyEstimator {
    * Estimate frequency using FFT method
    * Finds the peak in the frequency spectrum
    */
-  private estimateFrequencyFFT(data: Float32Array, frequencyData: Uint8Array, sampleRate: number, fftSize: number): number {
-    // Check noise gate using the time-domain data
-    if (!this.gainController.isSignalAboveNoiseGate(data)) {
+  private estimateFrequencyFFT(frequencyData: Uint8Array, sampleRate: number, fftSize: number, isSignalAboveNoiseGate: boolean): number {
+    // Check noise gate - caller determines if signal passes noise gate
+    if (!isSignalAboveNoiseGate) {
       return 0;
     }
     
@@ -176,8 +172,9 @@ export class FrequencyEstimator {
 
   /**
    * Estimate frequency based on selected method
+   * @param isSignalAboveNoiseGate - Result of noise gate check, used for FFT method
    */
-  estimateFrequency(data: Float32Array, frequencyData: Uint8Array | null, sampleRate: number, fftSize: number): number {
+  estimateFrequency(data: Float32Array, frequencyData: Uint8Array | null, sampleRate: number, fftSize: number, isSignalAboveNoiseGate: boolean): number {
     let rawFrequency: number;
     switch (this.frequencyEstimationMethod) {
       case 'zero-crossing':
@@ -190,7 +187,7 @@ export class FrequencyEstimator {
         if (!frequencyData) {
           rawFrequency = 0;
         } else {
-          rawFrequency = this.estimateFrequencyFFT(data, frequencyData, sampleRate, fftSize);
+          rawFrequency = this.estimateFrequencyFFT(frequencyData, sampleRate, fftSize, isSignalAboveNoiseGate);
         }
         break;
       default:

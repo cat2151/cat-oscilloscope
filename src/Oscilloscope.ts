@@ -25,7 +25,7 @@ export class Oscilloscope {
   constructor(canvas: HTMLCanvasElement) {
     this.audioManager = new AudioManager();
     this.gainController = new GainController();
-    this.frequencyEstimator = new FrequencyEstimator(this.gainController);
+    this.frequencyEstimator = new FrequencyEstimator();
     this.renderer = new WaveformRenderer(canvas);
     this.zeroCrossDetector = new ZeroCrossDetector();
   }
@@ -66,17 +66,23 @@ export class Oscilloscope {
     // Apply noise gate to input signal (modifies dataArray in place)
     this.gainController.applyNoiseGate(dataArray);
 
-    // Get frequency data for FFT display
-    const frequencyData = this.audioManager.getFrequencyData();
+    // Check if signal passed noise gate for FFT frequency estimation
+    const isSignalAboveNoiseGate = this.gainController.isSignalAboveNoiseGate(dataArray);
+
     const sampleRate = this.audioManager.getSampleRate();
     const fftSize = this.audioManager.getFFTSize();
+
+    // Only fetch frequency data if needed (FFT method OR FFT display enabled)
+    const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || this.renderer.getFFTDisplayEnabled();
+    const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
 
     // Estimate frequency (now works on gated signal)
     const estimatedFrequency = this.frequencyEstimator.estimateFrequency(
       dataArray,
       frequencyData,
       sampleRate,
-      fftSize
+      fftSize,
+      isSignalAboveNoiseGate
     );
 
     // Clear canvas and draw grid
