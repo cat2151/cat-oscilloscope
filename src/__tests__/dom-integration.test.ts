@@ -233,8 +233,8 @@ describe('DOM Integration Tests', () => {
 
     it('should handle invalid slider values', () => {
       const sliderValue = 'invalid';
-      const threshold = parseFloat(sliderValue) / 100;
-      expect(Number.isNaN(threshold)).toBe(true);
+      const db = parseFloat(sliderValue);
+      expect(Number.isNaN(db)).toBe(true);
     });
   });
 
