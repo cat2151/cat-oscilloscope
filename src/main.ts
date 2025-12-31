@@ -47,6 +47,11 @@ function sliderValueToThreshold(sliderValue: string): { db: number; amplitude: n
   return { db, amplitude: dbToAmplitude(db) };
 }
 
+// Helper function to format threshold display
+function formatThresholdDisplay(db: number, amplitude: number): string {
+  return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
+}
+
 const oscilloscope = new Oscilloscope(canvas);
 
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
@@ -56,8 +61,7 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
 const initialThreshold = sliderValueToThreshold(noiseGateThreshold.value);
 oscilloscope.setNoiseGateThreshold(initialThreshold.amplitude);
-// Display dB value with amplitude in parentheses
-thresholdValue.textContent = `${initialThreshold.db.toFixed(0)} dB (${initialThreshold.amplitude.toFixed(3)})`;
+thresholdValue.textContent = formatThresholdDisplay(initialThreshold.db, initialThreshold.amplitude);
 
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
@@ -81,8 +85,7 @@ fftDisplayCheckbox.addEventListener('change', () => {
 noiseGateThreshold.addEventListener('input', () => {
   const threshold = sliderValueToThreshold(noiseGateThreshold.value);
   oscilloscope.setNoiseGateThreshold(threshold.amplitude);
-  // Display dB value with amplitude in parentheses
-  thresholdValue.textContent = `${threshold.db.toFixed(0)} dB (${threshold.amplitude.toFixed(3)})`;
+  thresholdValue.textContent = formatThresholdDisplay(threshold.db, threshold.amplitude);
 });
 
 // Frequency estimation method selector handler
