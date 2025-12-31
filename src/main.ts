@@ -34,15 +34,22 @@ for (const { element, name } of requiredElements) {
   }
 }
 
-// Helper function to convert slider value (0-100) to threshold (0.00-1.00)
+// Helper function to convert dB value to amplitude (linear)
+// dB range: -60dB to 0dB
+// Amplitude range: 0.001 to 1.0
+function dbToAmplitude(db: number): number {
+  return Math.pow(10, db / 20);
+}
+
+// Helper function to convert slider value (-60 to 0) to threshold amplitude (0.001-1.00)
 function sliderValueToThreshold(sliderValue: string): number {
-  const value = parseFloat(sliderValue);
+  const db = parseFloat(sliderValue);
   
-  if (Number.isNaN(value)) {
+  if (Number.isNaN(db)) {
     throw new Error(`Invalid slider value for noise gate threshold: "${sliderValue}"`);
   }
   
-  return value / 100;
+  return dbToAmplitude(db);
 }
 
 const oscilloscope = new Oscilloscope(canvas);
@@ -53,7 +60,10 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 // Synchronize noise gate controls
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
 oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
-thresholdValue.textContent = sliderValueToThreshold(noiseGateThreshold.value).toFixed(2);
+// Display dB value with amplitude in parentheses
+const amplitude = sliderValueToThreshold(noiseGateThreshold.value);
+const db = parseFloat(noiseGateThreshold.value);
+thresholdValue.textContent = `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
 
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
@@ -77,7 +87,9 @@ fftDisplayCheckbox.addEventListener('change', () => {
 noiseGateThreshold.addEventListener('input', () => {
   const threshold = sliderValueToThreshold(noiseGateThreshold.value);
   oscilloscope.setNoiseGateThreshold(threshold);
-  thresholdValue.textContent = threshold.toFixed(2);
+  // Display dB value with amplitude in parentheses
+  const db = parseFloat(noiseGateThreshold.value);
+  thresholdValue.textContent = `${db.toFixed(0)} dB (${threshold.toFixed(3)})`;
 });
 
 // Frequency estimation method selector handler

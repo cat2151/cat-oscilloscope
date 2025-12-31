@@ -99,8 +99,8 @@ describe('DOM Integration Tests', () => {
         </label>
         <label>
           <span>Threshold:</span>
-          <input type="range" id="noiseGateThreshold" min="0" max="100" value="1" step="0.1">
-          <span id="thresholdValue">0.01</span>
+          <input type="range" id="noiseGateThreshold" min="-60" max="0" value="-40" step="1">
+          <span id="thresholdValue">-40 dB (0.010)</span>
         </label>
         <span id="status">Click Start to begin</span>
       </div>
@@ -192,8 +192,8 @@ describe('DOM Integration Tests', () => {
     });
 
     it('should have correct initial threshold value', () => {
-      expect(noiseGateThreshold.value).toBe('1');
-      expect(thresholdValue.textContent).toBe('0.01');
+      expect(noiseGateThreshold.value).toBe('-40');
+      expect(thresholdValue.textContent).toBe('-40 dB (0.010)');
     });
 
     it('should have autocorrelation selected by default', () => {
@@ -202,28 +202,32 @@ describe('DOM Integration Tests', () => {
   });
 
   describe('Slider Value Conversion', () => {
-    it('should convert slider value 0 to threshold 0.00', () => {
+    it('should convert slider value -60 to threshold ~0.001', () => {
+      const sliderValue = '-60';
+      const db = parseFloat(sliderValue);
+      const threshold = Math.pow(10, db / 20);
+      expect(threshold).toBeCloseTo(0.001, 4);
+    });
+
+    it('should convert slider value -40 to threshold ~0.01', () => {
+      const sliderValue = '-40';
+      const db = parseFloat(sliderValue);
+      const threshold = Math.pow(10, db / 20);
+      expect(threshold).toBeCloseTo(0.01, 4);
+    });
+
+    it('should convert slider value -20 to threshold ~0.1', () => {
+      const sliderValue = '-20';
+      const db = parseFloat(sliderValue);
+      const threshold = Math.pow(10, db / 20);
+      expect(threshold).toBeCloseTo(0.1, 4);
+    });
+
+    it('should convert slider value 0 to threshold 1.0', () => {
       const sliderValue = '0';
-      const threshold = parseFloat(sliderValue) / 100;
-      expect(threshold).toBe(0.00);
-    });
-
-    it('should convert slider value 1 to threshold 0.01', () => {
-      const sliderValue = '1';
-      const threshold = parseFloat(sliderValue) / 100;
-      expect(threshold).toBe(0.01);
-    });
-
-    it('should convert slider value 50 to threshold 0.50', () => {
-      const sliderValue = '50';
-      const threshold = parseFloat(sliderValue) / 100;
-      expect(threshold).toBe(0.50);
-    });
-
-    it('should convert slider value 100 to threshold 1.00', () => {
-      const sliderValue = '100';
-      const threshold = parseFloat(sliderValue) / 100;
-      expect(threshold).toBe(1.00);
+      const db = parseFloat(sliderValue);
+      const threshold = Math.pow(10, db / 20);
+      expect(threshold).toBeCloseTo(1.0, 4);
     });
 
     it('should handle invalid slider values', () => {
