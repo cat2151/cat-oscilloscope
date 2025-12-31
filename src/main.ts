@@ -1,4 +1,5 @@
 import { Oscilloscope } from './Oscilloscope';
+import { dbToAmplitude } from './utils';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -34,15 +35,21 @@ for (const { element, name } of requiredElements) {
   }
 }
 
-// Helper function to convert slider value (0-100) to threshold (0.00-1.00)
-function sliderValueToThreshold(sliderValue: string): number {
-  const value = parseFloat(sliderValue);
+// Helper function to convert slider value (-60 to 0) to threshold amplitude (0.001-1.00)
+// Returns both dB and amplitude to avoid redundant parsing
+function sliderValueToThreshold(sliderValue: string): { db: number; amplitude: number } {
+  const db = parseFloat(sliderValue);
   
-  if (Number.isNaN(value)) {
+  if (Number.isNaN(db)) {
     throw new Error(`Invalid slider value for noise gate threshold: "${sliderValue}"`);
   }
   
-  return value / 100;
+  return { db, amplitude: dbToAmplitude(db) };
+}
+
+// Helper function to format threshold display
+function formatThresholdDisplay(db: number, amplitude: number): string {
+  return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
 }
 
 const oscilloscope = new Oscilloscope(canvas);
@@ -52,8 +59,9 @@ oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
 // Synchronize noise gate controls
 oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
-oscilloscope.setNoiseGateThreshold(sliderValueToThreshold(noiseGateThreshold.value));
-thresholdValue.textContent = sliderValueToThreshold(noiseGateThreshold.value).toFixed(2);
+const initialThreshold = sliderValueToThreshold(noiseGateThreshold.value);
+oscilloscope.setNoiseGateThreshold(initialThreshold.amplitude);
+thresholdValue.textContent = formatThresholdDisplay(initialThreshold.db, initialThreshold.amplitude);
 
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
@@ -76,8 +84,8 @@ fftDisplayCheckbox.addEventListener('change', () => {
 // Noise gate threshold slider handler
 noiseGateThreshold.addEventListener('input', () => {
   const threshold = sliderValueToThreshold(noiseGateThreshold.value);
-  oscilloscope.setNoiseGateThreshold(threshold);
-  thresholdValue.textContent = threshold.toFixed(2);
+  oscilloscope.setNoiseGateThreshold(threshold.amplitude);
+  thresholdValue.textContent = formatThresholdDisplay(threshold.db, threshold.amplitude);
 });
 
 // Frequency estimation method selector handler
