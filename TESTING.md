@@ -120,7 +120,7 @@ Tests are configured in `vite.config.ts`:
 - ✓ Handles very low amplitude signals
 - ✓ Handles very high amplitude signals
 - ✓ Resets gain to 1.0 when disabled
-- ✓ Maintains gain within MIN/MAX bounds (0.5-20.0)
+- ✓ Maintains gain within MIN/MAX bounds (0.5-99.0)
 
 #### Signal Characteristics
 - ✓ Sine wave has correct peak amplitude
