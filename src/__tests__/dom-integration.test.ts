@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { dbToAmplitude } from '../utils';
 
 // Mock Web Audio API and MediaStream before importing main
 class MockAudioContext {
@@ -205,28 +206,28 @@ describe('DOM Integration Tests', () => {
     it('should convert slider value -60 to threshold ~0.001', () => {
       const sliderValue = '-60';
       const db = parseFloat(sliderValue);
-      const threshold = Math.pow(10, db / 20);
+      const threshold = dbToAmplitude(db);
       expect(threshold).toBeCloseTo(0.001, 4);
     });
 
     it('should convert slider value -40 to threshold ~0.01', () => {
       const sliderValue = '-40';
       const db = parseFloat(sliderValue);
-      const threshold = Math.pow(10, db / 20);
+      const threshold = dbToAmplitude(db);
       expect(threshold).toBeCloseTo(0.01, 4);
     });
 
     it('should convert slider value -20 to threshold ~0.1', () => {
       const sliderValue = '-20';
       const db = parseFloat(sliderValue);
-      const threshold = Math.pow(10, db / 20);
+      const threshold = dbToAmplitude(db);
       expect(threshold).toBeCloseTo(0.1, 4);
     });
 
     it('should convert slider value 0 to threshold 1.0', () => {
       const sliderValue = '0';
       const db = parseFloat(sliderValue);
-      const threshold = Math.pow(10, db / 20);
+      const threshold = dbToAmplitude(db);
       expect(threshold).toBeCloseTo(1.0, 4);
     });
 

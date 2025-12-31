@@ -1,4 +1,5 @@
 import { Oscilloscope } from './Oscilloscope';
+import { dbToAmplitude } from './utils';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -32,13 +33,6 @@ for (const { element, name } of requiredElements) {
   if (!element) {
     throw new Error(`Required DOM element not found: ${name}`);
   }
-}
-
-// Helper function to convert dB value to amplitude (linear)
-// dB range: -60dB to 0dB
-// Amplitude range: 0.001 to 1.0
-function dbToAmplitude(db: number): number {
-  return Math.pow(10, db / 20);
 }
 
 // Helper function to convert slider value (-60 to 0) to threshold amplitude (0.001-1.00)
