@@ -275,9 +275,9 @@ describe('Oscilloscope Class', () => {
   });
   
   describe('Noise Gate and FFT Display Interaction', () => {
-    it('should suppress FFT overlay when noise gate is active and signal is below threshold', async () => {
-      // Create a custom mock that returns silent data (below noise gate threshold)
-      class SilentMockAudioContext {
+    // Helper function to create a mock AudioContext with configurable silent data
+    function createSilentMockAudioContext(amplitudeGenerator: (i: number) => number) {
+      return class SilentMockAudioContext {
         state = 'running';
         sampleRate = 48000;
         
@@ -296,9 +296,8 @@ describe('Oscilloscope Class', () => {
             connect: vi.fn(),
             disconnect: vi.fn(),
             getFloatTimeDomainData: vi.fn((array: Float32Array) => {
-              // Fill with silent data (amplitude 0.001, below default threshold of 0.01)
               for (let i = 0; i < array.length; i++) {
-                array[i] = Math.sin(i / 10) * 0.001;
+                array[i] = amplitudeGenerator(i);
               }
             }),
             getByteFrequencyData: vi.fn((array: Uint8Array) => {
@@ -315,7 +314,31 @@ describe('Oscilloscope Class', () => {
           this.state = 'closed';
           return Promise.resolve();
         }
-      }
+      };
+    }
+    
+    // Helper function to calculate FFT overlay dimensions
+    function getFFTOverlayDimensions(canvasWidth: number, canvasHeight: number) {
+      const overlayWidth = Math.floor(canvasWidth * 0.35);
+      const overlayHeight = Math.floor(canvasHeight * 0.35);
+      const overlayX = 10;
+      const overlayY = canvasHeight - overlayHeight - 10;
+      return { overlayWidth, overlayHeight, overlayX, overlayY };
+    }
+    
+    // Helper function to find FFT overlay border call in strokeRect calls
+    function findFFTOverlayBorderCall(strokeRectCalls: any[], dimensions: ReturnType<typeof getFFTOverlayDimensions>) {
+      return strokeRectCalls.find((call: any[]) => {
+        return call[0] === dimensions.overlayX && 
+               call[1] === dimensions.overlayY && 
+               call[2] === dimensions.overlayWidth && 
+               call[3] === dimensions.overlayHeight;
+      });
+    }
+    
+    it('should suppress FFT overlay when noise gate is active and signal is below threshold', async () => {
+      // Create a mock that returns silent data (amplitude 0.001, below default threshold of 0.01)
+      const SilentMockAudioContext = createSilentMockAudioContext(i => Math.sin(i / 10) * 0.001);
       
       // Temporarily replace the global AudioContext with our silent mock
       const originalAudioContext = global.AudioContext;
@@ -348,24 +371,10 @@ describe('Oscilloscope Class', () => {
         // Verify that fillRect was called (for grid/waveform background)
         expect(mockContext.fillRect).toHaveBeenCalled();
         
-        // Count calls to strokeRect (used for FFT overlay border)
-        // If FFT overlay was drawn, strokeRect would be called for the border
+        // Check that FFT overlay border was NOT drawn when signal is gated
         const strokeRectCalls = mockContext.strokeRect.mock.calls;
-        
-        // strokeRect should not be called for FFT overlay border when signal is gated
-        // (it might be called for other purposes, but not with FFT overlay dimensions)
-        const fftOverlayBorderCall = strokeRectCalls.find((call: any[]) => {
-          // FFT overlay is approximately 35% of canvas width and height, positioned at (10, height - overlayHeight - 10)
-          const overlayWidth = Math.floor(800 * 0.35);
-          const overlayHeight = Math.floor(400 * 0.35);
-          const overlayX = 10;
-          const overlayY = 400 - overlayHeight - 10;
-          
-          return call[0] === overlayX && 
-                 call[1] === overlayY && 
-                 call[2] === overlayWidth && 
-                 call[3] === overlayHeight;
-        });
+        const dimensions = getFFTOverlayDimensions(800, 400);
+        const fftOverlayBorderCall = findFFTOverlayBorderCall(strokeRectCalls, dimensions);
         
         expect(fftOverlayBorderCall).toBeUndefined();
       } finally {
@@ -400,61 +409,15 @@ describe('Oscilloscope Class', () => {
       
       // Check if FFT overlay border was drawn
       const strokeRectCalls = mockContext.strokeRect.mock.calls;
-      const overlayWidth = Math.floor(800 * 0.35);
-      const overlayHeight = Math.floor(400 * 0.35);
-      const overlayX = 10;
-      const overlayY = 400 - overlayHeight - 10;
-      
-      const fftOverlayBorderCall = strokeRectCalls.find((call: any[]) => {
-        return call[0] === overlayX && 
-               call[1] === overlayY && 
-               call[2] === overlayWidth && 
-               call[3] === overlayHeight;
-      });
+      const dimensions = getFFTOverlayDimensions(800, 400);
+      const fftOverlayBorderCall = findFFTOverlayBorderCall(strokeRectCalls, dimensions);
       
       expect(fftOverlayBorderCall).toBeDefined();
     });
     
     it('should show FFT overlay when noise gate is disabled regardless of signal level', async () => {
-      // Create silent data mock
-      class SilentMockAudioContext {
-        state = 'running';
-        sampleRate = 48000;
-        
-        createMediaStreamSource() {
-          return {
-            connect: vi.fn(),
-            disconnect: vi.fn(),
-          };
-        }
-        
-        createAnalyser() {
-          const analyser = {
-            fftSize: 4096,
-            frequencyBinCount: 2048,
-            smoothingTimeConstant: 0,
-            connect: vi.fn(),
-            disconnect: vi.fn(),
-            getFloatTimeDomainData: vi.fn((array: Float32Array) => {
-              // Silent data
-              for (let i = 0; i < array.length; i++) {
-                array[i] = 0.0001;
-              }
-            }),
-            getByteFrequencyData: vi.fn((array: Uint8Array) => {
-              for (let i = 0; i < array.length; i++) {
-                array[i] = 100;
-              }
-            }),
-          };
-          return analyser;
-        }
-        
-        async close() {
-          this.state = 'closed';
-          return Promise.resolve();
-        }
-      }
+      // Create a mock with very low amplitude (0.0001)
+      const SilentMockAudioContext = createSilentMockAudioContext(() => 0.0001);
       
       const originalAudioContext = global.AudioContext;
       global.AudioContext = SilentMockAudioContext as any;
@@ -474,17 +437,8 @@ describe('Oscilloscope Class', () => {
         
         // FFT overlay should be drawn even with silent data when noise gate is off
         const strokeRectCalls = mockContext.strokeRect.mock.calls;
-        const overlayWidth = Math.floor(800 * 0.35);
-        const overlayHeight = Math.floor(400 * 0.35);
-        const overlayX = 10;
-        const overlayY = 400 - overlayHeight - 10;
-        
-        const fftOverlayBorderCall = strokeRectCalls.find((call: any[]) => {
-          return call[0] === overlayX && 
-                 call[1] === overlayY && 
-                 call[2] === overlayWidth && 
-                 call[3] === overlayHeight;
-        });
+        const dimensions = getFFTOverlayDimensions(800, 400);
+        const fftOverlayBorderCall = findFFTOverlayBorderCall(strokeRectCalls, dimensions);
         
         expect(fftOverlayBorderCall).toBeDefined();
       } finally {
