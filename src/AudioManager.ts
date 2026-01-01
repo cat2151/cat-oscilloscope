@@ -96,10 +96,15 @@ export class AudioManager {
     if (this.audioBufferSource) {
       try {
         this.audioBufferSource.stop();
+        this.audioBufferSource.disconnect();
       } catch (error) {
-        // Ignore error if already stopped
+        // Ignore error if already stopped, but still try to disconnect
+        try {
+          this.audioBufferSource.disconnect();
+        } catch (disconnectError) {
+          // Ignore disconnect errors
+        }
       }
-      this.audioBufferSource.disconnect();
       this.audioBufferSource = null;
     }
     if (this.mediaStream) {
