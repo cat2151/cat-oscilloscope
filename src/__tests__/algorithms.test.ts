@@ -282,7 +282,7 @@ describe('Algorithm-Specific Tests', () => {
 
   describe('Frequency Range Filtering', () => {
     it('should define valid frequency range constants', () => {
-      // The Oscilloscope class defines:
+      // The FrequencyEstimator class defines:
       // MIN_FREQUENCY_HZ = 50
       // MAX_FREQUENCY_HZ = 5000
       
