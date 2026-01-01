@@ -10,8 +10,30 @@ export class AudioManager {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private mediaStream: MediaStream | null = null;
+  private audioBufferSource: AudioBufferSourceNode | null = null;
   private dataArray: Float32Array | null = null;
   private frequencyData: Uint8Array | null = null;
+
+  /**
+   * Initialize analyser node and data arrays
+   */
+  private initializeAnalyser(): void {
+    if (!this.audioContext) {
+      throw new Error('AudioContext must be initialized before creating analyser');
+    }
+
+    // Create analyser node with high resolution
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 4096; // Higher resolution for better waveform
+    this.analyser.smoothingTimeConstant = 0; // No smoothing for accurate waveform
+    
+    // Create data array for time domain data
+    const bufferLength = this.analyser.fftSize;
+    this.dataArray = new Float32Array(bufferLength);
+    
+    // Create frequency data array for FFT
+    this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+  }
 
   /**
    * Start audio capture and analysis
@@ -25,22 +47,52 @@ export class AudioManager {
       this.audioContext = new AudioContext();
       const source = this.audioContext.createMediaStreamSource(this.mediaStream);
       
-      // Create analyser node with high resolution
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 4096; // Higher resolution for better waveform
-      this.analyser.smoothingTimeConstant = 0; // No smoothing for accurate waveform
+      // Initialize analyser and data arrays
+      this.initializeAnalyser();
       
       // Connect nodes
-      source.connect(this.analyser);
-      
-      // Create data array for time domain data
-      const bufferLength = this.analyser.fftSize;
-      this.dataArray = new Float32Array(bufferLength);
-      
-      // Create frequency data array for FFT
-      this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+      source.connect(this.analyser!);
     } catch (error) {
       console.error('Error accessing microphone:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Start audio playback from file
+   */
+  async startFromFile(file: File): Promise<void> {
+    try {
+      // Read file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Close existing AudioContext if present to avoid resource leak
+      if (this.audioContext && this.audioContext.state !== 'closed') {
+        await this.audioContext.close();
+      }
+
+      // Set up Web Audio API
+      this.audioContext = new AudioContext();
+      
+      // Decode audio data
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      // Initialize analyser and data arrays
+      this.initializeAnalyser();
+      
+      // Create buffer source for looping playback
+      this.audioBufferSource = this.audioContext.createBufferSource();
+      this.audioBufferSource.buffer = audioBuffer;
+      this.audioBufferSource.loop = true;
+      
+      // Connect nodes: source -> analyser -> destination
+      this.audioBufferSource.connect(this.analyser!);
+      this.analyser!.connect(this.audioContext.destination);
+      
+      // Start playback
+      this.audioBufferSource.start(0);
+    } catch (error) {
+      console.error('Error loading audio file:', error);
       throw error;
     }
   }
@@ -49,6 +101,19 @@ export class AudioManager {
    * Stop audio capture and clean up resources
    */
   async stop(): Promise<void> {
+    if (this.audioBufferSource) {
+      try {
+        this.audioBufferSource.stop();
+      } catch (error) {
+        // Ignore error if already stopped or in invalid state
+      }
+      try {
+        this.audioBufferSource.disconnect();
+      } catch (error) {
+        // Ignore disconnect errors
+      }
+      this.audioBufferSource = null;
+    }
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach(track => track.stop());
       this.mediaStream = null;
