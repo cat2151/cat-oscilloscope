@@ -112,8 +112,8 @@ export class Oscilloscope {
       this.renderer.drawWaveform(dataArray, 0, dataArray.length, gain);
     }
 
-    // Draw FFT spectrum overlay if enabled
-    if (frequencyData && this.renderer.getFFTDisplayEnabled()) {
+    // Draw FFT spectrum overlay if enabled and signal is above noise gate
+    if (frequencyData && this.renderer.getFFTDisplayEnabled() && isSignalAboveNoiseGate) {
       this.renderer.drawFFTOverlay(
         frequencyData,
         estimatedFrequency,
