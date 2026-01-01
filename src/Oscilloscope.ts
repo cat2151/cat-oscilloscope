@@ -41,6 +41,17 @@ export class Oscilloscope {
     }
   }
 
+  async startFromFile(file: File): Promise<void> {
+    try {
+      await this.audioManager.startFromFile(file);
+      this.isRunning = true;
+      this.render();
+    } catch (error) {
+      console.error('Error loading audio file:', error);
+      throw error;
+    }
+  }
+
   async stop(): Promise<void> {
     this.isRunning = false;
     if (this.animationId !== null) {

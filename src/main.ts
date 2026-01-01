@@ -4,6 +4,8 @@ import { dbToAmplitude } from './utils';
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
+const loadFileButton = document.getElementById('loadFileButton') as HTMLButtonElement;
+const fileInput = document.getElementById('fileInput') as HTMLInputElement;
 const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
 const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
@@ -18,6 +20,8 @@ const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 const requiredElements = [
   { element: canvas, name: 'canvas' },
   { element: startButton, name: 'startButton' },
+  { element: loadFileButton, name: 'loadFileButton' },
+  { element: fileInput, name: 'fileInput' },
   { element: autoGainCheckbox, name: 'autoGainCheckbox' },
   { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
@@ -127,6 +131,7 @@ startButton.addEventListener('click', async () => {
   if (!oscilloscope.getIsRunning()) {
     try {
       startButton.disabled = true;
+      loadFileButton.disabled = true;
       statusElement.textContent = 'Requesting microphone access...';
       
       await oscilloscope.start();
@@ -139,17 +144,60 @@ startButton.addEventListener('click', async () => {
       console.error('Failed to start oscilloscope:', error);
       statusElement.textContent = 'Error: Could not access microphone';
       startButton.disabled = false;
+      loadFileButton.disabled = false;
     }
   } else {
     try {
       stopFrequencyDisplay();
       await oscilloscope.stop();
       startButton.textContent = 'Start';
+      loadFileButton.disabled = false;
       statusElement.textContent = 'Stopped';
     } catch (error) {
       console.error('Failed to stop oscilloscope:', error);
       statusElement.textContent = 'Stopped (with errors)';
       startButton.textContent = 'Start';
+      loadFileButton.disabled = false;
     }
   }
+});
+
+// Load file button handler
+loadFileButton.addEventListener('click', () => {
+  fileInput.click();
+});
+
+// File input handler
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files?.[0];
+  if (!file) {
+    return;
+  }
+  
+  // Stop if already running
+  if (oscilloscope.getIsRunning()) {
+    stopFrequencyDisplay();
+    await oscilloscope.stop();
+  }
+  
+  try {
+    startButton.disabled = true;
+    loadFileButton.disabled = true;
+    statusElement.textContent = `Loading file: ${file.name}...`;
+    
+    await oscilloscope.startFromFile(file);
+    
+    startButton.textContent = 'Stop';
+    startButton.disabled = false;
+    statusElement.textContent = `Playing: ${file.name} (loop)`;
+    startFrequencyDisplay();
+  } catch (error) {
+    console.error('Failed to load audio file:', error);
+    statusElement.textContent = 'Error: Could not load audio file';
+    startButton.disabled = false;
+    loadFileButton.disabled = false;
+  }
+  
+  // Clear file input to allow loading the same file again
+  fileInput.value = '';
 });
