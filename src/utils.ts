@@ -12,6 +12,12 @@ export function dbToAmplitude(db: number): number {
 }
 
 /**
+ * Silence threshold in dB relative to peak amplitude
+ * Samples below this level relative to the peak are considered silence
+ */
+const SILENCE_THRESHOLD_DB = -48;
+
+/**
  * Trim silence from the beginning and end of an AudioBuffer
  * The threshold is calculated as -48dB relative to the peak amplitude of the entire buffer
  * @param audioBuffer - The audio buffer to trim
@@ -22,10 +28,14 @@ export function trimSilence(audioBuffer: AudioBuffer): AudioBuffer {
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
   
-  // Calculate the peak amplitude across all channels
+  // Cache channel data for reuse and calculate peak amplitude
+  const channelDataCache: Float32Array[] = [];
   let peakAmplitude = 0;
+  
   for (let channel = 0; channel < numberOfChannels; channel++) {
     const data = audioBuffer.getChannelData(channel);
+    channelDataCache.push(data);
+    
     for (let i = 0; i < length; i++) {
       const amplitude = Math.abs(data[i]);
       if (amplitude > peakAmplitude) {
@@ -39,18 +49,15 @@ export function trimSilence(audioBuffer: AudioBuffer): AudioBuffer {
     return audioBuffer;
   }
   
-  // Calculate threshold as -48dB relative to peak amplitude
-  // -48dB = 20 * log10(threshold / peak)
-  // threshold = peak * 10^(-48/20) = peak * 10^(-2.4)
-  const threshold = peakAmplitude * Math.pow(10, -48 / 20);
+  // Calculate threshold as SILENCE_THRESHOLD_DB relative to peak amplitude
+  const threshold = peakAmplitude * Math.pow(10, SILENCE_THRESHOLD_DB / 20);
   
   // Find the start index (first non-silent sample across all channels)
   let startIndex = length; // Initialize to length to detect if no non-silent sample found
   for (let i = 0; i < length; i++) {
     let isSilent = true;
     for (let channel = 0; channel < numberOfChannels; channel++) {
-      const data = audioBuffer.getChannelData(channel);
-      if (Math.abs(data[i]) > threshold) {
+      if (Math.abs(channelDataCache[channel][i]) > threshold) {
         isSilent = false;
         break;
       }
@@ -71,8 +78,7 @@ export function trimSilence(audioBuffer: AudioBuffer): AudioBuffer {
   for (let i = length - 1; i >= startIndex; i--) {
     let isSilent = true;
     for (let channel = 0; channel < numberOfChannels; channel++) {
-      const data = audioBuffer.getChannelData(channel);
-      if (Math.abs(data[i]) > threshold) {
+      if (Math.abs(channelDataCache[channel][i]) > threshold) {
         isSilent = false;
         break;
       }
@@ -98,7 +104,7 @@ export function trimSilence(audioBuffer: AudioBuffer): AudioBuffer {
   
   // Copy the non-silent samples to the new buffer
   for (let channel = 0; channel < numberOfChannels; channel++) {
-    const sourceData = audioBuffer.getChannelData(channel);
+    const sourceData = channelDataCache[channel];
     const destData = trimmedBuffer.getChannelData(channel);
     for (let i = 0; i < trimmedLength; i++) {
       destData[i] = sourceData[startIndex + i];
