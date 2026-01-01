@@ -23,7 +23,7 @@ export function trimSilence(audioBuffer: AudioBuffer, threshold: number = 0.01):
   const length = audioBuffer.length;
   
   // Find the start index (first non-silent sample across all channels)
-  let startIndex = 0;
+  let startIndex = length; // Initialize to length to detect if no non-silent sample found
   for (let i = 0; i < length; i++) {
     let isSilent = true;
     for (let channel = 0; channel < numberOfChannels; channel++) {
@@ -37,6 +37,11 @@ export function trimSilence(audioBuffer: AudioBuffer, threshold: number = 0.01):
       startIndex = i;
       break;
     }
+  }
+  
+  // If entire buffer is silent, return the original
+  if (startIndex >= length) {
+    return audioBuffer;
   }
   
   // Find the end index (last non-silent sample across all channels)
@@ -56,13 +61,8 @@ export function trimSilence(audioBuffer: AudioBuffer, threshold: number = 0.01):
     }
   }
   
-  // If the entire buffer is silent or no trimming is needed, return the original
+  // If no trimming is needed, return the original
   if (startIndex === 0 && endIndex === length - 1) {
-    return audioBuffer;
-  }
-  
-  // If the entire buffer is silent (startIndex >= endIndex after searching)
-  if (startIndex > endIndex) {
     return audioBuffer;
   }
   

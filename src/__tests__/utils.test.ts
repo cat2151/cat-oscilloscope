@@ -27,7 +27,7 @@ class MockAudioBuffer {
 }
 
 beforeAll(() => {
-  // @ts-ignore - Setting up global mock for tests
+  // @ts-expect-error - Setting up global mock for tests
   global.AudioBuffer = MockAudioBuffer;
 });
 
