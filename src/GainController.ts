@@ -20,7 +20,7 @@ export class GainController {
   private readonly CLIPPING_SAFETY_FACTOR = 0.95; // Safety margin for immediate gain reduction when clipping (95% of max)
   
   private noiseGateEnabled = true;
-  private noiseGateThreshold = 0.01; // Default threshold (1% of max amplitude)
+  private noiseGateThreshold = 0.00398; // Default threshold (-48dB, approximately 0.4% of max amplitude)
 
   /**
    * Calculate optimal gain based on waveform peak

@@ -43,6 +43,10 @@ describe('dbToAmplitude', () => {
   it('should convert -40 dB to amplitude 0.01', () => {
     expect(dbToAmplitude(-40)).toBeCloseTo(0.01, 5);
   });
+
+  it('should convert -48 dB to amplitude ~0.00398', () => {
+    expect(dbToAmplitude(-48)).toBeCloseTo(0.00398, 5);
+  });
 });
 
 describe('trimSilence', () => {
