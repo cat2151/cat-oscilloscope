@@ -102,9 +102,9 @@ describe('trimSilence', () => {
     // Test with quiet audio (peak = 0.01)
     // Threshold will be 0.01 * 10^(-48/20) ≈ 0.01 * 0.00398 ≈ 0.0000398
     const quietData = [
-      0.00005, 0.00005, 0.00005,  // Samples above threshold (relative to peak)
+      0.00005, 0.00005, 0.00005,  // Samples above silence threshold (not considered silent)
       0.01, 0.008, -0.009,         // Quiet audio (peak)
-      0.00005, 0.00005             // Samples above threshold (relative to peak)
+      0.00005, 0.00005             // Samples above silence threshold (not considered silent)
     ];
     const quietBuffer = createAudioBuffer(quietData);
     const trimmedQuiet = trimSilence(quietBuffer);
@@ -115,9 +115,9 @@ describe('trimSilence', () => {
     // Test with loud audio (peak = 1.0)
     // Threshold will be 1.0 * 10^(-48/20) ≈ 0.00398
     const loudData = [
-      0.001, 0.001, 0.001,     // Quiet samples that should be trimmed
+      0.001, 0.001, 0.001,     // Quiet samples below -48dB of the peak (0.001 < 0.00398), so they should be trimmed
       1.0, 0.8, -0.9,          // Loud audio (peak)
-      0.001, 0.001             // Quiet samples that should be trimmed
+      0.001, 0.001             // Quiet samples below -48dB of the peak (0.001 < 0.00398), so they should be trimmed
     ];
     const loudBuffer = createAudioBuffer(loudData);
     const trimmedLoud = trimSilence(loudBuffer);
