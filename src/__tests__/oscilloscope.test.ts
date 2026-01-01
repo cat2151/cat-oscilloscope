@@ -275,6 +275,9 @@ describe('Oscilloscope Class', () => {
   });
   
   describe('Noise Gate and FFT Display Interaction', () => {
+    // Constants for test mocks
+    const MOCK_FREQUENCY_MAGNITUDE = 100; // Significant magnitude for frequency data
+    
     // Helper function to create a mock AudioContext with configurable silent data
     function createSilentMockAudioContext(amplitudeGenerator: (i: number) => number) {
       return class SilentMockAudioContext {
@@ -303,7 +306,7 @@ describe('Oscilloscope Class', () => {
             getByteFrequencyData: vi.fn((array: Uint8Array) => {
               // Fill with some frequency data that would normally be visible
               for (let i = 0; i < array.length; i++) {
-                array[i] = 100; // Significant magnitude
+                array[i] = MOCK_FREQUENCY_MAGNITUDE;
               }
             }),
           };
@@ -317,6 +320,9 @@ describe('Oscilloscope Class', () => {
       };
     }
     
+    // Type for strokeRect call arguments
+    type StrokeRectCall = [number, number, number, number];
+    
     // Helper function to calculate FFT overlay dimensions
     function getFFTOverlayDimensions(canvasWidth: number, canvasHeight: number) {
       const overlayWidth = Math.floor(canvasWidth * 0.35);
@@ -327,8 +333,8 @@ describe('Oscilloscope Class', () => {
     }
     
     // Helper function to find FFT overlay border call in strokeRect calls
-    function findFFTOverlayBorderCall(strokeRectCalls: any[], dimensions: ReturnType<typeof getFFTOverlayDimensions>) {
-      return strokeRectCalls.find((call: any[]) => {
+    function findFFTOverlayBorderCall(strokeRectCalls: StrokeRectCall[], dimensions: ReturnType<typeof getFFTOverlayDimensions>) {
+      return strokeRectCalls.find((call: StrokeRectCall) => {
         return call[0] === dimensions.overlayX && 
                call[1] === dimensions.overlayY && 
                call[2] === dimensions.overlayWidth && 
