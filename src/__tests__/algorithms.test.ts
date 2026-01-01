@@ -284,11 +284,11 @@ describe('Algorithm-Specific Tests', () => {
     it('should define valid frequency range constants', () => {
       // The Oscilloscope class defines:
       // MIN_FREQUENCY_HZ = 50
-      // MAX_FREQUENCY_HZ = 1000
+      // MAX_FREQUENCY_HZ = 5000
       
       // These values should be sensible for audio oscilloscope
       const minFreq = 50;
-      const maxFreq = 1000;
+      const maxFreq = 5000;
       
       expect(minFreq).toBeGreaterThan(0);
       expect(maxFreq).toBeGreaterThan(minFreq);

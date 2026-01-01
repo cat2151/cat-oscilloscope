@@ -10,7 +10,7 @@ export class FrequencyEstimator {
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' = 'autocorrelation';
   private estimatedFrequency = 0;
   private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
-  private readonly MAX_FREQUENCY_HZ = 1000; // Maximum detectable frequency (Hz)
+  private readonly MAX_FREQUENCY_HZ = 5000; // Maximum detectable frequency (Hz) - allows viewing harmonics up to 5th for 880Hz
   private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
