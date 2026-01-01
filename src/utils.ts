@@ -10,3 +10,78 @@
 export function dbToAmplitude(db: number): number {
   return Math.pow(10, db / 20);
 }
+
+/**
+ * Trim silence from the beginning and end of an AudioBuffer
+ * @param audioBuffer - The audio buffer to trim
+ * @param threshold - Amplitude threshold for silence detection (default: 0.01, i.e., -40dB)
+ * @returns A new AudioBuffer with silence trimmed, or the original if no trimming is needed
+ */
+export function trimSilence(audioBuffer: AudioBuffer, threshold: number = 0.01): AudioBuffer {
+  const numberOfChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const length = audioBuffer.length;
+  
+  // Find the start index (first non-silent sample across all channels)
+  let startIndex = 0;
+  for (let i = 0; i < length; i++) {
+    let isSilent = true;
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+      const data = audioBuffer.getChannelData(channel);
+      if (Math.abs(data[i]) > threshold) {
+        isSilent = false;
+        break;
+      }
+    }
+    if (!isSilent) {
+      startIndex = i;
+      break;
+    }
+  }
+  
+  // Find the end index (last non-silent sample across all channels)
+  let endIndex = length - 1;
+  for (let i = length - 1; i >= startIndex; i--) {
+    let isSilent = true;
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+      const data = audioBuffer.getChannelData(channel);
+      if (Math.abs(data[i]) > threshold) {
+        isSilent = false;
+        break;
+      }
+    }
+    if (!isSilent) {
+      endIndex = i;
+      break;
+    }
+  }
+  
+  // If the entire buffer is silent or no trimming is needed, return the original
+  if (startIndex === 0 && endIndex === length - 1) {
+    return audioBuffer;
+  }
+  
+  // If the entire buffer is silent (startIndex >= endIndex after searching)
+  if (startIndex > endIndex) {
+    return audioBuffer;
+  }
+  
+  // Create a new buffer with the trimmed length
+  const trimmedLength = endIndex - startIndex + 1;
+  const trimmedBuffer = new AudioBuffer({
+    numberOfChannels: numberOfChannels,
+    length: trimmedLength,
+    sampleRate: sampleRate
+  });
+  
+  // Copy the non-silent samples to the new buffer
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    const sourceData = audioBuffer.getChannelData(channel);
+    const destData = trimmedBuffer.getChannelData(channel);
+    for (let i = 0; i < trimmedLength; i++) {
+      destData[i] = sourceData[startIndex + i];
+    }
+  }
+  
+  return trimmedBuffer;
+}

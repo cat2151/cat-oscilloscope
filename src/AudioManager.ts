@@ -1,3 +1,5 @@
+import { trimSilence } from './utils';
+
 /**
  * AudioManager handles Web Audio API integration
  * Responsible for:
@@ -75,7 +77,10 @@ export class AudioManager {
       this.audioContext = new AudioContext();
       
       // Decode audio data
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      let audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      // Trim silence from the beginning and end to avoid gaps in loop playback
+      audioBuffer = trimSilence(audioBuffer);
       
       // Initialize analyser and data arrays
       this.initializeAnalyser();
