@@ -62,13 +62,14 @@ describe('trimSilence', () => {
 
   it('should trim silence from beginning and end', () => {
     // Create buffer with silence at beginning and end
+    // Peak is 0.5, so threshold will be 0.5 * 10^(-48/20) ≈ 0.5 * 0.00398 ≈ 0.00199
     const data = [
       0, 0, 0, 0, 0,           // 5 samples of silence
       0.5, 0.3, -0.4, 0.2,     // 4 samples of audio
       0, 0, 0                  // 3 samples of silence
     ];
     const buffer = createAudioBuffer(data);
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
 
     expect(trimmed.length).toBe(4);
     const trimmedData = trimmed.getChannelData(0);
@@ -81,7 +82,7 @@ describe('trimSilence', () => {
   it('should return original buffer if no silence to trim', () => {
     const data = [0.5, 0.3, -0.4, 0.2];
     const buffer = createAudioBuffer(data);
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
 
     expect(trimmed.length).toBe(buffer.length);
     expect(trimmed).toBe(buffer); // Should be the same object
@@ -90,28 +91,39 @@ describe('trimSilence', () => {
   it('should handle buffer with only silence', () => {
     const data = [0, 0, 0, 0, 0];
     const buffer = createAudioBuffer(data);
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
 
     // Should return original buffer when entirely silent
     expect(trimmed.length).toBe(buffer.length);
     expect(trimmed).toBe(buffer);
   });
 
-  it('should respect custom threshold', () => {
-    const data = [
-      0.005, 0.005, 0.005,     // Below default threshold (0.01) but above custom (0.001)
-      0.5, 0.3, -0.4,          // Audio
-      0.005, 0.005             // Below default threshold
+  it('should adapt threshold to audio amplitude', () => {
+    // Test with quiet audio (peak = 0.01)
+    // Threshold will be 0.01 * 10^(-48/20) ≈ 0.01 * 0.00398 ≈ 0.0000398
+    const quietData = [
+      0.00005, 0.00005, 0.00005,  // Samples above threshold (relative to peak)
+      0.01, 0.008, -0.009,         // Quiet audio (peak)
+      0.00005, 0.00005             // Samples above threshold (relative to peak)
     ];
-    const buffer = createAudioBuffer(data);
+    const quietBuffer = createAudioBuffer(quietData);
+    const trimmedQuiet = trimSilence(quietBuffer);
     
-    // With default threshold (0.01), should trim the 0.005 samples
-    const trimmedDefault = trimSilence(buffer, 0.01);
-    expect(trimmedDefault.length).toBe(3);
+    // Should NOT trim the 0.00005 samples because they are within -48dB of the peak
+    expect(trimmedQuiet.length).toBe(8);
     
-    // With lower threshold (0.001), should keep the 0.005 samples
-    const trimmedLower = trimSilence(buffer, 0.001);
-    expect(trimmedLower.length).toBe(8);
+    // Test with loud audio (peak = 1.0)
+    // Threshold will be 1.0 * 10^(-48/20) ≈ 0.00398
+    const loudData = [
+      0.001, 0.001, 0.001,     // Quiet samples that should be trimmed
+      1.0, 0.8, -0.9,          // Loud audio (peak)
+      0.001, 0.001             // Quiet samples that should be trimmed
+    ];
+    const loudBuffer = createAudioBuffer(loudData);
+    const trimmedLoud = trimSilence(loudBuffer);
+    
+    // Should trim the 0.001 samples because they are below -48dB of the peak
+    expect(trimmedLoud.length).toBe(3);
   });
 
   it('should trim silence from beginning only', () => {
@@ -120,7 +132,7 @@ describe('trimSilence', () => {
       0.5, 0.3, -0.4           // Audio until the end
     ];
     const buffer = createAudioBuffer(data);
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
 
     expect(trimmed.length).toBe(3);
     const trimmedData = trimmed.getChannelData(0);
@@ -135,7 +147,7 @@ describe('trimSilence', () => {
       0, 0, 0                  // Silence
     ];
     const buffer = createAudioBuffer(data);
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
 
     expect(trimmed.length).toBe(3);
     const trimmedData = trimmed.getChannelData(0);
@@ -179,7 +191,7 @@ describe('trimSilence', () => {
     rightChannel[8] = 0;
     rightChannel[9] = 0;
     
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
     
     expect(trimmed.length).toBe(3);
     expect(trimmed.numberOfChannels).toBe(2);
@@ -218,7 +230,7 @@ describe('trimSilence', () => {
     rightChannel[2] = 0.3;
     rightChannel[4] = 0.2; // Sound extends further
     
-    const trimmed = trimSilence(buffer, 0.01);
+    const trimmed = trimSilence(buffer);
     
     // Should start from index 1 (earliest sound across all channels)
     // and end at index 4 (latest sound across all channels)

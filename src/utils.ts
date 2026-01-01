@@ -13,14 +13,36 @@ export function dbToAmplitude(db: number): number {
 
 /**
  * Trim silence from the beginning and end of an AudioBuffer
+ * The threshold is calculated as -48dB relative to the peak amplitude of the entire buffer
  * @param audioBuffer - The audio buffer to trim
- * @param threshold - Amplitude threshold for silence detection (default: 0.01, i.e., -40dB)
  * @returns A new AudioBuffer with silence trimmed, or the original if no trimming is needed
  */
-export function trimSilence(audioBuffer: AudioBuffer, threshold: number = 0.01): AudioBuffer {
+export function trimSilence(audioBuffer: AudioBuffer): AudioBuffer {
   const numberOfChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
+  
+  // Calculate the peak amplitude across all channels
+  let peakAmplitude = 0;
+  for (let channel = 0; channel < numberOfChannels; channel++) {
+    const data = audioBuffer.getChannelData(channel);
+    for (let i = 0; i < length; i++) {
+      const amplitude = Math.abs(data[i]);
+      if (amplitude > peakAmplitude) {
+        peakAmplitude = amplitude;
+      }
+    }
+  }
+  
+  // If the entire buffer is silent (peak is zero), return the original
+  if (peakAmplitude === 0) {
+    return audioBuffer;
+  }
+  
+  // Calculate threshold as -48dB relative to peak amplitude
+  // -48dB = 20 * log10(threshold / peak)
+  // threshold = peak * 10^(-48/20) = peak * 10^(-2.4)
+  const threshold = peakAmplitude * Math.pow(10, -48 / 20);
   
   // Find the start index (first non-silent sample across all channels)
   let startIndex = length; // Initialize to length to detect if no non-silent sample found
