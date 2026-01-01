@@ -194,6 +194,7 @@ fileInput.addEventListener('change', async () => {
   } catch (error) {
     console.error('Failed to load audio file:', error);
     statusElement.textContent = 'Error: Could not load audio file';
+    startButton.textContent = 'Start';
     startButton.disabled = false;
     loadFileButton.disabled = false;
   }
