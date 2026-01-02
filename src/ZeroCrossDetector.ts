@@ -111,11 +111,13 @@ export class ZeroCrossDetector {
 
   /**
    * Select the best zero-cross candidate based on waveform pattern matching
+   * Compares each candidate against the reference position (previous display value)
    */
   private selectBestCandidate(
     data: Float32Array,
     candidates: number[],
-    cycleLength: number
+    cycleLength: number,
+    referenceIndex: number | null
   ): number {
     if (candidates.length === 0) {
       return -1;
@@ -130,40 +132,42 @@ export class ZeroCrossDetector {
       return candidates[0];
     }
     
-    // Compare each candidate with an adjacent one (next if possible, otherwise previous)
-    // The candidate with highest similarity to its neighbor is considered most stable
+    // If no reference position, return first candidate
+    if (referenceIndex === null || referenceIndex < 0) {
+      return candidates[0];
+    }
+    
+    // Compare each candidate with the reference position (previous display value)
     let bestCandidate = candidates[0];
     let bestScore = -Infinity;
     
     const compareLength = Math.floor(cycleLength * 1.5); // Compare 1.5 cycles
     
-    // Early exit threshold: if we find a nearly perfect match, no need to check further
-    const EXCELLENT_SIMILARITY_THRESHOLD = 0.95;
+    // For debugging: store all similarity scores
+    const similarityScores: number[] = [];
     
     for (let i = 0; i < candidates.length; i++) {
       const currentCandidate = candidates[i];
       
-      // Prefer comparing with the next candidate; for the last one, compare with the previous
-      const neighborIndex = i < candidates.length - 1 ? i + 1 : i - 1;
-      const neighborCandidate = candidates[neighborIndex];
-      
-      // Calculate similarity between this cycle and its neighbor
+      // Calculate similarity between this candidate and the reference position
       const similarity = this.calculateWaveformSimilarity(
         data,
+        referenceIndex,
         currentCandidate,
-        neighborCandidate,
         compareLength
       );
+      
+      similarityScores.push(similarity);
       
       if (similarity > bestScore) {
         bestScore = similarity;
         bestCandidate = currentCandidate;
-        
-        // Early exit if we found an excellent match
-        if (similarity >= EXCELLENT_SIMILARITY_THRESHOLD) {
-          break;
-        }
       }
+    }
+    
+    // Log similarity scores for debugging/validation
+    if (similarityScores.length > 0) {
+      console.log('Similarity scores vs reference:', similarityScores.map(s => s.toFixed(3)).join(', '));
     }
     
     return bestCandidate;
@@ -215,10 +219,12 @@ export class ZeroCrossDetector {
           candidates.unshift(nearExpectedCandidate);
           
           // Select the best candidate based on waveform pattern matching
+          // Compare against the previous display value (expectedIndex)
           const selectedCandidate = this.selectBestCandidate(
             data,
             candidates,
-            estimatedCycleLength
+            estimatedCycleLength,
+            expectedIndex
           );
           
           if (selectedCandidate !== -1) {
@@ -241,10 +247,12 @@ export class ZeroCrossDetector {
         );
         candidates.unshift(zeroCross);
         
+        // For initial detection, no reference position exists
         const selectedCandidate = this.selectBestCandidate(
           data,
           candidates,
-          estimatedCycleLength
+          estimatedCycleLength,
+          null
         );
         
         if (selectedCandidate !== -1) {
