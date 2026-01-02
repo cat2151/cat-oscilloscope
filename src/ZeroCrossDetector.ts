@@ -9,6 +9,7 @@ export class ZeroCrossDetector {
   private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
+  private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
 
   /**
    * Find zero-cross point where signal crosses from negative to positive
@@ -165,12 +166,17 @@ export class ZeroCrossDetector {
       }
     }
     
-    // Log similarity scores for debugging/validation
-    if (similarityScores.length > 0) {
-      console.log('Similarity scores vs reference:', similarityScores.map(s => s.toFixed(3)).join(', '));
-    }
+    // Store similarity scores for UI display
+    this.lastSimilarityScores = similarityScores;
     
     return bestCandidate;
+  }
+  
+  /**
+   * Get the last computed similarity scores for UI display
+   */
+  getSimilarityScores(): number[] {
+    return this.lastSimilarityScores;
   }
 
   /**
