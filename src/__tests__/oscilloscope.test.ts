@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Oscilloscope } from '../Oscilloscope';
+import { dbToAmplitude } from '../utils';
 
 // Mock Web Audio API classes that don't exist in happy-dom
 class MockAudioContext {
@@ -207,7 +208,7 @@ describe('Oscilloscope Class', () => {
     
     it('should have default noise gate threshold of dbToAmplitude(-48)', () => {
       const oscilloscope = new Oscilloscope(canvas);
-      expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(0.003981071705534972, 10);
+      expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-48), 10);
     });
     
     it('should allow setting noise gate threshold', () => {
