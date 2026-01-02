@@ -44,8 +44,9 @@ describe('dbToAmplitude', () => {
     expect(dbToAmplitude(-40)).toBeCloseTo(0.01, 5);
   });
 
-  it('should convert -48 dB to amplitude ~0.00398', () => {
-    expect(dbToAmplitude(-48)).toBeCloseTo(0.00398, 5);
+  it('should convert -48 dB to amplitude 0.003981...', () => {
+    const result = dbToAmplitude(-48);
+    expect(result).toBeCloseTo(0.003981071705534972, 10);
   });
 });
 

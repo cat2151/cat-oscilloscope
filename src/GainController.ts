@@ -1,3 +1,5 @@
+import { dbToAmplitude } from './utils';
+
 /**
  * GainController handles automatic gain control and noise gate
  * Responsible for:
@@ -20,7 +22,7 @@ export class GainController {
   private readonly CLIPPING_SAFETY_FACTOR = 0.95; // Safety margin for immediate gain reduction when clipping (95% of max)
   
   private noiseGateEnabled = true;
-  private noiseGateThreshold = 0.00398; // Default threshold (-48dB, approximately 0.4% of max amplitude)
+  private noiseGateThreshold = dbToAmplitude(-48); // Default threshold (-48dB)
 
   /**
    * Calculate optimal gain based on waveform peak
