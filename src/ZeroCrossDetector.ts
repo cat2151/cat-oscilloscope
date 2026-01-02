@@ -172,7 +172,7 @@ export class ZeroCrossDetector {
         const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
         
         // Search for zero-crossing nearest to expected position
-        let bestZeroCross = -1;
+        let nearExpectedCandidate = -1;
         let bestDistance = Infinity;
         
         // Ensure we don't access out of bounds when checking data[i + 1]
@@ -181,22 +181,22 @@ export class ZeroCrossDetector {
             const distance = Math.abs(i - expectedIndex);
             if (distance < bestDistance) {
               bestDistance = distance;
-              bestZeroCross = i;
+              nearExpectedCandidate = i;
             }
           }
         }
         
         // If we found a zero-crossing near expected position
-        if (bestZeroCross !== -1) {
+        if (nearExpectedCandidate !== -1) {
           // Find candidates up to 4 cycles ahead
           const candidates = this.findZeroCrossCandidates(
             data,
-            bestZeroCross,
+            nearExpectedCandidate,
             this.MAX_CANDIDATE_CYCLES
           );
           
           // Include the first candidate
-          candidates.unshift(bestZeroCross);
+          candidates.unshift(nearExpectedCandidate);
           
           // Select the best candidate based on waveform pattern matching
           const selectedCandidate = this.selectBestCandidate(
