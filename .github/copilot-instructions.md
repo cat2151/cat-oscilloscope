@@ -57,3 +57,7 @@ npm test         # テスト実行 (Vitest)
 - `stop()`で全リソース（MediaStream, AudioContext）を確実に解放すること
 - `requestAnimationFrame`ループは`isRunning`フラグで制御
 - オーディオファイル読み込み時は`trimSilence()`で前後の無音を除去してループ再生の隙間を防ぐ
+
+# プルリクエストとレビュー
+- プルリクエストは日本語で記述してください
+- レビューは日本語で記述してください
