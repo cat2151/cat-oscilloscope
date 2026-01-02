@@ -8,6 +8,8 @@
 export class ZeroCrossDetector {
   private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
+  private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
+  private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
 
   /**
    * Find zero-cross point where signal crosses from negative to positive
@@ -35,6 +37,149 @@ export class ZeroCrossDetector {
   }
 
   /**
+   * Calculate waveform similarity score between two regions
+   * Returns a correlation coefficient between -1 and 1 (higher is more similar)
+   */
+  private calculateWaveformSimilarity(
+    data: Float32Array,
+    index1: number,
+    index2: number,
+    compareLength: number
+  ): number {
+    // Ensure we don't go out of bounds
+    const maxLength = Math.min(
+      compareLength,
+      data.length - index1,
+      data.length - index2
+    );
+    
+    if (maxLength <= 0) {
+      return -1;
+    }
+
+    // Calculate correlation coefficient
+    let sum1 = 0;
+    let sum2 = 0;
+    let sum1Sq = 0;
+    let sum2Sq = 0;
+    let sumProduct = 0;
+    
+    for (let i = 0; i < maxLength; i++) {
+      const val1 = data[index1 + i];
+      const val2 = data[index2 + i];
+      sum1 += val1;
+      sum2 += val2;
+      sum1Sq += val1 * val1;
+      sum2Sq += val2 * val2;
+      sumProduct += val1 * val2;
+    }
+    
+    // Pearson correlation coefficient
+    const numerator = maxLength * sumProduct - sum1 * sum2;
+    const denominator = Math.sqrt(
+      (maxLength * sum1Sq - sum1 * sum1) * (maxLength * sum2Sq - sum2 * sum2)
+    );
+    
+    if (denominator === 0) {
+      return 0;
+    }
+    
+    return numerator / denominator;
+  }
+
+  /**
+   * Find all zero-cross candidates after startIndex, up to maxCycles ahead
+   */
+  private findZeroCrossCandidates(
+    data: Float32Array,
+    startIndex: number,
+    maxCycles: number
+  ): number[] {
+    const candidates: number[] = [];
+    let currentIndex = startIndex;
+    
+    for (let cycle = 0; cycle < maxCycles; cycle++) {
+      const nextZeroCross = this.findNextZeroCross(data, currentIndex);
+      if (nextZeroCross === -1) {
+        break;
+      }
+      candidates.push(nextZeroCross);
+      currentIndex = nextZeroCross;
+    }
+    
+    return candidates;
+  }
+
+  /**
+   * Select the best zero-cross candidate based on waveform pattern matching
+   * Compares each candidate against the reference position (previous display value)
+   */
+  private selectBestCandidate(
+    data: Float32Array,
+    candidates: number[],
+    cycleLength: number,
+    referenceIndex: number | null
+  ): number {
+    if (candidates.length === 0) {
+      return -1;
+    }
+    
+    if (candidates.length === 1) {
+      return candidates[0];
+    }
+    
+    // Validate cycleLength to avoid division by zero or invalid comparison lengths
+    if (cycleLength <= 0) {
+      return candidates[0];
+    }
+    
+    // If no reference position, return first candidate
+    if (referenceIndex === null || referenceIndex < 0) {
+      return candidates[0];
+    }
+    
+    // Compare each candidate with the reference position (previous display value)
+    let bestCandidate = candidates[0];
+    let bestScore = -Infinity;
+    
+    const compareLength = Math.floor(cycleLength * 1.5); // Compare 1.5 cycles
+    
+    // For debugging: store all similarity scores
+    const similarityScores: number[] = [];
+    
+    for (let i = 0; i < candidates.length; i++) {
+      const currentCandidate = candidates[i];
+      
+      // Calculate similarity between this candidate and the reference position
+      const similarity = this.calculateWaveformSimilarity(
+        data,
+        referenceIndex,
+        currentCandidate,
+        compareLength
+      );
+      
+      similarityScores.push(similarity);
+      
+      if (similarity > bestScore) {
+        bestScore = similarity;
+        bestCandidate = currentCandidate;
+      }
+    }
+    
+    // Store similarity scores for UI display
+    this.lastSimilarityScores = similarityScores;
+    
+    return bestCandidate;
+  }
+  
+  /**
+   * Get the last computed similarity scores for UI display
+   */
+  getSimilarityScores(): number[] {
+    return this.lastSimilarityScores;
+  }
+
+  /**
    * Find a stable zero-crossing position with temporal continuity
    * This prevents rapid switching between different waveform patterns
    */
@@ -53,7 +198,7 @@ export class ZeroCrossDetector {
         const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
         
         // Search for zero-crossing nearest to expected position
-        let bestZeroCross = -1;
+        let nearExpectedCandidate = -1;
         let bestDistance = Infinity;
         
         // Ensure we don't access out of bounds when checking data[i + 1]
@@ -62,15 +207,36 @@ export class ZeroCrossDetector {
             const distance = Math.abs(i - expectedIndex);
             if (distance < bestDistance) {
               bestDistance = distance;
-              bestZeroCross = i;
+              nearExpectedCandidate = i;
             }
           }
         }
         
-        // If we found a zero-crossing near expected position, use it
-        if (bestZeroCross !== -1) {
-          this.previousZeroCrossIndex = bestZeroCross;
-          return bestZeroCross;
+        // If we found a zero-crossing near expected position
+        if (nearExpectedCandidate !== -1) {
+          // Find candidates up to 4 cycles ahead
+          const candidates = this.findZeroCrossCandidates(
+            data,
+            nearExpectedCandidate,
+            this.MAX_CANDIDATE_CYCLES
+          );
+          
+          // Include the first candidate
+          candidates.unshift(nearExpectedCandidate);
+          
+          // Select the best candidate based on waveform pattern matching
+          // Compare against the previous display value (expectedIndex)
+          const selectedCandidate = this.selectBestCandidate(
+            data,
+            candidates,
+            estimatedCycleLength,
+            expectedIndex
+          );
+          
+          if (selectedCandidate !== -1) {
+            this.previousZeroCrossIndex = selectedCandidate;
+            return selectedCandidate;
+          }
         }
       }
     }
@@ -78,6 +244,29 @@ export class ZeroCrossDetector {
     // No previous position or search failed - find first zero-crossing
     const zeroCross = this.findZeroCross(data, 0);
     if (zeroCross !== -1) {
+      // Also apply multi-cycle search for initial detection
+      if (estimatedCycleLength > 0) {
+        const candidates = this.findZeroCrossCandidates(
+          data,
+          zeroCross,
+          this.MAX_CANDIDATE_CYCLES
+        );
+        candidates.unshift(zeroCross);
+        
+        // For initial detection, no reference position exists
+        const selectedCandidate = this.selectBestCandidate(
+          data,
+          candidates,
+          estimatedCycleLength,
+          null
+        );
+        
+        if (selectedCandidate !== -1) {
+          this.previousZeroCrossIndex = selectedCandidate;
+          return selectedCandidate;
+        }
+      }
+      
       this.previousZeroCrossIndex = zeroCross;
     }
     return zeroCross;

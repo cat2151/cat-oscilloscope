@@ -190,4 +190,8 @@ export class Oscilloscope {
   getCurrentGain(): number {
     return this.gainController.getCurrentGain();
   }
+  
+  getSimilarityScores(): number[] {
+    return this.zeroCrossDetector.getSimilarityScores();
+  }
 }
