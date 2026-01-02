@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Oscilloscope } from '../Oscilloscope';
+import { ZeroCrossDetector } from '../ZeroCrossDetector';
 
 // Mock Web Audio API
 class MockAudioContext {
@@ -201,9 +202,19 @@ describe('Algorithm-Specific Tests', () => {
       // Generate a clean sine wave - all cycles should be similar
       const signal = generateSineWave(frequency, sampleRate, length, 0.8);
       
-      // Should have multiple zero-crossings to choose from
-      const zeroCrossings = countZeroCrossings(signal);
-      expect(zeroCrossings).toBeGreaterThan(3); // Need at least 4 for the algorithm
+      // Create a ZeroCrossDetector instance and test the new algorithm
+      const detector = new ZeroCrossDetector();
+      
+      const cycleLength = Math.floor(sampleRate / frequency); // ~109 samples
+      const stableZeroCross = detector.findStableZeroCross(signal, cycleLength);
+      
+      // Should find a valid zero-crossing
+      expect(stableZeroCross).toBeGreaterThanOrEqual(0);
+      expect(stableZeroCross).toBeLessThan(signal.length);
+      
+      // Verify it's actually a zero-crossing point
+      expect(signal[stableZeroCross]).toBeLessThanOrEqual(0);
+      expect(signal[stableZeroCross + 1]).toBeGreaterThan(0);
     });
 
     it('should handle waveform with varying patterns', () => {
@@ -211,7 +222,7 @@ describe('Algorithm-Specific Tests', () => {
       const frequency = 440;
       const length = 4096;
       
-      // Generate a wave with slight amplitude variation (simulating real audio)
+      // Generate a wave with amplitude variation (simulating real audio)
       const signal = new Float32Array(length);
       for (let i = 0; i < length; i++) {
         const baseWave = Math.sin(2 * Math.PI * frequency * i / sampleRate);
@@ -219,8 +230,19 @@ describe('Algorithm-Specific Tests', () => {
         signal[i] = baseWave * envelope;
       }
       
-      const zeroCrossings = countZeroCrossings(signal);
-      expect(zeroCrossings).toBeGreaterThan(0);
+      // Test that the algorithm can handle amplitude-modulated signals
+      const detector = new ZeroCrossDetector();
+      const cycleLength = Math.floor(sampleRate / frequency);
+      const stableZeroCross = detector.findStableZeroCross(signal, cycleLength);
+      
+      // Should find a valid zero-crossing even with amplitude modulation
+      expect(stableZeroCross).toBeGreaterThanOrEqual(0);
+      expect(stableZeroCross).toBeLessThan(signal.length);
+      
+      // Call it again to test temporal stability
+      const secondCall = detector.findStableZeroCross(signal, cycleLength);
+      // The second call should return a zero-crossing (stability feature)
+      expect(secondCall).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle complex waveform with harmonics', () => {
@@ -238,9 +260,20 @@ describe('Algorithm-Specific Tests', () => {
           0.15 * Math.sin(2 * Math.PI * fundamental * 3 * t);    // 3rd harmonic
       }
       
-      const zeroCrossings = countZeroCrossings(signal);
-      // Complex waveforms should still have detectable zero-crossings
-      expect(zeroCrossings).toBeGreaterThan(0);
+      // Test that the multi-cycle selection algorithm works with complex timbres
+      const detector = new ZeroCrossDetector();
+      const cycleLength = Math.floor(sampleRate / fundamental);
+      const stableZeroCross = detector.findStableZeroCross(signal, cycleLength);
+      
+      // Should find a valid zero-crossing for complex waveforms
+      expect(stableZeroCross).toBeGreaterThanOrEqual(0);
+      expect(stableZeroCross).toBeLessThan(signal.length);
+      
+      // Verify zero-crossing detection still works
+      if (stableZeroCross >= 0 && stableZeroCross < signal.length - 1) {
+        expect(signal[stableZeroCross]).toBeLessThanOrEqual(0);
+        expect(signal[stableZeroCross + 1]).toBeGreaterThan(0);
+      }
     });
   });
 

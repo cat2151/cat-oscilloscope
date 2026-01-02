@@ -87,7 +87,7 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Find all zero-cross candidates up to maxCycles ahead
+   * Find all zero-cross candidates after startIndex, up to maxCycles ahead
    */
   private findZeroCrossCandidates(
     data: Float32Array,
@@ -125,28 +125,44 @@ export class ZeroCrossDetector {
       return candidates[0];
     }
     
-    // Compare each candidate with the next one
-    // The candidate with highest similarity to its successor is most stable
+    // Validate cycleLength to avoid division by zero or invalid comparison lengths
+    if (cycleLength <= 0) {
+      return candidates[0];
+    }
+    
+    // Compare each candidate with an adjacent one (next if possible, otherwise previous)
+    // The candidate with highest similarity to its neighbor is considered most stable
     let bestCandidate = candidates[0];
     let bestScore = -Infinity;
     
     const compareLength = Math.floor(cycleLength * 1.5); // Compare 1.5 cycles
     
-    for (let i = 0; i < candidates.length - 1; i++) {
+    // Early exit threshold: if we find a nearly perfect match, no need to check further
+    const EXCELLENT_SIMILARITY_THRESHOLD = 0.95;
+    
+    for (let i = 0; i < candidates.length; i++) {
       const currentCandidate = candidates[i];
-      const nextCandidate = candidates[i + 1];
       
-      // Calculate similarity between this cycle and the next
+      // Prefer comparing with the next candidate; for the last one, compare with the previous
+      const neighborIndex = i < candidates.length - 1 ? i + 1 : i - 1;
+      const neighborCandidate = candidates[neighborIndex];
+      
+      // Calculate similarity between this cycle and its neighbor
       const similarity = this.calculateWaveformSimilarity(
         data,
         currentCandidate,
-        nextCandidate,
+        neighborCandidate,
         compareLength
       );
       
       if (similarity > bestScore) {
         bestScore = similarity;
         bestCandidate = currentCandidate;
+        
+        // Early exit if we found an excellent match
+        if (similarity >= EXCELLENT_SIMILARITY_THRESHOLD) {
+          break;
+        }
       }
     }
     
