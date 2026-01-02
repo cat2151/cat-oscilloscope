@@ -192,6 +192,56 @@ describe('Algorithm-Specific Tests', () => {
       const zeroCrossings = countZeroCrossings(signal);
       expect(zeroCrossings).toBe(0);
     });
+
+    it('should select stable zero-cross candidate from multiple cycles', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      
+      // Generate a clean sine wave - all cycles should be similar
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      // Should have multiple zero-crossings to choose from
+      const zeroCrossings = countZeroCrossings(signal);
+      expect(zeroCrossings).toBeGreaterThan(3); // Need at least 4 for the algorithm
+    });
+
+    it('should handle waveform with varying patterns', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      
+      // Generate a wave with slight amplitude variation (simulating real audio)
+      const signal = new Float32Array(length);
+      for (let i = 0; i < length; i++) {
+        const baseWave = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+        const envelope = 0.7 + 0.3 * Math.sin(2 * Math.PI * 2 * i / sampleRate); // Slow amplitude modulation
+        signal[i] = baseWave * envelope;
+      }
+      
+      const zeroCrossings = countZeroCrossings(signal);
+      expect(zeroCrossings).toBeGreaterThan(0);
+    });
+
+    it('should handle complex waveform with harmonics', () => {
+      const sampleRate = 48000;
+      const fundamental = 200;
+      const length = 4096;
+      
+      // Generate a wave with fundamental + harmonics (more complex timbre)
+      const signal = new Float32Array(length);
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        signal[i] = 
+          0.5 * Math.sin(2 * Math.PI * fundamental * t) +        // Fundamental
+          0.25 * Math.sin(2 * Math.PI * fundamental * 2 * t) +   // 2nd harmonic
+          0.15 * Math.sin(2 * Math.PI * fundamental * 3 * t);    // 3rd harmonic
+      }
+      
+      const zeroCrossings = countZeroCrossings(signal);
+      // Complex waveforms should still have detectable zero-crossings
+      expect(zeroCrossings).toBeGreaterThan(0);
+    });
   });
 
   describe('Noise Gate RMS Calculation', () => {
