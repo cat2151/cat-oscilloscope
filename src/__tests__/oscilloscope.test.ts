@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Oscilloscope } from '../Oscilloscope';
+import { dbToAmplitude } from '../utils';
 
 // Mock Web Audio API classes that don't exist in happy-dom
 class MockAudioContext {
@@ -205,9 +206,9 @@ describe('Oscilloscope Class', () => {
       expect(oscilloscope.getNoiseGateEnabled()).toBe(true);
     });
     
-    it('should have default noise gate threshold of 0.01', () => {
+    it('should have default noise gate threshold of dbToAmplitude(-48)', () => {
       const oscilloscope = new Oscilloscope(canvas);
-      expect(oscilloscope.getNoiseGateThreshold()).toBe(0.01);
+      expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-48), 10);
     });
     
     it('should allow setting noise gate threshold', () => {
@@ -343,7 +344,7 @@ describe('Oscilloscope Class', () => {
     }
     
     it('should suppress FFT overlay when noise gate is active and signal is below threshold', async () => {
-      // Create a mock that returns silent data (amplitude 0.001, below default threshold of 0.01)
+      // Create a mock that returns silent data (amplitude 0.001, below default threshold of 0.00398)
       const SilentMockAudioContext = createSilentMockAudioContext(i => Math.sin(i / 10) * 0.001);
       
       // Temporarily replace the global AudioContext with our silent mock
@@ -390,7 +391,7 @@ describe('Oscilloscope Class', () => {
     });
     
     it('should show FFT overlay when noise gate is active but signal is above threshold', async () => {
-      // Use the default mock which has amplitude 0.5 (above threshold of 0.01)
+      // Use the default mock which has amplitude 0.5 (above threshold of 0.00398)
       const oscilloscope = new Oscilloscope(canvas);
       
       // Enable both noise gate and FFT display
