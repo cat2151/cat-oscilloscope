@@ -204,6 +204,99 @@ export class WaveformRenderer {
     this.ctx.restore();
   }
 
+  /**
+   * Draw similarity scores as horizontal bar graph
+   * Display area: 50px height, with ruler markers at -1, 0, +1
+   * Each bar: 10px height, sorted by similarity score (descending)
+   */
+  drawSimilarityBarGraph(similarityScores: number[]): void {
+    if (similarityScores.length === 0) {
+      return;
+    }
+
+    // Bar graph dimensions (top-right corner)
+    const graphHeight = 50;
+    const graphWidth = 200;
+    const graphX = this.canvas.width - graphWidth - 10; // 10px from right edge
+    const graphY = 10; // 10px from top edge
+    const barHeight = 10;
+    const maxBars = 4;
+
+    // Sort scores in descending order
+    const sortedScores = [...similarityScores].sort((a, b) => b - a);
+    const displayScores = sortedScores.slice(0, maxBars);
+
+    this.ctx.save();
+
+    // Draw semi-transparent background
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+
+    // Draw border
+    this.ctx.strokeStyle = '#00ffff';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(graphX, graphY, graphWidth, graphHeight);
+
+    // Calculate ruler positions (-1, 0, +1)
+    // Similarity ranges from -1 to +1, so we map this to graphWidth
+    const zeroX = graphX + graphWidth / 2; // 0 is at center
+    const minusOneX = graphX; // -1 is at left edge
+    const plusOneX = graphX + graphWidth; // +1 is at right edge
+
+    // Draw ruler lines (vertical lines at -1, 0, +1)
+    this.ctx.strokeStyle = '#555555';
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    // -1 line
+    this.ctx.moveTo(minusOneX, graphY);
+    this.ctx.lineTo(minusOneX, graphY + graphHeight);
+    // 0 line
+    this.ctx.moveTo(zeroX, graphY);
+    this.ctx.lineTo(zeroX, graphY + graphHeight);
+    // +1 line
+    this.ctx.moveTo(plusOneX - 1, graphY);
+    this.ctx.lineTo(plusOneX - 1, graphY + graphHeight);
+    this.ctx.stroke();
+
+    // Draw ruler labels
+    this.ctx.fillStyle = '#888888';
+    this.ctx.font = '10px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('-1', minusOneX + 10, graphY + graphHeight + 10);
+    this.ctx.fillText('0', zeroX, graphY + graphHeight + 10);
+    this.ctx.fillText('+1', plusOneX - 10, graphY + graphHeight + 10);
+
+    // Draw bars
+    displayScores.forEach((score, index) => {
+      const barY = graphY + index * barHeight;
+      
+      // Map score from [-1, +1] to [0, graphWidth]
+      const barWidth = ((score + 1) / 2) * graphWidth;
+      
+      // Color based on score value (green for positive, red for negative)
+      if (score >= 0) {
+        this.ctx.fillStyle = `rgba(0, 255, 0, ${0.5 + score * 0.5})`;
+      } else {
+        this.ctx.fillStyle = `rgba(255, 0, 0, ${0.5 + Math.abs(score) * 0.5})`;
+      }
+      
+      // Draw bar from center (0 position)
+      if (score >= 0) {
+        this.ctx.fillRect(zeroX, barY, barWidth - graphWidth / 2, barHeight);
+      } else {
+        this.ctx.fillRect(zeroX - (graphWidth / 2 - barWidth), barY, graphWidth / 2 - barWidth, barHeight);
+      }
+      
+      // Draw score label
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.font = 'bold 9px Arial';
+      this.ctx.textAlign = 'left';
+      this.ctx.fillText(score.toFixed(3), graphX + 5, barY + barHeight - 2);
+    });
+
+    this.ctx.restore();
+  }
+
   // Getters and setters
   setFFTDisplay(enabled: boolean): void {
     this.fftDisplayEnabled = enabled;
