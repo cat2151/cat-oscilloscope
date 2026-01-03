@@ -1,4 +1,4 @@
-Last updated: 2026-01-03
+Last updated: 2026-01-04
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -208,6 +208,7 @@ Last updated: 2026-01-03
 - generated-docs/project-overview-generated-prompt.md
 - index.html
 - issue-notes/57.md
+- issue-notes/59.md
 - package-lock.json
 - package.json
 - src/AudioManager.ts
@@ -226,30 +227,6 @@ Last updated: 2026-01-03
 - vite.config.ts
 
 ## 現在のオープンIssues
-## [Issue #58](../issue-notes/58.md): Stabilize waveform display via multi-cycle zero-cross candidate selection
-## ゼロクロス検出の改善：4周期先まで探索して最適な候補を選択
-
-### 問題
-音色によっては波形が2～4つのパターンを激しく繰り返す問題があり、表示が不安定になっていました。
-
-### 解決策
-従来は最も近いゼロクロス候補を単純に選択していましたが、新しい実装では：
-1. 最初の候補から4周期先までのゼロクロス候補を収集
-2. 各候補について次の周期との波形パターンの類似度を計算（Pearson相関係数を使用）
-3. 最も類似度が高い（=最も安定した）候補を選択
-
-これにより、複雑な音色でもより安定した波形表示が実現されます。
-
-### 実装詳細
-
-#### ZeroCrossDetect...
-ラベル: 
---- issue-notes/58.md の内容 ---
-
-```markdown
-
-```
-
 ## [Issue #57](../issue-notes/57.md): ライブラリ化して、wavlpfから楽にライブラリとして呼び出せるようにする
 [issue-notes/57.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/57.md)
 
@@ -262,15 +239,6 @@ Last updated: 2026-01-03
 [issues #57](https://github.com/cat2151/cat-oscilloscope/issues/57)
 
 
-
-```
-
-## [Issue #52](../issue-notes/52.md): まだ音色によっては波形が2つ～4つのパターンを激しく繰り返すことがある。候補の探索時、まず見つけた候補に対し、その4周期先までを探索範囲とし、その中から最もマッチするものを候補とする、という方法を試す
-
-ラベル: 
---- issue-notes/52.md の内容 ---
-
-```markdown
 
 ```
 
@@ -311,181 +279,6 @@ Last updated: 2026-01-03
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/2.md
-```md
-{% raw %}
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
-
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
-まずplanしてください
-```
-
-# 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 共通ワークフロー
-
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
-
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
-
-on:
-  workflow_call:
-
-jobs:
-  check-commits:
-    runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 50 # 過去のコミットを取得
-
-      - name: Check for user commits in last 24 hours
-        id: check
-        run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
-
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
-        run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
-
-      - name: Install CodeQL CLI
-        run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
-
-      - name: Install CodeQL query packs
-        run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
-```
-
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
-
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
-- test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/25.md
 ```md
 {% raw %}
@@ -799,29 +592,32 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-3cd0c9b Auto-translate README.ja.md to README.md [auto]
-301c1fa Update README.ja.md with frequency estimation notes
-e8951d7 Add issue note for #57 [auto]
-c6ab6f1 Merge pull request #56 from cat2151/copilot/set-noise-gate-default-to-minus-48db
-7693470 PRとレビューを日本語化できるか試し
-7a711fa Use dbToAmplitude(-48) directly in tests to avoid magic numbers
-5497b8a Use dbToAmplitude(-48) for precise calculation and update tests
-2a58faf 現状を反映
-433baa1 Jekyll設定
-ad85500 Auto-translate README.ja.md to README.md [auto]
+eee08cc Merge pull request #60 from cat2151/copilot/improve-similarity-display
+375f259 Fix ruler labels positioning and add comprehensive tests for similarity bar graph
+3deab82 Fix bar width calculation to correctly extend from center
+0bd2e4d Add similarity score bar graph visualization in top-right corner
+c6646b3 Initial plan
+9261acf Add issue note for #59 [auto]
+376752b Merge pull request #58 from cat2151/copilot/improve-waveform-pattern-matching
+58dcb67 Add UI display for similarity scores vs reference
+2f3437d Improve candidate selection: compare vs previous display value, remove early exit, add debug logging
+d96ee23 Update project summaries (overview & development status) [auto]
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
 README.ja.md
 README.md
-_config.yml
-index.html
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 issue-notes/57.md
-src/GainController.ts
-src/__tests__/dom-integration.test.ts
+issue-notes/59.md
+src/Oscilloscope.ts
+src/WaveformRenderer.ts
+src/ZeroCrossDetector.ts
+src/__tests__/algorithms.test.ts
 src/__tests__/oscilloscope.test.ts
-src/__tests__/utils.test.ts
 
 
 ---
-Generated at: 2026-01-03 07:08:39 JST
+Generated at: 2026-01-04 07:08:13 JST

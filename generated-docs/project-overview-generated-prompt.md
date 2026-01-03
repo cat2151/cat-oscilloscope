@@ -1,4 +1,4 @@
-Last updated: 2026-01-03
+Last updated: 2026-01-04
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -222,6 +222,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 🌐 index.html
 📁 issue-notes/
   📖 57.md
+  📖 59.md
 📊 package-lock.json
 📊 package.json
 📁 src/
@@ -258,28 +259,28 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (194行, 6279バイト)
+**src/Oscilloscope.ts** (202行, 6555バイト)
   - 関数: constructor, catch, if, start, startFromFile, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
-**src/WaveformRenderer.ts** (216行, 6530バイト)
+**src/WaveformRenderer.ts** (314行, 10046バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
-**src/ZeroCrossDetector.ts** (164行, 5779バイト)
+**src/ZeroCrossDetector.ts** (353行, 11117バイト)
   - 関数: for, if
   - インポート: なし
 
-**src/__tests__/algorithms.test.ts** (379行, 12029バイト)
+**src/__tests__/algorithms.test.ts** (462行, 15725バイト)
   - 関数: generateSineWave, generateNoise, generateSquareWave, countZeroCrossings, createMediaStreamSource, createAnalyser, close, getTracks, for, if
-  - インポート: vitest, ../Oscilloscope
+  - インポート: vitest, ../Oscilloscope, ../ZeroCrossDetector
 
 **src/__tests__/dom-integration.test.ts** (281行, 8859バイト)
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/oscilloscope.test.ts** (457行, 15393バイト)
-  - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if
+**src/__tests__/oscilloscope.test.ts** (605行, 21336バイト)
+  - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if, defineProperty, function
   - インポート: vitest, ../Oscilloscope, ../utils
 
 **src/__tests__/utils.test.ts** (245行, 8143バイト)
@@ -319,6 +320,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
+      - defineProperty ()
+      - function ()
   - sliderValueToThreshold (src/main.ts)
     - formatThresholdDisplay ()
       - startFrequencyDisplay ()
@@ -335,6 +338,7 @@ README.md
 TESTING.md
 index.html
 issue-notes/57.md
+issue-notes/59.md
 package-lock.json
 package.json
 src/AudioManager.ts
@@ -362,4 +366,4 @@ vite.config.ts
 
 
 ---
-Generated at: 2026-01-03 07:08:39 JST
+Generated at: 2026-01-04 07:08:12 JST
