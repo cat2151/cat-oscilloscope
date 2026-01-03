@@ -134,6 +134,10 @@ export class Oscilloscope {
       );
     }
 
+    // Draw similarity scores bar graph
+    const similarityScores = this.zeroCrossDetector.getSimilarityScores();
+    this.renderer.drawSimilarityBarGraph(similarityScores);
+
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
   }

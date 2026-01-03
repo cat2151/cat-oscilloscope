@@ -15,7 +15,6 @@ const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
-const similarityScores = document.getElementById('similarityScores') as HTMLSpanElement;
 
 // Validate all required DOM elements
 const requiredElements = [
@@ -32,7 +31,6 @@ const requiredElements = [
   { element: frequencyMethod, name: 'frequencyMethod' },
   { element: frequencyValue, name: 'frequencyValue' },
   { element: gainValue, name: 'gainValue' },
-  { element: similarityScores, name: 'similarityScores' },
 ];
 
 for (const { element, name } of requiredElements) {
@@ -116,14 +114,6 @@ function startFrequencyDisplay(): void {
       // Update gain display
       const gain = oscilloscope.getCurrentGain();
       gainValue.textContent = `${gain.toFixed(2)}x`;
-      
-      // Update similarity scores display
-      const scores = oscilloscope.getSimilarityScores();
-      if (scores.length > 0) {
-        similarityScores.textContent = scores.map(s => s.toFixed(2)).join(' ');
-      } else {
-        similarityScores.textContent = '---';
-      }
     }, 100); // Update every 100ms (10 Hz)
   }
 }
@@ -134,7 +124,6 @@ function stopFrequencyDisplay(): void {
     frequencyUpdateInterval = null;
     frequencyValue.textContent = '--- Hz';
     gainValue.textContent = '---x';
-    similarityScores.textContent = '---';
   }
 }
 
