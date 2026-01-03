@@ -258,13 +258,15 @@ export class WaveformRenderer {
     this.ctx.lineTo(plusOneX - 1, graphY + graphHeight);
     this.ctx.stroke();
 
-    // Draw ruler labels
+    // Draw ruler labels inside the graph area (near the bottom edge)
     this.ctx.fillStyle = '#888888';
     this.ctx.font = '10px Arial';
     this.ctx.textAlign = 'center';
-    this.ctx.fillText('-1', minusOneX + 10, graphY + graphHeight + 10);
-    this.ctx.fillText('0', zeroX, graphY + graphHeight + 10);
-    this.ctx.fillText('+1', plusOneX - 10, graphY + graphHeight + 10);
+    this.ctx.textBaseline = 'bottom';
+    const rulerLabelY = graphY + graphHeight - 2;
+    this.ctx.fillText('-1', minusOneX + 10, rulerLabelY);
+    this.ctx.fillText('0', zeroX, rulerLabelY);
+    this.ctx.fillText('+1', plusOneX - 10, rulerLabelY);
 
     // Draw bars
     displayScores.forEach((score, index) => {
