@@ -270,8 +270,9 @@ export class WaveformRenderer {
     displayScores.forEach((score, index) => {
       const barY = graphY + index * barHeight;
       
-      // Map score from [-1, +1] to [0, graphWidth]
-      const barWidth = ((score + 1) / 2) * graphWidth;
+      // Calculate bar width as distance from center (0)
+      // Score ranges from -1 to +1, so map absolute value to half of graphWidth
+      const barWidth = Math.abs(score) * (graphWidth / 2);
       
       // Color based on score value (green for positive, red for negative)
       if (score >= 0) {
@@ -282,9 +283,11 @@ export class WaveformRenderer {
       
       // Draw bar from center (0 position)
       if (score >= 0) {
-        this.ctx.fillRect(zeroX, barY, barWidth - graphWidth / 2, barHeight);
+        // Positive score: bar extends to the right from center
+        this.ctx.fillRect(zeroX, barY, barWidth, barHeight);
       } else {
-        this.ctx.fillRect(zeroX - (graphWidth / 2 - barWidth), barY, graphWidth / 2 - barWidth, barHeight);
+        // Negative score: bar extends to the left from center
+        this.ctx.fillRect(zeroX - barWidth, barY, barWidth, barHeight);
       }
       
       // Draw score label
