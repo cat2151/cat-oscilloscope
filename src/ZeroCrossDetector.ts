@@ -443,6 +443,20 @@ export class ZeroCrossDetector {
   /**
    * Calculate the optimal display range for the waveform
    * Uses either zero-cross or peak detection based on usePeakMode setting
+   * 
+   * @param data Waveform data
+   * @param estimatedFrequency Estimated frequency in Hz
+   * @param sampleRate Sample rate in Hz
+   * @returns Display range information, or null if no alignment point found
+   * 
+   * @remarks
+   * **Important**: The returned property names `firstZeroCross` and `secondZeroCross` are maintained
+   * for API compatibility, but they represent different alignment points depending on the mode:
+   * - When `usePeakMode` is `false`: Contains actual zero-crossing positions (negative to positive)
+   * - When `usePeakMode` is `true`: Contains peak positions (maximum absolute amplitude points)
+   * 
+   * These properties should be interpreted as "first alignment point" and "second alignment point"
+   * rather than strictly as zero-crossings.
    */
   calculateDisplayRange(data: Float32Array, estimatedFrequency: number, sampleRate: number): {
     startIndex: number;
@@ -459,6 +473,16 @@ export class ZeroCrossDetector {
 
   /**
    * Calculate the optimal display range for the waveform using peak detection
+   * 
+   * @param data Waveform data
+   * @param estimatedFrequency Estimated frequency in Hz
+   * @param sampleRate Sample rate in Hz
+   * @returns Display range information with peak positions stored in `firstZeroCross`/`secondZeroCross`
+   * 
+   * @remarks
+   * This method uses peak detection (maximum absolute amplitude) instead of zero-crossing detection.
+   * The returned properties `firstZeroCross` and `secondZeroCross` actually contain peak positions
+   * for API compatibility with the zero-cross detection method.
    */
   private calculateDisplayRangeWithPeak(data: Float32Array, estimatedFrequency: number, sampleRate: number): {
     startIndex: number;
