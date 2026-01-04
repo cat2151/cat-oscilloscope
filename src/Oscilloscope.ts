@@ -24,6 +24,7 @@ export class Oscilloscope {
   private debugRenderer: DebugRenderer;
   private animationId: number | null = null;
   private isRunning = false;
+  private isPaused = false;
 
   /**
    * Create a dummy canvas for debug renderer when no debug canvas is provided
@@ -86,7 +87,9 @@ export class Oscilloscope {
       return;
     }
 
-    // Get waveform data
+    // If paused, skip drawing but continue the animation loop
+    if (!this.isPaused) {
+      // Get waveform data
     const dataArray = this.audioManager.getTimeDomainData();
     if (!dataArray) {
       return;
@@ -163,6 +166,7 @@ export class Oscilloscope {
       const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
       this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data);
     }
+    }
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
@@ -237,6 +241,14 @@ export class Oscilloscope {
 
   getDebugDisplayEnabled(): boolean {
     return this.debugRenderer.getDebugDisplayEnabled();
+  }
+  
+  setPauseDrawing(paused: boolean): void {
+    this.isPaused = paused;
+  }
+
+  getPauseDrawing(): boolean {
+    return this.isPaused;
   }
   
   getSimilarityScores(): number[] {

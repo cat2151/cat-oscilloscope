@@ -12,6 +12,7 @@ const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLIn
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
 const usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
 const debugDisplayCheckbox = document.getElementById('debugDisplayCheckbox') as HTMLInputElement;
+const pauseDrawingCheckbox = document.getElementById('pauseDrawingCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -31,6 +32,7 @@ const requiredElements = [
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
   { element: usePeakModeCheckbox, name: 'usePeakModeCheckbox' },
   { element: debugDisplayCheckbox, name: 'debugDisplayCheckbox' },
+  { element: pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -82,6 +84,9 @@ oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
 // Synchronize debug display control
 oscilloscope.setDebugDisplay(debugDisplayCheckbox.checked);
 
+// Synchronize pause drawing control
+oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -105,6 +110,11 @@ usePeakModeCheckbox.addEventListener('change', () => {
 // Debug display checkbox handler
 debugDisplayCheckbox.addEventListener('change', () => {
   oscilloscope.setDebugDisplay(debugDisplayCheckbox.checked);
+});
+
+// Pause drawing checkbox handler
+pauseDrawingCheckbox.addEventListener('change', () => {
+  oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 });
 
 // Noise gate threshold slider handler

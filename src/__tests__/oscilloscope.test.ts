@@ -612,4 +612,56 @@ describe('Oscilloscope Class', () => {
       });
     });
   });
+
+  describe('Pause Drawing', () => {
+    it('should have pause drawing disabled by default', () => {
+      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      expect(oscilloscope.getPauseDrawing()).toBe(false);
+    });
+
+    it('should allow enabling/disabling pause drawing', () => {
+      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      oscilloscope.setPauseDrawing(true);
+      expect(oscilloscope.getPauseDrawing()).toBe(true);
+
+      oscilloscope.setPauseDrawing(false);
+      expect(oscilloscope.getPauseDrawing()).toBe(false);
+    });
+
+    it('should skip drawing when paused but continue animation loop', async () => {
+      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const mockContext = canvas.getContext('2d') as any;
+      
+      await oscilloscope.start();
+      
+      // Wait for initial drawing
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Get initial fillRect calls count (used for drawing waveform background, grid, etc.)
+      const initialFillRectCalls = mockContext.fillRect.mock.calls.length;
+      
+      // Clear the mock to get a clean baseline
+      mockContext.fillRect.mock.calls.length = 0;
+      
+      // Enable pause
+      oscilloscope.setPauseDrawing(true);
+      
+      // Wait for several frames
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // fillRect should not have been called (no drawing)
+      expect(mockContext.fillRect.mock.calls.length).toBe(0);
+      
+      // Disable pause
+      oscilloscope.setPauseDrawing(false);
+      
+      // Wait for a frame
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // fillRect should have been called (drawing resumed)
+      expect(mockContext.fillRect.mock.calls.length).toBeGreaterThan(0);
+      
+      await oscilloscope.stop();
+    });
+  });
 });
