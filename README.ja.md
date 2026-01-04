@@ -8,6 +8,18 @@
 
 上記のURLでアプリケーションを試すことができます。マイクへのアクセス許可が必要です。
 
+## 📚 ライブラリとしての使用
+
+cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
+
+```typescript
+import { Oscilloscope } from 'cat-oscilloscope';
+
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const oscilloscope = new Oscilloscope(canvas);
+await oscilloscope.start();
+```
+
 ※このドキュメントは仮のため大部分がLLMによって生成されました。今後修正していきます
 
 ## メモ

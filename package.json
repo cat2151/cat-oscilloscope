@@ -3,9 +3,28 @@
   "version": "1.0.0",
   "description": "Browser-based oscilloscope-like waveform visualizer",
   "type": "module",
+  "main": "./dist/cat-oscilloscope.cjs",
+  "module": "./dist/cat-oscilloscope.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/cat-oscilloscope.mjs",
+      "require": "./dist/cat-oscilloscope.cjs",
+      "default": "./dist/cat-oscilloscope.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run build:app",
+    "build:app": "tsc && vite build",
+    "build:lib": "tsc --project tsconfig.lib.json && cross-env BUILD_MODE=library vite build",
+    "build:all": "npm run build:app && npm run build:lib",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -13,9 +32,29 @@
   },
   "devDependencies": {
     "@vitest/ui": "^4.0.16",
+    "cross-env": "^10.1.0",
     "happy-dom": "^20.0.11",
     "typescript": "^5.3.3",
     "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.16"
-  }
+  },
+  "keywords": [
+    "oscilloscope",
+    "waveform",
+    "visualizer",
+    "audio",
+    "web-audio",
+    "canvas",
+    "browser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cat2151/cat-oscilloscope.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cat2151/cat-oscilloscope/issues"
+  },
+  "homepage": "https://cat2151.github.io/cat-oscilloscope/",
+  "license": "MIT"
 }
