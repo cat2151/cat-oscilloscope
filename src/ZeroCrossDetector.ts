@@ -13,6 +13,12 @@ export class ZeroCrossDetector {
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
   private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
+  
+  // Debug information for visualization
+  private lastCandidates: number[] = []; // All zero-cross/peak candidates found
+  private lastReferenceData: Float32Array | null = null; // Reference waveform (previous frame's 0-2π)
+  private lastReferenceStartIndex: number = 0; // Start index of reference waveform in previous buffer
+  private lastSearchBuffer: Float32Array | null = null; // Full search buffer for current frame
 
   /**
    * Set whether to use peak mode instead of zero-crossing mode
@@ -238,6 +244,30 @@ export class ZeroCrossDetector {
   }
 
   /**
+   * Get all candidates found in the last calculation for debug visualization
+   */
+  getLastCandidates(): number[] {
+    return this.lastCandidates;
+  }
+
+  /**
+   * Get reference waveform data (previous frame's 0-2π) for debug visualization
+   */
+  getLastReferenceData(): { data: Float32Array | null; startIndex: number } {
+    return {
+      data: this.lastReferenceData,
+      startIndex: this.lastReferenceStartIndex
+    };
+  }
+
+  /**
+   * Get the full search buffer for debug visualization
+   */
+  getLastSearchBuffer(): Float32Array | null {
+    return this.lastSearchBuffer;
+  }
+
+  /**
    * Find all peak candidates after startIndex, up to maxCycles ahead
    */
   private findPeakCandidates(
@@ -295,6 +325,9 @@ export class ZeroCrossDetector {
           // Include the first candidate
           candidates.unshift(nearExpectedCandidate);
           
+          // Store candidates for debug visualization
+          this.lastCandidates = [...candidates];
+          
           // Select the best candidate based on waveform pattern matching
           const selectedCandidate = this.selectBestCandidate(
             data,
@@ -327,6 +360,9 @@ export class ZeroCrossDetector {
           this.MAX_CANDIDATE_CYCLES
         );
         candidates.unshift(peak);
+        
+        // Store candidates for debug visualization
+        this.lastCandidates = [...candidates];
         
         // For initial detection, no reference position exists
         const selectedCandidate = this.selectBestCandidate(
@@ -392,6 +428,9 @@ export class ZeroCrossDetector {
           // Include the first candidate
           candidates.unshift(nearExpectedCandidate);
           
+          // Store candidates for debug visualization
+          this.lastCandidates = [...candidates];
+          
           // Select the best candidate based on waveform pattern matching
           // Compare against the previous display value (expectedIndex)
           const selectedCandidate = this.selectBestCandidate(
@@ -420,6 +459,9 @@ export class ZeroCrossDetector {
           this.MAX_CANDIDATE_CYCLES
         );
         candidates.unshift(zeroCross);
+        
+        // Store candidates for debug visualization
+        this.lastCandidates = [...candidates];
         
         // For initial detection, no reference position exists
         const selectedCandidate = this.selectBestCandidate(
@@ -490,6 +532,9 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
+    // Store search buffer for debug visualization
+    this.lastSearchBuffer = new Float32Array(data);
+    
     // Estimate cycle length from frequency
     let cycleLength: number;
     if (estimatedFrequency > 0 && sampleRate > 0) {
@@ -515,9 +560,16 @@ export class ZeroCrossDetector {
     
     if (secondPeak === -1) {
       // Only one peak found, display from there to end
+      const startIndex = Math.max(0, firstPeak - phasePadding);
+      const endIndex = data.length;
+      
+      // Store reference data for next frame
+      this.lastReferenceData = data.slice(startIndex, endIndex);
+      this.lastReferenceStartIndex = startIndex;
+      
       return {
-        startIndex: Math.max(0, firstPeak - phasePadding),
-        endIndex: data.length,
+        startIndex,
+        endIndex,
         firstZeroCross: firstPeak, // Use peak position in place of zeroCross for API compatibility
       };
     }
@@ -525,6 +577,10 @@ export class ZeroCrossDetector {
     // Display from peak -π/8 to next peak +π/8
     const startIndex = Math.max(0, firstPeak - phasePadding);
     const endIndex = Math.min(data.length, secondPeak + phasePadding);
+    
+    // Store reference data for next frame
+    this.lastReferenceData = data.slice(startIndex, endIndex);
+    this.lastReferenceStartIndex = startIndex;
     
     return {
       startIndex,
@@ -543,6 +599,9 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
+    // Store search buffer for debug visualization
+    this.lastSearchBuffer = new Float32Array(data);
+    
     // Find the first zero-cross point to estimate cycle length
     const estimationZeroCross = this.findZeroCross(data, 0);
     
@@ -560,9 +619,16 @@ export class ZeroCrossDetector {
         cycleLength = Math.floor(sampleRate / estimatedFrequency);
       } else {
         // No frequency info, display from found zero-cross to end
+        const startIndex = estimationZeroCross;
+        const endIndex = data.length;
+        
+        // Store reference data for next frame
+        this.lastReferenceData = data.slice(startIndex, endIndex);
+        this.lastReferenceStartIndex = startIndex;
+        
         return {
-          startIndex: estimationZeroCross,
-          endIndex: data.length,
+          startIndex,
+          endIndex,
           firstZeroCross: estimationZeroCross,
         };
       }
@@ -586,9 +652,16 @@ export class ZeroCrossDetector {
     
     if (secondZeroCross === -1) {
       // Only one suitable zero-cross found, display from there to end
+      const startIndex = Math.max(0, firstZeroCross - phasePadding);
+      const endIndex = data.length;
+      
+      // Store reference data for next frame
+      this.lastReferenceData = data.slice(startIndex, endIndex);
+      this.lastReferenceStartIndex = startIndex;
+      
       return {
-        startIndex: Math.max(0, firstZeroCross - phasePadding),
-        endIndex: data.length,
+        startIndex,
+        endIndex,
         firstZeroCross: firstZeroCross,
       };
     }
@@ -596,6 +669,10 @@ export class ZeroCrossDetector {
     // Display from phase -π/8 to phase 2π+π/8
     const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
+    
+    // Store reference data for next frame
+    this.lastReferenceData = data.slice(startIndex, endIndex);
+    this.lastReferenceStartIndex = startIndex;
     
     return {
       startIndex,
@@ -611,5 +688,10 @@ export class ZeroCrossDetector {
   reset(): void {
     this.previousZeroCrossIndex = null;
     this.previousPeakIndex = null;
+    this.lastCandidates = [];
+    this.lastReferenceData = null;
+    this.lastReferenceStartIndex = 0;
+    this.lastSearchBuffer = null;
+    this.lastSimilarityScores = [];
   }
 }

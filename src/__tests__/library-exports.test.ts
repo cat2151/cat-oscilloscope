@@ -61,16 +61,19 @@ describe('Library exports', () => {
 
   it('should be able to instantiate Oscilloscope', () => {
     const canvas = document.createElement('canvas');
+    const debugCanvas = document.createElement('canvas');
     // Mock getContext for happy-dom
-    canvas.getContext = (() => ({
+    const mockContext = {
       fillRect: () => {},
       stroke: () => {},
       beginPath: () => {},
       moveTo: () => {},
       lineTo: () => {},
-    })) as any;
+    };
+    canvas.getContext = (() => mockContext) as any;
+    debugCanvas.getContext = (() => mockContext) as any;
     
-    const oscilloscope = new Oscilloscope(canvas);
+    const oscilloscope = new Oscilloscope(canvas, debugCanvas);
     expect(oscilloscope).toBeInstanceOf(Oscilloscope);
   });
 
