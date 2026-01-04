@@ -1,4 +1,4 @@
-Last updated: 2026-01-04
+Last updated: 2026-01-05
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -72,6 +72,25 @@ Last updated: 2026-01-04
 上記のURLでアプリケーションを試すことができます。マイクへのアクセス許可が必要です。
 
 ※このドキュメントは仮のため大部分がLLMによって生成されました。今後修正していきます
+
+## 状況
+- 大きなバグは一通り取った状態です。
+- 細かい不具合はあります。
+- micからの音の場合、位相が揃ったり揃わなかったりが不安定で、実用度が低いです。
+- WAVファイルからのチップチューンのモノラルの単純波形の場合、実用度が高いです。
+- ライブラリとしてどれくらい楽に使えるかは、これから検証予定です。
+
+## 📚 ライブラリとしての使用
+
+cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
+
+```typescript
+import { Oscilloscope } from 'cat-oscilloscope';
+
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const oscilloscope = new Oscilloscope(canvas);
+await oscilloscope.start();
+```
 
 ## メモ
 
@@ -196,7 +215,7 @@ npm run test:ui
 
 MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
 
-*Big Brother is listening to you. Now the cat does.* 🐱
+*Big Brother is listening to you. Now it’s the cat.* 🐱
 
 
 依存関係:
@@ -204,29 +223,49 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   "dependencies": {},
   "devDependencies": {
     "@vitest/ui": "^4.0.16",
+    "cross-env": "^10.1.0",
     "happy-dom": "^20.0.11",
     "typescript": "^5.3.3",
     "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.16"
   }
 }
 
 ## ファイル階層ツリー
 📄 .gitignore
+📖 IMPLEMENTATION_SUMMARY.md
+📖 LIBRARY_USAGE.md
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
 📖 TESTING.md
 📄 _config.yml
+🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
 📁 issue-notes/
   📖 57.md
   📖 59.md
+  📖 62.md
+  📖 64.md
+  📖 65.md
+  📖 66.md
+  📖 67.md
+  📖 68.md
+  📖 70.md
+  📖 73.md
+  📖 75.md
+  📖 77.md
+  📖 78.md
+  📖 79.md
+  📖 80.md
+  📖 81.md
 📊 package-lock.json
 📊 package.json
 📁 src/
   📘 AudioManager.ts
+  📘 DebugRenderer.ts
   📘 FrequencyEstimator.ts
   📘 GainController.ts
   📘 Oscilloscope.ts
@@ -235,21 +274,32 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📁 __tests__/
     📘 algorithms.test.ts
     📘 dom-integration.test.ts
+    📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 utils.test.ts
+  📘 index.ts
   📘 main.ts
   📘 utils.ts
 📊 tsconfig.json
+📊 tsconfig.lib.json
 📘 vite.config.ts
 
 ## ファイル詳細分析
-**index.html** (171行, 5272バイト)
+**example-library-usage.html** (292行, 8351バイト)
+  - 関数: なし
+  - インポート: なし
+
+**index.html** (216行, 6782バイト)
   - 関数: なし
   - インポート: なし
 
 **src/AudioManager.ts** (191行, 5353バイト)
   - 関数: if, catch, start, startFromFile, stop
   - インポート: ./utils
+
+**src/DebugRenderer.ts** (405行, 13879バイト)
+  - 関数: constructor, if, for
+  - インポート: なし
 
 **src/FrequencyEstimator.ts** (233行, 7853バイト)
   - 関数: for, if, switch
@@ -259,27 +309,31 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (202行, 6555バイト)
-  - 関数: constructor, catch, if, start, startFromFile, stop
+**src/Oscilloscope.ts** (260行, 8781バイト)
+  - 関数: if, constructor, catch, start, startFromFile, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
 **src/WaveformRenderer.ts** (314行, 10046バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
-**src/ZeroCrossDetector.ts** (353行, 11117バイト)
-  - 関数: for, if
+**src/ZeroCrossDetector.ts** (733行, 24729バイト)
+  - 関数: if, for
   - インポート: なし
 
-**src/__tests__/algorithms.test.ts** (462行, 15725バイト)
+**src/__tests__/algorithms.test.ts** (585行, 20273バイト)
   - 関数: generateSineWave, generateNoise, generateSquareWave, countZeroCrossings, createMediaStreamSource, createAnalyser, close, getTracks, for, if
   - インポート: vitest, ../Oscilloscope, ../ZeroCrossDetector
 
-**src/__tests__/dom-integration.test.ts** (281行, 8859バイト)
+**src/__tests__/dom-integration.test.ts** (289行, 9226バイト)
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/oscilloscope.test.ts** (605行, 21336バイト)
+**src/__tests__/library-exports.test.ts** (105行, 3264バイト)
+  - 関数: なし
+  - インポート: vitest
+
+**src/__tests__/oscilloscope.test.ts** (665行, 23789バイト)
   - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if, defineProperty, function
   - インポート: vitest, ../Oscilloscope, ../utils
 
@@ -287,7 +341,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
-**src/main.ts** (205行, 7458バイト)
+**src/index.ts** (19行, 655バイト)
+  - 関数: なし
+  - インポート: なし
+
+**src/main.ts** (237行, 8844バイト)
   - 関数: sliderValueToThreshold, formatThresholdDisplay, startFrequencyDisplay, stopFrequencyDisplay, for, if, catch
   - インポート: ./Oscilloscope, ./utils
 
@@ -295,9 +353,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: dbToAmplitude, trimSilence, for, if
   - インポート: なし
 
-**vite.config.ts** (17行, 283バイト)
+**vite.config.ts** (54行, 1525バイト)
   - 関数: なし
-  - インポート: vite
+  - インポート: vite, path, vite-plugin-dts
 
 ## 関数呼び出し階層
 - if (src/AudioManager.ts)
@@ -309,8 +367,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - close ()
       - getTracks ()
       - trimSilence ()
-  - dbToAmplitude ()
   - constructor (undefined)
+  - dbToAmplitude ()
   - generateSineWave (src/__tests__/algorithms.test.ts)
     - generateNoise ()
       - generateSquareWave ()
@@ -333,28 +391,37 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 
 
 ## プロジェクト構造（ファイル一覧）
+IMPLEMENTATION_SUMMARY.md
+LIBRARY_USAGE.md
 README.ja.md
 README.md
 TESTING.md
+example-library-usage.html
 index.html
 issue-notes/57.md
 issue-notes/59.md
+issue-notes/62.md
+issue-notes/64.md
+issue-notes/65.md
+issue-notes/66.md
+issue-notes/67.md
+issue-notes/68.md
+issue-notes/70.md
+issue-notes/73.md
+issue-notes/75.md
+issue-notes/77.md
+issue-notes/78.md
+issue-notes/79.md
+issue-notes/80.md
+issue-notes/81.md
 package-lock.json
 package.json
 src/AudioManager.ts
+src/DebugRenderer.ts
 src/FrequencyEstimator.ts
 src/GainController.ts
 src/Oscilloscope.ts
-src/WaveformRenderer.ts
-src/ZeroCrossDetector.ts
-src/__tests__/algorithms.test.ts
-src/__tests__/dom-integration.test.ts
-src/__tests__/oscilloscope.test.ts
-src/__tests__/utils.test.ts
-src/main.ts
-src/utils.ts
 tsconfig.json
-vite.config.ts
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -366,4 +433,4 @@ vite.config.ts
 
 
 ---
-Generated at: 2026-01-04 07:08:12 JST
+Generated at: 2026-01-05 07:08:27 JST

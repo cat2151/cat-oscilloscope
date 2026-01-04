@@ -1,4 +1,4 @@
-Last updated: 2026-01-04
+Last updated: 2026-01-05
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -200,18 +200,36 @@ Last updated: 2026-01-04
 - .github/workflows/call-translate-readme.yml
 - .github/workflows/deploy.yml
 - .gitignore
+- IMPLEMENTATION_SUMMARY.md
+- LIBRARY_USAGE.md
 - LICENSE
 - README.ja.md
 - README.md
 - TESTING.md
 - _config.yml
+- example-library-usage.html
 - generated-docs/project-overview-generated-prompt.md
 - index.html
 - issue-notes/57.md
 - issue-notes/59.md
+- issue-notes/62.md
+- issue-notes/64.md
+- issue-notes/65.md
+- issue-notes/66.md
+- issue-notes/67.md
+- issue-notes/68.md
+- issue-notes/70.md
+- issue-notes/73.md
+- issue-notes/75.md
+- issue-notes/77.md
+- issue-notes/78.md
+- issue-notes/79.md
+- issue-notes/80.md
+- issue-notes/81.md
 - package-lock.json
 - package.json
 - src/AudioManager.ts
+- src/DebugRenderer.ts
 - src/FrequencyEstimator.ts
 - src/GainController.ts
 - src/Oscilloscope.ts
@@ -219,24 +237,126 @@ Last updated: 2026-01-04
 - src/ZeroCrossDetector.ts
 - src/__tests__/algorithms.test.ts
 - src/__tests__/dom-integration.test.ts
+- src/__tests__/library-exports.test.ts
 - src/__tests__/oscilloscope.test.ts
 - src/__tests__/utils.test.ts
+- src/index.ts
 - src/main.ts
 - src/utils.ts
 - tsconfig.json
+- tsconfig.lib.json
 - vite.config.ts
 
 ## 現在のオープンIssues
-## [Issue #57](../issue-notes/57.md): ライブラリ化して、wavlpfから楽にライブラリとして呼び出せるようにする
-[issue-notes/57.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/57.md)
+## [Issue #82](../issue-notes/82.md): Fix candidate search algorithm to compare reference waveform from previous frame
+The `selectBestCandidate` method was incorrectly comparing positions within the same buffer (current frame), using `referenceIndex` as if it pointed to valid data in the current frame's buffer. This caused unstable candidate positions in the debug display, cycling between positions as the index grad...
+ラベル: 
+--- issue-notes/82.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #81](../issue-notes/81.md): 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする
+[issue-notes/81.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/81.md)
 
 ...
 ラベル: 
---- issue-notes/57.md の内容 ---
+--- issue-notes/81.md の内容 ---
 
 ```markdown
-# issue ライブラリ化して、wavlpfから楽にライブラリとして呼び出せるようにする #57
-[issues #57](https://github.com/cat2151/cat-oscilloscope/issues/57)
+# issue 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする #81
+[issues #81](https://github.com/cat2151/cat-oscilloscope/issues/81)
+
+
+
+```
+
+## [Issue #80](../issue-notes/80.md): 候補のend位置の算出方法がおかしい。-から+へのゼロクロスが2回ある波形において、長時間の波形と短時間の波形が両方候補に出ており推定周波数と矛盾。そうではなくendはstartプラス推定周波数ぶんの長さの位置にすべき
+[issue-notes/80.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/80.md)
+
+...
+ラベル: 
+--- issue-notes/80.md の内容 ---
+
+```markdown
+# issue 候補の算出方法がおかしい。常にゼロクロス単位で候補を算出しているため、-から+へのゼロクロスが2回ある波形において、長時間の波形と短時間の波形が両方候補に出ている。そうではなく常にstartがゼロクロスでendは推定周波数ぶんの長さの位置、から候補を出すべき #80
+[issues #80](https://github.com/cat2151/cat-oscilloscope/issues/80)
+
+
+
+```
+
+## [Issue #79](../issue-notes/79.md): debug表示の候補それぞれ、類似度が80%overなのに上下反転し、そのときフレームバッファ側の候補は上下反転せず正常なことがある、つまり表示不整合がある
+[issue-notes/79.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/79.md)
+
+...
+ラベル: 
+--- issue-notes/79.md の内容 ---
+
+```markdown
+# issue debug表示の候補それぞれの類似度が、80%overなのに上下反転していることがあることがあり、そのときフレームバッファ側は上下反転していないことがある、つまり表示不整合がある #79
+[issues #79](https://github.com/cat2151/cat-oscilloscope/issues/79)
+
+
+
+```
+
+## [Issue #78](../issue-notes/78.md): debug表示しているとsearch buffer上での候補startの場所が、だんだん後ろになりまた先頭に戻る、を繰り返しておりおかしい。正しくはsearch bufferの先頭から「前回波形と類似度が最高になるstart」を「endまでの長さは推定周波数ぶん」としstartを1サンプルずつ推定周波数ぶんの範囲を移動して探索すべき
+[issue-notes/78.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/78.md)
+
+...
+ラベル: 
+--- issue-notes/78.md の内容 ---
+
+```markdown
+# issue debug表示しているとsearch buffer上での候補の場所が、だんだん後ろになりまた先頭に戻る、を繰り返している。原因とアルゴリズムの妥当性を分析する #78
+[issues #78](https://github.com/cat2151/cat-oscilloscope/issues/78)
+
+
+
+```
+
+## [Issue #77](../issue-notes/77.md): 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある。そしてキーボードよりマウスのほうが破綻しやすい
+[issue-notes/77.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/77.md)
+
+...
+ラベル: 
+--- issue-notes/77.md の内容 ---
+
+```markdown
+# issue 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある #77
+[issues #77](https://github.com/cat2151/cat-oscilloscope/issues/77)
+
+
+
+```
+
+## [Issue #70](../issue-notes/70.md): wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する
+[issue-notes/70.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/70.md)
+
+...
+ラベル: 
+--- issue-notes/70.md の内容 ---
+
+```markdown
+# issue wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する #70
+[issues #70](https://github.com/cat2151/cat-oscilloscope/issues/70)
+
+
+
+```
+
+## [Issue #64](../issue-notes/64.md): 位相を揃えて表示する用、類似度の高い波形を探索するときの波形周期を、「周波数から算出した周期」の1倍、2倍、3倍、4倍からプルダウンメニューで選べるようにする
+[issue-notes/64.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/64.md)
+
+...
+ラベル: 
+--- issue-notes/64.md の内容 ---
+
+```markdown
+# issue 自己相関判定に使う周期を、「周波数から算出した周期」の1倍、2倍、3倍、4倍からプルダウンメニューで選べるようにする #64
+[issues #64](https://github.com/cat2151/cat-oscilloscope/issues/64)
 
 
 
@@ -244,7 +364,7 @@ Last updated: 2026-01-04
 
 ## [Issue #31](../issue-notes/31.md): 灰色のグリッド表示が計測値と関連しておらず、userが混乱する
 
-ラベル: 
+ラベル: good first issue
 --- issue-notes/31.md の内容 ---
 
 ```markdown
@@ -253,113 +373,185 @@ Last updated: 2026-01-04
 
 ## [Issue #28](../issue-notes/28.md): 表示文言から「Cat Oscilloscope」と「This oscilloscope visualizes audio from your microphone with zero-cross detection for stable waveform display.」をトルツメする
 
-ラベル: 
+ラベル: good first issue
 --- issue-notes/28.md の内容 ---
 
 ```markdown
 
 ```
 
-## [Issue #26](../issue-notes/26.md): 画面の一番下に、周波数50Hz～1000Hzの範囲のピアノ鍵盤風の画像を表示し、基音の周波数の鍵盤を光らせる
-
-ラベル: 
---- issue-notes/26.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #25](../issue-notes/25.md): 画面下部の周波数の右に、440Hzなら A4+0cent のように表示する
-
-ラベル: 
---- issue-notes/25.md の内容 ---
-
-```markdown
-
-```
-
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/25.md
+### .github/actions-tmp/issue-notes/2.md
 ```md
 {% raw %}
-# issue project summaryを他projectからcallしたところ、issue-notes参照ディレクトリ誤りが発覚した #25
-[issues #25](https://github.com/cat2151/github-actions/issues/25)
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
 
-# 事象
-- `Issueノートが存在しません: /home/runner/work/tonejs-mml-to-json/tonejs-mml-to-json/.github/actions-tmp/issue-notes/6.md`
 
-# どうする？
-- 当該処理のディレクトリ部分を確認する
-- 日次バッチでGeminiに確認させてみる
-- 結果
-    - Geminiに確認させてpromptを生成させ、agentに投げた
-    - 結果、projectRootの扱いの誤り、と判明
-        - 共通workflow側のdirを引数でわたしてしまっていた
-        - target repository側のdirを引数でわたすべき
-- 修正したつもり
-- 次の日次バッチで動作確認させるつもり
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
 
 # 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
 - test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
 
 # closeとする
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/26.md
-```md
-{% raw %}
-# issue userによるcommitがなくなって24時間超経過しているのに、毎日ムダにproject summaryとcallgraphの自動生成が行われてしまっている #26
-[issues #26](https://github.com/cat2151/github-actions/issues/26)
-
-# どうする？
-- logを確認する。24時間チェックがバグっている想定。
-- もしlogから判別できない場合は、logを改善する。
-
-# log確認結果
-- botによるcommitなのに、user commitとして誤判別されている
-```
-Checking for user commits in the last 24 hours...
-User commits found: true
-Recent user commits:
-7654bf7 Update callgraph.html [auto]
-abd2f2d Update project summaries (overview & development status)
-```
-
-# ざっくり調査結果
-- #27 が判明した
-
-# どうする？
-- [x] #27 を修正する。これで自動的に #26 も修正される想定。
-    - 当該処理を修正する。
-    - もしデータ不足なら、より詳細なlog生成を実装する。
-- 別件として、このチェックはむしろworkflow ymlの先頭で行うのが適切と考える。なぜなら、以降のムダな処理をカットできるのでエコ。
-    - [x] #28 を起票したので、そちらで実施する。
-
-# close条件は？
-- 前提
-    - [x] 先行タスクである #27 と #28 が完了済みであること
-- 誤爆がなくなること。
-    - つまり、userによるcommitがなくなって24時間超経過後の日次バッチにて、
-        - ムダなdevelopment status生成、等がないこと
-        - jobのlogに「commitがないので処理しません」的なmessageが出ること
-- どうする？
-    - 日次バッチを本番を流して本番testする
-
-# 結果
-- github-actions logより：
-    - 直近24hのcommitはbotによる1件のみであった
-    - よって後続jobはskipとなった
-    - ことを確認した
-- close条件を満たした、と判断する
-```
-Run node .github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
-BOT: Commit 5897f0c6df6bc2489f9ce3579b4f351754ee0551 | Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> | Message: Update project summaries (overview & development status) [auto]
-has_recent_human_commit=false
-```
-
-# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
 
 {% endraw %}
 ```
@@ -488,6 +680,152 @@ jobs:
 {% endraw %}
 ```
 
+### .github/actions-tmp/issue-notes/4.md
+```md
+{% raw %}
+# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
+[issues #4](https://github.com/cat2151/github-actions/issues/4)
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
+まずplanしてください
+```
+
+# 結果、あちこちハルシネーションのあるymlが生成された
+- agentの挙動があからさまにハルシネーション
+    - インデントが修正できない、「失敗した」という
+    - 構文誤りを認識できない
+- 人力で修正した
+
+# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 呼び出し元
+
+name: Call Daily Project Summary
+
+on:
+  schedule:
+    # 日本時間 07:00 (UTC 22:00 前日)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-daily-project-summary:
+    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+--- 共通ワークフロー
+name: Daily Project Summary
+on:
+  workflow_call:
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 履歴を取得するため
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          # 一時的なディレクトリで依存関係をインストール
+          mkdir -p /tmp/summary-deps
+          cd /tmp/summary-deps
+          npm init -y
+          npm install @google/generative-ai @octokit/rest
+          # generated-docsディレクトリを作成
+          mkdir -p $GITHUB_WORKSPACE/generated-docs
+
+      - name: Generate project summary
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NODE_PATH: /tmp/summary-deps/node_modules
+        run: |
+          node .github/scripts/generate-project-summary.cjs
+
+      - name: Check for generated summaries
+        id: check_summaries
+        run: |
+          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
+            echo "summaries_generated=true" >> $GITHUB_OUTPUT
+          else
+            echo "summaries_generated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push summaries
+        if: steps.check_summaries.outputs.summaries_generated == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # package.jsonの変更のみリセット（generated-docsは保持）
+          git restore package.json 2>/dev/null || true
+          # サマリーファイルのみを追加
+          git add generated-docs/project-overview.md
+          git add generated-docs/development-status.md
+          git commit -m "Update project summaries (overview & development status)"
+          git push
+
+      - name: Summary generation result
+        run: |
+          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
+            echo "✅ Project summaries updated successfully"
+            echo "📊 Generated: project-overview.md & development-status.md"
+          else
+            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
+          fi
+```
+
+# 上記promptで、2つのLLMにレビューさせ、合格した
+
+# 細部を、先行する2つのymlを参照に手直しした
+
+# ローカルtestをしてからcommitできるとよい。方法を検討する
+- ローカルtestのメリット
+    - 素早く修正のサイクルをまわせる
+    - ムダにgit historyを汚さない
+        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
+- 方法
+    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
+    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
+    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
+- 結果
+    - OK
+    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
+    - OK
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -579,11 +917,95 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### issue-notes/57.md
+### .github/actions-tmp/issue-notes/9.md
 ```md
 {% raw %}
-# issue ライブラリ化して、wavlpfから楽にライブラリとして呼び出せるようにする #57
-[issues #57](https://github.com/cat2151/cat-oscilloscope/issues/57)
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
+
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+
+# test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/64.md
+```md
+{% raw %}
+# issue 自己相関判定に使う周期を、「周波数から算出した周期」の1倍、2倍、3倍、4倍からプルダウンメニューで選べるようにする #64
+[issues #64](https://github.com/cat2151/cat-oscilloscope/issues/64)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/70.md
+```md
+{% raw %}
+# issue wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する #70
+[issues #70](https://github.com/cat2151/cat-oscilloscope/issues/70)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/77.md
+```md
+{% raw %}
+# issue 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある #77
+[issues #77](https://github.com/cat2151/cat-oscilloscope/issues/77)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/78.md
+```md
+{% raw %}
+# issue debug表示しているとsearch buffer上での候補の場所が、だんだん後ろになりまた先頭に戻る、を繰り返している。原因とアルゴリズムの妥当性を分析する #78
+[issues #78](https://github.com/cat2151/cat-oscilloscope/issues/78)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/79.md
+```md
+{% raw %}
+# issue debug表示の候補それぞれの類似度が、80%overなのに上下反転していることがあることがあり、そのときフレームバッファ側は上下反転していないことがある、つまり表示不整合がある #79
+[issues #79](https://github.com/cat2151/cat-oscilloscope/issues/79)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/80.md
+```md
+{% raw %}
+# issue 候補の算出方法がおかしい。常にゼロクロス単位で候補を算出しているため、-から+へのゼロクロスが2回ある波形において、長時間の波形と短時間の波形が両方候補に出ている。そうではなく常にstartがゼロクロスでendは推定周波数ぶんの長さの位置、から候補を出すべき #80
+[issues #80](https://github.com/cat2151/cat-oscilloscope/issues/80)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/81.md
+```md
+{% raw %}
+# issue 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする #81
+[issues #81](https://github.com/cat2151/cat-oscilloscope/issues/81)
 
 
 
@@ -592,32 +1014,27 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-eee08cc Merge pull request #60 from cat2151/copilot/improve-similarity-display
-375f259 Fix ruler labels positioning and add comprehensive tests for similarity bar graph
-3deab82 Fix bar width calculation to correctly extend from center
-0bd2e4d Add similarity score bar graph visualization in top-right corner
-c6646b3 Initial plan
-9261acf Add issue note for #59 [auto]
-376752b Merge pull request #58 from cat2151/copilot/improve-waveform-pattern-matching
-58dcb67 Add UI display for similarity scores vs reference
-2f3437d Improve candidate selection: compare vs previous display value, remove early exit, add debug logging
-d96ee23 Update project summaries (overview & development status) [auto]
+d6dae94 Add issue note for #81 [auto]
+373db8c Add issue note for #80 [auto]
+0de0611 Add issue note for #79 [auto]
+80a257f Add issue note for #78 [auto]
+1e3185a Add issue note for #77 [auto]
+386ea15 Merge pull request #76 from cat2151/copilot/adjust-waveform-layout
+a3e4f2a Implement 2-row debug waveform layout with similarity scores
+bb032a0 Initial plan
+8ec2104 Add issue note for #75 [auto]
+ef5630f Merge pull request #74 from cat2151/copilot/normalize-debug-waveform-amplitude
 
 ### 変更されたファイル:
-README.ja.md
-README.md
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/57.md
-issue-notes/59.md
+issue-notes/75.md
+issue-notes/77.md
+issue-notes/78.md
+issue-notes/79.md
+issue-notes/80.md
+issue-notes/81.md
+src/DebugRenderer.ts
 src/Oscilloscope.ts
-src/WaveformRenderer.ts
-src/ZeroCrossDetector.ts
-src/__tests__/algorithms.test.ts
-src/__tests__/oscilloscope.test.ts
 
 
 ---
-Generated at: 2026-01-04 07:08:13 JST
+Generated at: 2026-01-05 07:08:28 JST
