@@ -152,4 +152,4 @@ npm run test:ui
 
 MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
 
-*Big Brother is listening to you. Now the cat does.* 🐱
+*Big Brother is listening to you. Now it’s the cat.* 🐱
