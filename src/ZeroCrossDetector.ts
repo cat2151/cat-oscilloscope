@@ -269,8 +269,8 @@ export class ZeroCrossDetector {
   /**
    * Get reference waveform data (previous frame's 0-2π) for debug visualization
    * @returns Object containing the reference waveform data and its start index in the original buffer.
-   *          The startIndex indicates where in the previous frame's buffer the reference segment began,
-   *          which can be useful for advanced debugging scenarios where absolute positioning is needed.
+   * The startIndex indicates where in the previous frame's buffer the reference segment began,
+   * which can be useful for advanced debugging scenarios where absolute positioning is needed.
    */
   getLastReferenceData(): { data: Float32Array | null; startIndex: number } {
     return {
@@ -551,7 +551,7 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization (only when debug is enabled)
+    // Store search buffer for debug visualization (only when debug data collection is enabled)
     // Note: We copy the data because the Web Audio API reuses the buffer on each frame
     if (this.debugDataEnabled) {
       this.lastSearchBuffer = new Float32Array(data);
@@ -585,7 +585,7 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstPeak - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame (only when debug is enabled)
+      // Store reference data for next frame (only when debug data collection is enabled)
       if (this.debugDataEnabled) {
         this.lastReferenceData = data.slice(startIndex, endIndex);
         this.lastReferenceStartIndex = startIndex;
@@ -602,7 +602,7 @@ export class ZeroCrossDetector {
     const startIndex = Math.max(0, firstPeak - phasePadding);
     const endIndex = Math.min(data.length, secondPeak + phasePadding);
     
-    // Store reference data for next frame (only when debug is enabled)
+    // Store reference data for next frame (only when debug data collection is enabled)
     if (this.debugDataEnabled) {
       this.lastReferenceData = data.slice(startIndex, endIndex);
       this.lastReferenceStartIndex = startIndex;
@@ -625,7 +625,7 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization (only when debug is enabled)
+    // Store search buffer for debug visualization (only when debug data collection is enabled)
     // Note: We copy the data because the Web Audio API reuses the buffer on each frame
     if (this.debugDataEnabled) {
       this.lastSearchBuffer = new Float32Array(data);
@@ -651,7 +651,7 @@ export class ZeroCrossDetector {
         const startIndex = estimationZeroCross;
         const endIndex = data.length;
         
-        // Store reference data for next frame (only when debug is enabled)
+        // Store reference data for next frame (only when debug data collection is enabled)
         if (this.debugDataEnabled) {
           this.lastReferenceData = data.slice(startIndex, endIndex);
           this.lastReferenceStartIndex = startIndex;
@@ -686,7 +686,7 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstZeroCross - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame (only when debug is enabled)
+      // Store reference data for next frame (only when debug data collection is enabled)
       if (this.debugDataEnabled) {
         this.lastReferenceData = data.slice(startIndex, endIndex);
         this.lastReferenceStartIndex = startIndex;
@@ -703,7 +703,7 @@ export class ZeroCrossDetector {
     const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
     
-    // Store reference data for next frame (only when debug is enabled)
+    // Store reference data for next frame (only when debug data collection is enabled)
     if (this.debugDataEnabled) {
       this.lastReferenceData = data.slice(startIndex, endIndex);
       this.lastReferenceStartIndex = startIndex;
