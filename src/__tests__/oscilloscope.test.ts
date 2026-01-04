@@ -637,9 +637,6 @@ describe('Oscilloscope Class', () => {
       // Wait for initial drawing
       await new Promise(resolve => setTimeout(resolve, 50));
       
-      // Get initial fillRect calls count (used for drawing waveform background, grid, etc.)
-      const initialFillRectCalls = mockContext.fillRect.mock.calls.length;
-      
       // Clear the mock to get a clean baseline
       mockContext.fillRect.mock.calls.length = 0;
       

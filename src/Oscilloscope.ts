@@ -90,10 +90,12 @@ export class Oscilloscope {
     // If paused, skip drawing but continue the animation loop
     if (!this.isPaused) {
       // Get waveform data
-    const dataArray = this.audioManager.getTimeDomainData();
-    if (!dataArray) {
-      return;
-    }
+      const dataArray = this.audioManager.getTimeDomainData();
+      if (!dataArray) {
+        // Continue animation loop even if no data available
+        this.animationId = requestAnimationFrame(() => this.render());
+        return;
+      }
 
     // Apply noise gate to input signal (modifies dataArray in place)
     this.gainController.applyNoiseGate(dataArray);
