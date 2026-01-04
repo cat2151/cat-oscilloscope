@@ -13,6 +13,7 @@ export class ZeroCrossDetector {
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
   private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
+  private debugDataEnabled: boolean = false; // Enable debug data collection to reduce memory overhead
   
   // Debug information for visualization
   private lastCandidates: number[] = []; // All zero-cross/peak candidates found
@@ -32,6 +33,21 @@ export class ZeroCrossDetector {
    */
   getUsePeakMode(): boolean {
     return this.usePeakMode;
+  }
+
+  /**
+   * Set whether to enable debug data collection
+   * When enabled, stores search buffer and reference data for visualization (increases memory usage)
+   */
+  setDebugDataEnabled(enabled: boolean): void {
+    this.debugDataEnabled = enabled;
+  }
+
+  /**
+   * Get whether debug data collection is enabled
+   */
+  getDebugDataEnabled(): boolean {
+    return this.debugDataEnabled;
   }
 
   /**
@@ -252,6 +268,9 @@ export class ZeroCrossDetector {
 
   /**
    * Get reference waveform data (previous frame's 0-2π) for debug visualization
+   * @returns Object containing the reference waveform data and its start index in the original buffer.
+   *          The startIndex indicates where in the previous frame's buffer the reference segment began,
+   *          which can be useful for advanced debugging scenarios where absolute positioning is needed.
    */
   getLastReferenceData(): { data: Float32Array | null; startIndex: number } {
     return {
@@ -532,9 +551,11 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization
+    // Store search buffer for debug visualization (only when debug is enabled)
     // Note: We copy the data because the Web Audio API reuses the buffer on each frame
-    this.lastSearchBuffer = new Float32Array(data);
+    if (this.debugDataEnabled) {
+      this.lastSearchBuffer = new Float32Array(data);
+    }
     
     // Estimate cycle length from frequency
     let cycleLength: number;
@@ -564,9 +585,11 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstPeak - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame
-      this.lastReferenceData = data.slice(startIndex, endIndex);
-      this.lastReferenceStartIndex = startIndex;
+      // Store reference data for next frame (only when debug is enabled)
+      if (this.debugDataEnabled) {
+        this.lastReferenceData = data.slice(startIndex, endIndex);
+        this.lastReferenceStartIndex = startIndex;
+      }
       
       return {
         startIndex,
@@ -579,9 +602,11 @@ export class ZeroCrossDetector {
     const startIndex = Math.max(0, firstPeak - phasePadding);
     const endIndex = Math.min(data.length, secondPeak + phasePadding);
     
-    // Store reference data for next frame
-    this.lastReferenceData = data.slice(startIndex, endIndex);
-    this.lastReferenceStartIndex = startIndex;
+    // Store reference data for next frame (only when debug is enabled)
+    if (this.debugDataEnabled) {
+      this.lastReferenceData = data.slice(startIndex, endIndex);
+      this.lastReferenceStartIndex = startIndex;
+    }
     
     return {
       startIndex,
@@ -600,9 +625,11 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization
+    // Store search buffer for debug visualization (only when debug is enabled)
     // Note: We copy the data because the Web Audio API reuses the buffer on each frame
-    this.lastSearchBuffer = new Float32Array(data);
+    if (this.debugDataEnabled) {
+      this.lastSearchBuffer = new Float32Array(data);
+    }
     
     // Find the first zero-cross point to estimate cycle length
     const estimationZeroCross = this.findZeroCross(data, 0);
@@ -624,9 +651,11 @@ export class ZeroCrossDetector {
         const startIndex = estimationZeroCross;
         const endIndex = data.length;
         
-        // Store reference data for next frame
-        this.lastReferenceData = data.slice(startIndex, endIndex);
-        this.lastReferenceStartIndex = startIndex;
+        // Store reference data for next frame (only when debug is enabled)
+        if (this.debugDataEnabled) {
+          this.lastReferenceData = data.slice(startIndex, endIndex);
+          this.lastReferenceStartIndex = startIndex;
+        }
         
         return {
           startIndex,
@@ -657,9 +686,11 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstZeroCross - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame
-      this.lastReferenceData = data.slice(startIndex, endIndex);
-      this.lastReferenceStartIndex = startIndex;
+      // Store reference data for next frame (only when debug is enabled)
+      if (this.debugDataEnabled) {
+        this.lastReferenceData = data.slice(startIndex, endIndex);
+        this.lastReferenceStartIndex = startIndex;
+      }
       
       return {
         startIndex,
@@ -672,9 +703,11 @@ export class ZeroCrossDetector {
     const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
     
-    // Store reference data for next frame
-    this.lastReferenceData = data.slice(startIndex, endIndex);
-    this.lastReferenceStartIndex = startIndex;
+    // Store reference data for next frame (only when debug is enabled)
+    if (this.debugDataEnabled) {
+      this.lastReferenceData = data.slice(startIndex, endIndex);
+      this.lastReferenceStartIndex = startIndex;
+    }
     
     return {
       startIndex,

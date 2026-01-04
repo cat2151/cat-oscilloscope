@@ -25,13 +25,27 @@ export class Oscilloscope {
   private animationId: number | null = null;
   private isRunning = false;
 
-  constructor(canvas: HTMLCanvasElement, debugCanvas: HTMLCanvasElement) {
+  /**
+   * Create a dummy canvas for debug renderer when no debug canvas is provided
+   */
+  private createDummyCanvas(): HTMLCanvasElement {
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      return canvas;
+    }
+    throw new Error('No debug canvas provided and document is not available to create a dummy canvas.');
+  }
+
+  constructor(canvas: HTMLCanvasElement, debugCanvas?: HTMLCanvasElement) {
     this.audioManager = new AudioManager();
     this.gainController = new GainController();
     this.frequencyEstimator = new FrequencyEstimator();
     this.renderer = new WaveformRenderer(canvas);
     this.zeroCrossDetector = new ZeroCrossDetector();
-    this.debugRenderer = new DebugRenderer(debugCanvas);
+    const effectiveDebugCanvas = debugCanvas ?? this.createDummyCanvas();
+    this.debugRenderer = new DebugRenderer(effectiveDebugCanvas);
   }
 
   async start(): Promise<void> {
@@ -142,11 +156,13 @@ export class Oscilloscope {
     const similarityScores = this.zeroCrossDetector.getSimilarityScores();
     this.renderer.drawSimilarityBarGraph(similarityScores);
 
-    // Draw debug visualization
-    const searchBuffer = this.zeroCrossDetector.getLastSearchBuffer();
-    const candidates = this.zeroCrossDetector.getLastCandidates();
-    const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
-    this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data);
+    // Draw debug visualization (only when enabled)
+    if (this.debugRenderer.getDebugDisplayEnabled()) {
+      const searchBuffer = this.zeroCrossDetector.getLastSearchBuffer();
+      const candidates = this.zeroCrossDetector.getLastCandidates();
+      const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
+      this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data);
+    }
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
@@ -215,6 +231,8 @@ export class Oscilloscope {
   
   setDebugDisplay(enabled: boolean): void {
     this.debugRenderer.setDebugDisplay(enabled);
+    // Also enable/disable debug data collection in ZeroCrossDetector
+    this.zeroCrossDetector.setDebugDataEnabled(enabled);
   }
 
   getDebugDisplayEnabled(): boolean {

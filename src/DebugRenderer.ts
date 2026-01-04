@@ -9,6 +9,13 @@ export class DebugRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private debugDisplayEnabled = false;
+  
+  // Layout constants
+  private readonly REFERENCE_WIDTH_RATIO = 0.2; // Reference waveform occupies 20% of canvas width
+  
+  // Candidate visualization constants
+  private readonly CANDIDATE_COLORS = ['#ff0000', '#ff00ff', '#ff8800', '#ffff00'];
+  private readonly MAX_VISIBLE_LABELS = 10; // Limit candidate labels to prevent overlap
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -76,29 +83,37 @@ export class DebugRenderer {
   }
 
   /**
-   * Draw reference waveform on the left side
+   * Generic method to draw a waveform segment
+   * @param data Waveform data
+   * @param startX Starting X position on canvas
+   * @param width Width of the waveform area
+   * @param color Stroke color
+   * @param lineWidth Line width
    */
-  private drawReferenceWaveform(referenceData: Float32Array): void {
-    if (referenceData.length === 0) {
+  private drawWaveformSegment(
+    data: Float32Array,
+    startX: number,
+    width: number,
+    color: string,
+    lineWidth: number = 1
+  ): void {
+    if (data.length === 0) {
       return;
     }
 
-    // Reference waveform occupies 20% of canvas width
-    const referenceWidth = Math.floor(this.canvas.width * 0.2);
-    const sliceWidth = referenceWidth / referenceData.length;
+    const sliceWidth = width / data.length;
     const centerY = this.canvas.height / 2;
     const amplitude = this.canvas.height / 2;
 
-    // Draw reference waveform in cyan
-    this.ctx.strokeStyle = '#00ffff';
-    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = lineWidth;
     this.ctx.beginPath();
 
-    for (let i = 0; i < referenceData.length; i++) {
-      const value = referenceData[i];
+    for (let i = 0; i < data.length; i++) {
+      const value = data[i];
       const rawY = centerY - (value * amplitude);
       const y = Math.min(this.canvas.height, Math.max(0, rawY));
-      const x = i * sliceWidth;
+      const x = startX + (i * sliceWidth);
 
       if (i === 0) {
         this.ctx.moveTo(x, y);
@@ -108,6 +123,20 @@ export class DebugRenderer {
     }
 
     this.ctx.stroke();
+  }
+
+  /**
+   * Draw reference waveform on the left side
+   */
+  private drawReferenceWaveform(referenceData: Float32Array): void {
+    if (referenceData.length === 0) {
+      return;
+    }
+
+    const referenceWidth = Math.floor(this.canvas.width * this.REFERENCE_WIDTH_RATIO);
+    
+    // Draw reference waveform in cyan
+    this.drawWaveformSegment(referenceData, 0, referenceWidth, '#00ffff');
 
     // Draw separator line
     this.ctx.strokeStyle = '#ffff00';
@@ -131,31 +160,11 @@ export class DebugRenderer {
       return;
     }
 
-    // Search buffer occupies remaining 80% of canvas width
+    // Search buffer occupies remaining canvas width
     const searchWidth = this.canvas.width - referenceWidth;
-    const sliceWidth = searchWidth / searchBuffer.length;
-    const centerY = this.canvas.height / 2;
-    const amplitude = this.canvas.height / 2;
-
+    
     // Draw search buffer waveform in green
-    this.ctx.strokeStyle = '#00ff00';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-
-    for (let i = 0; i < searchBuffer.length; i++) {
-      const value = searchBuffer[i];
-      const rawY = centerY - (value * amplitude);
-      const y = Math.min(this.canvas.height, Math.max(0, rawY));
-      const x = referenceWidth + (i * sliceWidth);
-
-      if (i === 0) {
-        this.ctx.moveTo(x, y);
-      } else {
-        this.ctx.lineTo(x, y);
-      }
-    }
-
-    this.ctx.stroke();
+    this.drawWaveformSegment(searchBuffer, referenceWidth, searchWidth, '#00ff00');
 
     // Add label
     this.ctx.fillStyle = '#00ff00';
@@ -184,16 +193,15 @@ export class DebugRenderer {
       const x = referenceWidth + (candidateIndex * sliceWidth);
 
       // Alternate colors for visibility
-      const colors = ['#ff0000', '#ff00ff', '#ff8800', '#ffff00'];
-      this.ctx.strokeStyle = colors[i % colors.length];
+      this.ctx.strokeStyle = this.CANDIDATE_COLORS[i % this.CANDIDATE_COLORS.length];
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
       this.ctx.lineTo(x, this.canvas.height);
       this.ctx.stroke();
 
-      // Draw candidate number label (limit to first 10 to avoid overlap)
-      if (i < 10) {
+      // Draw candidate number label (limit to prevent overlap)
+      if (i < this.MAX_VISIBLE_LABELS) {
         this.ctx.fillStyle = this.ctx.strokeStyle;
         this.ctx.font = 'bold 10px Arial';
         this.ctx.fillText(`#${i}`, x + 2, 30 + (i * 12));
@@ -224,8 +232,8 @@ export class DebugRenderer {
     // Clear and prepare canvas
     this.clearAndDrawGrid();
 
-    // Calculate reference width (20% of canvas)
-    const referenceWidth = Math.floor(this.canvas.width * 0.2);
+    // Calculate reference width
+    const referenceWidth = Math.floor(this.canvas.width * this.REFERENCE_WIDTH_RATIO);
 
     // Draw reference waveform on the left
     if (referenceData && referenceData.length > 0) {

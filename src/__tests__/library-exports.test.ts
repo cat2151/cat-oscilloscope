@@ -10,6 +10,7 @@ import {
   FrequencyEstimator,
   WaveformRenderer,
   ZeroCrossDetector,
+  DebugRenderer,
   dbToAmplitude,
   trimSilence
 } from '../index';
@@ -43,6 +44,11 @@ describe('Library exports', () => {
   it('should export ZeroCrossDetector class', () => {
     expect(ZeroCrossDetector).toBeDefined();
     expect(typeof ZeroCrossDetector).toBe('function');
+  });
+
+  it('should export DebugRenderer class', () => {
+    expect(DebugRenderer).toBeDefined();
+    expect(typeof DebugRenderer).toBe('function');
   });
 
   it('should export dbToAmplitude utility function', () => {
@@ -93,5 +99,6 @@ describe('Library exports', () => {
     expect(new FrequencyEstimator()).toBeInstanceOf(FrequencyEstimator);
     expect(new WaveformRenderer(canvas)).toBeInstanceOf(WaveformRenderer);
     expect(new ZeroCrossDetector()).toBeInstanceOf(ZeroCrossDetector);
+    expect(new DebugRenderer(canvas)).toBeInstanceOf(DebugRenderer);
   });
 });
