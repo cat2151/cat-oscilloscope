@@ -3,6 +3,7 @@ import { dbToAmplitude } from './utils';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const debugCanvas = document.getElementById('debugCanvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const loadFileButton = document.getElementById('loadFileButton') as HTMLButtonElement;
 const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -10,6 +11,7 @@ const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInpu
 const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
 const usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
+const debugDisplayCheckbox = document.getElementById('debugDisplayCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -20,6 +22,7 @@ const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 // Validate all required DOM elements
 const requiredElements = [
   { element: canvas, name: 'canvas' },
+  { element: debugCanvas, name: 'debugCanvas' },
   { element: startButton, name: 'startButton' },
   { element: loadFileButton, name: 'loadFileButton' },
   { element: fileInput, name: 'fileInput' },
@@ -27,6 +30,7 @@ const requiredElements = [
   { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
   { element: usePeakModeCheckbox, name: 'usePeakModeCheckbox' },
+  { element: debugDisplayCheckbox, name: 'debugDisplayCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -58,7 +62,7 @@ function formatThresholdDisplay(db: number, amplitude: number): string {
   return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
 }
 
-const oscilloscope = new Oscilloscope(canvas);
+const oscilloscope = new Oscilloscope(canvas, debugCanvas);
 
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
 oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -74,6 +78,9 @@ oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 
 // Synchronize peak mode control
 oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
+
+// Synchronize debug display control
+oscilloscope.setDebugDisplay(debugDisplayCheckbox.checked);
 
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
@@ -93,6 +100,11 @@ fftDisplayCheckbox.addEventListener('change', () => {
 // Peak mode checkbox handler
 usePeakModeCheckbox.addEventListener('change', () => {
   oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
+});
+
+// Debug display checkbox handler
+debugDisplayCheckbox.addEventListener('change', () => {
+  oscilloscope.setDebugDisplay(debugDisplayCheckbox.checked);
 });
 
 // Noise gate threshold slider handler
