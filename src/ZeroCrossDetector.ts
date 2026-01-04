@@ -13,7 +13,7 @@ export class ZeroCrossDetector {
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
   private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
-  private readonly DEFAULT_INITIAL_SEARCH_LENGTH = 500; // Default search length (500 samples ≈ 10ms at 48kHz) when no frequency estimate is available
+  private readonly DEFAULT_INITIAL_SEARCH_LENGTH = 500; // Default search length (≈10ms at typical audio sample rates) when no frequency estimate is available
 
   /**
    * Set whether to use peak mode instead of zero-crossing mode

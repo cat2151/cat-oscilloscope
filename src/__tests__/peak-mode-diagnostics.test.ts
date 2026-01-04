@@ -159,16 +159,16 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
   describe('Root Cause Analysis', () => {
     it('should identify the problem in findNextPeak algorithm', () => {
       // Root cause: findNextPeak() has a hard-coded search limit of cycleLength * 1.5
-      // This is used in calculateDisplayRangeWithPeak() at line 509
+      // This is used in calculateDisplayRangeWithPeak()
       // 
-      // The searchEnd calculation in findNextPeak (line 63):
+      // The searchEnd calculation in findNextPeak():
       // const searchEnd = Math.min(data.length, searchStart + Math.floor(cycleLength * 1.5));
       //
       // This means the second peak can only be found within 1.5 cycles from the first peak,
       // resulting in a display range of approximately 1.5 cycles.
       //
       // Compare with zero-cross mode:
-      // - findNextZeroCross() searches until the end of the buffer (line 94)
+      // - findNextZeroCross() searches until the end of the buffer
       // - This allows displaying the full buffer's worth of waveform
       //
       // Proposed fix:
