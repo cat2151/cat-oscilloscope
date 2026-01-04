@@ -28,8 +28,8 @@ function generateSineWave(frequency: number, sampleRate: number, length: number,
 }
 
 describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
-  describe('Current Peak Mode Behavior', () => {
-    it('should identify the narrow display range problem', () => {
+  describe('Peak Mode Behavior After Fix', () => {
+    it('should display waveform within appropriate range in peak mode', () => {
       const sampleRate = 48000;
       const frequency = 440; // A4 note
       const length = 4096; // Full buffer length
@@ -58,8 +58,8 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
         console.log(`Peak distance: ${displayRange!.secondZeroCross - displayRange!.firstZeroCross} samples`);
       }
       
-      // The issue: Peak mode should display approximately 1 cycle, similar to zero-cross mode
-      // Current implementation uses limited search in findNextPeak
+      // Peak mode displays approximately 1 cycle, similar to zero-cross mode
+      // After fix: initial search range is 1 cycle, ensuring display starts near buffer beginning
       expect(rangeWidth).toBeGreaterThan(0);
       expect(rangeWidth).toBeLessThan(length); // Should not display entire buffer
     });
@@ -94,8 +94,8 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       console.log(`Zero-cross startIndex: ${zeroCrossRange!.startIndex}, firstZeroCross: ${zeroCrossRange!.firstZeroCross}`);
       console.log(`Peak mode startIndex: ${peakRange!.startIndex}, firstZeroCross (peak): ${peakRange!.firstZeroCross}`);
       
-      // Both modes should show similar amounts of data (around 1 cycle)
-      // This is expected based on the current implementation
+      // Current implementation searches for the next peak within approximately one cycle in findNextPeak,
+      // so the display range is expected to stay around a single period rather than the full buffer.
       expect(peakWidth).toBeGreaterThan(cycleLength * 0.8);
       expect(peakWidth).toBeLessThan(cycleLength * 1.5);
     });
@@ -137,7 +137,16 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       const sampleRate = 48000;
       const frequency = 440;
       const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
       const cycleLength = Math.floor(sampleRate / frequency);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      const displayRange = detector.calculateDisplayRange(signal, frequency, sampleRate);
+      expect(displayRange).not.toBeNull();
+      
+      const rangeWidth = displayRange!.endIndex - displayRange!.startIndex;
       
       // Expected: Peak mode should display approximately one cycle
       // That's peak to next peak, similar to zero-cross to next zero-cross
@@ -145,41 +154,44 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       console.log('=== Expected Peak Mode Behavior ===');
       console.log(`For proper display, peak mode should show: ${cycleLength} to ${cycleLength * 1.2} samples`);
       console.log(`This represents one cycle of the waveform`);
-      console.log(`Current implementation shows: ~${Math.floor(cycleLength * 1.5)} samples (too narrow)`);
+      console.log(`Updated implementation uses an initial search window of ~${cycleLength} samples (about one cycle)`);
       
-      // The fix should allow peak mode to display one full cycle, not just 1.5 cycles worth of search space
+      // Peak mode should display approximately one full cycle, while the internal peak search window is about one cycle
       const expectedMinWidth = cycleLength * 0.8; // At least 0.8 cycles
       const expectedMaxWidth = cycleLength * 1.3; // At most 1.3 cycles (including padding)
       
-      expect(expectedMinWidth).toBeGreaterThan(0);
-      expect(expectedMaxWidth).toBeLessThan(length);
+      expect(rangeWidth).toBeGreaterThanOrEqual(expectedMinWidth);
+      expect(rangeWidth).toBeLessThanOrEqual(expectedMaxWidth);
     });
   });
 
   describe('Root Cause Analysis', () => {
-    it('should identify the problem in findNextPeak algorithm', () => {
-      // Root cause: findNextPeak() has a hard-coded search limit of cycleLength * 1.5
-      // This is used in calculateDisplayRangeWithPeak()
-      // 
-      // The searchEnd calculation in findNextPeak():
-      // const searchEnd = Math.min(data.length, searchStart + Math.floor(cycleLength * 1.5));
+    it('should identify the problem in findStablePeak initial search range', () => {
+      // Root cause: findStablePeak() initializes its search window using an
+      // initialSearchLength based on 2 cycles of the waveform (e.g. cycleLength * 2).
+      // This overly broad initial range causes the algorithm to lock onto a peak
+      // using information from up to 2 cycles, which contributes to the peak-mode
+      // display showing a narrow, center-locked segment instead of a clean single cycle.
       //
-      // This means the second peak can only be found within 1.5 cycles from the first peak,
-      // resulting in a display range of approximately 1.5 cycles.
+      // In the PR that fixes issue #68, initialSearchLength is changed to be based on
+      // a single cycle (cycleLength). This aligns peak-mode behavior with zero-cross
+      // mode: one cycle is used as the reference window, and the display then shows
+      // approximately one full cycle (with small padding) from peak to next peak.
       //
       // Compare with zero-cross mode:
-      // - findNextZeroCross() searches until the end of the buffer
-      // - This allows displaying the full buffer's worth of waveform
+      // - It effectively uses one cycle as the reference span between crossings.
+      // - This produces a stable, single-cycle view of the waveform.
       //
-      // Proposed fix:
-      // - Change findNextPeak to search further, similar to findNextZeroCross
-      // - Or change calculateDisplayRangeWithPeak to find the peak at approximately one cycle away
+      // Corrective action:
+      // - Update findStablePeak so initialSearchLength is derived from 1 * cycleLength
+      //   instead of 2 * cycleLength, ensuring the stabilization window matches the
+      //   intended one-cycle display behavior.
       
       const diagnosis = {
-        problem: 'findNextPeak searches only 1.5 cycles ahead',
-        impact: 'Display range limited to ~1.5 cycles instead of full buffer',
-        expectedBehavior: 'Display one full cycle from peak to next peak',
-        proposedFix: 'Search for next peak without artificial 1.5x cycle limit',
+        problem: 'findStablePeak uses an initialSearchLength based on 2 cycles',
+        impact: 'Peak mode stabilizes over too wide a window, leading to an incorrect narrow display instead of a clean single-cycle view',
+        expectedBehavior: 'Display approximately one full cycle from peak to next peak, similar to zero-cross mode',
+        proposedFix: 'Compute initialSearchLength from 1 * cycleLength in findStablePeak to align the stabilization window with one cycle',
       };
       
       console.log('=== Root Cause ===');
@@ -226,11 +238,6 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       const length = 4096;
       const cycleLength = Math.floor(sampleRate / frequency);
       
-      // Tolerance threshold for temporal stability (0.5 cycles)
-      // This allows for minor variations due to pattern matching while ensuring
-      // the peak position doesn't jump wildly between frames
-      const MAX_POSITION_VARIANCE_CYCLES = 0.5;
-      
       const detector = new ZeroCrossDetector();
       detector.setUsePeakMode(true);
       
@@ -253,9 +260,9 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       
       console.log(`Position variance: ${positionVariance} samples (${(positionVariance / cycleLength).toFixed(2)} cycles)`);
       
-      // Positions should be very stable for the same signal
-      // Allow some variance due to pattern matching, but should be less than MAX_POSITION_VARIANCE_CYCLES
-      expect(positionVariance).toBeLessThan(cycleLength * MAX_POSITION_VARIANCE_CYCLES);
+      // Positions should be completely stable for the same signal (variance = 0)
+      // Since we're using identical signals, peak detection should be deterministic
+      expect(positionVariance).toBe(0);
     });
   });
 });
