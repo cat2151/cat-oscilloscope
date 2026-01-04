@@ -4,7 +4,7 @@
     /* Emit type declarations for library consumers */
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": true,
     "outDir": "./dist",
     
     /* Module resolution for library */

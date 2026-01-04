@@ -35,8 +35,8 @@ export default defineConfig({
     },
     // Generate source maps for debugging
     sourcemap: true,
-    // Clear output directory
-    emptyOutDir: true
+    // Do not clear output directory to avoid removing app build artifacts
+    emptyOutDir: false
   } : {
     // Application build configuration (default) - generates static web app for GitHub Pages
     outDir: 'dist',

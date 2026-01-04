@@ -10,12 +10,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/cat-oscilloscope.mjs",
-      "require": "./dist/cat-oscilloscope.cjs"
+      "require": "./dist/cat-oscilloscope.cjs",
+      "default": "./dist/cat-oscilloscope.mjs"
     }
   },
   "files": [
     "dist",
-    "src",
     "README.md",
     "LICENSE"
   ],
@@ -23,7 +23,7 @@
     "dev": "vite",
     "build": "npm run build:app",
     "build:app": "tsc && vite build",
-    "build:lib": "tsc --project tsconfig.lib.json && BUILD_MODE=library vite build",
+    "build:lib": "tsc --project tsconfig.lib.json && cross-env BUILD_MODE=library vite build",
     "build:all": "npm run build:app && npm run build:lib",
     "preview": "vite preview",
     "test": "vitest",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "^4.0.16",
+    "cross-env": "^10.1.0",
     "happy-dom": "^20.0.11",
     "typescript": "^5.3.3",
     "vite": "^6.0.0",
