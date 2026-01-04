@@ -8,6 +8,15 @@
 
 上記のURLでアプリケーションを試すことができます。マイクへのアクセス許可が必要です。
 
+※このドキュメントは仮のため大部分がLLMによって生成されました。今後修正していきます
+
+## 状況
+- 大きなバグは一通り取った状態です。
+- 細かい不具合はあります。
+- micからの音の場合、位相が揃ったり揃わなかったりが不安定で、実用度が低いです。
+- WAVファイルからのチップチューンのモノラルの単純波形の場合、実用度が高いです。
+- ライブラリとしてどれくらい楽に使えるかは、これから検証予定です。
+
 ## 📚 ライブラリとしての使用
 
 cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
@@ -19,8 +28,6 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const oscilloscope = new Oscilloscope(canvas);
 await oscilloscope.start();
 ```
-
-※このドキュメントは仮のため大部分がLLMによって生成されました。今後修正していきます
 
 ## メモ
 
