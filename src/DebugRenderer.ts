@@ -15,6 +15,7 @@ export class DebugRenderer {
   private readonly CANDIDATES_WIDTH_RATIO = 0.2 * (2/3); // 4 candidates occupy same width as reference (≈13.3%)
   private readonly MAX_CANDIDATES_TO_DISPLAY = 4; // Display first 4 candidates
   private readonly DEBUG_AMPLITUDE_NORMALIZE = 0.85; // Normalize debug waveforms to 85% amplitude
+  private readonly CANDIDATE_SEGMENT_PADDING_RATIO = 0.1; // Padding before candidate segment as ratio of cycle length
   
   // Candidate visualization constants
   private readonly CANDIDATE_COLORS = ['#ff0000', '#ff00ff', '#ff8800', '#ffff00'];
@@ -161,8 +162,8 @@ export class DebugRenderer {
 
     const referenceWidth = Math.floor(this.canvas.width * this.REFERENCE_WIDTH_RATIO);
     
-    // Draw reference waveform in cyan
-    this.drawWaveformSegment(referenceData, 0, referenceWidth, '#00ffff');
+    // Draw reference waveform in cyan with amplitude normalization
+    this.drawWaveformSegment(referenceData, 0, referenceWidth, '#00ffff', 1, true);
 
     // Draw separator line
     this.ctx.strokeStyle = '#ffff00';
@@ -232,7 +233,7 @@ export class DebugRenderer {
       }
 
       // Extract waveform segment around candidate with same length as reference
-      const segmentStart = Math.max(0, candidateIndex - Math.floor(cycleLength * 0.1));
+      const segmentStart = Math.max(0, candidateIndex - Math.floor(cycleLength * this.CANDIDATE_SEGMENT_PADDING_RATIO));
       const segmentEnd = Math.min(searchBuffer.length, segmentStart + cycleLength);
       const segmentData = searchBuffer.slice(segmentStart, segmentEnd);
 
