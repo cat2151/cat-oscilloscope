@@ -13,6 +13,11 @@ import { ZeroCrossDetector } from '../ZeroCrossDetector';
 
 /**
  * Helper function to generate a sine wave
+ * @param frequency Frequency in Hz
+ * @param sampleRate Sample rate in Hz
+ * @param length Number of samples to generate
+ * @param amplitude Peak amplitude (0-1)
+ * @returns Float32Array containing the generated sine wave
  */
 function generateSineWave(frequency: number, sampleRate: number, length: number, amplitude: number = 1.0): Float32Array {
   const data = new Float32Array(length);

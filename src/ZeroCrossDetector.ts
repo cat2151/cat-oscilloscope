@@ -13,6 +13,7 @@ export class ZeroCrossDetector {
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
   private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
+  private readonly DEFAULT_INITIAL_SEARCH_LENGTH = 500; // Default search length when no frequency estimate is available
 
   /**
    * Set whether to use peak mode instead of zero-crossing mode
@@ -316,7 +317,7 @@ export class ZeroCrossDetector {
     // This ensures the display starts from the beginning, similar to zero-cross mode
     const initialSearchLength = estimatedCycleLength > 0 
       ? Math.min(data.length, Math.floor(estimatedCycleLength))
-      : Math.min(data.length, 500);
+      : Math.min(data.length, this.DEFAULT_INITIAL_SEARCH_LENGTH);
       
     const peak = this.findPeak(data, 0, initialSearchLength);
     if (peak !== -1) {
