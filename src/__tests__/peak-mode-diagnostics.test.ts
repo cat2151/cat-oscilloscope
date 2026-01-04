@@ -13,10 +13,10 @@ import { ZeroCrossDetector } from '../ZeroCrossDetector';
 
 /**
  * Helper function to generate a sine wave
- * @param frequency Frequency in Hz
- * @param sampleRate Sample rate in Hz
- * @param length Number of samples to generate
- * @param amplitude Peak amplitude (0-1)
+ * @param frequency Frequency in Hz (typically 20-20000 for audio)
+ * @param sampleRate Sample rate in Hz (e.g., 48000)
+ * @param length Number of samples to generate (must be positive integer)
+ * @param amplitude Peak amplitude, must be in range 0-1 (default: 1.0)
  * @returns Float32Array containing the generated sine wave
  */
 function generateSineWave(frequency: number, sampleRate: number, length: number, amplitude: number = 1.0): Float32Array {
@@ -226,6 +226,11 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       const length = 4096;
       const cycleLength = Math.floor(sampleRate / frequency);
       
+      // Tolerance threshold for temporal stability (0.5 cycles)
+      // This allows for minor variations due to pattern matching while ensuring
+      // the peak position doesn't jump wildly between frames
+      const MAX_POSITION_VARIANCE_CYCLES = 0.5;
+      
       const detector = new ZeroCrossDetector();
       detector.setUsePeakMode(true);
       
@@ -249,8 +254,8 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       console.log(`Position variance: ${positionVariance} samples (${(positionVariance / cycleLength).toFixed(2)} cycles)`);
       
       // Positions should be very stable for the same signal
-      // Allow some variance due to pattern matching, but should be less than 0.5 cycles
-      expect(positionVariance).toBeLessThan(cycleLength * 0.5);
+      // Allow some variance due to pattern matching, but should be less than MAX_POSITION_VARIANCE_CYCLES
+      expect(positionVariance).toBeLessThan(cycleLength * MAX_POSITION_VARIANCE_CYCLES);
     });
   });
 });
