@@ -73,6 +73,7 @@ describe('DOM Integration Tests', () => {
   let autoGainCheckbox: HTMLInputElement;
   let noiseGateCheckbox: HTMLInputElement;
   let fftDisplayCheckbox: HTMLInputElement;
+  let usePeakModeCheckbox: HTMLInputElement;
   let noiseGateThreshold: HTMLInputElement;
   let thresholdValue: HTMLSpanElement;
   let statusElement: HTMLSpanElement;
@@ -97,6 +98,10 @@ describe('DOM Integration Tests', () => {
         <label>
           <input type="checkbox" id="fftDisplayCheckbox" checked>
           <span>FFT Display</span>
+        </label>
+        <label>
+          <input type="checkbox" id="usePeakModeCheckbox">
+          <span>Peak Mode</span>
         </label>
         <label>
           <span>Threshold:</span>
@@ -131,6 +136,7 @@ describe('DOM Integration Tests', () => {
     autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
     noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
     fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
+    usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
     noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
     thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
     statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -178,6 +184,7 @@ describe('DOM Integration Tests', () => {
       expect(autoGainCheckbox).toBeTruthy();
       expect(noiseGateCheckbox).toBeTruthy();
       expect(fftDisplayCheckbox).toBeTruthy();
+      expect(usePeakModeCheckbox).toBeTruthy();
       expect(noiseGateThreshold).toBeTruthy();
       expect(thresholdValue).toBeTruthy();
       expect(statusElement).toBeTruthy();
@@ -190,6 +197,7 @@ describe('DOM Integration Tests', () => {
       expect(autoGainCheckbox.checked).toBe(true);
       expect(noiseGateCheckbox.checked).toBe(true);
       expect(fftDisplayCheckbox.checked).toBe(true);
+      expect(usePeakModeCheckbox.checked).toBe(false);
     });
 
     it('should have correct initial threshold value', () => {

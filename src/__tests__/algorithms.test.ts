@@ -435,6 +435,123 @@ describe('Algorithm-Specific Tests', () => {
     });
   });
 
+  describe('Peak Detection Mode', () => {
+    it('should toggle peak mode on and off', () => {
+      oscilloscope.setUsePeakMode(false);
+      expect(oscilloscope.getUsePeakMode()).toBe(false);
+      
+      oscilloscope.setUsePeakMode(true);
+      expect(oscilloscope.getUsePeakMode()).toBe(true);
+      
+      oscilloscope.setUsePeakMode(false);
+      expect(oscilloscope.getUsePeakMode()).toBe(false);
+    });
+
+    it('should have peak mode disabled by default', () => {
+      expect(oscilloscope.getUsePeakMode()).toBe(false);
+    });
+
+    it('should find peak in a sine wave', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      const detector = new ZeroCrossDetector();
+      const peak = detector.findPeak(signal, 0);
+      
+      // Should find a valid peak
+      expect(peak).toBeGreaterThanOrEqual(0);
+      expect(peak).toBeLessThan(signal.length);
+      
+      // The peak should be at or near maximum amplitude
+      const peakValue = Math.abs(signal[peak]);
+      expect(peakValue).toBeGreaterThan(0.7); // Should be close to 0.8
+    });
+
+    it('should find peak in a square wave', () => {
+      const sampleRate = 48000;
+      const frequency = 100;
+      const length = 4096;
+      const amplitude = 0.9;
+      const signal = generateSquareWave(frequency, sampleRate, length, amplitude);
+      
+      const detector = new ZeroCrossDetector();
+      const peak = detector.findPeak(signal, 0);
+      
+      // Should find a valid peak
+      expect(peak).toBeGreaterThanOrEqual(0);
+      expect(peak).toBeLessThan(signal.length);
+      
+      // The peak should have maximum amplitude
+      const peakValue = Math.abs(signal[peak]);
+      expect(peakValue).toBeCloseTo(amplitude, 6);
+    });
+
+    it('should find stable peak with temporal continuity', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      const cycleLength = Math.floor(sampleRate / frequency);
+      const firstPeak = detector.findStablePeak(signal, cycleLength);
+      
+      // Should find a valid peak
+      expect(firstPeak).toBeGreaterThanOrEqual(0);
+      expect(firstPeak).toBeLessThan(signal.length);
+      
+      // Call again to test temporal stability
+      const secondPeak = detector.findStablePeak(signal, cycleLength);
+      expect(secondPeak).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should calculate display range using peak mode', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      const displayRange = detector.calculateDisplayRange(signal, frequency, sampleRate);
+      
+      // Should return a valid display range
+      expect(displayRange).not.toBeNull();
+      expect(displayRange!.startIndex).toBeGreaterThanOrEqual(0);
+      expect(displayRange!.endIndex).toBeLessThanOrEqual(signal.length);
+      expect(displayRange!.startIndex).toBeLessThan(displayRange!.endIndex);
+      expect(displayRange!.firstZeroCross).toBeGreaterThanOrEqual(0); // Actually contains peak position
+    });
+
+    it('should reset peak tracking when reset is called', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      const cycleLength = Math.floor(sampleRate / frequency);
+      
+      // Find a peak to establish tracking
+      const firstPeak = detector.findStablePeak(signal, cycleLength);
+      expect(firstPeak).toBeGreaterThanOrEqual(0);
+      
+      // Reset should clear the tracking
+      detector.reset();
+      
+      // After reset, it should still be able to find a peak
+      const peakAfterReset = detector.findStablePeak(signal, cycleLength);
+      expect(peakAfterReset).toBeGreaterThanOrEqual(0);
+    });
+  });
+
   describe('Noise Gate Threshold Behavior', () => {
     it('should apply noise gate when enabled', () => {
       oscilloscope.setNoiseGate(true);
