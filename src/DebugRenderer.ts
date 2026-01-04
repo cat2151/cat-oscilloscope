@@ -11,7 +11,11 @@ export class DebugRenderer {
   private debugDisplayEnabled = false;
   
   // Layout constants
-  private readonly REFERENCE_WIDTH_RATIO = 0.2; // Reference waveform occupies 20% of canvas width
+  private readonly REFERENCE_WIDTH_RATIO = 0.2 * (2/3); // Reference waveform occupies 2/3 of original 20% (≈13.33% of canvas width before flooring)
+  private readonly CANDIDATES_WIDTH_RATIO = 0.2 * (2/3); // 4 candidates occupy the same ratio as reference (≈13.33% of canvas width before flooring)
+  private readonly MAX_CANDIDATES_TO_DISPLAY = 4; // Display first 4 candidates
+  private readonly DEBUG_AMPLITUDE_NORMALIZE = 0.85; // Normalize debug waveforms to 85% amplitude
+  private readonly CANDIDATE_SEGMENT_PADDING_RATIO = 0.5; // Center candidate in segment (extract from -50% to +50% of cycle length)
   
   // Candidate visualization constants
   private readonly CANDIDATE_COLORS = ['#ff0000', '#ff00ff', '#ff8800', '#ffff00'];
@@ -89,13 +93,15 @@ export class DebugRenderer {
    * @param width Width of the waveform area
    * @param color Stroke color
    * @param lineWidth Line width
+   * @param normalizeAmplitude Whether to normalize amplitude to 85% for better visibility
    */
   private drawWaveformSegment(
     data: Float32Array,
     startX: number,
     width: number,
     color: string,
-    lineWidth: number = 1
+    lineWidth: number = 1,
+    normalizeAmplitude: boolean = true
   ): void {
     if (data.length === 0) {
       return;
@@ -103,7 +109,28 @@ export class DebugRenderer {
 
     const sliceWidth = width / data.length;
     const centerY = this.canvas.height / 2;
-    const amplitude = this.canvas.height / 2;
+    const baseAmplitude = this.canvas.height / 2;
+
+    // Find max absolute value for normalization
+    let maxAbsValue = 0;
+    if (normalizeAmplitude) {
+      for (let i = 0; i < data.length; i++) {
+        const absValue = Math.abs(data[i]);
+        if (absValue > maxAbsValue) {
+          maxAbsValue = absValue;
+        }
+      }
+    }
+
+    // Calculate amplitude with normalization
+    let amplitude: number;
+    if (normalizeAmplitude && maxAbsValue > 0) {
+      // Normalize waveform so its maximum amplitude reaches 85% of half canvas height (baseAmplitude)
+      const normalizationFactor = this.DEBUG_AMPLITUDE_NORMALIZE / maxAbsValue;
+      amplitude = baseAmplitude * normalizationFactor;
+    } else {
+      amplitude = baseAmplitude;
+    }
 
     this.ctx.strokeStyle = color;
     this.ctx.lineWidth = lineWidth;
@@ -127,16 +154,16 @@ export class DebugRenderer {
 
   /**
    * Draw reference waveform on the left side
+   * @param referenceData Reference waveform data
+   * @param referenceWidth Width to use for the reference section
    */
-  private drawReferenceWaveform(referenceData: Float32Array): void {
+  private drawReferenceWaveform(referenceData: Float32Array, referenceWidth: number): void {
     if (referenceData.length === 0) {
       return;
     }
-
-    const referenceWidth = Math.floor(this.canvas.width * this.REFERENCE_WIDTH_RATIO);
     
-    // Draw reference waveform in cyan
-    this.drawWaveformSegment(referenceData, 0, referenceWidth, '#00ffff');
+    // Draw reference waveform in cyan with amplitude normalization
+    this.drawWaveformSegment(referenceData, 0, referenceWidth, '#00ffff', 1, true);
 
     // Draw separator line
     this.ctx.strokeStyle = '#ffff00';
@@ -154,34 +181,107 @@ export class DebugRenderer {
 
   /**
    * Draw search buffer waveform
+   * @param searchBuffer Search buffer data
+   * @param startX Starting X position for search buffer
+   * @param width Width available for search buffer
    */
-  private drawSearchBuffer(searchBuffer: Float32Array, referenceWidth: number): void {
+  private drawSearchBuffer(searchBuffer: Float32Array, startX: number, width: number): void {
     if (searchBuffer.length === 0) {
       return;
     }
-
-    // Search buffer occupies remaining canvas width
-    const searchWidth = this.canvas.width - referenceWidth;
     
     // Draw search buffer waveform in green
-    this.drawWaveformSegment(searchBuffer, referenceWidth, searchWidth, '#00ff00');
+    this.drawWaveformSegment(searchBuffer, startX, width, '#00ff00', 1, true);
 
     // Add label
     this.ctx.fillStyle = '#00ff00';
     this.ctx.font = 'bold 12px Arial';
-    this.ctx.fillText('Search Buffer', referenceWidth + 5, 15);
+    this.ctx.fillText('Search Buffer (Full Frame)', startX + 5, 15);
   }
 
   /**
-   * Draw vertical lines for all candidates
+   * Draw candidate waveforms in separate sections
+   * @param candidates Array of candidate indices in searchBuffer
+   * @param searchBuffer Full search buffer data
+   * @param referenceData Reference waveform for cycle length estimation
+   * @param startX Starting X position for candidate sections
+   * @param totalWidth Total width available for all candidates
    */
-  private drawCandidateLines(candidates: number[], searchBuffer: Float32Array, referenceWidth: number): void {
+  private drawCandidateSegments(
+    candidates: number[],
+    searchBuffer: Float32Array,
+    referenceData: Float32Array,
+    startX: number,
+    totalWidth: number
+  ): void {
     if (candidates.length === 0 || searchBuffer.length === 0) {
       return;
     }
 
-    const searchWidth = this.canvas.width - referenceWidth;
-    const sliceWidth = searchWidth / searchBuffer.length;
+    // Limit to first 4 candidates
+    const displayCandidates = candidates.slice(0, this.MAX_CANDIDATES_TO_DISPLAY);
+    const candidateWidth = totalWidth / this.MAX_CANDIDATES_TO_DISPLAY;
+
+    // Estimate cycle length from reference data
+    const cycleLength = referenceData.length;
+
+    // Draw each candidate waveform
+    displayCandidates.forEach((candidateIndex, i) => {
+      // Validate candidate index
+      if (candidateIndex < 0 || candidateIndex >= searchBuffer.length) {
+        return;
+      }
+
+      // Extract waveform segment centered on candidate with same length as reference
+      const segmentStart = Math.max(0, candidateIndex - Math.floor(cycleLength * this.CANDIDATE_SEGMENT_PADDING_RATIO));
+      const segmentEnd = Math.min(searchBuffer.length, segmentStart + cycleLength);
+      const segmentData = searchBuffer.slice(segmentStart, segmentEnd);
+
+      // Draw waveform in this candidate's section
+      const sectionStartX = startX + (i * candidateWidth);
+      const color = this.CANDIDATE_COLORS[i % this.CANDIDATE_COLORS.length];
+      
+      this.drawWaveformSegment(segmentData, sectionStartX, candidateWidth, color, 1.5, true);
+
+      // Draw separator line between candidates
+      if (i < displayCandidates.length - 1) {
+        this.ctx.strokeStyle = '#444444';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(sectionStartX + candidateWidth, 0);
+        this.ctx.lineTo(sectionStartX + candidateWidth, this.canvas.height);
+        this.ctx.stroke();
+      }
+
+      // Draw label
+      this.ctx.fillStyle = color;
+      this.ctx.font = 'bold 10px Arial';
+      this.ctx.fillText(`Candidate #${i}`, sectionStartX + 5, 15);
+    });
+
+    // Draw final separator after all candidates
+    this.ctx.strokeStyle = '#ffff00';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    const separatorX = startX + totalWidth;
+    this.ctx.moveTo(separatorX, 0);
+    this.ctx.lineTo(separatorX, this.canvas.height);
+    this.ctx.stroke();
+  }
+
+  /**
+   * Draw vertical lines for all candidates on the search buffer
+   * @param candidates Array of candidate indices
+   * @param searchBuffer Search buffer data
+   * @param startX Starting X position of search buffer area
+   * @param width Width of search buffer area
+   */
+  private drawCandidateLines(candidates: number[], searchBuffer: Float32Array, startX: number, width: number): void {
+    if (candidates.length === 0 || searchBuffer.length === 0) {
+      return;
+    }
+
+    const sliceWidth = width / searchBuffer.length;
 
     // Draw vertical lines for each candidate
     candidates.forEach((candidateIndex, i) => {
@@ -190,7 +290,7 @@ export class DebugRenderer {
         return;
       }
       
-      const x = referenceWidth + (candidateIndex * sliceWidth);
+      const x = startX + (candidateIndex * sliceWidth);
 
       // Alternate colors for visibility
       this.ctx.strokeStyle = this.CANDIDATE_COLORS[i % this.CANDIDATE_COLORS.length];
@@ -211,7 +311,7 @@ export class DebugRenderer {
     // Add legend
     this.ctx.fillStyle = '#ffffff';
     this.ctx.font = 'bold 12px Arial';
-    this.ctx.fillText(`Candidates: ${candidates.length}`, referenceWidth + 5, this.canvas.height - 10);
+    this.ctx.fillText(`Candidates: ${candidates.length}`, startX + 5, this.canvas.height - 10);
   }
 
   /**
@@ -232,20 +332,28 @@ export class DebugRenderer {
     // Clear and prepare canvas
     this.clearAndDrawGrid();
 
-    // Calculate reference width
+    // Calculate layout widths
     const referenceWidth = Math.floor(this.canvas.width * this.REFERENCE_WIDTH_RATIO);
+    const candidatesWidth = Math.floor(this.canvas.width * this.CANDIDATES_WIDTH_RATIO);
+    const searchBufferStartX = referenceWidth + candidatesWidth;
+    const searchBufferWidth = this.canvas.width - searchBufferStartX;
 
     // Draw reference waveform on the left
     if (referenceData && referenceData.length > 0) {
-      this.drawReferenceWaveform(referenceData);
+      this.drawReferenceWaveform(referenceData, referenceWidth);
     }
 
-    // Draw search buffer waveform
+    // Draw candidate segments next to reference
+    if (searchBuffer && searchBuffer.length > 0 && referenceData && referenceData.length > 0 && candidates.length > 0) {
+      this.drawCandidateSegments(candidates, searchBuffer, referenceData, referenceWidth, candidatesWidth);
+    }
+
+    // Draw search buffer waveform on the right
     if (searchBuffer && searchBuffer.length > 0) {
-      this.drawSearchBuffer(searchBuffer, referenceWidth);
+      this.drawSearchBuffer(searchBuffer, searchBufferStartX, searchBufferWidth);
       
-      // Draw candidate lines
-      this.drawCandidateLines(candidates, searchBuffer, referenceWidth);
+      // Draw candidate lines on search buffer
+      this.drawCandidateLines(candidates, searchBuffer, searchBufferStartX, searchBufferWidth);
     }
   }
 }
