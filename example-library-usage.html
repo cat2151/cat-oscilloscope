@@ -118,12 +118,16 @@
   </div>
 
   <div class="info">
-    <h3>使用方法（npm経由）:</h3>
-    <pre><code>// インストール
-npm install cat-oscilloscope
-
-// 使用例
-import { Oscilloscope } from 'cat-oscilloscope';
+    <h3>使用方法:</h3>
+    
+    <h4>GitHubリポジトリから直接インストール:</h4>
+    <pre><code>npm install git+https://github.com/cat2151/cat-oscilloscope.git</code></pre>
+    
+    <h4>npm経由でのインストール（パッケージ公開後）:</h4>
+    <pre><code>npm install cat-oscilloscope</code></pre>
+    
+    <h4>基本的な使用例:</h4>
+    <pre><code>import { Oscilloscope } from 'cat-oscilloscope';
 
 const canvas = document.getElementById('oscilloscope');
 const oscilloscope = new Oscilloscope(canvas);

@@ -29,7 +29,7 @@ export default defineConfig({
       // Externalize dependencies that shouldn't be bundled
       external: [],
       output: {
-        // Provide global variables for UMD build (if needed in future)
+        // Provide global variables if needed in future (e.g., for UMD format)
         globals: {}
       }
     },
