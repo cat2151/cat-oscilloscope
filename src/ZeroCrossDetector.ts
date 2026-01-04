@@ -192,6 +192,15 @@ export class ZeroCrossDetector {
   }
 
   /**
+   * Initialize placeholder similarity scores for UI display
+   * Used when real similarity calculations cannot be performed (e.g., no reference data yet)
+   */
+  private initializePlaceholderScores(candidateCount: number): void {
+    // Limit to 4 candidates to match the UI bar graph display limit
+    this.lastSimilarityScores = new Array(Math.min(candidateCount, 4)).fill(0);
+  }
+
+  /**
    * Select the best zero-cross candidate based on waveform pattern matching
    * Compares each candidate segment in the current buffer against the reference waveform from the previous frame
    */
@@ -207,7 +216,7 @@ export class ZeroCrossDetector {
     if (candidates.length === 1) {
       // Initialize with a placeholder for UI (will be replaced with real scores once reference exists)
       if (this.lastSimilarityScores.length === 0) {
-        this.lastSimilarityScores = [0];
+        this.initializePlaceholderScores(candidates.length);
       }
       return candidates[0];
     }
@@ -216,7 +225,7 @@ export class ZeroCrossDetector {
     if (cycleLength <= 0) {
       // Initialize with placeholders for UI (will be replaced with real scores once conditions are met)
       if (this.lastSimilarityScores.length === 0) {
-        this.lastSimilarityScores = new Array(Math.min(candidates.length, 4)).fill(0);
+        this.initializePlaceholderScores(candidates.length);
       }
       return candidates[0];
     }
@@ -225,7 +234,7 @@ export class ZeroCrossDetector {
     if (!this.lastReferenceData || this.lastReferenceData.length === 0) {
       // Initialize with placeholders for UI on first frame (will be replaced with real scores in subsequent frames)
       if (this.lastSimilarityScores.length === 0) {
-        this.lastSimilarityScores = new Array(Math.min(candidates.length, 4)).fill(0);
+        this.initializePlaceholderScores(candidates.length);
       }
       return candidates[0];
     }
