@@ -533,6 +533,7 @@ export class ZeroCrossDetector {
     secondZeroCross?: number;
   } | null {
     // Store search buffer for debug visualization
+    // Note: We copy the data because the Web Audio API reuses the buffer on each frame
     this.lastSearchBuffer = new Float32Array(data);
     
     // Estimate cycle length from frequency
@@ -600,6 +601,7 @@ export class ZeroCrossDetector {
     secondZeroCross?: number;
   } | null {
     // Store search buffer for debug visualization
+    // Note: We copy the data because the Web Audio API reuses the buffer on each frame
     this.lastSearchBuffer = new Float32Array(data);
     
     // Find the first zero-cross point to estimate cycle length

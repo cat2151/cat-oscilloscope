@@ -176,6 +176,11 @@ export class DebugRenderer {
 
     // Draw vertical lines for each candidate
     candidates.forEach((candidateIndex, i) => {
+      // Validate candidate index is within bounds
+      if (candidateIndex < 0 || candidateIndex >= searchBuffer.length) {
+        return;
+      }
+      
       const x = referenceWidth + (candidateIndex * sliceWidth);
 
       // Alternate colors for visibility
@@ -187,10 +192,12 @@ export class DebugRenderer {
       this.ctx.lineTo(x, this.canvas.height);
       this.ctx.stroke();
 
-      // Draw candidate number label
-      this.ctx.fillStyle = this.ctx.strokeStyle;
-      this.ctx.font = 'bold 10px Arial';
-      this.ctx.fillText(`#${i}`, x + 2, 30 + (i * 12));
+      // Draw candidate number label (limit to first 10 to avoid overlap)
+      if (i < 10) {
+        this.ctx.fillStyle = this.ctx.strokeStyle;
+        this.ctx.font = 'bold 10px Arial';
+        this.ctx.fillText(`#${i}`, x + 2, 30 + (i * 12));
+      }
     });
 
     // Add legend
