@@ -166,7 +166,7 @@ export class Oscilloscope {
         const searchBuffer = this.zeroCrossDetector.getLastSearchBuffer();
         const candidates = this.zeroCrossDetector.getLastCandidates();
         const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
-        this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data);
+        this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data, similarityScores);
       }
     }
 
