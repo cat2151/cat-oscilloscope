@@ -182,5 +182,70 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       
       expect(diagnosis.problem).toBeTruthy();
     });
+
+    it('should verify waveform content in display range', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      const displayRange = detector.calculateDisplayRange(signal, frequency, sampleRate);
+      expect(displayRange).not.toBeNull();
+      
+      // Check if the display range contains a full waveform cycle
+      let minVal = Infinity;
+      let maxVal = -Infinity;
+      for (let i = displayRange!.startIndex; i < displayRange!.endIndex; i++) {
+        minVal = Math.min(minVal, signal[i]);
+        maxVal = Math.max(maxVal, signal[i]);
+      }
+      
+      console.log('=== Waveform Content Analysis ===');
+      console.log(`Display range: ${displayRange!.startIndex} to ${displayRange!.endIndex}`);
+      console.log(`Min value in range: ${minVal.toFixed(3)}`);
+      console.log(`Max value in range: ${maxVal.toFixed(3)}`);
+      console.log(`Peak-to-peak amplitude: ${(maxVal - minVal).toFixed(3)}`);
+      
+      // The display range should contain a full cycle with both positive and negative peaks
+      expect(maxVal).toBeGreaterThan(0.7); // Should have positive peak close to 0.8
+      expect(minVal).toBeLessThan(-0.7); // Should have negative peak close to -0.8
+      expect(maxVal - minVal).toBeGreaterThan(1.4); // Peak-to-peak should be ~1.6
+    });
+
+    it('should maintain stable peak positions across multiple frames', () => {
+      const sampleRate = 48000;
+      const frequency = 440;
+      const length = 4096;
+      const cycleLength = Math.floor(sampleRate / frequency);
+      
+      const detector = new ZeroCrossDetector();
+      detector.setUsePeakMode(true);
+      
+      // Simulate multiple consecutive frames with the same signal
+      const positions: number[] = [];
+      for (let frame = 0; frame < 10; frame++) {
+        const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+        const displayRange = detector.calculateDisplayRange(signal, frequency, sampleRate);
+        expect(displayRange).not.toBeNull();
+        positions.push(displayRange!.firstZeroCross); // Peak position
+      }
+      
+      console.log('=== Temporal Stability Analysis ===');
+      console.log(`Peak positions across 10 frames:`, positions);
+      
+      // Check if positions are stable (should be very similar or identical)
+      const maxPosition = Math.max(...positions);
+      const minPosition = Math.min(...positions);
+      const positionVariance = maxPosition - minPosition;
+      
+      console.log(`Position variance: ${positionVariance} samples (${(positionVariance / cycleLength).toFixed(2)} cycles)`);
+      
+      // Positions should be very stable for the same signal
+      // Allow some variance due to pattern matching, but should be less than 0.5 cycles
+      expect(positionVariance).toBeLessThan(cycleLength * 0.5);
+    });
   });
 });

@@ -311,10 +311,12 @@ export class ZeroCrossDetector {
       }
     }
     
-    // No previous position or search failed - find first peak in initial portion
+    // No previous position or search failed - find first peak from beginning
+    // Search within the first cycle to find a peak near the start of the buffer
+    // This ensures the display starts from the beginning, similar to zero-cross mode
     const initialSearchLength = estimatedCycleLength > 0 
-      ? Math.min(data.length, Math.floor(estimatedCycleLength * 2))
-      : Math.min(data.length, 1000);
+      ? Math.min(data.length, Math.floor(estimatedCycleLength * 1.0))
+      : Math.min(data.length, 500);
       
     const peak = this.findPeak(data, 0, initialSearchLength);
     if (peak !== -1) {
