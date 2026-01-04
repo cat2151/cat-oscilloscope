@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cat-oscilloscope Library Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    h1 {
+      color: #00ff00;
+    }
+    canvas {
+      border: 2px solid #00ff00;
+      display: block;
+      margin: 20px 0;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    button {
+      background: #00ff00;
+      border: none;
+      color: #000;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    label {
+      margin: 10px;
+      display: inline-block;
+    }
+    input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    .info {
+      background: #333;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .status {
+      color: #00ff00;
+      font-weight: bold;
+    }
+    code {
+      background: #222;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #00ff00;
+    }
+    pre {
+      background: #222;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐱 cat-oscilloscope ライブラリ使用例</h1>
+  
+  <div class="info">
+    <p>このページは、cat-oscilloscopeをnpmライブラリとして使用する方法を示す例です。</p>
+    <p><strong>注意:</strong> マイクへのアクセス許可が必要です。HTTPSまたはlocalhostで実行してください。</p>
+  </div>
+
+  <canvas id="oscilloscope" width="800" height="400"></canvas>
+  
+  <div class="controls">
+    <button id="startBtn">Start Microphone</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+    <button id="loadFileBtn">Load Audio File</button>
+    <br>
+    <label>
+      <input type="checkbox" id="autoGain" checked>
+      Auto Gain
+    </label>
+    <label>
+      <input type="checkbox" id="noiseGate">
+      Noise Gate
+    </label>
+    <label>
+      <input type="checkbox" id="fftDisplay">
+      FFT Display
+    </label>
+    <br>
+    <label>
+      周波数推定方法:
+      <select id="freqMethod">
+        <option value="zero-crossing">Zero-Crossing</option>
+        <option value="autocorrelation" selected>Autocorrelation</option>
+        <option value="fft">FFT</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="info">
+    <p>状態: <span class="status" id="status">Stopped</span></p>
+    <p>周波数: <span class="status" id="frequency">--- Hz</span></p>
+    <p>ゲイン: <span class="status" id="gain">---x</span></p>
+  </div>
+
+  <div class="info">
+    <h3>使用方法（npm経由）:</h3>
+    <pre><code>// インストール
+npm install cat-oscilloscope
+
+// 使用例
+import { Oscilloscope } from 'cat-oscilloscope';
+
+const canvas = document.getElementById('oscilloscope');
+const oscilloscope = new Oscilloscope(canvas);
+
+// マイク開始
+await oscilloscope.start();
+
+// オプション設定
+oscilloscope.setAutoGain(true);
+oscilloscope.setNoiseGate(false);
+oscilloscope.setFrequencyEstimationMethod('autocorrelation');
+
+// 停止
+await oscilloscope.stop();</code></pre>
+    
+    <p>詳細は <a href="https://github.com/cat2151/cat-oscilloscope/blob/main/LIBRARY_USAGE.md" style="color: #00ff00;">LIBRARY_USAGE.md</a> を参照してください。</p>
+  </div>
+
+  <script type="module">
+    // この例では、ライブラリがグローバルにインストールされていると仮定しています
+    // 実際の使用では: import { Oscilloscope } from 'cat-oscilloscope';
+    
+    // ローカル開発用にsrcからインポート
+    import { Oscilloscope } from './src/index.ts';
+
+    const canvas = document.getElementById('oscilloscope');
+    const oscilloscope = new Oscilloscope(canvas);
+    
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const loadFileBtn = document.getElementById('loadFileBtn');
+    const fileInput = document.getElementById('fileInput');
+    const autoGainCheckbox = document.getElementById('autoGain');
+    const noiseGateCheckbox = document.getElementById('noiseGate');
+    const fftDisplayCheckbox = document.getElementById('fftDisplay');
+    const freqMethodSelect = document.getElementById('freqMethod');
+    const statusElement = document.getElementById('status');
+    const frequencyElement = document.getElementById('frequency');
+    const gainElement = document.getElementById('gain');
+
+    // 初期設定
+    oscilloscope.setAutoGain(autoGainCheckbox.checked);
+    oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+    oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    oscilloscope.setFrequencyEstimationMethod(freqMethodSelect.value);
+
+    // 周波数とゲイン表示の更新
+    let updateInterval = null;
+    function startUpdates() {
+      updateInterval = setInterval(() => {
+        const freq = oscilloscope.getEstimatedFrequency();
+        frequencyElement.textContent = freq > 0 ? `${freq.toFixed(1)} Hz` : '--- Hz';
+        
+        const gain = oscilloscope.getCurrentGain();
+        gainElement.textContent = `${gain.toFixed(2)}x`;
+      }, 100);
+    }
+    
+    function stopUpdates() {
+      if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+      }
+      frequencyElement.textContent = '--- Hz';
+      gainElement.textContent = '---x';
+    }
+
+    // マイク開始ボタン
+    startBtn.addEventListener('click', async () => {
+      try {
+        startBtn.disabled = true;
+        loadFileBtn.disabled = true;
+        statusElement.textContent = 'Requesting microphone access...';
+        
+        await oscilloscope.start();
+        
+        statusElement.textContent = 'Running - Microphone active';
+        startBtn.style.display = 'none';
+        stopBtn.disabled = false;
+        startUpdates();
+      } catch (error) {
+        console.error('Failed to start oscilloscope:', error);
+        statusElement.textContent = 'Error: Could not access microphone';
+        startBtn.disabled = false;
+        loadFileBtn.disabled = false;
+      }
+    });
+
+    // 停止ボタン
+    stopBtn.addEventListener('click', async () => {
+      try {
+        await oscilloscope.stop();
+        
+        statusElement.textContent = 'Stopped';
+        startBtn.style.display = 'inline-block';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        loadFileBtn.disabled = false;
+        stopUpdates();
+      } catch (error) {
+        console.error('Failed to stop oscilloscope:', error);
+      }
+    });
+
+    // ファイル読み込み
+    loadFileBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      
+      if (oscilloscope.getIsRunning()) {
+        await oscilloscope.stop();
+        stopUpdates();
+      }
+      
+      try {
+        startBtn.disabled = true;
+        loadFileBtn.disabled = true;
+        stopBtn.disabled = true;
+        statusElement.textContent = `Loading: ${file.name}...`;
+        
+        await oscilloscope.startFromFile(file);
+        
+        statusElement.textContent = `Playing: ${file.name} (loop)`;
+        startBtn.style.display = 'none';
+        stopBtn.disabled = false;
+        startUpdates();
+      } catch (error) {
+        console.error('Failed to load audio file:', error);
+        statusElement.textContent = 'Error: Could not load audio file';
+        startBtn.style.display = 'inline-block';
+        startBtn.disabled = false;
+        loadFileBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+      
+      fileInput.value = '';
+    });
+
+    // 設定変更
+    autoGainCheckbox.addEventListener('change', () => {
+      oscilloscope.setAutoGain(autoGainCheckbox.checked);
+    });
+
+    noiseGateCheckbox.addEventListener('change', () => {
+      oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+    });
+
+    fftDisplayCheckbox.addEventListener('change', () => {
+      oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    });
+
+    freqMethodSelect.addEventListener('change', () => {
+      oscilloscope.setFrequencyEstimationMethod(freqMethodSelect.value);
+    });
+  </script>
+</body>
+</html>
