@@ -195,6 +195,14 @@ export class Oscilloscope {
     return this.gainController.getCurrentGain();
   }
   
+  setUsePeakMode(enabled: boolean): void {
+    this.zeroCrossDetector.setUsePeakMode(enabled);
+  }
+
+  getUsePeakMode(): boolean {
+    return this.zeroCrossDetector.getUsePeakMode();
+  }
+  
   getSimilarityScores(): number[] {
     return this.zeroCrossDetector.getSimilarityScores();
   }

@@ -2,14 +2,72 @@
  * ZeroCrossDetector handles zero-crossing detection and display range calculation
  * Responsible for:
  * - Finding zero-crossing points in waveform
+ * - Finding peak points in waveform (alternative to zero-crossing for high frequencies)
  * - Calculating optimal display ranges
- * - Maintaining temporal stability in zero-cross detection
+ * - Maintaining temporal stability in zero-cross/peak detection
  */
 export class ZeroCrossDetector {
   private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
+  private previousPeakIndex: number | null = null; // Previous frame's peak position
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
   private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
+  private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
+
+  /**
+   * Set whether to use peak mode instead of zero-crossing mode
+   */
+  setUsePeakMode(enabled: boolean): void {
+    this.usePeakMode = enabled;
+  }
+
+  /**
+   * Get whether peak mode is enabled
+   */
+  getUsePeakMode(): boolean {
+    return this.usePeakMode;
+  }
+
+  /**
+   * Find peak point (maximum absolute amplitude) in the waveform
+   * @param data Waveform data
+   * @param startIndex Starting index for search
+   * @param endIndex Ending index for search (exclusive)
+   * @returns Index of peak point, or -1 if not found
+   */
+  findPeak(data: Float32Array, startIndex: number = 0, endIndex?: number): number {
+    const end = endIndex ?? data.length;
+    if (startIndex >= end || startIndex < 0) {
+      return -1;
+    }
+
+    let peakIndex = startIndex;
+    let peakValue = Math.abs(data[startIndex]);
+
+    for (let i = startIndex + 1; i < end; i++) {
+      const absValue = Math.abs(data[i]);
+      if (absValue > peakValue) {
+        peakValue = absValue;
+        peakIndex = i;
+      }
+    }
+
+    return peakIndex;
+  }
+
+  /**
+   * Find the next peak after the given index within approximately one cycle
+   */
+  findNextPeak(data: Float32Array, startIndex: number, cycleLength: number): number {
+    const searchStart = startIndex + 1;
+    const searchEnd = Math.min(data.length, searchStart + Math.floor(cycleLength * 1.5));
+    
+    if (searchStart >= data.length) {
+      return -1;
+    }
+    
+    return this.findPeak(data, searchStart, searchEnd);
+  }
 
   /**
    * Find zero-cross point where signal crosses from negative to positive
@@ -180,6 +238,116 @@ export class ZeroCrossDetector {
   }
 
   /**
+   * Find all peak candidates after startIndex, up to maxCycles ahead
+   */
+  private findPeakCandidates(
+    data: Float32Array,
+    startIndex: number,
+    cycleLength: number,
+    maxCycles: number
+  ): number[] {
+    const candidates: number[] = [];
+    let currentIndex = startIndex;
+    
+    for (let cycle = 0; cycle < maxCycles; cycle++) {
+      const nextPeak = this.findNextPeak(data, currentIndex, cycleLength);
+      if (nextPeak === -1) {
+        break;
+      }
+      candidates.push(nextPeak);
+      currentIndex = nextPeak;
+    }
+    
+    return candidates;
+  }
+
+  /**
+   * Find a stable peak position with temporal continuity
+   * This prevents rapid switching between different waveform patterns
+   */
+  findStablePeak(data: Float32Array, estimatedCycleLength: number): number {
+    // If we have a previous peak position and cycle estimate
+    if (this.previousPeakIndex !== null && estimatedCycleLength > 0) {
+      let expectedIndex = this.previousPeakIndex;
+      
+      // If the previous index is out of range for the current buffer, reset
+      if (expectedIndex < 0 || expectedIndex >= data.length) {
+        this.previousPeakIndex = null;
+      } else {
+        // Define search range around expected position
+        const searchTolerance = estimatedCycleLength * this.ZERO_CROSS_SEARCH_TOLERANCE_CYCLES;
+        const searchStart = Math.max(0, Math.floor(expectedIndex - searchTolerance));
+        const searchEnd = Math.min(data.length, Math.ceil(expectedIndex + searchTolerance));
+        
+        // Find peak nearest to expected position
+        const nearExpectedCandidate = this.findPeak(data, searchStart, searchEnd);
+        
+        // If we found a peak near expected position
+        if (nearExpectedCandidate !== -1) {
+          // Find candidates up to 4 cycles ahead
+          const candidates = this.findPeakCandidates(
+            data,
+            nearExpectedCandidate,
+            estimatedCycleLength,
+            this.MAX_CANDIDATE_CYCLES
+          );
+          
+          // Include the first candidate
+          candidates.unshift(nearExpectedCandidate);
+          
+          // Select the best candidate based on waveform pattern matching
+          const selectedCandidate = this.selectBestCandidate(
+            data,
+            candidates,
+            estimatedCycleLength,
+            expectedIndex
+          );
+          
+          if (selectedCandidate !== -1) {
+            this.previousPeakIndex = selectedCandidate;
+            return selectedCandidate;
+          }
+        }
+      }
+    }
+    
+    // No previous position or search failed - find first peak in initial portion
+    const initialSearchLength = estimatedCycleLength > 0 
+      ? Math.min(data.length, Math.floor(estimatedCycleLength * 2))
+      : Math.min(data.length, 1000);
+      
+    const peak = this.findPeak(data, 0, initialSearchLength);
+    if (peak !== -1) {
+      // Also apply multi-cycle search for initial detection
+      if (estimatedCycleLength > 0) {
+        const candidates = this.findPeakCandidates(
+          data,
+          peak,
+          estimatedCycleLength,
+          this.MAX_CANDIDATE_CYCLES
+        );
+        candidates.unshift(peak);
+        
+        // For initial detection, no reference position exists
+        const selectedCandidate = this.selectBestCandidate(
+          data,
+          candidates,
+          estimatedCycleLength,
+          null
+        );
+        
+        if (selectedCandidate !== -1) {
+          this.previousPeakIndex = selectedCandidate;
+          return selectedCandidate;
+        }
+      }
+      
+      this.previousPeakIndex = peak;
+    }
+    return peak;
+  }
+
+  /**
    * Find a stable zero-crossing position with temporal continuity
    * This prevents rapid switching between different waveform patterns
    */
@@ -273,9 +441,79 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Calculate the optimal display range for the waveform with zero-cross padding
+   * Calculate the optimal display range for the waveform
+   * Uses either zero-cross or peak detection based on usePeakMode setting
    */
   calculateDisplayRange(data: Float32Array, estimatedFrequency: number, sampleRate: number): {
+    startIndex: number;
+    endIndex: number;
+    firstZeroCross: number;
+    secondZeroCross?: number;
+  } | null {
+    if (this.usePeakMode) {
+      return this.calculateDisplayRangeWithPeak(data, estimatedFrequency, sampleRate);
+    } else {
+      return this.calculateDisplayRangeWithZeroCross(data, estimatedFrequency, sampleRate);
+    }
+  }
+
+  /**
+   * Calculate the optimal display range for the waveform using peak detection
+   */
+  private calculateDisplayRangeWithPeak(data: Float32Array, estimatedFrequency: number, sampleRate: number): {
+    startIndex: number;
+    endIndex: number;
+    firstZeroCross: number;
+    secondZeroCross?: number;
+  } | null {
+    // Estimate cycle length from frequency
+    let cycleLength: number;
+    if (estimatedFrequency > 0 && sampleRate > 0) {
+      cycleLength = Math.floor(sampleRate / estimatedFrequency);
+    } else {
+      // No frequency info, use a default search window
+      cycleLength = Math.floor(data.length / 4);
+    }
+
+    // Use stable peak detection
+    const firstPeak = this.findStablePeak(data, cycleLength);
+    
+    if (firstPeak === -1) {
+      return null; // No peak found
+    }
+    
+    const secondPeak = this.findNextPeak(data, firstPeak, cycleLength);
+
+    // Calculate phase padding
+    const rawPhasePadding = Math.floor(cycleLength / 16); // π/8 of one cycle (2π / 16 = π/8)
+    const maxPhasePadding = Math.floor(data.length / 2);
+    const phasePadding = Math.min(rawPhasePadding, maxPhasePadding);
+    
+    if (secondPeak === -1) {
+      // Only one peak found, display from there to end
+      return {
+        startIndex: Math.max(0, firstPeak - phasePadding),
+        endIndex: data.length,
+        firstZeroCross: firstPeak, // Use peak position in place of zeroCross for API compatibility
+      };
+    }
+
+    // Display from peak -π/8 to next peak +π/8
+    const startIndex = Math.max(0, firstPeak - phasePadding);
+    const endIndex = Math.min(data.length, secondPeak + phasePadding);
+    
+    return {
+      startIndex,
+      endIndex,
+      firstZeroCross: firstPeak, // Use peak position in place of zeroCross for API compatibility
+      secondZeroCross: secondPeak,
+    };
+  }
+
+  /**
+   * Calculate the optimal display range for the waveform with zero-cross padding
+   */
+  private calculateDisplayRangeWithZeroCross(data: Float32Array, estimatedFrequency: number, sampleRate: number): {
     startIndex: number;
     endIndex: number;
     firstZeroCross: number;
@@ -344,9 +582,10 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Reset zero-cross tracking (e.g., when stopping)
+   * Reset zero-cross and peak tracking (e.g., when stopping)
    */
   reset(): void {
     this.previousZeroCrossIndex = null;
+    this.previousPeakIndex = null;
   }
 }

@@ -9,6 +9,7 @@ const fileInput = document.getElementById('fileInput') as HTMLInputElement;
 const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
 const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
+const usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -25,6 +26,7 @@ const requiredElements = [
   { element: autoGainCheckbox, name: 'autoGainCheckbox' },
   { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
+  { element: usePeakModeCheckbox, name: 'usePeakModeCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -70,6 +72,9 @@ thresholdValue.textContent = formatThresholdDisplay(initialThreshold.db, initial
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 
+// Synchronize peak mode control
+oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -83,6 +88,11 @@ noiseGateCheckbox.addEventListener('change', () => {
 // FFT display checkbox handler
 fftDisplayCheckbox.addEventListener('change', () => {
   oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+});
+
+// Peak mode checkbox handler
+usePeakModeCheckbox.addEventListener('change', () => {
+  oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
 });
 
 // Noise gate threshold slider handler
