@@ -117,57 +117,6 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Calculate waveform similarity score between two regions
-   * Returns a correlation coefficient between -1 and 1 (higher is more similar)
-   */
-  private calculateWaveformSimilarity(
-    data: Float32Array,
-    index1: number,
-    index2: number,
-    compareLength: number
-  ): number {
-    // Ensure we don't go out of bounds
-    const maxLength = Math.min(
-      compareLength,
-      data.length - index1,
-      data.length - index2
-    );
-    
-    if (maxLength <= 0) {
-      return -1;
-    }
-
-    // Calculate correlation coefficient
-    let sum1 = 0;
-    let sum2 = 0;
-    let sum1Sq = 0;
-    let sum2Sq = 0;
-    let sumProduct = 0;
-    
-    for (let i = 0; i < maxLength; i++) {
-      const val1 = data[index1 + i];
-      const val2 = data[index2 + i];
-      sum1 += val1;
-      sum2 += val2;
-      sum1Sq += val1 * val1;
-      sum2Sq += val2 * val2;
-      sumProduct += val1 * val2;
-    }
-    
-    // Pearson correlation coefficient
-    const numerator = maxLength * sumProduct - sum1 * sum2;
-    const denominator = Math.sqrt(
-      (maxLength * sum1Sq - sum1 * sum1) * (maxLength * sum2Sq - sum2 * sum2)
-    );
-    
-    if (denominator === 0) {
-      return 0;
-    }
-    
-    return numerator / denominator;
-  }
-
-  /**
    * Calculate waveform similarity score between two different buffers
    * Returns a correlation coefficient between -1 and 1 (higher is more similar)
    */
@@ -249,8 +198,7 @@ export class ZeroCrossDetector {
   private selectBestCandidate(
     data: Float32Array,
     candidates: number[],
-    cycleLength: number,
-    referenceIndex: number | null
+    cycleLength: number
   ): number {
     if (candidates.length === 0) {
       return -1;
@@ -416,8 +364,7 @@ export class ZeroCrossDetector {
           const selectedCandidate = this.selectBestCandidate(
             data,
             candidates,
-            estimatedCycleLength,
-            expectedIndex
+            estimatedCycleLength
           );
           
           if (selectedCandidate !== -1) {
@@ -452,8 +399,7 @@ export class ZeroCrossDetector {
         const selectedCandidate = this.selectBestCandidate(
           data,
           candidates,
-          estimatedCycleLength,
-          null
+          estimatedCycleLength
         );
         
         if (selectedCandidate !== -1) {
@@ -516,12 +462,10 @@ export class ZeroCrossDetector {
           this.lastCandidates = [...candidates];
           
           // Select the best candidate based on waveform pattern matching
-          // Compare against the previous display value (expectedIndex)
           const selectedCandidate = this.selectBestCandidate(
             data,
             candidates,
-            estimatedCycleLength,
-            expectedIndex
+            estimatedCycleLength
           );
           
           if (selectedCandidate !== -1) {
@@ -551,8 +495,7 @@ export class ZeroCrossDetector {
         const selectedCandidate = this.selectBestCandidate(
           data,
           candidates,
-          estimatedCycleLength,
-          null
+          estimatedCycleLength
         );
         
         if (selectedCandidate !== -1) {
