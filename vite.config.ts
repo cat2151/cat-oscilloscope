@@ -18,7 +18,7 @@ export default defineConfig({
     })
   ] : [],
   build: isLibraryMode ? {
-    // Library build configuration
+    // Library build configuration - generates ESM/CJS bundles with type definitions
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'CatOscilloscope',
@@ -38,7 +38,7 @@ export default defineConfig({
     // Clear output directory
     emptyOutDir: true
   } : {
-    // Application build configuration (default)
+    // Application build configuration (default) - generates static web app for GitHub Pages
     outDir: 'dist',
     sourcemap: true
   },
