@@ -137,8 +137,8 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       const sampleRate = 48000;
       const frequency = 440;
       const length = 4096;
-      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
       const cycleLength = Math.floor(sampleRate / frequency);
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
       
       const detector = new ZeroCrossDetector();
       detector.setUsePeakMode(true);
@@ -154,9 +154,9 @@ describe('Peak Mode Algorithm Diagnostics (Issue #68)', () => {
       console.log('=== Expected Peak Mode Behavior ===');
       console.log(`For proper display, peak mode should show: ${cycleLength} to ${cycleLength * 1.2} samples`);
       console.log(`This represents one cycle of the waveform`);
-      console.log(`Updated implementation uses an initial search window of ~${cycleLength} samples (about one cycle)`);
+      console.log(`Updated implementation: findStablePeak uses initial search window of ~${cycleLength} samples`);
       
-      // Peak mode should display approximately one full cycle, while the internal peak search window is about one cycle
+      // Peak mode should display approximately one full cycle
       const expectedMinWidth = cycleLength * 0.8; // At least 0.8 cycles
       const expectedMaxWidth = cycleLength * 1.3; // At most 1.3 cycles (including padding)
       
