@@ -117,12 +117,17 @@ function countZeroCrossings(data: Float32Array): number {
 
 describe('Algorithm-Specific Tests', () => {
   let canvas: HTMLCanvasElement;
+  let debugCanvas: HTMLCanvasElement;
   let oscilloscope: Oscilloscope;
 
   beforeEach(() => {
     canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 400;
+    
+    debugCanvas = document.createElement('canvas');
+    debugCanvas.width = 800;
+    debugCanvas.height = 300;
     
     const mockContext = {
       fillStyle: '',
@@ -141,8 +146,9 @@ describe('Algorithm-Specific Tests', () => {
       restore: vi.fn(),
     };
     canvas.getContext = vi.fn(() => mockContext) as any;
+    debugCanvas.getContext = vi.fn(() => mockContext) as any;
     
-    oscilloscope = new Oscilloscope(canvas);
+    oscilloscope = new Oscilloscope(canvas, debugCanvas);
   });
 
   describe('Zero-Crossing Detection', () => {

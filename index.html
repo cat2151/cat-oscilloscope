@@ -36,6 +36,14 @@
       box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
     }
 
+    #debugCanvas {
+      margin-top: 20px;
+      background-color: #000000;
+      border: 2px solid #ff6600;
+      border-radius: 4px;
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+    }
+
     #controls {
       margin-top: 20px;
       display: flex;
@@ -90,6 +98,13 @@
     aria-label="Oscilloscope waveform visualization canvas for microphone audio"
     aria-describedby="oscilloscopeDescription"
   ></canvas>
+  <canvas
+    id="debugCanvas"
+    width="800"
+    height="300"
+    style="display: none;"
+    aria-label="Debug canvas for phase estimation visualization"
+  ></canvas>
   <div id="controls">
     <button id="startButton">Start</button>
     <button id="loadFileButton">Load WAV File</button>
@@ -136,6 +151,16 @@
         title="Use peak detection for better high-frequency stability"
       >
       <span>Peak Mode</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="debugDisplayCheckbox"
+        style="cursor: pointer;"
+        aria-label="Display debug visualization for phase estimation"
+        title="Show search buffer, zero-cross candidates, and reference waveform"
+      >
+      <span>Debug Display</span>
     </label>
     <label style="display: flex; align-items: center; gap: 10px;">
       <span>Threshold:</span>
