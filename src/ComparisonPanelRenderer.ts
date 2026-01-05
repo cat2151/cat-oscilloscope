@@ -161,6 +161,12 @@ export class ComparisonPanelRenderer {
 
   /**
    * Update all comparison panels
+   * @param previousWaveform - Previous frame's waveform data (null if no previous frame exists)
+   * @param currentWaveform - Full buffer containing current frame's audio data
+   * @param currentStart - Start index of the extracted waveform within currentWaveform
+   * @param currentEnd - End index of the extracted waveform within currentWaveform (exclusive)
+   * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
+   * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
    */
   updatePanels(
     previousWaveform: Float32Array | null,
@@ -175,7 +181,6 @@ export class ComparisonPanelRenderer {
 
     // Draw previous waveform
     if (previousWaveform) {
-      this.clearCanvas(this.previousCtx, this.previousCanvas.width, this.previousCanvas.height);
       this.drawCenterLine(this.previousCtx, this.previousCanvas.width, this.previousCanvas.height);
       this.drawWaveform(
         this.previousCtx,
@@ -189,7 +194,6 @@ export class ComparisonPanelRenderer {
     }
 
     // Draw current waveform with similarity score
-    this.clearCanvas(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
     this.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
     const currentLength = currentEnd - currentStart;
     if (currentLength > 0) {
@@ -208,7 +212,6 @@ export class ComparisonPanelRenderer {
     }
 
     // Draw full frame buffer with position markers
-    this.clearCanvas(this.bufferCtx, this.bufferCanvas.width, this.bufferCanvas.height);
     this.drawCenterLine(this.bufferCtx, this.bufferCanvas.width, this.bufferCanvas.height);
     this.drawWaveform(
       this.bufferCtx,

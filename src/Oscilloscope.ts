@@ -29,6 +29,13 @@ export class Oscilloscope {
   private isRunning = false;
   private isPaused = false;
 
+  /**
+   * Create a new Oscilloscope instance
+   * @param canvas - Main oscilloscope display canvas (recommended: 800x400px)
+   * @param previousWaveformCanvas - Canvas for displaying previous frame's waveform (recommended: 250x150px)
+   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform with similarity score (recommended: 250x150px)
+   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 250x150px)
+   */
   constructor(
     canvas: HTMLCanvasElement,
     previousWaveformCanvas: HTMLCanvasElement,

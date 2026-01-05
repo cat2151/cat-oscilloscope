@@ -118,18 +118,45 @@
     aria-label="Oscilloscope waveform visualization canvas for microphone audio"
     aria-describedby="oscilloscopeDescription"
   ></canvas>
+  <p
+    id="comparisonPanelDescription"
+    style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;"
+  >
+    比較パネルには、前回の波形、今回の波形とその類似度、そしてフレームバッファ全体の波形が小さなキャンバスとして表示されます。
+  </p>
   <div id="comparisonPanel">
     <div class="canvasContainer">
       <span class="canvasLabel">前回の波形</span>
-      <canvas id="previousWaveformCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+      <canvas
+        id="previousWaveformCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="前回の入力から取得した波形のプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
     </div>
     <div class="canvasContainer">
       <span class="canvasLabel">今回の波形と類似度</span>
-      <canvas id="currentWaveformCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+      <canvas
+        id="currentWaveformCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="今回の入力波形と前回の波形との類似度を示すプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
     </div>
     <div class="canvasContainer">
       <span class="canvasLabel">フレームバッファ全体</span>
-      <canvas id="frameBufferCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+      <canvas
+        id="frameBufferCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="フレームバッファ全体に蓄積された波形のプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
     </div>
   </div>
   <div id="controls">
