@@ -10,6 +10,9 @@ import {
   FrequencyEstimator,
   WaveformRenderer,
   ZeroCrossDetector,
+  WaveformSearcher,
+  ComparisonPanelRenderer,
+  WaveformDataProcessor,
   dbToAmplitude,
   trimSilence
 } from '../index';
@@ -43,6 +46,21 @@ describe('Library exports', () => {
   it('should export ZeroCrossDetector class', () => {
     expect(ZeroCrossDetector).toBeDefined();
     expect(typeof ZeroCrossDetector).toBe('function');
+  });
+
+  it('should export WaveformSearcher class', () => {
+    expect(WaveformSearcher).toBeDefined();
+    expect(typeof WaveformSearcher).toBe('function');
+  });
+
+  it('should export ComparisonPanelRenderer class', () => {
+    expect(ComparisonPanelRenderer).toBeDefined();
+    expect(typeof ComparisonPanelRenderer).toBe('function');
+  });
+
+  it('should export WaveformDataProcessor class (new for Rust WASM)', () => {
+    expect(WaveformDataProcessor).toBeDefined();
+    expect(typeof WaveformDataProcessor).toBe('function');
   });
 
   it('should export dbToAmplitude utility function', () => {
@@ -98,5 +116,25 @@ describe('Library exports', () => {
     expect(new FrequencyEstimator()).toBeInstanceOf(FrequencyEstimator);
     expect(new WaveformRenderer(canvas)).toBeInstanceOf(WaveformRenderer);
     expect(new ZeroCrossDetector()).toBeInstanceOf(ZeroCrossDetector);
+    expect(new WaveformSearcher()).toBeInstanceOf(WaveformSearcher);
+    expect(new ComparisonPanelRenderer(canvas, canvas, canvas)).toBeInstanceOf(ComparisonPanelRenderer);
+  });
+
+  it('should be able to instantiate WaveformDataProcessor', () => {
+    const audioManager = new AudioManager();
+    const gainController = new GainController();
+    const frequencyEstimator = new FrequencyEstimator();
+    const zeroCrossDetector = new ZeroCrossDetector();
+    const waveformSearcher = new WaveformSearcher();
+    
+    const processor = new WaveformDataProcessor(
+      audioManager,
+      gainController,
+      frequencyEstimator,
+      zeroCrossDetector,
+      waveformSearcher
+    );
+    
+    expect(processor).toBeInstanceOf(WaveformDataProcessor);
   });
 });

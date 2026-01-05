@@ -5,6 +5,7 @@ import { WaveformRenderer } from './WaveformRenderer';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+import { WaveformDataProcessor } from './WaveformDataProcessor';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -16,6 +17,7 @@ import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
  * - ZeroCrossDetector: Zero-crossing detection and display range calculation
  * - WaveformSearcher: Waveform similarity search
  * - ComparisonPanelRenderer: Comparison panel rendering
+ * - WaveformDataProcessor: Data generation and processing (separated from rendering)
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -25,6 +27,7 @@ export class Oscilloscope {
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
   private comparisonRenderer: ComparisonPanelRenderer;
+  private dataProcessor: WaveformDataProcessor;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
@@ -52,6 +55,13 @@ export class Oscilloscope {
       previousWaveformCanvas,
       currentWaveformCanvas,
       frameBufferCanvas
+    );
+    this.dataProcessor = new WaveformDataProcessor(
+      this.audioManager,
+      this.gainController,
+      this.frequencyEstimator,
+      this.zeroCrossDetector,
+      this.waveformSearcher
     );
   }
 
@@ -90,157 +100,84 @@ export class Oscilloscope {
     this.comparisonRenderer.clear();
   }
 
-  /**
-   * Calculate cycle length from estimated frequency and sample rate
-   */
-  private calculateCycleLength(frequency: number, sampleRate: number): number {
-    if (frequency > 0 && sampleRate > 0) {
-      return sampleRate / frequency;
-    }
-    return 0;
-  }
-
-  /**
-   * Store waveform for next frame's similarity comparison
-   */
-  private storeWaveformForNextFrame(data: Float32Array, startIndex: number, cycleLength: number): void {
-    if (cycleLength > 0) {
-      const waveformLength = Math.floor(cycleLength);
-      const endIndex = Math.min(startIndex + waveformLength, data.length);
-      this.waveformSearcher.storeWaveform(data, startIndex, endIndex);
-    }
-  }
-
   private render(): void {
-    if (!this.isRunning || !this.audioManager.isReady()) {
+    if (!this.isRunning) {
       return;
     }
 
-    // If paused, skip drawing but continue the animation loop
+    // If paused, skip processing and drawing but continue the animation loop
     if (!this.isPaused) {
-      // Get waveform data
-      const dataArray = this.audioManager.getTimeDomainData();
-      if (!dataArray) {
-        // Continue animation loop even if no data available
-        this.animationId = requestAnimationFrame(() => this.render());
-        return;
-      }
-
-      // Apply noise gate to input signal (modifies dataArray in place)
-      this.gainController.applyNoiseGate(dataArray);
-
-      // Check if signal passed noise gate for FFT frequency estimation
-      const isSignalAboveNoiseGate = this.gainController.isSignalAboveNoiseGate(dataArray);
-
-      const sampleRate = this.audioManager.getSampleRate();
-      const fftSize = this.audioManager.getFFTSize();
-
-      // Only fetch frequency data if needed (FFT method OR FFT display enabled)
-      const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || this.renderer.getFFTDisplayEnabled();
-      const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
-
-      // Estimate frequency (now works on gated signal)
-      const estimatedFrequency = this.frequencyEstimator.estimateFrequency(
-        dataArray,
-        frequencyData,
-        sampleRate,
-        fftSize,
-        isSignalAboveNoiseGate
-      );
-
-      // Clear canvas and draw grid
-      this.renderer.clearAndDrawGrid();
-
-      // Calculate cycle length from estimated frequency
-      const cycleLength = this.calculateCycleLength(estimatedFrequency, sampleRate);
-
-      // Try to find similar waveform if we have a previous waveform and valid cycle length
-      let displayStartIndex = 0;
-      let displayEndIndex = dataArray.length;
-      let useZeroCrossDetection = true;
+      // === DATA GENERATION PHASE ===
+      // Process frame and generate all data needed for rendering
+      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
       
-      if (this.waveformSearcher.hasPreviousWaveform() && cycleLength > 0) {
-        const searchResult = this.waveformSearcher.searchSimilarWaveform(dataArray, cycleLength);
-        if (searchResult) {
-          // Use similarity search result
-          const waveformLength = Math.floor(cycleLength);
-          displayStartIndex = searchResult.startIndex;
-          displayEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
-          useZeroCrossDetection = false;
-        }
+      if (renderData) {
+        // === RENDERING PHASE ===
+        // All rendering logic uses only the generated data
+        this.renderFrame(renderData);
       }
-      
-      // Fallback to zero-cross detection if similarity search not available
-      if (useZeroCrossDetection) {
-        const displayRange = this.zeroCrossDetector.calculateDisplayRange(
-          dataArray,
-          estimatedFrequency,
-          sampleRate
-        );
-        
-        if (displayRange) {
-          displayStartIndex = displayRange.startIndex;
-          displayEndIndex = displayRange.endIndex;
-          
-          // Calculate auto gain before drawing
-          this.gainController.calculateAutoGain(dataArray, displayStartIndex, displayEndIndex);
-          const gain = this.gainController.getCurrentGain();
-          
-          this.renderer.drawWaveform(dataArray, displayStartIndex, displayEndIndex, gain);
-          this.renderer.drawZeroCrossLine(displayRange.firstZeroCross, displayStartIndex, displayEndIndex);
-          if (displayRange.secondZeroCross !== undefined) {
-            this.renderer.drawZeroCrossLine(displayRange.secondZeroCross, displayStartIndex, displayEndIndex);
-          }
-          
-          // Store waveform for next frame's comparison
-          this.storeWaveformForNextFrame(dataArray, displayStartIndex, cycleLength);
-        } else {
-          // No zero-cross found, draw entire buffer
-          this.gainController.calculateAutoGain(dataArray, 0, dataArray.length);
-          const gain = this.gainController.getCurrentGain();
-          this.renderer.drawWaveform(dataArray, 0, dataArray.length, gain);
-          
-          // Store waveform for next frame's comparison even when zero-cross fails
-          this.storeWaveformForNextFrame(dataArray, 0, cycleLength);
-        }
-      } else {
-        // Using similarity search result
-        // Calculate auto gain before drawing
-        this.gainController.calculateAutoGain(dataArray, displayStartIndex, displayEndIndex);
-        const gain = this.gainController.getCurrentGain();
-        
-        this.renderer.drawWaveform(dataArray, displayStartIndex, displayEndIndex, gain);
-        
-        // Store waveform for next frame's comparison
-        this.storeWaveformForNextFrame(dataArray, displayStartIndex, cycleLength);
-      }
-
-      // Draw FFT spectrum overlay if enabled and signal is above noise gate
-      if (frequencyData && this.renderer.getFFTDisplayEnabled() && isSignalAboveNoiseGate) {
-        this.renderer.drawFFTOverlay(
-          frequencyData,
-          estimatedFrequency,
-          sampleRate,
-          fftSize,
-          this.frequencyEstimator.getMaxFrequency()
-        );
-      }
-
-      // Update comparison panels
-      const previousWaveform = this.waveformSearcher.getPreviousWaveform();
-      const similarity = this.waveformSearcher.getLastSimilarity();
-      this.comparisonRenderer.updatePanels(
-        previousWaveform,
-        dataArray,
-        displayStartIndex,
-        displayEndIndex,
-        dataArray,
-        similarity
-      );
     }
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
+  }
+
+  /**
+   * Render a single frame using pre-processed data
+   * This method contains only rendering logic - no data processing
+   */
+  private renderFrame(renderData: ReturnType<typeof this.dataProcessor.processFrame>): void {
+    if (!renderData) return;
+
+    // Clear canvas and draw grid
+    this.renderer.clearAndDrawGrid();
+
+    // Draw waveform with calculated gain
+    this.renderer.drawWaveform(
+      renderData.waveformData,
+      renderData.displayStartIndex,
+      renderData.displayEndIndex,
+      renderData.gain
+    );
+
+    // Draw alignment markers if available and not using similarity search
+    if (!renderData.usedSimilaritySearch) {
+      if (renderData.firstAlignmentPoint !== undefined) {
+        this.renderer.drawZeroCrossLine(
+          renderData.firstAlignmentPoint,
+          renderData.displayStartIndex,
+          renderData.displayEndIndex
+        );
+      }
+      if (renderData.secondAlignmentPoint !== undefined) {
+        this.renderer.drawZeroCrossLine(
+          renderData.secondAlignmentPoint,
+          renderData.displayStartIndex,
+          renderData.displayEndIndex
+        );
+      }
+    }
+
+    // Draw FFT spectrum overlay if enabled and signal is above noise gate
+    if (renderData.frequencyData && this.renderer.getFFTDisplayEnabled() && renderData.isSignalAboveNoiseGate) {
+      this.renderer.drawFFTOverlay(
+        renderData.frequencyData,
+        renderData.estimatedFrequency,
+        renderData.sampleRate,
+        renderData.fftSize,
+        renderData.maxFrequency
+      );
+    }
+
+    // Update comparison panels
+    this.comparisonRenderer.updatePanels(
+      renderData.previousWaveform,
+      renderData.waveformData,
+      renderData.displayStartIndex,
+      renderData.displayEndIndex,
+      renderData.waveformData,
+      renderData.similarity
+    );
   }
 
   // Getters and setters - delegate to appropriate modules
