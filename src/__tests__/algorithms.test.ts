@@ -117,7 +117,9 @@ function countZeroCrossings(data: Float32Array): number {
 
 describe('Algorithm-Specific Tests', () => {
   let canvas: HTMLCanvasElement;
-  let debugCanvas: HTMLCanvasElement;
+  let previousWaveformCanvas: HTMLCanvasElement;
+  let currentWaveformCanvas: HTMLCanvasElement;
+  let frameBufferCanvas: HTMLCanvasElement;
   let oscilloscope: Oscilloscope;
 
   beforeEach(() => {
@@ -125,9 +127,17 @@ describe('Algorithm-Specific Tests', () => {
     canvas.width = 800;
     canvas.height = 400;
     
-    debugCanvas = document.createElement('canvas');
-    debugCanvas.width = 800;
-    debugCanvas.height = 300;
+    previousWaveformCanvas = document.createElement('canvas');
+    previousWaveformCanvas.width = 250;
+    previousWaveformCanvas.height = 150;
+
+    currentWaveformCanvas = document.createElement('canvas');
+    currentWaveformCanvas.width = 250;
+    currentWaveformCanvas.height = 150;
+
+    frameBufferCanvas = document.createElement('canvas');
+    frameBufferCanvas.width = 250;
+    frameBufferCanvas.height = 150;
     
     const mockContext = {
       fillStyle: '',
@@ -146,9 +156,11 @@ describe('Algorithm-Specific Tests', () => {
       restore: vi.fn(),
     };
     canvas.getContext = vi.fn(() => mockContext) as any;
-    debugCanvas.getContext = vi.fn(() => mockContext) as any;
+    previousWaveformCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
+    currentWaveformCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
+    frameBufferCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
     
-    oscilloscope = new Oscilloscope(canvas, debugCanvas);
+    oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
   });
 
   describe('Zero-Crossing Detection', () => {

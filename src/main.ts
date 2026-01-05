@@ -3,6 +3,9 @@ import { dbToAmplitude } from './utils';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+const previousWaveformCanvas = document.getElementById('previousWaveformCanvas') as HTMLCanvasElement;
+const currentWaveformCanvas = document.getElementById('currentWaveformCanvas') as HTMLCanvasElement;
+const frameBufferCanvas = document.getElementById('frameBufferCanvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const loadFileButton = document.getElementById('loadFileButton') as HTMLButtonElement;
 const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -22,6 +25,9 @@ const similarityValue = document.getElementById('similarityValue') as HTMLSpanEl
 // Validate all required DOM elements
 const requiredElements = [
   { element: canvas, name: 'canvas' },
+  { element: previousWaveformCanvas, name: 'previousWaveformCanvas' },
+  { element: currentWaveformCanvas, name: 'currentWaveformCanvas' },
+  { element: frameBufferCanvas, name: 'frameBufferCanvas' },
   { element: startButton, name: 'startButton' },
   { element: loadFileButton, name: 'loadFileButton' },
   { element: fileInput, name: 'fileInput' },
@@ -62,7 +68,7 @@ function formatThresholdDisplay(db: number, amplitude: number): string {
   return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
 }
 
-const oscilloscope = new Oscilloscope(canvas);
+const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
 
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
 oscilloscope.setAutoGain(autoGainCheckbox.checked);
