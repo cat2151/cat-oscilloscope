@@ -86,8 +86,8 @@ export class WaveformSearcher {
     let bestStartIndex = 0;
 
     // Slide search: compare each position in current frame
-    // Search range: from 0 to (cycleLength - 1) samples
-    const searchEndIndex = Math.min(currentFrame.length - waveformLength, waveformLength);
+    // Search range: from 0 to (cycleLength - 1) samples (total cycleLength positions)
+    const searchEndIndex = Math.min(currentFrame.length - waveformLength, waveformLength - 1);
     
     for (let startIndex = 0; startIndex <= searchEndIndex; startIndex++) {
       // Extract candidate waveform

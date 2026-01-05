@@ -115,56 +115,66 @@ export class Oscilloscope {
         cycleLength = sampleRate / estimatedFrequency;
       }
 
-      // Try to find similar waveform if we have a previous waveform
-      let adjustedStartIndex = 0;
+      // Try to find similar waveform if we have a previous waveform and valid cycle length
+      let displayStartIndex = 0;
+      let displayEndIndex = dataArray.length;
+      let useZeroCrossDetection = true;
+      
       if (this.waveformSearcher.hasPreviousWaveform() && cycleLength > 0) {
         const searchResult = this.waveformSearcher.searchSimilarWaveform(dataArray, cycleLength);
         if (searchResult) {
-          adjustedStartIndex = searchResult.startIndex;
+          // Use similarity search result
+          const waveformLength = Math.floor(cycleLength);
+          displayStartIndex = searchResult.startIndex;
+          displayEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
+          useZeroCrossDetection = false;
         }
       }
-
-      // Calculate display range and draw waveform with zero-cross indicators
-      const displayRange = this.zeroCrossDetector.calculateDisplayRange(
-        dataArray,
-        estimatedFrequency,
-        sampleRate
-      );
       
-      if (displayRange) {
-        // Adjust display range based on similarity search
-        const displayStartIndex = displayRange.startIndex + adjustedStartIndex;
-        const displayEndIndex = displayRange.endIndex + adjustedStartIndex;
+      // Fallback to zero-cross detection if similarity search not available
+      if (useZeroCrossDetection) {
+        const displayRange = this.zeroCrossDetector.calculateDisplayRange(
+          dataArray,
+          estimatedFrequency,
+          sampleRate
+        );
         
-        // Ensure we don't exceed buffer bounds
-        const finalStartIndex = Math.min(displayStartIndex, dataArray.length - 1);
-        const finalEndIndex = Math.min(displayEndIndex, dataArray.length);
-        
-        // Calculate auto gain before drawing
-        this.gainController.calculateAutoGain(dataArray, finalStartIndex, finalEndIndex);
-        const gain = this.gainController.getCurrentGain();
-        
-        this.renderer.drawWaveform(dataArray, finalStartIndex, finalEndIndex, gain);
-        
-        // Adjust zero-cross indicators
-        const adjustedFirstZeroCross = displayRange.firstZeroCross + adjustedStartIndex;
-        this.renderer.drawZeroCrossLine(adjustedFirstZeroCross, finalStartIndex, finalEndIndex);
-        if (displayRange.secondZeroCross !== undefined) {
-          const adjustedSecondZeroCross = displayRange.secondZeroCross + adjustedStartIndex;
-          this.renderer.drawZeroCrossLine(adjustedSecondZeroCross, finalStartIndex, finalEndIndex);
-        }
-        
-        // Store waveform for next frame's comparison
-        if (cycleLength > 0) {
-          const waveformLength = Math.floor(cycleLength);
-          const storeEndIndex = Math.min(finalStartIndex + waveformLength, dataArray.length);
-          this.waveformSearcher.storeWaveform(dataArray, finalStartIndex, storeEndIndex);
+        if (displayRange) {
+          displayStartIndex = displayRange.startIndex;
+          displayEndIndex = displayRange.endIndex;
+          
+          // Calculate auto gain before drawing
+          this.gainController.calculateAutoGain(dataArray, displayStartIndex, displayEndIndex);
+          const gain = this.gainController.getCurrentGain();
+          
+          this.renderer.drawWaveform(dataArray, displayStartIndex, displayEndIndex, gain);
+          this.renderer.drawZeroCrossLine(displayRange.firstZeroCross, displayStartIndex, displayEndIndex);
+          if (displayRange.secondZeroCross !== undefined) {
+            this.renderer.drawZeroCrossLine(displayRange.secondZeroCross, displayStartIndex, displayEndIndex);
+          }
+          
+          // Store waveform for next frame's comparison
+          if (cycleLength > 0) {
+            const waveformLength = Math.floor(cycleLength);
+            const storeEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
+            this.waveformSearcher.storeWaveform(dataArray, displayStartIndex, storeEndIndex);
+          }
+        } else {
+          // No zero-cross found, draw entire buffer
+          this.gainController.calculateAutoGain(dataArray, 0, dataArray.length);
+          const gain = this.gainController.getCurrentGain();
+          this.renderer.drawWaveform(dataArray, 0, dataArray.length, gain);
         }
       } else {
-        // No zero-cross found, draw entire buffer
-        this.gainController.calculateAutoGain(dataArray, 0, dataArray.length);
+        // Using similarity search result
+        // Calculate auto gain before drawing
+        this.gainController.calculateAutoGain(dataArray, displayStartIndex, displayEndIndex);
         const gain = this.gainController.getCurrentGain();
-        this.renderer.drawWaveform(dataArray, 0, dataArray.length, gain);
+        
+        this.renderer.drawWaveform(dataArray, displayStartIndex, displayEndIndex, gain);
+        
+        // Store waveform for next frame's comparison
+        this.waveformSearcher.storeWaveform(dataArray, displayStartIndex, displayEndIndex);
       }
 
       // Draw FFT spectrum overlay if enabled and signal is above noise gate
@@ -238,6 +248,10 @@ export class Oscilloscope {
   
   getSimilarityScore(): number {
     return this.waveformSearcher.getLastSimilarity();
+  }
+  
+  isSimilaritySearchActive(): boolean {
+    return this.waveformSearcher.hasPreviousWaveform();
   }
   
   setUsePeakMode(enabled: boolean): void {

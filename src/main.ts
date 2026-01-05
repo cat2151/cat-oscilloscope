@@ -137,9 +137,9 @@ function startFrequencyDisplay(): void {
       const gain = oscilloscope.getCurrentGain();
       gainValue.textContent = `${gain.toFixed(2)}x`;
       
-      // Update similarity display
-      const similarity = oscilloscope.getSimilarityScore();
-      if (similarity !== 0) {
+      // Update similarity display - show value if similarity search is active
+      if (oscilloscope.isSimilaritySearchActive()) {
+        const similarity = oscilloscope.getSimilarityScore();
         similarityValue.textContent = similarity.toFixed(3);
       } else {
         similarityValue.textContent = '---';
