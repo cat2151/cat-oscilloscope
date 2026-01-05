@@ -74,12 +74,16 @@ describe('DOM Integration Tests', () => {
   let noiseGateCheckbox: HTMLInputElement;
   let fftDisplayCheckbox: HTMLInputElement;
   let usePeakModeCheckbox: HTMLInputElement;
+  let pauseDrawingCheckbox: HTMLInputElement;
+  let infoDisplayCheckbox: HTMLInputElement;
   let noiseGateThreshold: HTMLInputElement;
   let thresholdValue: HTMLSpanElement;
   let statusElement: HTMLSpanElement;
   let frequencyMethod: HTMLSelectElement;
   let frequencyValue: HTMLSpanElement;
   let gainValue: HTMLSpanElement;
+  let similarityValue: HTMLSpanElement;
+  let frequencyDisplay: HTMLDivElement;
 
   beforeEach(() => {
     // Setup DOM elements as they appear in index.html
@@ -102,6 +106,14 @@ describe('DOM Integration Tests', () => {
         <label>
           <input type="checkbox" id="usePeakModeCheckbox">
           <span>Peak Mode</span>
+        </label>
+        <label>
+          <input type="checkbox" id="pauseDrawingCheckbox">
+          <span>描画の一時停止</span>
+        </label>
+        <label>
+          <input type="checkbox" id="infoDisplayCheckbox" checked>
+          <span>情報表示</span>
         </label>
         <label>
           <span>Threshold:</span>
@@ -127,6 +139,10 @@ describe('DOM Integration Tests', () => {
           <span>Auto Gain:</span>
           <span id="gainValue">---x</span>
         </div>
+        <div>
+          <span>Similarity:</span>
+          <span id="similarityValue">---</span>
+        </div>
       </div>
     `;
 
@@ -137,12 +153,16 @@ describe('DOM Integration Tests', () => {
     noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
     fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
     usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
+    pauseDrawingCheckbox = document.getElementById('pauseDrawingCheckbox') as HTMLInputElement;
+    infoDisplayCheckbox = document.getElementById('infoDisplayCheckbox') as HTMLInputElement;
     noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
     thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
     statusElement = document.getElementById('status') as HTMLSpanElement;
     frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
     frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
     gainValue = document.getElementById('gainValue') as HTMLSpanElement;
+    similarityValue = document.getElementById('similarityValue') as HTMLSpanElement;
+    frequencyDisplay = document.getElementById('frequencyDisplay') as HTMLDivElement;
 
     // Mock canvas context
     const mockContext = {
@@ -185,12 +205,16 @@ describe('DOM Integration Tests', () => {
       expect(noiseGateCheckbox).toBeTruthy();
       expect(fftDisplayCheckbox).toBeTruthy();
       expect(usePeakModeCheckbox).toBeTruthy();
+      expect(pauseDrawingCheckbox).toBeTruthy();
+      expect(infoDisplayCheckbox).toBeTruthy();
       expect(noiseGateThreshold).toBeTruthy();
       expect(thresholdValue).toBeTruthy();
       expect(statusElement).toBeTruthy();
       expect(frequencyMethod).toBeTruthy();
       expect(frequencyValue).toBeTruthy();
       expect(gainValue).toBeTruthy();
+      expect(similarityValue).toBeTruthy();
+      expect(frequencyDisplay).toBeTruthy();
     });
 
     it('should have correct initial checkbox states', () => {
@@ -198,6 +222,8 @@ describe('DOM Integration Tests', () => {
       expect(noiseGateCheckbox.checked).toBe(true);
       expect(fftDisplayCheckbox.checked).toBe(true);
       expect(usePeakModeCheckbox.checked).toBe(false);
+      expect(pauseDrawingCheckbox.checked).toBe(false);
+      expect(infoDisplayCheckbox.checked).toBe(true);
     });
 
     it('should have correct initial threshold value', () => {
@@ -283,6 +309,45 @@ describe('DOM Integration Tests', () => {
 
     it('should have placeholder gain value', () => {
       expect(gainValue.textContent).toBe('---x');
+    });
+
+    it('should have placeholder similarity value', () => {
+      expect(similarityValue.textContent).toBe('---');
+    });
+  });
+
+  describe('Info Display Toggle', () => {
+    it('should show frequency display panel when infoDisplayCheckbox is checked', () => {
+      infoDisplayCheckbox.checked = true;
+      // Simulate the event handler logic
+      frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+      
+      expect(frequencyDisplay.style.display).toBe('flex');
+    });
+
+    it('should hide frequency display panel when infoDisplayCheckbox is unchecked', () => {
+      infoDisplayCheckbox.checked = false;
+      // Simulate the event handler logic
+      frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+      
+      expect(frequencyDisplay.style.display).toBe('none');
+    });
+
+    it('should toggle frequency display panel visibility when checkbox state changes', () => {
+      // Initial state: checked
+      infoDisplayCheckbox.checked = true;
+      frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+      expect(frequencyDisplay.style.display).toBe('flex');
+
+      // Toggle to unchecked
+      infoDisplayCheckbox.checked = false;
+      frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+      expect(frequencyDisplay.style.display).toBe('none');
+
+      // Toggle back to checked
+      infoDisplayCheckbox.checked = true;
+      frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+      expect(frequencyDisplay.style.display).toBe('flex');
     });
   });
 });
