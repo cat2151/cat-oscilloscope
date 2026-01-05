@@ -117,20 +117,21 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Calculate waveform similarity score between two regions
+   * Calculate waveform similarity score between two different buffers
    * Returns a correlation coefficient between -1 and 1 (higher is more similar)
    */
-  private calculateWaveformSimilarity(
-    data: Float32Array,
-    index1: number,
-    index2: number,
+  private calculateWaveformSimilarityBetweenBuffers(
+    buffer1: Float32Array,
+    startIndex1: number,
+    buffer2: Float32Array,
+    startIndex2: number,
     compareLength: number
   ): number {
     // Ensure we don't go out of bounds
     const maxLength = Math.min(
       compareLength,
-      data.length - index1,
-      data.length - index2
+      buffer1.length - startIndex1,
+      buffer2.length - startIndex2
     );
     
     if (maxLength <= 0) {
@@ -145,8 +146,8 @@ export class ZeroCrossDetector {
     let sumProduct = 0;
     
     for (let i = 0; i < maxLength; i++) {
-      const val1 = data[index1 + i];
-      const val2 = data[index2 + i];
+      const val1 = buffer1[startIndex1 + i];
+      const val2 = buffer2[startIndex2 + i];
       sum1 += val1;
       sum2 += val2;
       sum1Sq += val1 * val1;
@@ -191,34 +192,48 @@ export class ZeroCrossDetector {
   }
 
   /**
+   * Initialize placeholder similarity scores for UI display
+   * Used when real similarity calculations cannot be performed (e.g., no reference data yet)
+   */
+  private initializePlaceholderScores(candidateCount: number): void {
+    // Initialize scores for all candidates; UI should limit visible items if needed
+    this.lastSimilarityScores = new Array(candidateCount).fill(0);
+  }
+
+  /**
    * Select the best zero-cross candidate based on waveform pattern matching
-   * Compares each candidate against the reference position (previous display value)
+   * Compares each candidate segment in the current buffer against the reference waveform from the previous frame
    */
   private selectBestCandidate(
     data: Float32Array,
     candidates: number[],
-    cycleLength: number,
-    referenceIndex: number | null
+    cycleLength: number
   ): number {
     if (candidates.length === 0) {
       return -1;
     }
     
     if (candidates.length === 1) {
+      // Initialize with a placeholder for UI (will be replaced with real scores once reference exists)
+      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
     // Validate cycleLength to avoid division by zero or invalid comparison lengths
     if (cycleLength <= 0) {
+      // Initialize with placeholders for UI (will be replaced with real scores once conditions are met)
+      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
-    // If no reference position, return first candidate
-    if (referenceIndex === null || referenceIndex < 0) {
+    // If no reference waveform is available, return first candidate
+    if (!this.lastReferenceData || this.lastReferenceData.length === 0) {
+      // Initialize with placeholders for UI on first frame (will be replaced with real scores in subsequent frames)
+      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
-    // Compare each candidate with the reference position (previous display value)
+    // Compare each candidate segment in current buffer with the reference waveform
     let bestCandidate = candidates[0];
     let bestScore = -Infinity;
     
@@ -230,10 +245,11 @@ export class ZeroCrossDetector {
     for (let i = 0; i < candidates.length; i++) {
       const currentCandidate = candidates[i];
       
-      // Calculate similarity between this candidate and the reference position
-      const similarity = this.calculateWaveformSimilarity(
+      // Calculate similarity between the candidate segment in current buffer and reference waveform
+      const similarity = this.calculateWaveformSimilarityBetweenBuffers(
+        this.lastReferenceData,
+        0, // Start from beginning of reference waveform
         data,
-        referenceIndex,
         currentCandidate,
         compareLength
       );
@@ -351,8 +367,7 @@ export class ZeroCrossDetector {
           const selectedCandidate = this.selectBestCandidate(
             data,
             candidates,
-            estimatedCycleLength,
-            expectedIndex
+            estimatedCycleLength
           );
           
           if (selectedCandidate !== -1) {
@@ -387,8 +402,7 @@ export class ZeroCrossDetector {
         const selectedCandidate = this.selectBestCandidate(
           data,
           candidates,
-          estimatedCycleLength,
-          null
+          estimatedCycleLength
         );
         
         if (selectedCandidate !== -1) {
@@ -451,12 +465,10 @@ export class ZeroCrossDetector {
           this.lastCandidates = [...candidates];
           
           // Select the best candidate based on waveform pattern matching
-          // Compare against the previous display value (expectedIndex)
           const selectedCandidate = this.selectBestCandidate(
             data,
             candidates,
-            estimatedCycleLength,
-            expectedIndex
+            estimatedCycleLength
           );
           
           if (selectedCandidate !== -1) {
@@ -486,8 +498,7 @@ export class ZeroCrossDetector {
         const selectedCandidate = this.selectBestCandidate(
           data,
           candidates,
-          estimatedCycleLength,
-          null
+          estimatedCycleLength
         );
         
         if (selectedCandidate !== -1) {
@@ -727,6 +738,7 @@ export class ZeroCrossDetector {
     this.lastReferenceData = null;
     this.lastReferenceStartIndex = 0;
     this.lastSearchBuffer = null;
-    this.lastSimilarityScores = [];
+    // Don't reset lastSimilarityScores to allow inspection after stopping
+    // this.lastSimilarityScores = [];
   }
 }
