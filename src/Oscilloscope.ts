@@ -3,7 +3,6 @@ import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
 import { WaveformRenderer } from './WaveformRenderer';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
-import { DebugRenderer } from './DebugRenderer';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -13,7 +12,6 @@ import { DebugRenderer } from './DebugRenderer';
  * - FrequencyEstimator: Frequency detection algorithms
  * - WaveformRenderer: Canvas rendering
  * - ZeroCrossDetector: Zero-crossing detection and display range calculation
- * - DebugRenderer: Debug visualization for phase estimation
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -21,32 +19,16 @@ export class Oscilloscope {
   private frequencyEstimator: FrequencyEstimator;
   private renderer: WaveformRenderer;
   private zeroCrossDetector: ZeroCrossDetector;
-  private debugRenderer: DebugRenderer;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
 
-  /**
-   * Create a dummy canvas for debug renderer when no debug canvas is provided
-   */
-  private createDummyCanvas(): HTMLCanvasElement {
-    if (typeof document !== 'undefined') {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1;
-      canvas.height = 1;
-      return canvas;
-    }
-    throw new Error('No debug canvas provided and document is not available to create a dummy canvas.');
-  }
-
-  constructor(canvas: HTMLCanvasElement, debugCanvas?: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement) {
     this.audioManager = new AudioManager();
     this.gainController = new GainController();
     this.frequencyEstimator = new FrequencyEstimator();
     this.renderer = new WaveformRenderer(canvas);
     this.zeroCrossDetector = new ZeroCrossDetector();
-    const effectiveDebugCanvas = debugCanvas ?? this.createDummyCanvas();
-    this.debugRenderer = new DebugRenderer(effectiveDebugCanvas);
   }
 
   async start(): Promise<void> {
@@ -156,18 +138,6 @@ export class Oscilloscope {
           this.frequencyEstimator.getMaxFrequency()
         );
       }
-
-      // Draw similarity scores bar graph
-      const similarityScores = this.zeroCrossDetector.getSimilarityScores();
-      this.renderer.drawSimilarityBarGraph(similarityScores);
-
-      // Draw debug visualization (only when enabled)
-      if (this.debugRenderer.getDebugDisplayEnabled()) {
-        const searchBuffer = this.zeroCrossDetector.getLastSearchBuffer();
-        const candidates = this.zeroCrossDetector.getLastCandidates();
-        const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
-        this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data, similarityScores);
-      }
     }
 
     // Continue rendering
@@ -235,25 +205,11 @@ export class Oscilloscope {
     return this.zeroCrossDetector.getUsePeakMode();
   }
   
-  setDebugDisplay(enabled: boolean): void {
-    this.debugRenderer.setDebugDisplay(enabled);
-    // Also enable/disable debug data collection in ZeroCrossDetector
-    this.zeroCrossDetector.setDebugDataEnabled(enabled);
-  }
-
-  getDebugDisplayEnabled(): boolean {
-    return this.debugRenderer.getDebugDisplayEnabled();
-  }
-  
   setPauseDrawing(paused: boolean): void {
     this.isPaused = paused;
   }
 
   getPauseDrawing(): boolean {
     return this.isPaused;
-  }
-  
-  getSimilarityScores(): number[] {
-    return this.zeroCrossDetector.getSimilarityScores();
   }
 }

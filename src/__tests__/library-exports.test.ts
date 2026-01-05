@@ -10,7 +10,6 @@ import {
   FrequencyEstimator,
   WaveformRenderer,
   ZeroCrossDetector,
-  DebugRenderer,
   dbToAmplitude,
   trimSilence
 } from '../index';
@@ -46,11 +45,6 @@ describe('Library exports', () => {
     expect(typeof ZeroCrossDetector).toBe('function');
   });
 
-  it('should export DebugRenderer class', () => {
-    expect(DebugRenderer).toBeDefined();
-    expect(typeof DebugRenderer).toBe('function');
-  });
-
   it('should export dbToAmplitude utility function', () => {
     expect(dbToAmplitude).toBeDefined();
     expect(typeof dbToAmplitude).toBe('function');
@@ -67,7 +61,6 @@ describe('Library exports', () => {
 
   it('should be able to instantiate Oscilloscope', () => {
     const canvas = document.createElement('canvas');
-    const debugCanvas = document.createElement('canvas');
     // Mock getContext for happy-dom
     const mockContext = {
       fillRect: () => {},
@@ -77,9 +70,8 @@ describe('Library exports', () => {
       lineTo: () => {},
     };
     canvas.getContext = (() => mockContext) as any;
-    debugCanvas.getContext = (() => mockContext) as any;
     
-    const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+    const oscilloscope = new Oscilloscope(canvas);
     expect(oscilloscope).toBeInstanceOf(Oscilloscope);
   });
 
@@ -99,6 +91,5 @@ describe('Library exports', () => {
     expect(new FrequencyEstimator()).toBeInstanceOf(FrequencyEstimator);
     expect(new WaveformRenderer(canvas)).toBeInstanceOf(WaveformRenderer);
     expect(new ZeroCrossDetector()).toBeInstanceOf(ZeroCrossDetector);
-    expect(new DebugRenderer(canvas)).toBeInstanceOf(DebugRenderer);
   });
 });
