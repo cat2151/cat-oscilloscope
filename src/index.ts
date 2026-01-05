@@ -13,6 +13,11 @@ export { FrequencyEstimator } from './FrequencyEstimator';
 export { WaveformRenderer } from './WaveformRenderer';
 export { ZeroCrossDetector } from './ZeroCrossDetector';
 export { WaveformSearcher } from './WaveformSearcher';
+export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+
+// Data processing and types - for Rust WASM integration
+export { WaveformDataProcessor } from './WaveformDataProcessor';
+export type { WaveformRenderData } from './WaveformRenderData';
 
 // Utility functions
 export { dbToAmplitude, trimSilence } from './utils';
