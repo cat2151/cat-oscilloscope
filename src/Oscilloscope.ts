@@ -3,6 +3,7 @@ import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
 import { WaveformRenderer } from './WaveformRenderer';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
+import { WaveformSearcher } from './WaveformSearcher';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -12,6 +13,7 @@ import { ZeroCrossDetector } from './ZeroCrossDetector';
  * - FrequencyEstimator: Frequency detection algorithms
  * - WaveformRenderer: Canvas rendering
  * - ZeroCrossDetector: Zero-crossing detection and display range calculation
+ * - WaveformSearcher: Waveform similarity search
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -19,6 +21,7 @@ export class Oscilloscope {
   private frequencyEstimator: FrequencyEstimator;
   private renderer: WaveformRenderer;
   private zeroCrossDetector: ZeroCrossDetector;
+  private waveformSearcher: WaveformSearcher;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
@@ -29,6 +32,7 @@ export class Oscilloscope {
     this.frequencyEstimator = new FrequencyEstimator();
     this.renderer = new WaveformRenderer(canvas);
     this.zeroCrossDetector = new ZeroCrossDetector();
+    this.waveformSearcher = new WaveformSearcher();
   }
 
   async start(): Promise<void> {
@@ -62,6 +66,7 @@ export class Oscilloscope {
     await this.audioManager.stop();
     this.frequencyEstimator.clearHistory();
     this.zeroCrossDetector.reset();
+    this.waveformSearcher.reset();
   }
 
   private render(): void {
@@ -104,6 +109,21 @@ export class Oscilloscope {
       // Clear canvas and draw grid
       this.renderer.clearAndDrawGrid();
 
+      // Calculate cycle length from estimated frequency
+      let cycleLength = 0;
+      if (estimatedFrequency > 0 && sampleRate > 0) {
+        cycleLength = sampleRate / estimatedFrequency;
+      }
+
+      // Try to find similar waveform if we have a previous waveform
+      let adjustedStartIndex = 0;
+      if (this.waveformSearcher.hasPreviousWaveform() && cycleLength > 0) {
+        const searchResult = this.waveformSearcher.searchSimilarWaveform(dataArray, cycleLength);
+        if (searchResult) {
+          adjustedStartIndex = searchResult.startIndex;
+        }
+      }
+
       // Calculate display range and draw waveform with zero-cross indicators
       const displayRange = this.zeroCrossDetector.calculateDisplayRange(
         dataArray,
@@ -112,14 +132,33 @@ export class Oscilloscope {
       );
       
       if (displayRange) {
+        // Adjust display range based on similarity search
+        const displayStartIndex = displayRange.startIndex + adjustedStartIndex;
+        const displayEndIndex = displayRange.endIndex + adjustedStartIndex;
+        
+        // Ensure we don't exceed buffer bounds
+        const finalStartIndex = Math.min(displayStartIndex, dataArray.length - 1);
+        const finalEndIndex = Math.min(displayEndIndex, dataArray.length);
+        
         // Calculate auto gain before drawing
-        this.gainController.calculateAutoGain(dataArray, displayRange.startIndex, displayRange.endIndex);
+        this.gainController.calculateAutoGain(dataArray, finalStartIndex, finalEndIndex);
         const gain = this.gainController.getCurrentGain();
         
-        this.renderer.drawWaveform(dataArray, displayRange.startIndex, displayRange.endIndex, gain);
-        this.renderer.drawZeroCrossLine(displayRange.firstZeroCross, displayRange.startIndex, displayRange.endIndex);
+        this.renderer.drawWaveform(dataArray, finalStartIndex, finalEndIndex, gain);
+        
+        // Adjust zero-cross indicators
+        const adjustedFirstZeroCross = displayRange.firstZeroCross + adjustedStartIndex;
+        this.renderer.drawZeroCrossLine(adjustedFirstZeroCross, finalStartIndex, finalEndIndex);
         if (displayRange.secondZeroCross !== undefined) {
-          this.renderer.drawZeroCrossLine(displayRange.secondZeroCross, displayRange.startIndex, displayRange.endIndex);
+          const adjustedSecondZeroCross = displayRange.secondZeroCross + adjustedStartIndex;
+          this.renderer.drawZeroCrossLine(adjustedSecondZeroCross, finalStartIndex, finalEndIndex);
+        }
+        
+        // Store waveform for next frame's comparison
+        if (cycleLength > 0) {
+          const waveformLength = Math.floor(cycleLength);
+          const storeEndIndex = Math.min(finalStartIndex + waveformLength, dataArray.length);
+          this.waveformSearcher.storeWaveform(dataArray, finalStartIndex, storeEndIndex);
         }
       } else {
         // No zero-cross found, draw entire buffer
@@ -195,6 +234,10 @@ export class Oscilloscope {
 
   getCurrentGain(): number {
     return this.gainController.getCurrentGain();
+  }
+  
+  getSimilarityScore(): number {
+    return this.waveformSearcher.getLastSimilarity();
   }
   
   setUsePeakMode(enabled: boolean): void {

@@ -12,6 +12,7 @@ export { GainController } from './GainController';
 export { FrequencyEstimator } from './FrequencyEstimator';
 export { WaveformRenderer } from './WaveformRenderer';
 export { ZeroCrossDetector } from './ZeroCrossDetector';
+export { WaveformSearcher } from './WaveformSearcher';
 
 // Utility functions
 export { dbToAmplitude, trimSilence } from './utils';
