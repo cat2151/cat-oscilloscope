@@ -275,6 +275,18 @@ describe('Oscilloscope Class', () => {
     });
   });
   
+  describe('Similarity Search', () => {
+    it('should initialize similarity score to 0', () => {
+      const oscilloscope = new Oscilloscope(canvas);
+      expect(oscilloscope.getSimilarityScore()).toBe(0);
+    });
+    
+    it('should not have similarity search active initially', () => {
+      const oscilloscope = new Oscilloscope(canvas);
+      expect(oscilloscope.isSimilaritySearchActive()).toBe(false);
+    });
+  });
+  
   describe('Noise Gate and FFT Display Interaction', () => {
     // Constants for test mocks
     const MOCK_FREQUENCY_MAGNITUDE = 100; // Significant magnitude for frequency data
