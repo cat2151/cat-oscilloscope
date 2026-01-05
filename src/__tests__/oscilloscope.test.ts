@@ -86,7 +86,6 @@ global.navigator = {
 
 describe('Oscilloscope Class', () => {
   let canvas: HTMLCanvasElement;
-  let debugCanvas: HTMLCanvasElement;
   
   beforeEach(() => {
     // Create a mock canvas element
@@ -115,13 +114,6 @@ describe('Oscilloscope Class', () => {
     canvas.getContext = vi.fn(() => mockContext) as any;
     document.body.appendChild(canvas);
     
-    // Create debug canvas
-    debugCanvas = document.createElement('canvas');
-    debugCanvas.width = 800;
-    debugCanvas.height = 300;
-    debugCanvas.getContext = vi.fn(() => mockContext) as any;
-    document.body.appendChild(debugCanvas);
-    
     // Mock requestAnimationFrame
     global.requestAnimationFrame = vi.fn((cb) => {
       setTimeout(cb, 16);
@@ -135,15 +127,12 @@ describe('Oscilloscope Class', () => {
     if (canvas && canvas.parentNode) {
       canvas.parentNode.removeChild(canvas);
     }
-    if (debugCanvas && debugCanvas.parentNode) {
-      debugCanvas.parentNode.removeChild(debugCanvas);
-    }
     vi.clearAllMocks();
   });
   
   describe('Constructor', () => {
     it('should create an oscilloscope instance with valid canvas', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope).toBeDefined();
       expect(oscilloscope.getIsRunning()).toBe(false);
     });
@@ -153,26 +142,26 @@ describe('Oscilloscope Class', () => {
         getContext: () => null,
       } as any;
       
-      expect(() => new Oscilloscope(mockCanvas, debugCanvas)).toThrow('Could not get 2D context');
+      expect(() => new Oscilloscope(mockCanvas)).toThrow('Could not get 2D context');
     });
   });
   
   describe('Start and Stop Lifecycle', () => {
     it('should start the oscilloscope successfully', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       await oscilloscope.start();
       expect(oscilloscope.getIsRunning()).toBe(true);
     });
     
     it('should stop the oscilloscope successfully', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       await oscilloscope.start();
       await oscilloscope.stop();
       expect(oscilloscope.getIsRunning()).toBe(false);
     });
     
     it('should clean up resources on stop', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       await oscilloscope.start();
       await oscilloscope.stop();
       
@@ -183,18 +172,18 @@ describe('Oscilloscope Class', () => {
   
   describe('Auto Gain', () => {
     it('should have auto gain enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getAutoGainEnabled()).toBe(true);
     });
     
     it('should allow disabling auto gain', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setAutoGain(false);
       expect(oscilloscope.getAutoGainEnabled()).toBe(false);
     });
     
     it('should reset gain to 1.0 when auto gain is disabled', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setAutoGain(true);
       // Manually set a different gain would happen during rendering
       oscilloscope.setAutoGain(false);
@@ -204,12 +193,12 @@ describe('Oscilloscope Class', () => {
   
   describe('Noise Gate', () => {
     it('should have noise gate enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getNoiseGateEnabled()).toBe(true);
     });
     
     it('should allow enabling/disabling noise gate', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setNoiseGate(false);
       expect(oscilloscope.getNoiseGateEnabled()).toBe(false);
       
@@ -218,18 +207,18 @@ describe('Oscilloscope Class', () => {
     });
     
     it('should have default noise gate threshold of dbToAmplitude(-48)', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-48), 10);
     });
     
     it('should allow setting noise gate threshold', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setNoiseGateThreshold(0.05);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(0.05);
     });
     
     it('should clamp noise gate threshold between 0 and 1', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       
       oscilloscope.setNoiseGateThreshold(-0.5);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(0);
@@ -241,36 +230,36 @@ describe('Oscilloscope Class', () => {
   
   describe('Frequency Estimation Methods', () => {
     it('should have autocorrelation as default method', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('autocorrelation');
     });
     
     it('should allow setting zero-crossing method', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setFrequencyEstimationMethod('zero-crossing');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('zero-crossing');
     });
     
     it('should allow setting FFT method', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setFrequencyEstimationMethod('fft');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('fft');
     });
     
     it('should initialize estimated frequency to 0', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getEstimatedFrequency()).toBe(0);
     });
   });
   
   describe('FFT Display', () => {
     it('should have FFT display enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getFFTDisplayEnabled()).toBe(true);
     });
     
     it('should allow enabling/disabling FFT display', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setFFTDisplay(false);
       expect(oscilloscope.getFFTDisplayEnabled()).toBe(false);
       
@@ -281,7 +270,7 @@ describe('Oscilloscope Class', () => {
   
   describe('Gain Value', () => {
     it('should initialize current gain to 1.0', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getCurrentGain()).toBe(1.0);
     });
   });
@@ -363,7 +352,7 @@ describe('Oscilloscope Class', () => {
       global.AudioContext = SilentMockAudioContext as any;
       
       try {
-        const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+        const oscilloscope = new Oscilloscope(canvas);
         
         // Enable both noise gate and FFT display
         oscilloscope.setNoiseGate(true);
@@ -403,7 +392,7 @@ describe('Oscilloscope Class', () => {
     
     it('should show FFT overlay when noise gate is active but signal is above threshold', async () => {
       // Use the default mock which has amplitude 0.5 (above threshold of 0.00398)
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       
       // Enable both noise gate and FFT display
       oscilloscope.setNoiseGate(true);
@@ -441,7 +430,7 @@ describe('Oscilloscope Class', () => {
       global.AudioContext = SilentMockAudioContext as any;
       
       try {
-        const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+        const oscilloscope = new Oscilloscope(canvas);
         
         // Disable noise gate but enable FFT display
         oscilloscope.setNoiseGate(false);
@@ -465,162 +454,14 @@ describe('Oscilloscope Class', () => {
     });
   });
 
-  describe('Similarity Bar Graph', () => {
-    it('should draw similarity bar graph with border', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
-      const mockContext = canvas.getContext('2d') as any;
-      
-      await oscilloscope.start();
-      await new Promise(resolve => setTimeout(resolve, 20));
-      await oscilloscope.stop();
-      
-      // Verify that strokeRect was called for the similarity graph border
-      const strokeRectCalls = mockContext.strokeRect.mock.calls;
-      const similarityGraphBorder = strokeRectCalls.find((call: any[]) => 
-        call[0] === 800 - 200 - 10 && // x = canvasWidth - graphWidth - 10
-        call[1] === 10 && // y = 10
-        call[2] === 200 && // width = graphWidth
-        call[3] === 50 // height = graphHeight
-      );
-      
-      // The similarity graph border should be drawn
-      expect(similarityGraphBorder).toBeDefined();
-    });
-
-    it('should draw similarity bar graph with sorted scores (descending)', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
-      const mockContext = canvas.getContext('2d') as any;
-      
-      await oscilloscope.start();
-      await new Promise(resolve => setTimeout(resolve, 20));
-      await oscilloscope.stop();
-      
-      // Verify that strokeRect was called for the similarity graph border
-      const strokeRectCalls = mockContext.strokeRect.mock.calls;
-      const similarityGraphBorder = strokeRectCalls.find((call: any[]) => 
-        call[0] === 800 - 200 - 10 && // x = canvasWidth - graphWidth - 10
-        call[1] === 10 && // y = 10
-        call[2] === 200 && // width = graphWidth
-        call[3] === 50 // height = graphHeight
-      );
-      
-      // The similarity graph border should be drawn
-      expect(similarityGraphBorder).toBeDefined();
-      
-      // Verify fillRect was called (for bars and background)
-      expect(mockContext.fillRect).toHaveBeenCalled();
-    });
-
-    it('should display up to 4 bars sorted in descending order', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
-      const mockContext = canvas.getContext('2d') as any;
-      
-      await oscilloscope.start();
-      await new Promise(resolve => setTimeout(resolve, 20));
-      await oscilloscope.stop();
-      
-      // Get similarity scores
-      const scores = oscilloscope.getSimilarityScores();
-      
-      // If we have more than 4 scores, only top 4 should be displayed
-      // The bars are drawn at specific y positions (graphY + index * barHeight)
-      const fillRectCalls = mockContext.fillRect.mock.calls;
-      
-      // Count bars drawn at similarity graph y positions (10, 20, 30, 40)
-      const barYPositions = [10, 20, 30, 40];
-      const barsDrawn = fillRectCalls.filter((call: any[]) => 
-        barYPositions.includes(call[1]) && // y position matches bar positions
-        call[3] === 10 // height = barHeight (10px)
-      );
-      
-      // Should have at most 4 bars (or fewer if scores.length < 4)
-      expect(barsDrawn.length).toBeLessThanOrEqual(Math.min(4, scores.length));
-    });
-
-    it('should use green color for positive scores and red for negative scores', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
-      const mockContext = canvas.getContext('2d') as any;
-      
-      // Track fillStyle changes
-      const fillStyleValues: string[] = [];
-      const originalFillStyleSetter = Object.getOwnPropertyDescriptor(
-        mockContext, 'fillStyle'
-      )?.set;
-      
-      Object.defineProperty(mockContext, 'fillStyle', {
-        set: function(value: string) {
-          fillStyleValues.push(value);
-          if (originalFillStyleSetter) {
-            originalFillStyleSetter.call(this, value);
-          }
-        },
-        get: function() {
-          return this._fillStyle;
-        }
-      });
-      
-      await oscilloscope.start();
-      await new Promise(resolve => setTimeout(resolve, 20));
-      await oscilloscope.stop();
-      
-      // Check if rgba colors with green or red were used
-      const greenColors = fillStyleValues.filter(style => 
-        style.includes('rgba(0, 255, 0,') // Green for positive scores
-      );
-      const redColors = fillStyleValues.filter(style => 
-        style.includes('rgba(255, 0, 0,') // Red for negative scores
-      );
-      
-      // At least one color should be used for bars
-      // (The specific count depends on the similarity scores generated)
-      expect(greenColors.length + redColors.length).toBeGreaterThan(0);
-    });
-
-    it('should draw bars extending from center (zero position)', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
-      const mockContext = canvas.getContext('2d') as any;
-      
-      await oscilloscope.start();
-      await new Promise(resolve => setTimeout(resolve, 20));
-      await oscilloscope.stop();
-      
-      const fillRectCalls = mockContext.fillRect.mock.calls;
-      
-      // Center of similarity graph is at graphX + graphWidth/2
-      // graphX = 800 - 200 - 10 = 590
-      // centerX = 590 + 200/2 = 690
-      const centerX = 800 - 200 - 10 + 200 / 2;
-      
-      // Find bars (height = 10, y in range 10-40)
-      const bars = fillRectCalls.filter((call: any[]) => 
-        call[3] === 10 && // height = 10
-        call[1] >= 10 && call[1] < 50 // y position in graph area
-      );
-      
-      // Bars should be positioned relative to center
-      // Positive scores: x = centerX, width = positive
-      // Negative scores: x = centerX - width, width = positive
-      bars.forEach((bar: any[]) => {
-        const x = bar[0];
-        const width = bar[2];
-        
-        // Bar should either start at center (positive) or end at center (negative)
-        const isPositiveBar = Math.abs(x - centerX) < 1; // starts at center
-        const isNegativeBar = Math.abs(x + width - centerX) < 1; // ends at center
-        
-        expect(isPositiveBar || isNegativeBar).toBe(true);
-      });
-    });
-  });
-
   describe('Pause Drawing', () => {
     it('should have pause drawing disabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       expect(oscilloscope.getPauseDrawing()).toBe(false);
     });
 
     it('should allow enabling/disabling pause drawing', () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       oscilloscope.setPauseDrawing(true);
       expect(oscilloscope.getPauseDrawing()).toBe(true);
 
@@ -629,7 +470,7 @@ describe('Oscilloscope Class', () => {
     });
 
     it('should skip drawing when paused but continue animation loop', async () => {
-      const oscilloscope = new Oscilloscope(canvas, debugCanvas);
+      const oscilloscope = new Oscilloscope(canvas);
       const mockContext = canvas.getContext('2d') as any;
       
       await oscilloscope.start();

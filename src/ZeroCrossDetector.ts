@@ -10,16 +10,7 @@ export class ZeroCrossDetector {
   private previousZeroCrossIndex: number | null = null; // Previous frame's zero-crossing position
   private previousPeakIndex: number | null = null; // Previous frame's peak position
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
-  private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
-  private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
-  private debugDataEnabled: boolean = false; // Enable debug data collection to reduce memory overhead
-  
-  // Debug information for visualization
-  private lastCandidates: number[] = []; // All zero-cross/peak candidates found
-  private lastReferenceData: Float32Array | null = null; // Reference waveform (previous frame's 0-2π)
-  private lastReferenceStartIndex: number = 0; // Start index of reference waveform in previous buffer
-  private lastSearchBuffer: Float32Array | null = null; // Full search buffer for current frame
 
   /**
    * Set whether to use peak mode instead of zero-crossing mode
@@ -33,21 +24,6 @@ export class ZeroCrossDetector {
    */
   getUsePeakMode(): boolean {
     return this.usePeakMode;
-  }
-
-  /**
-   * Set whether to enable debug data collection
-   * When enabled, stores search buffer and reference data for visualization (increases memory usage)
-   */
-  setDebugDataEnabled(enabled: boolean): void {
-    this.debugDataEnabled = enabled;
-  }
-
-  /**
-   * Get whether debug data collection is enabled
-   */
-  getDebugDataEnabled(): boolean {
-    return this.debugDataEnabled;
   }
 
   /**
@@ -117,216 +93,6 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Calculate waveform similarity score between two different buffers
-   * Returns a correlation coefficient between -1 and 1 (higher is more similar)
-   */
-  private calculateWaveformSimilarityBetweenBuffers(
-    buffer1: Float32Array,
-    startIndex1: number,
-    buffer2: Float32Array,
-    startIndex2: number,
-    compareLength: number
-  ): number {
-    // Ensure we don't go out of bounds
-    const maxLength = Math.min(
-      compareLength,
-      buffer1.length - startIndex1,
-      buffer2.length - startIndex2
-    );
-    
-    if (maxLength <= 0) {
-      return -1;
-    }
-
-    // Calculate correlation coefficient
-    let sum1 = 0;
-    let sum2 = 0;
-    let sum1Sq = 0;
-    let sum2Sq = 0;
-    let sumProduct = 0;
-    
-    for (let i = 0; i < maxLength; i++) {
-      const val1 = buffer1[startIndex1 + i];
-      const val2 = buffer2[startIndex2 + i];
-      sum1 += val1;
-      sum2 += val2;
-      sum1Sq += val1 * val1;
-      sum2Sq += val2 * val2;
-      sumProduct += val1 * val2;
-    }
-    
-    // Pearson correlation coefficient
-    const numerator = maxLength * sumProduct - sum1 * sum2;
-    const denominator = Math.sqrt(
-      (maxLength * sum1Sq - sum1 * sum1) * (maxLength * sum2Sq - sum2 * sum2)
-    );
-    
-    if (denominator === 0) {
-      return 0;
-    }
-    
-    return numerator / denominator;
-  }
-
-  /**
-   * Find all zero-cross candidates after startIndex, up to maxCycles ahead
-   */
-  private findZeroCrossCandidates(
-    data: Float32Array,
-    startIndex: number,
-    maxCycles: number
-  ): number[] {
-    const candidates: number[] = [];
-    let currentIndex = startIndex;
-    
-    for (let cycle = 0; cycle < maxCycles; cycle++) {
-      const nextZeroCross = this.findNextZeroCross(data, currentIndex);
-      if (nextZeroCross === -1) {
-        break;
-      }
-      candidates.push(nextZeroCross);
-      currentIndex = nextZeroCross;
-    }
-    
-    return candidates;
-  }
-
-  /**
-   * Initialize placeholder similarity scores for UI display
-   * Used when real similarity calculations cannot be performed (e.g., no reference data yet)
-   */
-  private initializePlaceholderScores(candidateCount: number): void {
-    // Initialize scores for all candidates; UI should limit visible items if needed
-    this.lastSimilarityScores = new Array(candidateCount).fill(0);
-  }
-
-  /**
-   * Select the best zero-cross candidate based on waveform pattern matching
-   * Compares each candidate segment in the current buffer against the reference waveform from the previous frame
-   */
-  private selectBestCandidate(
-    data: Float32Array,
-    candidates: number[],
-    cycleLength: number
-  ): number {
-    if (candidates.length === 0) {
-      return -1;
-    }
-    
-    if (candidates.length === 1) {
-      // Initialize with a placeholder for UI (will be replaced with real scores once reference exists)
-      this.initializePlaceholderScores(candidates.length);
-      return candidates[0];
-    }
-    
-    // Validate cycleLength to avoid division by zero or invalid comparison lengths
-    if (cycleLength <= 0) {
-      // Initialize with placeholders for UI (will be replaced with real scores once conditions are met)
-      this.initializePlaceholderScores(candidates.length);
-      return candidates[0];
-    }
-    
-    // If no reference waveform is available, return first candidate
-    if (!this.lastReferenceData || this.lastReferenceData.length === 0) {
-      // Initialize with placeholders for UI on first frame (will be replaced with real scores in subsequent frames)
-      this.initializePlaceholderScores(candidates.length);
-      return candidates[0];
-    }
-    
-    // Compare each candidate segment in current buffer with the reference waveform
-    let bestCandidate = candidates[0];
-    let bestScore = -Infinity;
-    
-    const compareLength = Math.floor(cycleLength * 1.5); // Compare 1.5 cycles
-    
-    // For debugging: store all similarity scores
-    const similarityScores: number[] = [];
-    
-    for (let i = 0; i < candidates.length; i++) {
-      const currentCandidate = candidates[i];
-      
-      // Calculate similarity between the candidate segment in current buffer and reference waveform
-      const similarity = this.calculateWaveformSimilarityBetweenBuffers(
-        this.lastReferenceData,
-        0, // Start from beginning of reference waveform
-        data,
-        currentCandidate,
-        compareLength
-      );
-      
-      similarityScores.push(similarity);
-      
-      if (similarity > bestScore) {
-        bestScore = similarity;
-        bestCandidate = currentCandidate;
-      }
-    }
-    
-    // Store similarity scores for UI display
-    this.lastSimilarityScores = similarityScores;
-    
-    return bestCandidate;
-  }
-  
-  /**
-   * Get the last computed similarity scores for UI display
-   */
-  getSimilarityScores(): number[] {
-    return this.lastSimilarityScores;
-  }
-
-  /**
-   * Get all candidates found in the last calculation for debug visualization
-   */
-  getLastCandidates(): number[] {
-    return this.lastCandidates;
-  }
-
-  /**
-   * Get reference waveform data (previous frame's 0-2π) for debug visualization
-   * @returns Object containing the reference waveform data and its start index in the original buffer.
-   * The startIndex indicates where in the previous frame's buffer the reference segment began,
-   * which can be useful for advanced debugging scenarios where absolute positioning is needed.
-   */
-  getLastReferenceData(): { data: Float32Array | null; startIndex: number } {
-    return {
-      data: this.lastReferenceData,
-      startIndex: this.lastReferenceStartIndex
-    };
-  }
-
-  /**
-   * Get the full search buffer for debug visualization
-   */
-  getLastSearchBuffer(): Float32Array | null {
-    return this.lastSearchBuffer;
-  }
-
-  /**
-   * Find all peak candidates after startIndex, up to maxCycles ahead
-   */
-  private findPeakCandidates(
-    data: Float32Array,
-    startIndex: number,
-    cycleLength: number,
-    maxCycles: number
-  ): number[] {
-    const candidates: number[] = [];
-    let currentIndex = startIndex;
-    
-    for (let cycle = 0; cycle < maxCycles; cycle++) {
-      const nextPeak = this.findNextPeak(data, currentIndex, cycleLength);
-      if (nextPeak === -1) {
-        break;
-      }
-      candidates.push(nextPeak);
-      currentIndex = nextPeak;
-    }
-    
-    return candidates;
-  }
-
-  /**
    * Find a stable peak position with temporal continuity
    * This prevents rapid switching between different waveform patterns
    */
@@ -345,35 +111,12 @@ export class ZeroCrossDetector {
         const searchEnd = Math.min(data.length, Math.ceil(expectedIndex + searchTolerance));
         
         // Find peak nearest to expected position
-        const nearExpectedCandidate = this.findPeak(data, searchStart, searchEnd);
+        const nearExpectedPeak = this.findPeak(data, searchStart, searchEnd);
         
         // If we found a peak near expected position
-        if (nearExpectedCandidate !== -1) {
-          // Find candidates up to 4 cycles ahead
-          const candidates = this.findPeakCandidates(
-            data,
-            nearExpectedCandidate,
-            estimatedCycleLength,
-            this.MAX_CANDIDATE_CYCLES
-          );
-          
-          // Include the first candidate
-          candidates.unshift(nearExpectedCandidate);
-          
-          // Store candidates for debug visualization
-          this.lastCandidates = [...candidates];
-          
-          // Select the best candidate based on waveform pattern matching
-          const selectedCandidate = this.selectBestCandidate(
-            data,
-            candidates,
-            estimatedCycleLength
-          );
-          
-          if (selectedCandidate !== -1) {
-            this.previousPeakIndex = selectedCandidate;
-            return selectedCandidate;
-          }
+        if (nearExpectedPeak !== -1) {
+          this.previousPeakIndex = nearExpectedPeak;
+          return nearExpectedPeak;
         }
       }
     }
@@ -385,32 +128,6 @@ export class ZeroCrossDetector {
       
     const peak = this.findPeak(data, 0, initialSearchLength);
     if (peak !== -1) {
-      // Also apply multi-cycle search for initial detection
-      if (estimatedCycleLength > 0) {
-        const candidates = this.findPeakCandidates(
-          data,
-          peak,
-          estimatedCycleLength,
-          this.MAX_CANDIDATE_CYCLES
-        );
-        candidates.unshift(peak);
-        
-        // Store candidates for debug visualization
-        this.lastCandidates = [...candidates];
-        
-        // For initial detection, no reference position exists
-        const selectedCandidate = this.selectBestCandidate(
-          data,
-          candidates,
-          estimatedCycleLength
-        );
-        
-        if (selectedCandidate !== -1) {
-          this.previousPeakIndex = selectedCandidate;
-          return selectedCandidate;
-        }
-      }
-      
       this.previousPeakIndex = peak;
     }
     return peak;
@@ -435,7 +152,7 @@ export class ZeroCrossDetector {
         const searchEnd = Math.min(data.length - 1, Math.ceil(expectedIndex + searchTolerance));
         
         // Search for zero-crossing nearest to expected position
-        let nearExpectedCandidate = -1;
+        let nearExpectedZeroCross = -1;
         let bestDistance = Infinity;
         
         // Ensure we don't access out of bounds when checking data[i + 1]
@@ -444,37 +161,15 @@ export class ZeroCrossDetector {
             const distance = Math.abs(i - expectedIndex);
             if (distance < bestDistance) {
               bestDistance = distance;
-              nearExpectedCandidate = i;
+              nearExpectedZeroCross = i;
             }
           }
         }
         
         // If we found a zero-crossing near expected position
-        if (nearExpectedCandidate !== -1) {
-          // Find candidates up to 4 cycles ahead
-          const candidates = this.findZeroCrossCandidates(
-            data,
-            nearExpectedCandidate,
-            this.MAX_CANDIDATE_CYCLES
-          );
-          
-          // Include the first candidate
-          candidates.unshift(nearExpectedCandidate);
-          
-          // Store candidates for debug visualization
-          this.lastCandidates = [...candidates];
-          
-          // Select the best candidate based on waveform pattern matching
-          const selectedCandidate = this.selectBestCandidate(
-            data,
-            candidates,
-            estimatedCycleLength
-          );
-          
-          if (selectedCandidate !== -1) {
-            this.previousZeroCrossIndex = selectedCandidate;
-            return selectedCandidate;
-          }
+        if (nearExpectedZeroCross !== -1) {
+          this.previousZeroCrossIndex = nearExpectedZeroCross;
+          return nearExpectedZeroCross;
         }
       }
     }
@@ -482,31 +177,6 @@ export class ZeroCrossDetector {
     // No previous position or search failed - find first zero-crossing
     const zeroCross = this.findZeroCross(data, 0);
     if (zeroCross !== -1) {
-      // Also apply multi-cycle search for initial detection
-      if (estimatedCycleLength > 0) {
-        const candidates = this.findZeroCrossCandidates(
-          data,
-          zeroCross,
-          this.MAX_CANDIDATE_CYCLES
-        );
-        candidates.unshift(zeroCross);
-        
-        // Store candidates for debug visualization
-        this.lastCandidates = [...candidates];
-        
-        // For initial detection, no reference position exists
-        const selectedCandidate = this.selectBestCandidate(
-          data,
-          candidates,
-          estimatedCycleLength
-        );
-        
-        if (selectedCandidate !== -1) {
-          this.previousZeroCrossIndex = selectedCandidate;
-          return selectedCandidate;
-        }
-      }
-      
       this.previousZeroCrossIndex = zeroCross;
     }
     return zeroCross;
@@ -562,12 +232,6 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization (only when debug data collection is enabled)
-    // Note: We copy the data because the Web Audio API reuses the buffer on each frame
-    if (this.debugDataEnabled) {
-      this.lastSearchBuffer = new Float32Array(data);
-    }
-    
     // Estimate cycle length from frequency
     let cycleLength: number;
     if (estimatedFrequency > 0 && sampleRate > 0) {
@@ -596,12 +260,6 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstPeak - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame (only when debug data collection is enabled)
-      if (this.debugDataEnabled) {
-        this.lastReferenceData = data.slice(startIndex, endIndex);
-        this.lastReferenceStartIndex = startIndex;
-      }
-      
       return {
         startIndex,
         endIndex,
@@ -612,12 +270,6 @@ export class ZeroCrossDetector {
     // Display from peak -π/8 to next peak +π/8
     const startIndex = Math.max(0, firstPeak - phasePadding);
     const endIndex = Math.min(data.length, secondPeak + phasePadding);
-    
-    // Store reference data for next frame (only when debug data collection is enabled)
-    if (this.debugDataEnabled) {
-      this.lastReferenceData = data.slice(startIndex, endIndex);
-      this.lastReferenceStartIndex = startIndex;
-    }
     
     return {
       startIndex,
@@ -636,12 +288,6 @@ export class ZeroCrossDetector {
     firstZeroCross: number;
     secondZeroCross?: number;
   } | null {
-    // Store search buffer for debug visualization (only when debug data collection is enabled)
-    // Note: We copy the data because the Web Audio API reuses the buffer on each frame
-    if (this.debugDataEnabled) {
-      this.lastSearchBuffer = new Float32Array(data);
-    }
-    
     // Find the first zero-cross point to estimate cycle length
     const estimationZeroCross = this.findZeroCross(data, 0);
     
@@ -661,12 +307,6 @@ export class ZeroCrossDetector {
         // No frequency info, display from found zero-cross to end
         const startIndex = estimationZeroCross;
         const endIndex = data.length;
-        
-        // Store reference data for next frame (only when debug data collection is enabled)
-        if (this.debugDataEnabled) {
-          this.lastReferenceData = data.slice(startIndex, endIndex);
-          this.lastReferenceStartIndex = startIndex;
-        }
         
         return {
           startIndex,
@@ -697,12 +337,6 @@ export class ZeroCrossDetector {
       const startIndex = Math.max(0, firstZeroCross - phasePadding);
       const endIndex = data.length;
       
-      // Store reference data for next frame (only when debug data collection is enabled)
-      if (this.debugDataEnabled) {
-        this.lastReferenceData = data.slice(startIndex, endIndex);
-        this.lastReferenceStartIndex = startIndex;
-      }
-      
       return {
         startIndex,
         endIndex,
@@ -713,12 +347,6 @@ export class ZeroCrossDetector {
     // Display from phase -π/8 to phase 2π+π/8
     const startIndex = Math.max(0, firstZeroCross - phasePadding);
     const endIndex = Math.min(data.length, secondZeroCross + phasePadding);
-    
-    // Store reference data for next frame (only when debug data collection is enabled)
-    if (this.debugDataEnabled) {
-      this.lastReferenceData = data.slice(startIndex, endIndex);
-      this.lastReferenceStartIndex = startIndex;
-    }
     
     return {
       startIndex,
@@ -734,11 +362,5 @@ export class ZeroCrossDetector {
   reset(): void {
     this.previousZeroCrossIndex = null;
     this.previousPeakIndex = null;
-    this.lastCandidates = [];
-    this.lastReferenceData = null;
-    this.lastReferenceStartIndex = 0;
-    this.lastSearchBuffer = null;
-    // Don't reset lastSimilarityScores to allow inspection after stopping
-    // this.lastSimilarityScores = [];
   }
 }
