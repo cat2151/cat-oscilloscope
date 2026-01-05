@@ -178,6 +178,9 @@ export class Oscilloscope {
           this.gainController.calculateAutoGain(dataArray, 0, dataArray.length);
           const gain = this.gainController.getCurrentGain();
           this.renderer.drawWaveform(dataArray, 0, dataArray.length, gain);
+          
+          // Store waveform for next frame's comparison even when zero-cross fails
+          this.storeWaveformForNextFrame(dataArray, 0, cycleLength);
         }
       } else {
         // Using similarity search result
