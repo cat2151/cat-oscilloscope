@@ -11,6 +11,7 @@ const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLIn
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
 const usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
 const pauseDrawingCheckbox = document.getElementById('pauseDrawingCheckbox') as HTMLInputElement;
+const infoDisplayCheckbox = document.getElementById('infoDisplayCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -18,6 +19,7 @@ const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelect
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 const similarityValue = document.getElementById('similarityValue') as HTMLSpanElement;
+const frequencyDisplay = document.getElementById('frequencyDisplay') as HTMLDivElement;
 
 // Validate all required DOM elements
 const requiredElements = [
@@ -30,6 +32,7 @@ const requiredElements = [
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
   { element: usePeakModeCheckbox, name: 'usePeakModeCheckbox' },
   { element: pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
+  { element: infoDisplayCheckbox, name: 'infoDisplayCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -37,6 +40,7 @@ const requiredElements = [
   { element: frequencyValue, name: 'frequencyValue' },
   { element: gainValue, name: 'gainValue' },
   { element: similarityValue, name: 'similarityValue' },
+  { element: frequencyDisplay, name: 'frequencyDisplay' },
 ];
 
 for (const { element, name } of requiredElements) {
@@ -82,6 +86,9 @@ oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
+// Synchronize info display control
+frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -105,6 +112,11 @@ usePeakModeCheckbox.addEventListener('change', () => {
 // Pause drawing checkbox handler
 pauseDrawingCheckbox.addEventListener('change', () => {
   oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
+});
+
+// Info display checkbox handler
+infoDisplayCheckbox.addEventListener('change', () => {
+  frequencyDisplay.style.display = infoDisplayCheckbox.checked ? 'flex' : 'none';
 });
 
 // Noise gate threshold slider handler
