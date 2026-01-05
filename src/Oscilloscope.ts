@@ -69,6 +69,27 @@ export class Oscilloscope {
     this.waveformSearcher.reset();
   }
 
+  /**
+   * Calculate cycle length from estimated frequency and sample rate
+   */
+  private calculateCycleLength(frequency: number, sampleRate: number): number {
+    if (frequency > 0 && sampleRate > 0) {
+      return sampleRate / frequency;
+    }
+    return 0;
+  }
+
+  /**
+   * Store waveform for next frame's similarity comparison
+   */
+  private storeWaveformForNextFrame(data: Float32Array, startIndex: number, cycleLength: number): void {
+    if (cycleLength > 0) {
+      const waveformLength = Math.floor(cycleLength);
+      const endIndex = Math.min(startIndex + waveformLength, data.length);
+      this.waveformSearcher.storeWaveform(data, startIndex, endIndex);
+    }
+  }
+
   private render(): void {
     if (!this.isRunning || !this.audioManager.isReady()) {
       return;
@@ -110,10 +131,7 @@ export class Oscilloscope {
       this.renderer.clearAndDrawGrid();
 
       // Calculate cycle length from estimated frequency
-      let cycleLength = 0;
-      if (estimatedFrequency > 0 && sampleRate > 0) {
-        cycleLength = sampleRate / estimatedFrequency;
-      }
+      const cycleLength = this.calculateCycleLength(estimatedFrequency, sampleRate);
 
       // Try to find similar waveform if we have a previous waveform and valid cycle length
       let displayStartIndex = 0;
@@ -154,11 +172,7 @@ export class Oscilloscope {
           }
           
           // Store waveform for next frame's comparison
-          if (cycleLength > 0) {
-            const waveformLength = Math.floor(cycleLength);
-            const storeEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
-            this.waveformSearcher.storeWaveform(dataArray, displayStartIndex, storeEndIndex);
-          }
+          this.storeWaveformForNextFrame(dataArray, displayStartIndex, cycleLength);
         } else {
           // No zero-cross found, draw entire buffer
           this.gainController.calculateAutoGain(dataArray, 0, dataArray.length);
@@ -174,7 +188,7 @@ export class Oscilloscope {
         this.renderer.drawWaveform(dataArray, displayStartIndex, displayEndIndex, gain);
         
         // Store waveform for next frame's comparison
-        this.waveformSearcher.storeWaveform(dataArray, displayStartIndex, displayEndIndex);
+        this.storeWaveformForNextFrame(dataArray, displayStartIndex, cycleLength);
       }
 
       // Draw FFT spectrum overlay if enabled and signal is above noise gate
