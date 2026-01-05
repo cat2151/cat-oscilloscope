@@ -247,15 +247,13 @@ export class DebugRenderer {
    * @param referenceData Reference waveform for cycle length estimation
    * @param segmentWidth Width of one segment in row 1
    * @param row1Height Height of row 1
-   * @param similarityScores Similarity scores for each candidate
    */
   private drawCandidateSegments(
     candidates: number[],
     searchBuffer: Float32Array,
     referenceData: Float32Array,
     segmentWidth: number,
-    row1Height: number,
-    similarityScores: number[]
+    row1Height: number
   ): void {
     if (candidates.length === 0 || searchBuffer.length === 0) {
       return;
@@ -300,15 +298,6 @@ export class DebugRenderer {
       this.ctx.fillStyle = color;
       this.ctx.font = 'bold 10px Arial';
       this.ctx.fillText(`Candidate #${i}`, sectionStartX + 5, 15);
-
-      // Draw similarity score if available
-      if (i < similarityScores.length) {
-        const similarity = similarityScores[i];
-        const similarityText = `Match: ${(similarity * 100).toFixed(1)}%`;
-        this.ctx.fillStyle = color;
-        this.ctx.font = 'bold 10px Arial';
-        this.ctx.fillText(similarityText, sectionStartX + 5, 30);
-      }
     });
   }
 
@@ -362,13 +351,11 @@ export class DebugRenderer {
    * @param searchBuffer Full search buffer (current frame's waveform data)
    * @param candidates All zero-cross/peak candidates found
    * @param referenceData Previous frame's 0-2π reference waveform
-   * @param similarityScores Similarity scores for each candidate
    */
   renderDebug(
     searchBuffer: Float32Array | null,
     candidates: number[],
-    referenceData: Float32Array | null,
-    similarityScores: number[]
+    referenceData: Float32Array | null
   ): void {
     if (!this.debugDisplayEnabled) {
       return;
@@ -389,7 +376,7 @@ export class DebugRenderer {
 
       // Draw candidate segments if available
       if (searchBuffer && searchBuffer.length > 0 && candidates.length > 0) {
-        this.drawCandidateSegments(candidates, searchBuffer, referenceData, segmentWidth, row1Height, similarityScores);
+        this.drawCandidateSegments(candidates, searchBuffer, referenceData, segmentWidth, row1Height);
       }
     }
 

@@ -157,16 +157,12 @@ export class Oscilloscope {
         );
       }
 
-      // Draw similarity scores bar graph
-      const similarityScores = this.zeroCrossDetector.getSimilarityScores();
-      this.renderer.drawSimilarityBarGraph(similarityScores);
-
       // Draw debug visualization (only when enabled)
       if (this.debugRenderer.getDebugDisplayEnabled()) {
         const searchBuffer = this.zeroCrossDetector.getLastSearchBuffer();
         const candidates = this.zeroCrossDetector.getLastCandidates();
         const referenceInfo = this.zeroCrossDetector.getLastReferenceData();
-        this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data, similarityScores);
+        this.debugRenderer.renderDebug(searchBuffer, candidates, referenceInfo.data);
       }
     }
 
@@ -251,9 +247,5 @@ export class Oscilloscope {
 
   getPauseDrawing(): boolean {
     return this.isPaused;
-  }
-  
-  getSimilarityScores(): number[] {
-    return this.zeroCrossDetector.getSimilarityScores();
   }
 }

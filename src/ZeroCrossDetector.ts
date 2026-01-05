@@ -11,7 +11,6 @@ export class ZeroCrossDetector {
   private previousPeakIndex: number | null = null; // Previous frame's peak position
   private readonly ZERO_CROSS_SEARCH_TOLERANCE_CYCLES = 0.5; // Search within ±0.5 cycles of expected position
   private readonly MAX_CANDIDATE_CYCLES = 4; // Search up to 4 cycles ahead for best candidate
-  private lastSimilarityScores: number[] = []; // Store last similarity scores for UI display
   private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
   private debugDataEnabled: boolean = false; // Enable debug data collection to reduce memory overhead
   
@@ -192,15 +191,6 @@ export class ZeroCrossDetector {
   }
 
   /**
-   * Initialize placeholder similarity scores for UI display
-   * Used when real similarity calculations cannot be performed (e.g., no reference data yet)
-   */
-  private initializePlaceholderScores(candidateCount: number): void {
-    // Initialize scores for all candidates; UI should limit visible items if needed
-    this.lastSimilarityScores = new Array(candidateCount).fill(0);
-  }
-
-  /**
    * Select the best zero-cross candidate based on waveform pattern matching
    * Compares each candidate segment in the current buffer against the reference waveform from the previous frame
    */
@@ -214,22 +204,16 @@ export class ZeroCrossDetector {
     }
     
     if (candidates.length === 1) {
-      // Initialize with a placeholder for UI (will be replaced with real scores once reference exists)
-      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
     // Validate cycleLength to avoid division by zero or invalid comparison lengths
     if (cycleLength <= 0) {
-      // Initialize with placeholders for UI (will be replaced with real scores once conditions are met)
-      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
     // If no reference waveform is available, return first candidate
     if (!this.lastReferenceData || this.lastReferenceData.length === 0) {
-      // Initialize with placeholders for UI on first frame (will be replaced with real scores in subsequent frames)
-      this.initializePlaceholderScores(candidates.length);
       return candidates[0];
     }
     
@@ -238,9 +222,6 @@ export class ZeroCrossDetector {
     let bestScore = -Infinity;
     
     const compareLength = Math.floor(cycleLength * 1.5); // Compare 1.5 cycles
-    
-    // For debugging: store all similarity scores
-    const similarityScores: number[] = [];
     
     for (let i = 0; i < candidates.length; i++) {
       const currentCandidate = candidates[i];
@@ -254,27 +235,15 @@ export class ZeroCrossDetector {
         compareLength
       );
       
-      similarityScores.push(similarity);
-      
       if (similarity > bestScore) {
         bestScore = similarity;
         bestCandidate = currentCandidate;
       }
     }
     
-    // Store similarity scores for UI display
-    this.lastSimilarityScores = similarityScores;
-    
     return bestCandidate;
   }
   
-  /**
-   * Get the last computed similarity scores for UI display
-   */
-  getSimilarityScores(): number[] {
-    return this.lastSimilarityScores;
-  }
-
   /**
    * Get all candidates found in the last calculation for debug visualization
    */
@@ -738,7 +707,5 @@ export class ZeroCrossDetector {
     this.lastReferenceData = null;
     this.lastReferenceStartIndex = 0;
     this.lastSearchBuffer = null;
-    // Don't reset lastSimilarityScores to allow inspection after stopping
-    // this.lastSimilarityScores = [];
   }
 }
