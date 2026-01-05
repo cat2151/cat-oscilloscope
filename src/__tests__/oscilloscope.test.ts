@@ -86,12 +86,28 @@ global.navigator = {
 
 describe('Oscilloscope Class', () => {
   let canvas: HTMLCanvasElement;
+  let previousWaveformCanvas: HTMLCanvasElement;
+  let currentWaveformCanvas: HTMLCanvasElement;
+  let frameBufferCanvas: HTMLCanvasElement;
   
   beforeEach(() => {
     // Create a mock canvas element
     canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 400;
+
+    // Create comparison panel canvases
+    previousWaveformCanvas = document.createElement('canvas');
+    previousWaveformCanvas.width = 250;
+    previousWaveformCanvas.height = 150;
+
+    currentWaveformCanvas = document.createElement('canvas');
+    currentWaveformCanvas.width = 250;
+    currentWaveformCanvas.height = 150;
+
+    frameBufferCanvas = document.createElement('canvas');
+    frameBufferCanvas.width = 250;
+    frameBufferCanvas.height = 150;
     
     // Mock getContext to return a valid 2D context
     const mockContext = {
@@ -112,7 +128,14 @@ describe('Oscilloscope Class', () => {
     };
     
     canvas.getContext = vi.fn(() => mockContext) as any;
+    previousWaveformCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
+    currentWaveformCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
+    frameBufferCanvas.getContext = vi.fn(() => ({ ...mockContext })) as any;
+
     document.body.appendChild(canvas);
+    document.body.appendChild(previousWaveformCanvas);
+    document.body.appendChild(currentWaveformCanvas);
+    document.body.appendChild(frameBufferCanvas);
     
     // Mock requestAnimationFrame
     global.requestAnimationFrame = vi.fn((cb) => {
@@ -127,12 +150,21 @@ describe('Oscilloscope Class', () => {
     if (canvas && canvas.parentNode) {
       canvas.parentNode.removeChild(canvas);
     }
+    if (previousWaveformCanvas && previousWaveformCanvas.parentNode) {
+      previousWaveformCanvas.parentNode.removeChild(previousWaveformCanvas);
+    }
+    if (currentWaveformCanvas && currentWaveformCanvas.parentNode) {
+      currentWaveformCanvas.parentNode.removeChild(currentWaveformCanvas);
+    }
+    if (frameBufferCanvas && frameBufferCanvas.parentNode) {
+      frameBufferCanvas.parentNode.removeChild(frameBufferCanvas);
+    }
     vi.clearAllMocks();
   });
   
   describe('Constructor', () => {
     it('should create an oscilloscope instance with valid canvas', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope).toBeDefined();
       expect(oscilloscope.getIsRunning()).toBe(false);
     });
@@ -142,26 +174,26 @@ describe('Oscilloscope Class', () => {
         getContext: () => null,
       } as any;
       
-      expect(() => new Oscilloscope(mockCanvas)).toThrow('Could not get 2D context');
+      expect(() => new Oscilloscope(mockCanvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas)).toThrow('Could not get 2D context');
     });
   });
   
   describe('Start and Stop Lifecycle', () => {
     it('should start the oscilloscope successfully', async () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       await oscilloscope.start();
       expect(oscilloscope.getIsRunning()).toBe(true);
     });
     
     it('should stop the oscilloscope successfully', async () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       await oscilloscope.start();
       await oscilloscope.stop();
       expect(oscilloscope.getIsRunning()).toBe(false);
     });
     
     it('should clean up resources on stop', async () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       await oscilloscope.start();
       await oscilloscope.stop();
       
@@ -172,18 +204,18 @@ describe('Oscilloscope Class', () => {
   
   describe('Auto Gain', () => {
     it('should have auto gain enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getAutoGainEnabled()).toBe(true);
     });
     
     it('should allow disabling auto gain', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setAutoGain(false);
       expect(oscilloscope.getAutoGainEnabled()).toBe(false);
     });
     
     it('should reset gain to 1.0 when auto gain is disabled', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setAutoGain(true);
       // Manually set a different gain would happen during rendering
       oscilloscope.setAutoGain(false);
@@ -193,12 +225,12 @@ describe('Oscilloscope Class', () => {
   
   describe('Noise Gate', () => {
     it('should have noise gate enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getNoiseGateEnabled()).toBe(true);
     });
     
     it('should allow enabling/disabling noise gate', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setNoiseGate(false);
       expect(oscilloscope.getNoiseGateEnabled()).toBe(false);
       
@@ -207,18 +239,18 @@ describe('Oscilloscope Class', () => {
     });
     
     it('should have default noise gate threshold of dbToAmplitude(-48)', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-48), 10);
     });
     
     it('should allow setting noise gate threshold', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setNoiseGateThreshold(0.05);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(0.05);
     });
     
     it('should clamp noise gate threshold between 0 and 1', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       
       oscilloscope.setNoiseGateThreshold(-0.5);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(0);
@@ -230,36 +262,36 @@ describe('Oscilloscope Class', () => {
   
   describe('Frequency Estimation Methods', () => {
     it('should have autocorrelation as default method', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('autocorrelation');
     });
     
     it('should allow setting zero-crossing method', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setFrequencyEstimationMethod('zero-crossing');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('zero-crossing');
     });
     
     it('should allow setting FFT method', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setFrequencyEstimationMethod('fft');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('fft');
     });
     
     it('should initialize estimated frequency to 0', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getEstimatedFrequency()).toBe(0);
     });
   });
   
   describe('FFT Display', () => {
     it('should have FFT display enabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getFFTDisplayEnabled()).toBe(true);
     });
     
     it('should allow enabling/disabling FFT display', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setFFTDisplay(false);
       expect(oscilloscope.getFFTDisplayEnabled()).toBe(false);
       
@@ -270,19 +302,19 @@ describe('Oscilloscope Class', () => {
   
   describe('Gain Value', () => {
     it('should initialize current gain to 1.0', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getCurrentGain()).toBe(1.0);
     });
   });
   
   describe('Similarity Search', () => {
     it('should initialize similarity score to 0', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getSimilarityScore()).toBe(0);
     });
     
     it('should not have similarity search active initially', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.isSimilaritySearchActive()).toBe(false);
     });
   });
@@ -364,7 +396,7 @@ describe('Oscilloscope Class', () => {
       global.AudioContext = SilentMockAudioContext as any;
       
       try {
-        const oscilloscope = new Oscilloscope(canvas);
+        const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
         
         // Enable both noise gate and FFT display
         oscilloscope.setNoiseGate(true);
@@ -404,7 +436,7 @@ describe('Oscilloscope Class', () => {
     
     it('should show FFT overlay when noise gate is active but signal is above threshold', async () => {
       // Use the default mock which has amplitude 0.5 (above threshold of 0.00398)
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       
       // Enable both noise gate and FFT display
       oscilloscope.setNoiseGate(true);
@@ -442,7 +474,7 @@ describe('Oscilloscope Class', () => {
       global.AudioContext = SilentMockAudioContext as any;
       
       try {
-        const oscilloscope = new Oscilloscope(canvas);
+        const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
         
         // Disable noise gate but enable FFT display
         oscilloscope.setNoiseGate(false);
@@ -468,12 +500,12 @@ describe('Oscilloscope Class', () => {
 
   describe('Pause Drawing', () => {
     it('should have pause drawing disabled by default', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       expect(oscilloscope.getPauseDrawing()).toBe(false);
     });
 
     it('should allow enabling/disabling pause drawing', () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       oscilloscope.setPauseDrawing(true);
       expect(oscilloscope.getPauseDrawing()).toBe(true);
 
@@ -482,7 +514,7 @@ describe('Oscilloscope Class', () => {
     });
 
     it('should skip drawing when paused but continue animation loop', async () => {
-      const oscilloscope = new Oscilloscope(canvas);
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
       const mockContext = canvas.getContext('2d') as any;
       
       await oscilloscope.start();

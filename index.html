@@ -36,6 +36,34 @@
       box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
     }
 
+    #comparisonPanel {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .comparisonCanvas {
+      background-color: #000000;
+      border: 2px solid #0088ff;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+    }
+
+    .canvasContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .canvasLabel {
+      font-size: 12px;
+      color: #aaaaaa;
+      text-align: center;
+    }
+
     #controls {
       margin-top: 20px;
       display: flex;
@@ -90,6 +118,20 @@
     aria-label="Oscilloscope waveform visualization canvas for microphone audio"
     aria-describedby="oscilloscopeDescription"
   ></canvas>
+  <div id="comparisonPanel">
+    <div class="canvasContainer">
+      <span class="canvasLabel">前回の波形</span>
+      <canvas id="previousWaveformCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">今回の波形と類似度</span>
+      <canvas id="currentWaveformCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">フレームバッファ全体</span>
+      <canvas id="frameBufferCanvas" class="comparisonCanvas" width="250" height="150"></canvas>
+    </div>
+  </div>
   <div id="controls">
     <button id="startButton">Start</button>
     <button id="loadFileButton">Load WAV File</button>

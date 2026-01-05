@@ -61,6 +61,10 @@ describe('Library exports', () => {
 
   it('should be able to instantiate Oscilloscope', () => {
     const canvas = document.createElement('canvas');
+    const previousWaveformCanvas = document.createElement('canvas');
+    const currentWaveformCanvas = document.createElement('canvas');
+    const frameBufferCanvas = document.createElement('canvas');
+    
     // Mock getContext for happy-dom
     const mockContext = {
       fillRect: () => {},
@@ -70,8 +74,11 @@ describe('Library exports', () => {
       lineTo: () => {},
     };
     canvas.getContext = (() => mockContext) as any;
+    previousWaveformCanvas.getContext = (() => mockContext) as any;
+    currentWaveformCanvas.getContext = (() => mockContext) as any;
+    frameBufferCanvas.getContext = (() => mockContext) as any;
     
-    const oscilloscope = new Oscilloscope(canvas);
+    const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
     expect(oscilloscope).toBeInstanceOf(Oscilloscope);
   });
 

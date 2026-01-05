@@ -4,6 +4,7 @@ import { FrequencyEstimator } from './FrequencyEstimator';
 import { WaveformRenderer } from './WaveformRenderer';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
+import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -14,6 +15,7 @@ import { WaveformSearcher } from './WaveformSearcher';
  * - WaveformRenderer: Canvas rendering
  * - ZeroCrossDetector: Zero-crossing detection and display range calculation
  * - WaveformSearcher: Waveform similarity search
+ * - ComparisonPanelRenderer: Comparison panel rendering
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -22,17 +24,28 @@ export class Oscilloscope {
   private renderer: WaveformRenderer;
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
+  private comparisonRenderer: ComparisonPanelRenderer;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    previousWaveformCanvas: HTMLCanvasElement,
+    currentWaveformCanvas: HTMLCanvasElement,
+    frameBufferCanvas: HTMLCanvasElement
+  ) {
     this.audioManager = new AudioManager();
     this.gainController = new GainController();
     this.frequencyEstimator = new FrequencyEstimator();
     this.renderer = new WaveformRenderer(canvas);
     this.zeroCrossDetector = new ZeroCrossDetector();
     this.waveformSearcher = new WaveformSearcher();
+    this.comparisonRenderer = new ComparisonPanelRenderer(
+      previousWaveformCanvas,
+      currentWaveformCanvas,
+      frameBufferCanvas
+    );
   }
 
   async start(): Promise<void> {
@@ -67,6 +80,7 @@ export class Oscilloscope {
     this.frequencyEstimator.clearHistory();
     this.zeroCrossDetector.reset();
     this.waveformSearcher.reset();
+    this.comparisonRenderer.clear();
   }
 
   /**
@@ -204,6 +218,18 @@ export class Oscilloscope {
           this.frequencyEstimator.getMaxFrequency()
         );
       }
+
+      // Update comparison panels
+      const previousWaveform = this.waveformSearcher.getPreviousWaveform();
+      const similarity = this.waveformSearcher.getLastSimilarity();
+      this.comparisonRenderer.updatePanels(
+        previousWaveform,
+        dataArray,
+        displayStartIndex,
+        displayEndIndex,
+        dataArray,
+        similarity
+      );
     }
 
     // Continue rendering

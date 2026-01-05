@@ -149,4 +149,16 @@ export class WaveformSearcher {
   hasPreviousWaveform(): boolean {
     return this.previousWaveform !== null;
   }
+
+  /**
+   * Get a copy of the previous waveform
+   * @returns Copy of previous waveform or null if not available
+   */
+  getPreviousWaveform(): Float32Array | null {
+    if (this.previousWaveform === null) {
+      return null;
+    }
+    // Return a copy to prevent external modification
+    return new Float32Array(this.previousWaveform);
+  }
 }
