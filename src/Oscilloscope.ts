@@ -127,9 +127,7 @@ export class Oscilloscope {
    * Render a single frame using pre-processed data
    * This method contains only rendering logic - no data processing
    */
-  private renderFrame(renderData: WaveformRenderData | null): void {
-    if (!renderData) return;
-
+  private renderFrame(renderData: WaveformRenderData): void {
     // Clear canvas and draw grid
     this.renderer.clearAndDrawGrid();
 
