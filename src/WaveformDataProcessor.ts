@@ -164,7 +164,7 @@ export class WaveformDataProcessor {
       fftSize,
       firstAlignmentPoint,
       secondAlignmentPoint,
-      frequencyData: frequencyData || undefined,
+      frequencyData: frequencyData ?? undefined,
       isSignalAboveNoiseGate,
       maxFrequency: this.frequencyEstimator.getMaxFrequency(),
       previousWaveform,

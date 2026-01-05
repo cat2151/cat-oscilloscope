@@ -6,6 +6,7 @@ import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 import { WaveformDataProcessor } from './WaveformDataProcessor';
+import { WaveformRenderData } from './WaveformRenderData';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -126,7 +127,7 @@ export class Oscilloscope {
    * Render a single frame using pre-processed data
    * This method contains only rendering logic - no data processing
    */
-  private renderFrame(renderData: ReturnType<typeof this.dataProcessor.processFrame>): void {
+  private renderFrame(renderData: WaveformRenderData | null): void {
     if (!renderData) return;
 
     // Clear canvas and draw grid
