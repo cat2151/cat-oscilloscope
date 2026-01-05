@@ -1,61 +1,80 @@
-Last updated: 2026-01-05
+Last updated: 2026-01-06
 
 # Development Status
 
 ## 現在のIssues
-- 現在、波形表示の安定性 ([Issue #82], [Issue #80], [Issue #78], [Issue #79], [Issue #77]) と低周波での周波数推定精度 ([Issue #81]) に関する複数の課題がオープンしています。
-- 特に、候補波形の選定アルゴリズムの不正確さ、デバッグ表示の不整合、一時停止時の波形破綻などが主要な問題です。
-- これらの根本原因を特定し、より安定したアルゴリズムへの改善と、ユーザーが周期を選択できる機能 ([Issue #64]) の追加が求められています。
+- 波形表示エリアの下に、前回の波形、類似度、現在のフレームバッファ全体を示す比較パネルの追加 ([Issue #96](../issue-notes/96.md), [Issue #97](../issue-notes/97.md)) が進行中です。
+- 描画処理のRust WASM化 ([Issue #92](../issue-notes/92.md)) に向け、処理の2分割リファクタリング ([Issue #90](../issue-notes/90.md)) と、各処理の所要時間計測 ([Issue #91](../issue-notes/91.md)) を計画しています。
+- 一時停止時の波形破綻 ([Issue #77](../issue-notes/77.md)) や類似波形表示の不整合 ([Issue #79](../issue-notes/79.md)) など、波形表示に関する重要なバグ修正がオープンしています。
 
 ## 次の一手候補
-1. 波形候補の選定アルゴリズムの根本的な見直し ([Issue #82], [Issue #80], [Issue #78])
-   - 最初の小さな一歩: `src/Oscilloscope.ts` 内の `selectBestCandidate` メソッドを分析し、[Issue #82] で指摘されている「referenceIndexが現在のフレームバッファを指している」問題とその周辺ロジックが、[Issue #80] の「end位置の算出」や [Issue #78] の「search buffer上の候補startの不安定さ」にどのように影響しているかを特定する。
+1. 新しい波形比較パネルの実装完了 ([Issue #96](../issue-notes/96.md), [Issue #97](../issue-notes/97.md))
+   - 最初の小さな一歩: `src/ComparisonPanelRenderer.ts`を新規作成し、3つの比較パネル（前回の波形、類似度、フレームバッファ位置）の基本的な描画フレームワークとCanvas要素の管理ロジックを実装する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: src/ComparisonPanelRenderer.ts (新規), src/Oscilloscope.ts, index.html
+
+     実行内容:
+     1. `src/ComparisonPanelRenderer.ts`を新規作成し、以下の機能を実装してください。
+        - 3つのCanvas要素を管理し、それぞれに「前回の波形」「今回の波形と類似度」「現在のフレームバッファ全体と位置」を描画するメソッド。
+        - 描画に必要なデータを外部から受け取れるように設計してください。
+     2. `src/Oscilloscope.ts`に`ComparisonPanelRenderer`のインスタンスを生成・保持し、毎フレームの描画ループ内で適切なデータを渡して比較パネルを更新するロジックを追加してください。
+     3. `index.html`に、3つの比較パネルを表示するための適切なDOM要素（例: `div`や`canvas`）を追加し、CSSで横並びに配置されるように調整してください。
+
+     確認事項:
+     - 既存の`WaveformRenderer`との描画処理の競合がないことを確認してください。
+     - 比較パネルがメインの波形の下に正しく配置され、横並びに表示されることを確認してください。
+     - パネルごとのデータの受け渡しと描画が、それぞれの目的に合致しているか確認してください。
+
+     期待する出力:
+     `src/ComparisonPanelRenderer.ts`の新規ファイル内容、`src/Oscilloscope.ts`と`index.html`への変更差分 (patch) をMarkdown形式で出力してください。
+     ```
+
+2. 描画処理の分割とパフォーマンス計測の準備 ([Issue #90](../issue-notes/90.md), [Issue #91](../issue-notes/91.md))
+   - 最初の小さな一歩: 「描画の元情報を生成する処理」（例: 波形データの前処理、ゼロクロス検出、類似度計算）を`src/Oscilloscope.ts`から抽出し、新しい`src/WaveformProcessor.ts`クラスとして定義する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: src/Oscilloscope.ts, src/WaveformRenderer.ts, src/DebugRenderer.ts
+     対象ファイル: src/Oscilloscope.ts, src/WaveformSearcher.ts, src/ZeroCrossDetector.ts, src/WaveformProcessor.ts (新規)
 
-     実行内容: src/Oscilloscope.ts の `selectBestCandidate` メソッドと、そのメソッドが利用するバッファやインデックスの扱いに焦点を当て、[Issue #82](../issue-notes/82.md), [Issue #80](../issue-notes/80.md), [Issue #78](../issue-notes/78.md) の問題がどのように発生しているかを分析してください。特に、`referenceIndex`がどのように使われ、それが波形候補の`start`と`end`の決定にどう影響するかを詳細に調査し、現在のアルゴリズムの問題点を具体的に特定してください。
+     実行内容:
+     1. `src/WaveformProcessor.ts`を新規作成し、以下のロジックを`src/Oscilloscope.ts`および関連ファイルから移動または再構築してください。
+        - オーディオバッファからの波形データの取得と前処理。
+        - ゼロクロス検出 (`ZeroCrossDetector`の利用)。
+        - 類似波形探索 (`WaveformSearcher`の利用)。
+        - これらの処理結果（描画に必要な座標データ、類似度、周期など）をまとめたオブジェクトを返すインターフェースを定義してください。
+     2. `src/Oscilloscope.ts`を修正し、`WaveformProcessor`のインスタンスを利用して描画元情報を取得するように変更してください。
+     3. 既存の`WaveformRenderer.ts`が、`WaveformProcessor`から返されるデータを受け取って描画できるようにインターフェースを調整してください。
 
-     確認事項: 
-     - `selectBestCandidate`が呼び出される際の入力データ（`searchBuffer`, `referenceWaveform`, `frequency`, `sampleRate`など）の想定される状態。
-     - `referenceIndex`と`candidate.start`, `candidate.end`の関係性。
-     - 波形が上下反転するケースが、このアルゴリズムに起因する可能性がないか。
+     確認事項:
+     - リファクタリング後も、現在の波形表示、ゼロクロス検出、類似波形探索機能がすべて正常に動作することを確認してください。
+     - `WaveformProcessor`と`WaveformRenderer`間のデータの受け渡しが明確かつ効率的であること、将来的なRust WASMへの置き換えを考慮した設計になっているかを確認してください。
 
-     期待する出力: markdown形式で、`selectBestCandidate`の既存アルゴリズムが各Issue ([Issue #82](../issue-notes/82.md), [Issue #80](../issue-notes/80.md), [Issue #78](../issue-notes/78.md)) の問題を引き起こしている具体的なメカニズムを説明し、改善の方向性について初期提案を含めてください。
+     期待する出力:
+     `src/WaveformProcessor.ts`の新規ファイル内容、および`src/Oscilloscope.ts`、`src/WaveformSearcher.ts`、`src/ZeroCrossDetector.ts`、`src/WaveformRenderer.ts`への変更差分 (patch) をMarkdown形式で出力してください。
      ```
 
-2. 低周波における周波数推定の改善アプローチの検討と実装 ([Issue #81])
-   - 最初の小さな一歩: `src/FrequencyEstimator.ts` の現状のFFTベースの周波数推定ロジックを確認し、短時間フレームバッファでの低周波推定の限界を、理論的および実装上の観点から文書化する。そして、過去フレームバッファの利用方法（1, 4, 16倍のサイズ）やSTFT/CQTなどの代替手法の実現可能性について、初期的な調査と技術的なトレードオフをまとめる。
+3. 波形表示の一時停止時の不整合の原因特定 ([Issue #77](../issue-notes/77.md))
+   - 最初の小さな一歩: 一時停止がトリガーされた際に、その時点のオーディオバッファの生データ、計算された描画範囲（開始・終了インデックス）、およびゼロクロス検出の結果をコンソールにログ出力するデバッグ機能を実装する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: src/FrequencyEstimator.ts
+     対象ファイル: src/Oscilloscope.ts, src/main.ts
 
-     実行内容: src/FrequencyEstimator.ts 内の周波数推定ロジック（特にFFT関連部分）を分析し、現在の1/60秒フレームバッファ長での低周波推定の失敗メカニズムを特定してください。[Issue #81](../issue-notes/81.md) で提案されている「過去フレームバッファ利用 (1, 4, 16倍)」および「STFTやCQTの導入」について、それぞれの実現可能性、必要な変更、および技術的な課題を調査し、比較分析してください。
+     実行内容:
+     1. `src/Oscilloscope.ts`の`pause`メソッドが呼び出された際、または一時停止状態に入った直後に、以下の情報をコンソールにログ出力するデバッグコードを追加してください。
+        - 現在のオーディオバッファの全データ（またはその一部）。
+        - 現在の描画開始・終了インデックス。
+        - ゼロクロス検出によって決定された周期や位相情報。
+        - その他の描画に影響を与える可能性のある内部状態変数。
+     2. `src/main.ts`または関連するイベントハンドラで、一時停止がキーボードとマウスのどちらでトリガーされたかを示す情報もログに含めるようにしてください。
 
-     確認事項: 
-     - 現在のFFT実装における窓関数やパディングの有無。
-     - `sampleRate`とフレームバッファ長から算出される周波数分解能。
-     - STFTやCQTの導入が既存のアーキテクチャに与える影響。
-     - 複数フレームバッファを結合してFFTする場合のデータ管理方法。
+     確認事項:
+     - デバッグログが一時停止時のみ出力され、通常の動作中にパフォーマンスを著しく低下させないことを確認してください。
+     - ログの内容が、一時停止前後の波形データの状態や計算結果の差異を比較・分析するのに十分な情報を含んでいることを確認してください。
+     - ログ出力されたデータに機密情報が含まれないことを確認してください。
 
-     期待する出力: markdown形式で、現在の周波数推定の問題点 ([Issue #81](../issue-notes/81.md)) を技術的に説明し、提案されている各改善策 (過去フレームバッファ利用、STFT、CQT) のメリット・デメリット、実装の複雑さ、および実現へのロードマップ（最初のステップを含む）を比較して出力してください。
+     期待する出力:
+     デバッグログ機能を追加するための`src/Oscilloscope.ts`と`src/main.ts`への変更差分 (patch) と、コンソールに出力されるログの例をMarkdown形式で記述してください。
      ```
-
-3. デバッグ表示の不整合と一時停止時の波形破綻の修正 ([Issue #79], [Issue #77])
-   - 最初の小さな一歩: `src/DebugRenderer.ts` と `src/Oscilloscope.ts` の間のデータフロー、特に波形データが `Oscilloscope` から `DebugRenderer` に渡されるタイミングと形式を調査する。一時停止 (pause) ロジックがどのように波形バッファに影響を与えているかを特定し、[Issue #77] の「一時停止時の波形破綻」と [Issue #79] の「デバッグ表示の上下反転」がデータ取得/描画のどの段階で発生しているかを仮説立てる。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: src/DebugRenderer.ts, src/Oscilloscope.ts, src/WaveformRenderer.ts
-
-     実行内容: src/Oscilloscope.ts における波形データの処理、src/DebugRenderer.ts におけるデバッグ表示の描画、および一時停止機能の実装 (もしあれば) を分析してください。特に、[Issue #79](../issue-notes/79.md) の「デバッグ表示の候補の上下反転と表示不整合」と [Issue #77](../issue-notes/77.md) の「一時停止時の波形破綻」が、波形データのコピー、同期、または描画処理のどの段階で発生している可能性があるかを特定し、具体的な原因の仮説を立ててください。
-
-     確認事項: 
-     - `DebugRenderer` が参照する波形データが、`Oscilloscope` のメイン処理のどの時点のデータであるか。
-     - 波形データをコピーして使用しているか、参照渡ししているか。
-     - 一時停止ロジックが波形データの更新をどのように停止または一時停止しているか。
-     - 波形描画時の座標変換や正規化の処理。
-
-     期待する出力: markdown形式で、[Issue #79](../issue-notes/79.md) と [Issue #77](../issue-notes/77.md) の問題を引き起こしている可能性のあるデータフローまたは描画ロジックの具体的な箇所を指摘し、それぞれの問題に対する最も可能性の高い原因の仮説を複数提示してください。
 
 ---
-Generated at: 2026-01-05 07:08:48 JST
+Generated at: 2026-01-06 07:09:28 JST

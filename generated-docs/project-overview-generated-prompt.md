@@ -1,4 +1,4 @@
-Last updated: 2026-01-05
+Last updated: 2026-01-06
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -261,15 +261,24 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 79.md
   📖 80.md
   📖 81.md
+  📖 83.md
+  📖 85.md
+  📖 86.md
+  📖 88.md
+  📖 90.md
+  📖 91.md
+  📖 92.md
+  📖 93.md
+  📖 96.md
 📊 package-lock.json
 📊 package.json
 📁 src/
   📘 AudioManager.ts
-  📘 DebugRenderer.ts
   📘 FrequencyEstimator.ts
   📘 GainController.ts
   📘 Oscilloscope.ts
   📘 WaveformRenderer.ts
+  📘 WaveformSearcher.ts
   📘 ZeroCrossDetector.ts
   📁 __tests__/
     📘 algorithms.test.ts
@@ -277,6 +286,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 utils.test.ts
+    📘 waveform-searcher.test.ts
   📘 index.ts
   📘 main.ts
   📘 utils.ts
@@ -289,17 +299,13 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**index.html** (216行, 6782バイト)
+**index.html** (195行, 6306バイト)
   - 関数: なし
   - インポート: なし
 
 **src/AudioManager.ts** (191行, 5353バイト)
   - 関数: if, catch, start, startFromFile, stop
   - インポート: ./utils
-
-**src/DebugRenderer.ts** (405行, 13879バイト)
-  - 関数: constructor, if, for
-  - インポート: なし
 
 **src/FrequencyEstimator.ts** (233行, 7853バイト)
   - 関数: for, if, switch
@@ -309,15 +315,19 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (260行, 8781バイト)
-  - 関数: if, constructor, catch, start, startFromFile, stop
+**src/Oscilloscope.ts** (290行, 9938バイト)
+  - 関数: constructor, catch, if, start, startFromFile, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
-**src/WaveformRenderer.ts** (314行, 10046バイト)
+**src/WaveformRenderer.ts** (217行, 6531バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
-**src/ZeroCrossDetector.ts** (733行, 24729バイト)
+**src/WaveformSearcher.ts** (153行, 4512バイト)
+  - 関数: if, for
+  - インポート: なし
+
+**src/ZeroCrossDetector.ts** (367行, 13193バイト)
   - 関数: if, for
   - インポート: なし
 
@@ -329,23 +339,27 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/library-exports.test.ts** (105行, 3264バイト)
+**src/__tests__/library-exports.test.ts** (96行, 2901バイト)
   - 関数: なし
   - インポート: vitest
 
-**src/__tests__/oscilloscope.test.ts** (665行, 23789バイト)
-  - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if, defineProperty, function
+**src/__tests__/oscilloscope.test.ts** (518行, 17473バイト)
+  - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if
   - インポート: vitest, ../Oscilloscope, ../utils
 
 **src/__tests__/utils.test.ts** (245行, 8143バイト)
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
-**src/index.ts** (19行, 655バイト)
+**src/__tests__/waveform-searcher.test.ts** (208行, 7391バイト)
+  - 関数: for, if
+  - インポート: vitest, ../WaveformSearcher
+
+**src/index.ts** (19行, 661バイト)
   - 関数: なし
   - インポート: なし
 
-**src/main.ts** (237行, 8844バイト)
+**src/main.ts** (236行, 8796バイト)
   - 関数: sliderValueToThreshold, formatThresholdDisplay, startFrequencyDisplay, stopFrequencyDisplay, for, if, catch
   - インポート: ./Oscilloscope, ./utils
 
@@ -367,8 +381,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - close ()
       - getTracks ()
       - trimSilence ()
-  - constructor (undefined)
   - dbToAmplitude ()
+  - constructor (undefined)
   - generateSineWave (src/__tests__/algorithms.test.ts)
     - generateNoise ()
       - generateSquareWave ()
@@ -378,8 +392,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
-      - defineProperty ()
-      - function ()
   - sliderValueToThreshold (src/main.ts)
     - formatThresholdDisplay ()
       - startFrequencyDisplay ()
@@ -414,14 +426,14 @@ issue-notes/78.md
 issue-notes/79.md
 issue-notes/80.md
 issue-notes/81.md
+issue-notes/83.md
+issue-notes/85.md
+issue-notes/86.md
+issue-notes/88.md
+issue-notes/90.md
+issue-notes/91.md
+issue-notes/92.md
 package-lock.json
-package.json
-src/AudioManager.ts
-src/DebugRenderer.ts
-src/FrequencyEstimator.ts
-src/GainController.ts
-src/Oscilloscope.ts
-tsconfig.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -433,4 +445,4 @@ tsconfig.json
 
 
 ---
-Generated at: 2026-01-05 07:08:27 JST
+Generated at: 2026-01-06 07:09:00 JST
