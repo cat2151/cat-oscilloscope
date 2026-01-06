@@ -243,4 +243,53 @@ describe('WaveformSearcher', () => {
       expect(result?.similarity).toBeGreaterThan(0.9);
     });
   });
+
+  describe('4-cycle storage and search', () => {
+    it('should store and search 4 cycles worth of data', () => {
+      // Single cycle: sine-like pattern with 8 samples per cycle
+      const singleCycle = [0.0, 0.707, 1.0, 0.707, 0.0, -0.707, -1.0, -0.707];
+      
+      // Store 4 cycles worth (32 samples)
+      const fourCycles = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]);
+      searcher.storeWaveform(fourCycles, 0, 32);
+      
+      expect(searcher.hasPreviousWaveform()).toBe(true);
+      
+      // Current frame with same pattern offset by 5 samples (within 4-cycle search range = 32 samples)
+      const offset = 5;
+      const currentFrame = new Float32Array(40);
+      for (let i = 0; i < 32; i++) {
+        currentFrame[i + offset] = fourCycles[i];
+      }
+      
+      const result = searcher.searchSimilarWaveform(currentFrame, 8); // cycleLength = 8
+      
+      expect(result).not.toBeNull();
+      expect(result?.startIndex).toBe(offset);
+      expect(result?.similarity).toBeGreaterThan(0.99); // Should be very close to 1.0
+    });
+
+    it('should find pattern within extended 4-cycle search range', () => {
+      // Test that search range is 4 cycles, not 1 cycle
+      const singleCycle = [1.0, 0.5, 0.0, -0.5, -1.0];
+      const fourCycles = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 20 samples
+      searcher.storeWaveform(fourCycles, 0, 20);
+      
+      // Pattern shifted by 15 samples (3 cycles), which is within 4-cycle search range
+      const currentFrame = new Float32Array(40);
+      for (let i = 0; i < 20; i++) {
+        currentFrame[i + 15] = fourCycles[i];
+      }
+      
+      const result = searcher.searchSimilarWaveform(currentFrame, 5); // cycleLength = 5
+      
+      expect(result).not.toBeNull();
+      expect(result?.startIndex).toBe(15);
+      expect(result?.similarity).toBeGreaterThan(0.99);
+    });
+  });
 });
