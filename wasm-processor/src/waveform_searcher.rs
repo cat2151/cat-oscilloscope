@@ -5,8 +5,12 @@ pub struct SearchResult {
 }
 
 /// Constants for waveform storage and search
-pub const CYCLES_TO_STORE: usize = 4;  // Store 4 cycles worth of waveform data
-pub const CYCLES_TO_SEARCH: usize = 4; // Search within 4 cycles range
+
+/// Store 4 cycles worth of waveform data
+pub const CYCLES_TO_STORE: usize = 4;
+
+/// Search within 4 cycles range
+pub const CYCLES_TO_SEARCH: usize = 4;
 
 /// WaveformSearcher handles waveform similarity search
 pub struct WaveformSearcher {
