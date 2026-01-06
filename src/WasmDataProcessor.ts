@@ -11,6 +11,23 @@ interface WasmModule {
   default: (wasmPath?: string) => Promise<void>;
 }
 
+// Type definition for WASM processor instance
+interface WasmProcessorInstance {
+  setAutoGain(enabled: boolean): void;
+  setNoiseGate(enabled: boolean): void;
+  setNoiseGateThreshold(threshold: number): void;
+  setFrequencyEstimationMethod(method: string): void;
+  setUsePeakMode(enabled: boolean): void;
+  reset(): void;
+  processFrame(
+    waveformData: Float32Array,
+    frequencyData: Uint8Array | null,
+    sampleRate: number,
+    fftSize: number,
+    fftDisplayEnabled: boolean
+  ): any;
+}
+
 /**
  * WasmDataProcessor - Wrapper for the WASM implementation of WaveformDataProcessor
  * 
@@ -25,7 +42,7 @@ export class WasmDataProcessor {
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
   
-  private wasmProcessor: any = null;
+  private wasmProcessor: WasmProcessorInstance | null = null;
   private isInitialized = false;
 
   constructor(
@@ -51,8 +68,8 @@ export class WasmDataProcessor {
       return;
     }
     
-    // Check if we're in a test environment
-    if (typeof window === 'undefined' || !window.location || window.location.protocol === 'file:') {
+    // Check if we're in a test or non-browser-like environment
+    if (typeof window === 'undefined' || window.location.protocol === 'file:') {
       throw new Error('WASM module not available in test/non-browser environment');
     }
     
@@ -83,6 +100,12 @@ export class WasmDataProcessor {
         return;
       }
       
+      // Set up timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('WASM module loading timed out after 10 seconds'));
+      }, 10000);
+      
       const script = document.createElement('script');
       script.type = 'module';
       script.textContent = `
@@ -92,7 +115,13 @@ export class WasmDataProcessor {
         window.dispatchEvent(new Event('wasmLoaded'));
       `;
       
+      const cleanup = () => {
+        clearTimeout(timeout);
+        window.removeEventListener('wasmLoaded', handleLoad);
+      };
+      
       const handleLoad = () => {
+        cleanup();
         // @ts-ignore
         if (window.wasmProcessor && window.wasmProcessor.WasmDataProcessor) {
           // @ts-ignore
@@ -101,14 +130,13 @@ export class WasmDataProcessor {
         } else {
           reject(new Error('WASM module loaded but WasmDataProcessor not found'));
         }
-        window.removeEventListener('wasmLoaded', handleLoad);
       };
       
       window.addEventListener('wasmLoaded', handleLoad);
       
       script.onerror = () => {
+        cleanup();
         reject(new Error('Failed to load WASM module script'));
-        window.removeEventListener('wasmLoaded', handleLoad);
       };
       
       document.head.appendChild(script);
@@ -130,18 +158,29 @@ export class WasmDataProcessor {
   
   /**
    * Sync WASM results back to TypeScript objects
+   * 
+   * Note: This method accesses private members using type assertions.
+   * This is a temporary solution to maintain compatibility with existing code
+   * that uses getters like getEstimatedFrequency(), getCurrentGain(), etc.
+   * 
+   * TODO: Consider adding public setter methods to these classes or
+   * redesigning the synchronization interface for better type safety.
    */
   private syncResultsFromWasm(renderData: WaveformRenderData): void {
     // Update frequency estimator's estimated frequency
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.frequencyEstimator as any).estimatedFrequency = renderData.estimatedFrequency;
     
     // Update gain controller's current gain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.gainController as any).currentGain = renderData.gain;
     
     // Update waveform searcher's state
     if (renderData.previousWaveform) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this.waveformSearcher as any).previousWaveform = renderData.previousWaveform;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.waveformSearcher as any).lastSimilarity = renderData.similarity;
   }
 

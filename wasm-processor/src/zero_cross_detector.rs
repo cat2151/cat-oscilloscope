@@ -1,4 +1,4 @@
-/// DisplayRange contains the calculated display range and alignment points
+/// DisplayRangeは計算された表示範囲とアライメント点（ゼロクロスまたはピーク）を含みます
 pub struct DisplayRange {
     pub start_index: usize,
     pub end_index: usize,
@@ -179,8 +179,8 @@ impl ZeroCrossDetector {
             Some(DisplayRange {
                 start_index: first_peak,
                 end_index,
-                first_zero_cross: first_peak,
-                second_zero_cross: second_peak,
+                first_zero_cross: first_peak, // Alignment point (peak in peak mode)
+                second_zero_cross: second_peak, // Second alignment point (peak in peak mode)
             })
         } else {
             // Zero-crossing mode

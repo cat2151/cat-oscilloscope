@@ -23,7 +23,7 @@
     "dev": "vite",
     "build": "npm run build:app",
     "build:wasm": "cd wasm-processor && wasm-pack build --target web && cd .. && mkdir -p public/wasm && cp wasm-processor/pkg/* public/wasm/",
-    "build:app": "npm run build:wasm && tsc && vite build",
+    "build:app": "(npm run build:wasm || echo \"[warn] WASM build failed; using prebuilt artifacts in public/wasm/\") && tsc && vite build",
     "build:lib": "tsc --project tsconfig.lib.json && cross-env BUILD_MODE=library vite build",
     "build:all": "npm run build:app && npm run build:lib",
     "preview": "vite preview",

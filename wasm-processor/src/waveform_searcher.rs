@@ -77,12 +77,16 @@ impl WaveformSearcher {
         let mut best_similarity = -2.0f32; // Lower than minimum possible value (-1)
         let mut best_start_index = 0;
         
-        // Slide search: compare each position in current frame
-        // Search range: from 0 to (current_frame.len() - waveform_length) 
-        // but limited to waveform_length-1 for efficiency
-        let search_end_index = current_frame.len()
-            .saturating_sub(waveform_length)
-            .min(waveform_length.saturating_sub(1));
+        // Base search range: from 0 to (current_frame.len() - waveform_length)
+        // For longer waveforms (length >= 2), we further limit the search range
+        // to at most waveform_length - 1 for efficiency. For very short waveforms
+        // (length 0 or 1), we search the full valid range.
+        let max_start_index = current_frame.len().saturating_sub(waveform_length);
+        let search_end_index = if waveform_length < 2 {
+            max_start_index
+        } else {
+            max_start_index.min(waveform_length - 1)
+        };
         
         for start_index in 0..=search_end_index {
             let candidate = &current_frame[start_index..start_index + waveform_length];
