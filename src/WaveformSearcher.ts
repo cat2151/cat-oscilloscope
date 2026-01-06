@@ -1,4 +1,14 @@
 /**
+ * Constants for waveform storage and search
+ */
+
+/** Store 4 cycles worth of waveform data */
+export const CYCLES_TO_STORE = 4;
+
+/** Search within 4 cycles range */
+export const CYCLES_TO_SEARCH = 4;
+
+/**
  * WaveformSearcher handles waveform similarity search
  * Responsible for:
  * - Storing previous frame's waveform (4 cycles worth)
@@ -9,8 +19,6 @@
 export class WaveformSearcher {
   private previousWaveform: Float32Array | null = null;
   private lastSimilarity: number = 0;
-  private readonly CYCLES_TO_STORE = 4; // Store 4 cycles worth of waveform data
-  private readonly CYCLES_TO_SEARCH = 4; // Search within 4 cycles range
 
   /**
    * Calculate similarity (correlation coefficient) between two waveforms
@@ -73,7 +81,7 @@ export class WaveformSearcher {
     }
 
     // Compare against 4 cycles worth of waveform data
-    const waveformLength = Math.floor(cycleLength * this.CYCLES_TO_STORE);
+    const waveformLength = Math.floor(cycleLength * CYCLES_TO_STORE);
     
     // Ensure we have enough data for at least one comparison
     if (currentFrame.length < waveformLength) {
@@ -90,7 +98,7 @@ export class WaveformSearcher {
 
     // Slide search: compare each position in current frame
     // Search range: from 0 to (4 * cycleLength - 1) samples (total 4 cycles worth of positions)
-    const searchRange = Math.floor(cycleLength * this.CYCLES_TO_SEARCH);
+    const searchRange = Math.floor(cycleLength * CYCLES_TO_SEARCH);
     const searchEndIndex = Math.min(currentFrame.length - waveformLength, searchRange - 1);
     
     for (let startIndex = 0; startIndex <= searchEndIndex; startIndex++) {
@@ -164,13 +172,5 @@ export class WaveformSearcher {
     }
     // Return a copy to prevent external modification
     return new Float32Array(this.previousWaveform);
-  }
-
-  /**
-   * Get the number of cycles to store
-   * @returns Number of cycles stored (4)
-   */
-  getCyclesToStore(): number {
-    return this.CYCLES_TO_STORE;
   }
 }

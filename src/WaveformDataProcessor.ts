@@ -2,7 +2,7 @@ import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
-import { WaveformSearcher } from './WaveformSearcher';
+import { WaveformSearcher, CYCLES_TO_STORE } from './WaveformSearcher';
 import { WaveformRenderData } from './WaveformRenderData';
 
 /**
@@ -55,9 +55,8 @@ export class WaveformDataProcessor {
    */
   private storeWaveformForNextFrame(data: Float32Array, startIndex: number, cycleLength: number): void {
     if (cycleLength > 0) {
-      // Store N cycles worth of waveform data (where N is from WaveformSearcher)
-      const cyclesToStore = this.waveformSearcher.getCyclesToStore();
-      const waveformLength = Math.floor(cycleLength * cyclesToStore);
+      // Store N cycles worth of waveform data (where N is CYCLES_TO_STORE)
+      const waveformLength = Math.floor(cycleLength * CYCLES_TO_STORE);
       const endIndex = Math.min(startIndex + waveformLength, data.length);
       this.waveformSearcher.storeWaveform(data, startIndex, endIndex);
     }
@@ -125,9 +124,8 @@ export class WaveformDataProcessor {
     if (this.waveformSearcher.hasPreviousWaveform() && cycleLength > 0) {
       const searchResult = this.waveformSearcher.searchSimilarWaveform(dataArray, cycleLength);
       if (searchResult) {
-        // Use similarity search result - display N cycles worth (where N is from WaveformSearcher)
-        const cyclesToStore = this.waveformSearcher.getCyclesToStore();
-        const waveformLength = Math.floor(cycleLength * cyclesToStore);
+        // Use similarity search result - display N cycles worth (where N is CYCLES_TO_STORE)
+        const waveformLength = Math.floor(cycleLength * CYCLES_TO_STORE);
         displayStartIndex = searchResult.startIndex;
         displayEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
         usedSimilaritySearch = true;

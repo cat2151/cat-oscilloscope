@@ -5,7 +5,6 @@ pub struct SearchResult {
 }
 
 /// Constants for waveform storage and search
-
 /// Store 4 cycles worth of waveform data
 pub const CYCLES_TO_STORE: usize = 4;
 
