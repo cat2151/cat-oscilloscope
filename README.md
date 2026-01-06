@@ -29,12 +29,34 @@ const oscilloscope = new Oscilloscope(canvas);
 await oscilloscope.start();
 ```
 
+## Features
+
+### Frequency Estimation
+
+cat-oscilloscope supports five frequency estimation algorithms:
+
+1. **Zero-Crossing**: Simple and fast. Suitable for simple waveforms.
+2. **Autocorrelation**: Default. Balanced accuracy for complex waveforms.
+3. **FFT (Fast Fourier Transform)**: Frequency spectrum analysis. Strong for high frequencies.
+4. **STFT (Short-Time Fourier Transform)**: Variable window length improves low-frequency detection accuracy.
+5. **CQT (Constant-Q Transform)**: High frequency resolution in low-frequency ranges. Suitable for music analysis.
+
+### Buffer Size Multiplier
+
+To improve low-frequency detection accuracy, extended buffers using past frame buffers are supported:
+
+- **1x (Standard)**: Standard buffer size (approximately 1/60 second)
+- **4x (Better Low Freq)**: 4x extended buffer for improved low-frequency detection
+- **16x (Best Low Freq)**: 16x extended buffer for best low-frequency detection accuracy
+
+**Example Usage**: For detecting ultra-low frequencies below 50Hz, select STFT or CQT and set Buffer Size to 16x for optimal results.
+
 ## Notes
 
 - Frequency Estimation
   - Sometimes FFT is accurate, and sometimes other methods are more accurate.
-  - We are considering making FFT the default.
-  - Further improvements to frequency estimation will be postponed. We will prioritize many other urgent tasks.
+  - STFT and CQT are particularly excellent for detecting low frequencies (50-100Hz).
+  - Increasing the buffer size multiplier improves low-frequency accuracy but may slightly slow response time.
 
 ## About WASM Implementation
 

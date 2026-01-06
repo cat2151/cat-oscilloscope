@@ -445,6 +445,12 @@ describe('Algorithm-Specific Tests', () => {
       
       oscilloscope.setFrequencyEstimationMethod('fft');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('fft');
+      
+      oscilloscope.setFrequencyEstimationMethod('stft');
+      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('stft');
+      
+      oscilloscope.setFrequencyEstimationMethod('cqt');
+      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('cqt');
     });
 
     it('should have autocorrelation as default', () => {
@@ -591,6 +597,24 @@ describe('Algorithm-Specific Tests', () => {
       
       oscilloscope.setNoiseGateThreshold(2.0);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(1.0);
+    });
+  });
+
+  describe('Buffer Size Multiplier', () => {
+    it('should allow setting buffer size multiplier to 1x, 4x, and 16x', () => {
+      oscilloscope.setBufferSizeMultiplier(1);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(1);
+      
+      oscilloscope.setBufferSizeMultiplier(4);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(4);
+      
+      oscilloscope.setBufferSizeMultiplier(16);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(16);
+    });
+
+    it('should have 1x as default buffer size multiplier', () => {
+      const defaultMultiplier = oscilloscope.getBufferSizeMultiplier();
+      expect(defaultMultiplier).toBe(1);
     });
   });
 });
