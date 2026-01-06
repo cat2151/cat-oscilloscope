@@ -250,6 +250,16 @@
         <option value="zero-crossing">Zero-Crossing</option>
         <option value="autocorrelation" selected>Autocorrelation</option>
         <option value="fft">FFT</option>
+        <option value="stft">STFT</option>
+        <option value="cqt">CQT</option>
+      </select>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Buffer Size:</span>
+      <select id="bufferSizeMultiplier" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select buffer size multiplier for extended FFT/STFT/CQT" title="Larger buffers improve low frequency detection">
+        <option value="1" selected>1x (Standard)</option>
+        <option value="4">4x (Better Low Freq)</option>
+        <option value="16">16x (Best Low Freq)</option>
       </select>
     </label>
     <div style="display: flex; align-items: center; gap: 10px;">

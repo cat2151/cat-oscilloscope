@@ -5,12 +5,6 @@ import { FrequencyEstimator } from './FrequencyEstimator';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 
-// Type definition for WASM module
-interface WasmModule {
-  WasmDataProcessor: any;
-  default: (wasmPath?: string) => Promise<void>;
-}
-
 // Type definition for WASM processor instance
 interface WasmProcessorInstance {
   setAutoGain(enabled: boolean): void;

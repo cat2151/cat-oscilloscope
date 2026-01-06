@@ -88,13 +88,22 @@ export class WaveformDataProcessor {
     const sampleRate = this.audioManager.getSampleRate();
     const fftSize = this.audioManager.getFFTSize();
 
+    // Get extended buffer for STFT/CQT methods if needed
+    const bufferMultiplier = this.frequencyEstimator.getBufferSizeMultiplier();
+    const extendedDataArray = (bufferMultiplier > 1) 
+      ? this.audioManager.getExtendedTimeDomainData(bufferMultiplier) 
+      : dataArray;
+    
+    // Use extended buffer if available, otherwise fall back to current buffer
+    const dataForFrequencyEstimation = extendedDataArray || dataArray;
+
     // Only fetch frequency data if needed (FFT method OR FFT display enabled)
     const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
     const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
 
-    // Estimate frequency (now works on gated signal)
+    // Estimate frequency (now works on gated signal, using extended buffer for STFT/CQT)
     const estimatedFrequency = this.frequencyEstimator.estimateFrequency(
-      dataArray,
+      dataForFrequencyEstimation,
       frequencyData,
       sampleRate,
       fftSize,

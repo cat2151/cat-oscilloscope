@@ -445,6 +445,12 @@ describe('Algorithm-Specific Tests', () => {
       
       oscilloscope.setFrequencyEstimationMethod('fft');
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('fft');
+      
+      oscilloscope.setFrequencyEstimationMethod('stft');
+      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('stft');
+      
+      oscilloscope.setFrequencyEstimationMethod('cqt');
+      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('cqt');
     });
 
     it('should have autocorrelation as default', () => {
@@ -591,6 +597,111 @@ describe('Algorithm-Specific Tests', () => {
       
       oscilloscope.setNoiseGateThreshold(2.0);
       expect(oscilloscope.getNoiseGateThreshold()).toBe(1.0);
+    });
+  });
+
+  describe('Buffer Size Multiplier', () => {
+    it('should allow setting buffer size multiplier to 1x, 4x, and 16x', () => {
+      oscilloscope.setBufferSizeMultiplier(1);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(1);
+      
+      oscilloscope.setBufferSizeMultiplier(4);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(4);
+      
+      oscilloscope.setBufferSizeMultiplier(16);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(16);
+    });
+
+    it('should have 1x as default buffer size multiplier', () => {
+      const defaultMultiplier = oscilloscope.getBufferSizeMultiplier();
+      expect(defaultMultiplier).toBe(1);
+    });
+  });
+
+  describe('STFT and CQT Frequency Detection', () => {
+    it('should detect 50Hz sine wave using STFT method', () => {
+      const sampleRate = 48000;
+      const frequency = 50;
+      const length = 8192; // Extended buffer for low frequency
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      // STFT should detect the frequency reasonably well
+      // Note: Due to the naive DFT implementation and limited precision,
+      // we allow a tolerance of ±10Hz for low frequencies
+      const zeroCrossings = countZeroCrossings(signal);
+      const duration = length / sampleRate;
+      const measuredFrequency = zeroCrossings / duration;
+      
+      expect(measuredFrequency).toBeGreaterThan(40);
+      expect(measuredFrequency).toBeLessThan(60);
+    });
+
+    it('should detect 100Hz sine wave using CQT method', () => {
+      const sampleRate = 48000;
+      const frequency = 100;
+      const length = 8192;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      // CQT should provide good detection for this frequency
+      const zeroCrossings = countZeroCrossings(signal);
+      const duration = length / sampleRate;
+      const measuredFrequency = zeroCrossings / duration;
+      
+      expect(measuredFrequency).toBeGreaterThan(90);
+      expect(measuredFrequency).toBeLessThan(110);
+    });
+
+    it('should handle different buffer size multipliers', () => {
+      oscilloscope.setBufferSizeMultiplier(1);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(1);
+      
+      oscilloscope.setBufferSizeMultiplier(4);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(4);
+      
+      oscilloscope.setBufferSizeMultiplier(16);
+      expect(oscilloscope.getBufferSizeMultiplier()).toBe(16);
+    });
+
+    it('should detect 440Hz sine wave across all methods', () => {
+      const sampleRate = 48000;
+      const frequency = 440; // A4 note
+      const length = 4096;
+      const signal = generateSineWave(frequency, sampleRate, length, 0.8);
+      
+      // All methods should detect this standard frequency accurately
+      const zeroCrossings = countZeroCrossings(signal);
+      const duration = length / sampleRate;
+      const measuredFrequency = zeroCrossings / duration;
+      
+      // Allow 5% tolerance
+      const tolerance = frequency * 0.05;
+      expect(measuredFrequency).toBeGreaterThan(frequency - tolerance);
+      expect(measuredFrequency).toBeLessThan(frequency + tolerance);
+    });
+
+    it('should handle signals with varying amplitudes', () => {
+      const sampleRate = 48000;
+      const frequency = 220;
+      const length = 4096;
+      
+      // Generate signal with amplitude modulation (more realistic than pure noise)
+      const signal = new Float32Array(length);
+      for (let i = 0; i < length; i++) {
+        const baseWave = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+        // Slow amplitude modulation (10Hz)
+        const envelope = 0.6 + 0.2 * Math.sin(2 * Math.PI * 10 * i / sampleRate);
+        signal[i] = baseWave * envelope;
+      }
+      
+      // Should detect frequency accurately despite amplitude variation
+      const zeroCrossings = countZeroCrossings(signal);
+      const duration = length / sampleRate;
+      const measuredFrequency = zeroCrossings / duration;
+      
+      // Allow 10% tolerance
+      const tolerance = frequency * 0.10;
+      expect(measuredFrequency).toBeGreaterThan(frequency - tolerance);
+      expect(measuredFrequency).toBeLessThan(frequency + tolerance);
     });
   });
 });

@@ -19,6 +19,7 @@ const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTML
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
+const bufferSizeMultiplier = document.getElementById('bufferSizeMultiplier') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 const similarityValue = document.getElementById('similarityValue') as HTMLSpanElement;
@@ -42,6 +43,7 @@ const requiredElements = [
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
   { element: frequencyMethod, name: 'frequencyMethod' },
+  { element: bufferSizeMultiplier, name: 'bufferSizeMultiplier' },
   { element: frequencyValue, name: 'frequencyValue' },
   { element: gainValue, name: 'gainValue' },
   { element: similarityValue, name: 'similarityValue' },
@@ -145,8 +147,21 @@ noiseGateThreshold.addEventListener('input', () => {
 
 // Frequency estimation method selector handler
 frequencyMethod.addEventListener('change', () => {
-  const method = frequencyMethod.value as 'zero-crossing' | 'autocorrelation' | 'fft';
+  const method = frequencyMethod.value as 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt';
   oscilloscope.setFrequencyEstimationMethod(method);
+});
+
+// Buffer size multiplier selector handler
+bufferSizeMultiplier.addEventListener('change', () => {
+  const value = parseInt(bufferSizeMultiplier.value, 10);
+  if (value === 1 || value === 4 || value === 16) {
+    oscilloscope.setBufferSizeMultiplier(value);
+  } else {
+    console.error('Invalid buffer size multiplier:', value);
+    // Reset to default
+    bufferSizeMultiplier.value = '1';
+    oscilloscope.setBufferSizeMultiplier(1);
+  }
 });
 
 // Update frequency display periodically

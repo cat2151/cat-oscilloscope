@@ -15,6 +15,8 @@ export class AudioManager {
   private audioBufferSource: AudioBufferSourceNode | null = null;
   private dataArray: Float32Array | null = null;
   private frequencyData: Uint8Array | null = null;
+  private frameBufferHistory: Float32Array[] = []; // History of frame buffers for extended FFT
+  private readonly MAX_FRAME_HISTORY = 16; // Support up to 16x buffer size
 
   /**
    * Initialize analyser node and data arrays
@@ -134,10 +136,12 @@ export class AudioManager {
     this.analyser = null;
     this.dataArray = null;
     this.frequencyData = null;
+    this.clearFrameBufferHistory();
   }
 
   /**
    * Get time-domain data (waveform)
+   * Also updates the frame buffer history for extended FFT
    */
   getTimeDomainData(): Float32Array | null {
     if (!this.analyser || !this.dataArray) {
@@ -145,7 +149,75 @@ export class AudioManager {
     }
     // @ts-ignore - Web Audio API type definitions issue
     this.analyser.getFloatTimeDomainData(this.dataArray);
+    
+    // Store a copy of the current frame buffer for history
+    this.updateFrameBufferHistory(this.dataArray);
+    
     return this.dataArray;
+  }
+  
+  /**
+   * Update frame buffer history with the current frame
+   * Reuses existing buffers to avoid allocating a new Float32Array every frame
+   */
+  private updateFrameBufferHistory(currentBuffer: Float32Array): void {
+    let buffer: Float32Array;
+
+    if (this.frameBufferHistory.length < this.MAX_FRAME_HISTORY) {
+      // Warm-up phase: allocate new buffers until we reach MAX_FRAME_HISTORY
+      buffer = new Float32Array(currentBuffer.length);
+    } else {
+      // Steady state: reuse the oldest buffer
+      buffer = this.frameBufferHistory.shift() as Float32Array;
+      // If FFT size (and thus buffer length) has changed, reallocate
+      if (buffer.length !== currentBuffer.length) {
+        buffer = new Float32Array(currentBuffer.length);
+      }
+    }
+
+    // Copy current data into the buffer
+    buffer.set(currentBuffer);
+
+    // Add updated buffer as most recent
+    this.frameBufferHistory.push(buffer);
+  }
+  
+  /**
+   * Get extended time-domain data by concatenating past frame buffers
+   * @param multiplier - Buffer size multiplier (1, 4, or 16)
+   * @returns Combined buffer or null if insufficient history
+   */
+  getExtendedTimeDomainData(multiplier: 1 | 4 | 16): Float32Array | null {
+    if (multiplier === 1) {
+      // Return current buffer for 1x
+      return this.dataArray;
+    }
+    
+    if (!this.dataArray || this.frameBufferHistory.length < multiplier) {
+      return null; // Not enough history yet
+    }
+    
+    // Get the most recent 'multiplier' buffers
+    const recentBuffers = this.frameBufferHistory.slice(-multiplier);
+    
+    // Concatenate buffers
+    const totalLength = recentBuffers.reduce((sum, buf) => sum + buf.length, 0);
+    const extendedBuffer = new Float32Array(totalLength);
+    
+    let offset = 0;
+    for (const buffer of recentBuffers) {
+      extendedBuffer.set(buffer, offset);
+      offset += buffer.length;
+    }
+    
+    return extendedBuffer;
+  }
+  
+  /**
+   * Clear frame buffer history
+   */
+  clearFrameBufferHistory(): void {
+    this.frameBufferHistory = [];
   }
 
   /**
