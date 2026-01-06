@@ -220,12 +220,20 @@ export class Oscilloscope {
     return this.gainController.getNoiseGateThreshold();
   }
 
-  setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft'): void {
+  setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt'): void {
     this.frequencyEstimator.setFrequencyEstimationMethod(method);
   }
 
   getFrequencyEstimationMethod(): string {
     return this.frequencyEstimator.getFrequencyEstimationMethod();
+  }
+
+  setBufferSizeMultiplier(multiplier: 1 | 4 | 16): void {
+    this.frequencyEstimator.setBufferSizeMultiplier(multiplier);
+  }
+
+  getBufferSizeMultiplier(): 1 | 4 | 16 {
+    return this.frequencyEstimator.getBufferSizeMultiplier();
   }
 
   getEstimatedFrequency(): number {
