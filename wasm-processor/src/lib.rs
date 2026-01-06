@@ -7,7 +7,7 @@ mod gain_controller;
 
 use frequency_estimator::FrequencyEstimator;
 use zero_cross_detector::ZeroCrossDetector;
-use waveform_searcher::WaveformSearcher;
+use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;
 
 /// WaveformRenderData - Complete data structure for waveform rendering
@@ -200,8 +200,8 @@ impl WasmDataProcessor {
         
         if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
             if let Some(search_result) = self.waveform_searcher.search_similar_waveform(&data, cycle_length) {
-                // Display 4 cycles worth
-                let waveform_length = (cycle_length * 4.0).floor() as usize;
+                // Display N cycles worth (where N is CYCLES_TO_STORE)
+                let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
                 display_start_index = search_result.start_index;
                 display_end_index = (display_start_index + waveform_length).min(data.len());
                 used_similarity_search = true;
@@ -230,9 +230,9 @@ impl WasmDataProcessor {
         self.gain_controller.calculate_auto_gain(&data, display_start_index, display_end_index);
         let gain = self.gain_controller.get_current_gain();
         
-        // Store waveform for next frame (4 cycles worth)
+        // Store waveform for next frame (N cycles worth, where N is CYCLES_TO_STORE)
         if cycle_length > 0.0 {
-            let waveform_length = (cycle_length * 4.0).floor() as usize;
+            let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
             let end_index = (display_start_index + waveform_length).min(data.len());
             self.waveform_searcher.store_waveform(&data, display_start_index, end_index);
         }

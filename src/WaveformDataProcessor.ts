@@ -55,8 +55,9 @@ export class WaveformDataProcessor {
    */
   private storeWaveformForNextFrame(data: Float32Array, startIndex: number, cycleLength: number): void {
     if (cycleLength > 0) {
-      // Store 4 cycles worth of waveform data
-      const waveformLength = Math.floor(cycleLength * 4);
+      // Store N cycles worth of waveform data (where N is from WaveformSearcher)
+      const cyclesToStore = this.waveformSearcher.getCyclesToStore();
+      const waveformLength = Math.floor(cycleLength * cyclesToStore);
       const endIndex = Math.min(startIndex + waveformLength, data.length);
       this.waveformSearcher.storeWaveform(data, startIndex, endIndex);
     }
@@ -124,8 +125,9 @@ export class WaveformDataProcessor {
     if (this.waveformSearcher.hasPreviousWaveform() && cycleLength > 0) {
       const searchResult = this.waveformSearcher.searchSimilarWaveform(dataArray, cycleLength);
       if (searchResult) {
-        // Use similarity search result - display 4 cycles worth
-        const waveformLength = Math.floor(cycleLength * 4);
+        // Use similarity search result - display N cycles worth (where N is from WaveformSearcher)
+        const cyclesToStore = this.waveformSearcher.getCyclesToStore();
+        const waveformLength = Math.floor(cycleLength * cyclesToStore);
         displayStartIndex = searchResult.startIndex;
         displayEndIndex = Math.min(displayStartIndex + waveformLength, dataArray.length);
         usedSimilaritySearch = true;

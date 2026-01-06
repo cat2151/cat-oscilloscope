@@ -165,4 +165,12 @@ export class WaveformSearcher {
     // Return a copy to prevent external modification
     return new Float32Array(this.previousWaveform);
   }
+
+  /**
+   * Get the number of cycles to store
+   * @returns Number of cycles stored (4)
+   */
+  getCyclesToStore(): number {
+    return this.CYCLES_TO_STORE;
+  }
 }
