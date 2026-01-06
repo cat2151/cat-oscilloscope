@@ -1,0 +1,33 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
+export const __wbg_waveformrenderdata_free: (a: number, b: number) => void;
+export const wasmdataprocessor_new: () => number;
+export const wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
+export const wasmdataprocessor_reset: (a: number) => void;
+export const wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
+export const wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;
+export const wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
+export const wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
+export const wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
+export const waveformrenderdata_displayEndIndex: (a: number) => number;
+export const waveformrenderdata_displayStartIndex: (a: number) => number;
+export const waveformrenderdata_estimatedFrequency: (a: number) => number;
+export const waveformrenderdata_fftSize: (a: number) => number;
+export const waveformrenderdata_firstAlignmentPoint: (a: number) => number;
+export const waveformrenderdata_frequencyData: (a: number) => [number, number];
+export const waveformrenderdata_gain: (a: number) => number;
+export const waveformrenderdata_isSignalAboveNoiseGate: (a: number) => number;
+export const waveformrenderdata_maxFrequency: (a: number) => number;
+export const waveformrenderdata_previousWaveform: (a: number) => [number, number];
+export const waveformrenderdata_sampleRate: (a: number) => number;
+export const waveformrenderdata_secondAlignmentPoint: (a: number) => number;
+export const waveformrenderdata_similarity: (a: number) => number;
+export const waveformrenderdata_usedSimilaritySearch: (a: number) => number;
+export const waveformrenderdata_waveform_data: (a: number) => [number, number];
+export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_malloc: (a: number, b: number) => number;
+export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const __wbindgen_start: () => void;
