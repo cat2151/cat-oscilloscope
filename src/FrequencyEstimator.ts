@@ -119,6 +119,10 @@ export class FrequencyEstimator {
   /**
    * Estimate frequency using STFT (Short-Time Fourier Transform) method
    * Uses overlapping windows to improve frequency resolution for low frequencies
+   * 
+   * Note: This implementation uses a naive DFT for educational purposes.
+   * For production use with large buffer sizes, consider using an FFT library like fft.js
+   * for O(n log n) performance instead of O(n²).
    */
   private estimateFrequencySTFT(data: Float32Array, sampleRate: number, isSignalAboveNoiseGate: boolean): number {
     // Check noise gate
@@ -137,7 +141,7 @@ export class FrequencyEstimator {
     const numWindows = Math.floor((data.length - windowSize) / hopSize) + 1;
     const frequencyCandidates: number[] = [];
     
-    for (let w = 0; w < numWindows && w < 4; w++) { // Process up to 4 windows
+    for (let w = 0; w < numWindows && w < 4; w++) { // Limit to 4 windows for performance
       const startIndex = w * hopSize;
       const endIndex = startIndex + windowSize;
       
@@ -149,8 +153,8 @@ export class FrequencyEstimator {
         segment[i] = data[startIndex + i] * hannWindow[i];
       }
       
-      // Compute FFT manually using simple DFT (for educational purposes)
-      // In production, this would use a proper FFT library like fft.js
+      // Compute peak frequency using DFT (O(n²) complexity)
+      // Note: For production with large buffers, use an FFT library for better performance
       const frequency = this.computePeakFrequencyFromDFT(segment, sampleRate, windowSize);
       
       if (frequency > 0) {
@@ -169,6 +173,9 @@ export class FrequencyEstimator {
   /**
    * Estimate frequency using CQT (Constant-Q Transform) method
    * Provides better frequency resolution at low frequencies
+   * 
+   * Note: Uses Goertzel algorithm for single-frequency DFT, which is more efficient
+   * than full DFT when computing only a subset of frequency bins.
    */
   private estimateFrequencyCQT(data: Float32Array, sampleRate: number, isSignalAboveNoiseGate: boolean): number {
     // Check noise gate
@@ -230,7 +237,21 @@ export class FrequencyEstimator {
 
   /**
    * Compute peak frequency from DFT of a windowed segment
-   * Simplified implementation for demonstration
+   * Simplified implementation for demonstration purposes
+   * 
+   * Performance Note: This naive DFT implementation has O(n²) complexity.
+   * It computes only the frequency bins of interest (MIN_FREQUENCY_HZ to MAX_FREQUENCY_HZ)
+   * to reduce computation, but it's still slower than FFT for large buffer sizes.
+   * 
+   * For production use with extended buffers (4x, 16x), consider:
+   * - Using an FFT library (fft.js, kiss-fft, etc.) for O(n log n) performance
+   * - Using Web Audio API's AnalyserNode for hardware-accelerated FFT
+   * - Pre-computing and caching results for repeated analysis
+   * 
+   * @param data - Windowed signal segment
+   * @param sampleRate - Audio sample rate
+   * @param fftSize - Size of the DFT (typically equal to data.length)
+   * @returns Peak frequency in Hz, or 0 if below threshold
    */
   private computePeakFrequencyFromDFT(data: Float32Array, sampleRate: number, fftSize: number): number {
     const binFrequency = sampleRate / fftSize;
@@ -241,12 +262,13 @@ export class FrequencyEstimator {
     let peakBin = 0;
     
     // Compute magnitude spectrum for frequency range of interest
+    // Note: O(n × k) complexity where n = data.length, k = number of frequency bins
     for (let k = minBin; k < maxBin; k++) {
       let real = 0;
       let imag = 0;
       const omega = 2 * Math.PI * k / fftSize;
       
-      // Compute DFT bin (only a subset for efficiency)
+      // Compute DFT bin
       for (let n = 0; n < data.length; n++) {
         const angle = omega * n;
         real += data[n] * Math.cos(angle);
@@ -261,7 +283,8 @@ export class FrequencyEstimator {
       }
     }
     
-    // Normalize threshold
+    // Threshold scales with buffer length since DFT magnitude increases with more samples
+    // This maintains consistent sensitivity across different buffer sizes
     const normalizedThreshold = this.FFT_MAGNITUDE_THRESHOLD * data.length / 255.0;
     if (maxMagnitude < normalizedThreshold) return 0;
     
