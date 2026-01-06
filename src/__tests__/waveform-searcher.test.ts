@@ -46,13 +46,19 @@ describe('WaveformSearcher', () => {
     });
 
     it('should find exact match at start', () => {
-      // Store a pattern
-      const pattern = new Float32Array([0.1, 0.5, 0.9, 0.5, 0.1]);
-      searcher.storeWaveform(pattern, 0, 5);
+      // Store a pattern (4 cycles worth, each cycle is 5 samples = 20 samples total)
+      const singleCycle = [0.1, 0.5, 0.9, 0.5, 0.1];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 20 samples
+      searcher.storeWaveform(pattern, 0, 20);
 
       // Current frame starts with the same pattern
-      const currentFrame = new Float32Array([0.1, 0.5, 0.9, 0.5, 0.1, 0.0, 0.0, 0.0]);
-      const result = searcher.searchSimilarWaveform(currentFrame, 5);
+      const currentFrame = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle,
+        0.0, 0.0, 0.0, 0.0
+      ]);
+      const result = searcher.searchSimilarWaveform(currentFrame, 5); // cycleLength = 5
 
       expect(result).not.toBeNull();
       expect(result?.startIndex).toBe(0);
@@ -60,13 +66,20 @@ describe('WaveformSearcher', () => {
     });
 
     it('should find exact match at offset position', () => {
-      // Store a pattern
-      const pattern = new Float32Array([0.5, 0.9, 0.5]);
-      searcher.storeWaveform(pattern, 0, 3);
+      // Store a pattern (4 cycles worth, each cycle is 3 samples = 12 samples total)
+      const singleCycle = [0.5, 0.9, 0.5];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 12 samples
+      searcher.storeWaveform(pattern, 0, 12);
 
       // Current frame has the pattern at offset 2
-      const currentFrame = new Float32Array([0.0, 0.0, 0.5, 0.9, 0.5, 0.0]);
-      const result = searcher.searchSimilarWaveform(currentFrame, 3);
+      const currentFrame = new Float32Array([
+        0.0, 0.0, // offset
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle,
+        0.0
+      ]);
+      const result = searcher.searchSimilarWaveform(currentFrame, 3); // cycleLength = 3
 
       expect(result).not.toBeNull();
       expect(result?.startIndex).toBe(2);
@@ -74,14 +87,17 @@ describe('WaveformSearcher', () => {
     });
 
     it('should find best match among multiple candidates', () => {
-      // Store a specific pattern
-      const pattern = new Float32Array([0.0, 0.5, 1.0, 0.5, 0.0]);
-      searcher.storeWaveform(pattern, 0, 5);
+      // Store a specific pattern (4 cycles worth, each cycle is 5 samples = 20 samples total)
+      const singleCycle = [0.0, 0.5, 1.0, 0.5, 0.0];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 20 samples
+      searcher.storeWaveform(pattern, 0, 20);
 
       // Current frame has better match at position 3
       const currentFrame = new Float32Array([
         0.0, 0.1, 0.2, // weak match at 0
-        0.0, 0.5, 1.0, 0.5, 0.0, // exact match at 3
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle, // exact match at 3
         0.0, 0.0
       ]);
       const result = searcher.searchSimilarWaveform(currentFrame, 5);
@@ -92,12 +108,18 @@ describe('WaveformSearcher', () => {
     });
 
     it('should handle inverted waveform (negative correlation)', () => {
-      // Store a pattern
-      const pattern = new Float32Array([1.0, 0.5, 0.0, -0.5, -1.0]);
-      searcher.storeWaveform(pattern, 0, 5);
+      // Store a pattern (4 cycles worth, each cycle is 5 samples = 20 samples total)
+      const singleCycle = [1.0, 0.5, 0.0, -0.5, -1.0];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 20 samples
+      searcher.storeWaveform(pattern, 0, 20);
 
       // Current frame has inverted pattern at start (only one clear candidate)
-      const currentFrame = new Float32Array([-1.0, -0.5, 0.0, 0.5, 1.0]);
+      const invertedCycle = [-1.0, -0.5, 0.0, 0.5, 1.0];
+      const currentFrame = new Float32Array([
+        ...invertedCycle, ...invertedCycle, ...invertedCycle, ...invertedCycle
+      ]);
       const result = searcher.searchSimilarWaveform(currentFrame, 5);
 
       expect(result).not.toBeNull();
@@ -124,12 +146,19 @@ describe('WaveformSearcher', () => {
     });
 
     it('should handle constant waveform', () => {
-      // Store constant pattern
-      const pattern = new Float32Array([0.5, 0.5, 0.5, 0.5]);
-      searcher.storeWaveform(pattern, 0, 4);
+      // Store constant pattern (4 cycles worth, each cycle is 4 samples = 16 samples total)
+      const singleCycle = [0.5, 0.5, 0.5, 0.5];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 16 samples
+      searcher.storeWaveform(pattern, 0, 16);
 
       // Current frame also constant
-      const currentFrame = new Float32Array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]);
+      const currentFrame = new Float32Array([
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+        0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+        0.5, 0.5
+      ]);
       const result = searcher.searchSimilarWaveform(currentFrame, 4);
 
       // Constant signals have undefined correlation (0 in our implementation)
@@ -140,10 +169,17 @@ describe('WaveformSearcher', () => {
 
   describe('reset', () => {
     it('should clear stored waveform and similarity', () => {
-      const data = new Float32Array([0.1, 0.2, 0.3, 0.4, 0.5]);
-      searcher.storeWaveform(data, 0, 5);
+      // Store pattern (4 cycles worth, each cycle is 5 samples = 20 samples total)
+      const singleCycle = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const data = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 20 samples
+      searcher.storeWaveform(data, 0, 20);
       
-      const currentFrame = new Float32Array([0.1, 0.2, 0.3, 0.4, 0.5, 0.0]);
+      const currentFrame = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle,
+        0.0
+      ]);
       searcher.searchSimilarWaveform(currentFrame, 5);
       
       expect(searcher.hasPreviousWaveform()).toBe(true);
@@ -185,19 +221,22 @@ describe('WaveformSearcher', () => {
   });
 
   describe('sliding window search', () => {
-    it('should search within one cycle length', () => {
-      // Create a repeating pattern
-      const pattern = new Float32Array([0.0, 1.0, 0.0, -1.0]);
-      searcher.storeWaveform(pattern, 0, 4);
+    it('should search within 4 cycles range', () => {
+      // Create a repeating pattern (4 cycles worth, each cycle is 4 samples = 16 samples total)
+      const singleCycle = [0.0, 1.0, 0.0, -1.0];
+      const pattern = new Float32Array([
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle
+      ]); // 16 samples
+      searcher.storeWaveform(pattern, 0, 16);
 
-      // Current frame with pattern shifted by 2 samples
+      // Current frame with pattern shifted by 2 samples (within 4 cycles = 16 samples search range)
       const currentFrame = new Float32Array([
-        0.5, 0.5,  // offset
-        0.0, 1.0, 0.0, -1.0,  // exact match at index 2
+        0.5, 0.5,  // offset (2 samples)
+        ...singleCycle, ...singleCycle, ...singleCycle, ...singleCycle,  // exact match at index 2
         0.0, 0.0, 0.0, 0.0
       ]);
       
-      const result = searcher.searchSimilarWaveform(currentFrame, 4);
+      const result = searcher.searchSimilarWaveform(currentFrame, 4); // cycleLength = 4
       
       expect(result).not.toBeNull();
       expect(result?.startIndex).toBe(2);
