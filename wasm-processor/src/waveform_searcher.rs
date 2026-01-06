@@ -4,12 +4,14 @@ pub struct SearchResult {
     pub similarity: f32,
 }
 
+/// Constants for waveform storage and search
+const CYCLES_TO_STORE: usize = 4;  // Store 4 cycles worth of waveform data
+const CYCLES_TO_SEARCH: usize = 4; // Search within 4 cycles range
+
 /// WaveformSearcher handles waveform similarity search
 pub struct WaveformSearcher {
     previous_waveform: Option<Vec<f32>>,
     last_similarity: f32,
-    cycles_to_store: usize,  // Store 4 cycles worth of waveform data
-    cycles_to_search: usize, // Search within 4 cycles range
 }
 
 impl WaveformSearcher {
@@ -17,8 +19,6 @@ impl WaveformSearcher {
         WaveformSearcher {
             previous_waveform: None,
             last_similarity: 0.0,
-            cycles_to_store: 4,
-            cycles_to_search: 4,
         }
     }
     
@@ -69,7 +69,7 @@ impl WaveformSearcher {
         }
         
         // Compare against 4 cycles worth of waveform data
-        let waveform_length = (cycle_length * self.cycles_to_store as f32).floor() as usize;
+        let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
         
         if current_frame.len() < waveform_length {
             return None;
@@ -83,7 +83,7 @@ impl WaveformSearcher {
         let mut best_start_index = 0;
         
         // Search range: from 0 to (4 * cycle_length - 1) samples (total 4 cycles worth of positions)
-        let search_range = (cycle_length * self.cycles_to_search as f32).floor() as usize;
+        let search_range = (cycle_length * CYCLES_TO_SEARCH as f32).floor() as usize;
         let max_start_index = current_frame.len().saturating_sub(waveform_length);
         let search_end_index = if search_range < 2 {
             max_start_index
