@@ -78,6 +78,8 @@ impl WaveformSearcher {
         let mut best_start_index = 0;
         
         // Slide search: compare each position in current frame
+        // Search range: from 0 to (current_frame.len() - waveform_length) 
+        // but limited to waveform_length-1 for efficiency
         let search_end_index = current_frame.len()
             .saturating_sub(waveform_length)
             .min(waveform_length.saturating_sub(1));

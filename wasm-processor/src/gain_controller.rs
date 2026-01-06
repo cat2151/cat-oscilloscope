@@ -18,11 +18,9 @@ impl GainController {
     const GAIN_SMOOTHING_FACTOR: f32 = 0.1;
     const MAX_SAMPLES_TO_CHECK: usize = 512;
     const CLIPPING_SAFETY_FACTOR: f32 = 0.95;
+    const DEFAULT_NOISE_GATE_THRESHOLD: f32 = 0.003981072; // 10^(-48/20) ≈ -48dB
     
     pub fn new() -> Self {
-        // Default threshold: -48dB = 10^(-48/20) ≈ 0.003981
-        let default_threshold = 10f32.powf(-48.0 / 20.0);
-        
         GainController {
             auto_gain_enabled: true,
             current_gain: 1.0,
@@ -30,7 +28,7 @@ impl GainController {
             peak_decay: 0.95,
             previous_peak: 0.0,
             noise_gate_enabled: true,
-            noise_gate_threshold: default_threshold,
+            noise_gate_threshold: Self::DEFAULT_NOISE_GATE_THRESHOLD,
         }
     }
     

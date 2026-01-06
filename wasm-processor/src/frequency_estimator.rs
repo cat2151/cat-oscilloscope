@@ -139,10 +139,14 @@ impl FrequencyEstimator {
             let y_peak = frequency_data[peak_bin] as f32;
             let y_plus = frequency_data[peak_bin + 1] as f32;
             
-            let delta = 0.5 * (y_plus - y_minus) / (2.0 * y_peak - y_minus - y_plus);
-            let interpolated_bin = peak_bin as f32 + delta;
-            
-            interpolated_bin * bin_frequency
+            let denominator = 2.0 * y_peak - y_minus - y_plus;
+            if denominator.abs() > 0.001 {  // Avoid division by zero
+                let delta = 0.5 * (y_plus - y_minus) / denominator;
+                let interpolated_bin = peak_bin as f32 + delta;
+                interpolated_bin * bin_frequency
+            } else {
+                peak_bin as f32 * bin_frequency
+            }
         } else {
             peak_bin as f32 * bin_frequency
         }
