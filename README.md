@@ -37,6 +37,31 @@ await oscilloscope.start();
   - Whether to make FFT the default is under consideration.
   - Further improvements to frequency estimation are deferred, prioritizing numerous other tasks.
 
+## WASM Implementation
+
+The data processing part (waveform search, frequency estimation, zero-cross detection, etc.) is also implemented in Rust/WASM.
+
+- **TypeScript implementation**: Used by default. High compatibility and easy to debug.
+- **Rust/WASM implementation**: Expected to offer faster processing. Can be toggled with the "Use WASM" checkbox.
+
+Both implementations return the same `WaveformRenderData` structure, so the rendering logic is shared.
+
+### Building the WASM Implementation
+
+The WASM implementation is located in the `wasm-processor` directory.
+
+```bash
+# Build the WASM implementation (requires wasm-pack)
+npm run build:wasm
+
+# Build the entire app (including WASM)
+npm run build
+```
+
+**Required tools**:
+- Rust toolchain (rustc, cargo)
+- wasm-pack (`cargo install wasm-pack`)
+
 ## Features
 
 - 🎤 **Microphone Input** - Captures audio from the microphone in real-time
@@ -46,6 +71,8 @@ await oscilloscope.start();
 - ⚡ **Real-time Rendering** - Continuously updates waveform visualization
 - 🎨 **Classic Design** - Green waveform and grid overlay on a black background
 - 🛡️ **Error Handling** - Gracefully handles microphone access permission issues
+- 🔍 **Waveform Similarity Search** - Calculates similarity with previous frame for stable display
+- 🦀 **Rust/WASM Support** - Data processing also implemented in Rust/WASM, toggleable via checkbox
 
 ## Getting Started
 
