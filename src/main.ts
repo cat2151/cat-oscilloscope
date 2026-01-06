@@ -153,8 +153,15 @@ frequencyMethod.addEventListener('change', () => {
 
 // Buffer size multiplier selector handler
 bufferSizeMultiplier.addEventListener('change', () => {
-  const multiplier = parseInt(bufferSizeMultiplier.value) as 1 | 4 | 16;
-  oscilloscope.setBufferSizeMultiplier(multiplier);
+  const value = parseInt(bufferSizeMultiplier.value, 10);
+  if (value === 1 || value === 4 || value === 16) {
+    oscilloscope.setBufferSizeMultiplier(value);
+  } else {
+    console.error('Invalid buffer size multiplier:', value);
+    // Reset to default
+    bufferSizeMultiplier.value = '1';
+    oscilloscope.setBufferSizeMultiplier(1);
+  }
 });
 
 // Update frequency display periodically

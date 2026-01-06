@@ -158,18 +158,28 @@ export class AudioManager {
   
   /**
    * Update frame buffer history with the current frame
+   * Reuses existing buffers to avoid allocating a new Float32Array every frame
    */
   private updateFrameBufferHistory(currentBuffer: Float32Array): void {
-    // Create a copy of the current buffer
-    const bufferCopy = new Float32Array(currentBuffer);
-    
-    // Add to history
-    this.frameBufferHistory.push(bufferCopy);
-    
-    // Keep only the most recent MAX_FRAME_HISTORY frames
-    if (this.frameBufferHistory.length > this.MAX_FRAME_HISTORY) {
-      this.frameBufferHistory.shift();
+    let buffer: Float32Array;
+
+    if (this.frameBufferHistory.length < this.MAX_FRAME_HISTORY) {
+      // Warm-up phase: allocate new buffers until we reach MAX_FRAME_HISTORY
+      buffer = new Float32Array(currentBuffer.length);
+    } else {
+      // Steady state: reuse the oldest buffer
+      buffer = this.frameBufferHistory.shift() as Float32Array;
+      // If FFT size (and thus buffer length) has changed, reallocate
+      if (buffer.length !== currentBuffer.length) {
+        buffer = new Float32Array(currentBuffer.length);
+      }
     }
+
+    // Copy current data into the buffer
+    buffer.set(currentBuffer);
+
+    // Add updated buffer as most recent
+    this.frameBufferHistory.push(buffer);
   }
   
   /**

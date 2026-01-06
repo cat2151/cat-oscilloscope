@@ -3,15 +3,15 @@
  * Responsible for:
  * - Zero-crossing detection
  * - Autocorrelation analysis
- * - FFT-based frequency estimation with variable buffer sizes
- * - STFT (Short-Time Fourier Transform) with variable window length
- * - CQT (Constant-Q Transform)
+ * - FFT-based frequency estimation
+ * - STFT (Short-Time Fourier Transform) with variable buffer sizes
+ * - CQT (Constant-Q Transform) with variable buffer sizes
  * - Frequency smoothing and temporal stability
  */
 export class FrequencyEstimator {
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'autocorrelation';
   private estimatedFrequency = 0;
-  private readonly MIN_FREQUENCY_HZ = 50; // Minimum detectable frequency (Hz)
+  private readonly MIN_FREQUENCY_HZ = 20; // Minimum detectable frequency (Hz) - lower limit for STFT/CQT with extended buffers
   private readonly MAX_FREQUENCY_HZ = 5000; // Maximum detectable frequency (Hz) - allows viewing harmonics up to 5th for 880Hz
   private readonly FFT_MAGNITUDE_THRESHOLD = 10; // Minimum FFT magnitude to consider as valid signal
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
@@ -131,7 +131,16 @@ export class FrequencyEstimator {
     }
     
     // Window size depends on buffer multiplier for better low-frequency resolution
-    const windowSize = Math.min(data.length, 2048 * this.bufferSizeMultiplier);
+    // Ensure minimum window size of 512 samples to maintain reasonable frequency resolution
+    const MIN_WINDOW_SIZE = 512;
+    const desiredWindowSize = 2048 * this.bufferSizeMultiplier;
+    const windowSize = Math.max(MIN_WINDOW_SIZE, Math.min(data.length, desiredWindowSize));
+    
+    // If data is too short, skip STFT analysis
+    if (data.length < MIN_WINDOW_SIZE) {
+      return 0;
+    }
+    
     const hopSize = Math.floor(windowSize / 2); // 50% overlap
     
     // Apply Hann window to reduce spectral leakage
@@ -204,9 +213,16 @@ export class FrequencyEstimator {
       const centerFreq = minFreq * Math.pow(2, k / binsPerOctave);
       
       // Window length for this frequency
-      const windowLength = Math.floor(Q * sampleRate / centerFreq);
+      const idealWindowLength = Math.floor(Q * sampleRate / centerFreq);
       
-      if (windowLength > data.length) continue;
+      // Adjust window length to available data, but skip if too short
+      // Minimum 2 cycles required for meaningful frequency detection
+      const minWindowLength = Math.floor(2 * sampleRate / centerFreq);
+      if (data.length < minWindowLength) {
+        continue; // Skip this frequency bin - insufficient data
+      }
+      
+      const windowLength = Math.min(idealWindowLength, data.length);
       
       // Compute magnitude at this frequency using Goertzel algorithm
       const magnitude = this.goertzelMagnitude(data, centerFreq, sampleRate, windowLength);
