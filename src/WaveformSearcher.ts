@@ -1,10 +1,20 @@
 /**
+ * Constants for waveform storage and search
+ */
+
+/** Store 4 cycles worth of waveform data */
+export const CYCLES_TO_STORE = 4;
+
+/** Search within 4 cycles range */
+export const CYCLES_TO_SEARCH = 4;
+
+/**
  * WaveformSearcher handles waveform similarity search
  * Responsible for:
- * - Storing previous frame's waveform
+ * - Storing previous frame's waveform (4 cycles worth)
  * - Searching for similar waveforms in current frame
  * - Calculating similarity scores (correlation coefficient -1 to +1)
- * - Finding optimal waveform position by sliding search
+ * - Finding optimal waveform position by sliding search (4 cycles range)
  */
 export class WaveformSearcher {
   private previousWaveform: Float32Array | null = null;
@@ -58,7 +68,7 @@ export class WaveformSearcher {
   /**
    * Search for the most similar waveform in current frame by sliding search
    * @param currentFrame Current frame data
-   * @param cycleLength Estimated cycle length in samples
+   * @param cycleLength Estimated cycle length in samples (single cycle)
    * @returns Object containing best match start index and similarity score, or null if no previous waveform
    */
   searchSimilarWaveform(currentFrame: Float32Array, cycleLength: number): {
@@ -70,7 +80,8 @@ export class WaveformSearcher {
       return null;
     }
 
-    const waveformLength = Math.floor(cycleLength);
+    // Compare against 4 cycles worth of waveform data
+    const waveformLength = Math.floor(cycleLength * CYCLES_TO_STORE);
     
     // Ensure we have enough data for at least one comparison
     if (currentFrame.length < waveformLength) {
@@ -86,11 +97,12 @@ export class WaveformSearcher {
     let bestStartIndex = 0;
 
     // Slide search: compare each position in current frame
-    // Search range: from 0 to (cycleLength - 1) samples (total cycleLength positions)
-    const searchEndIndex = Math.min(currentFrame.length - waveformLength, waveformLength - 1);
+    // Search range: from 0 to (4 * cycleLength - 1) samples (total 4 cycles worth of positions)
+    const searchRange = Math.floor(cycleLength * CYCLES_TO_SEARCH);
+    const searchEndIndex = Math.min(currentFrame.length - waveformLength, searchRange - 1);
     
     for (let startIndex = 0; startIndex <= searchEndIndex; startIndex++) {
-      // Extract candidate waveform
+      // Extract candidate waveform (4 cycles worth)
       const candidate = currentFrame.slice(startIndex, startIndex + waveformLength);
       
       // Calculate similarity
