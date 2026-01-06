@@ -14,6 +14,7 @@ const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLIn
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
 const usePeakModeCheckbox = document.getElementById('usePeakModeCheckbox') as HTMLInputElement;
 const pauseDrawingCheckbox = document.getElementById('pauseDrawingCheckbox') as HTMLInputElement;
+const useWasmCheckbox = document.getElementById('useWasmCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
 const statusElement = document.getElementById('status') as HTMLSpanElement;
@@ -36,6 +37,7 @@ const requiredElements = [
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
   { element: usePeakModeCheckbox, name: 'usePeakModeCheckbox' },
   { element: pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
+  { element: useWasmCheckbox, name: 'useWasmCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
   { element: statusElement, name: 'status' },
@@ -111,6 +113,27 @@ usePeakModeCheckbox.addEventListener('change', () => {
 // Pause drawing checkbox handler
 pauseDrawingCheckbox.addEventListener('change', () => {
   oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
+});
+
+// WASM checkbox handler
+useWasmCheckbox.addEventListener('change', async () => {
+  const shouldUseWasm = useWasmCheckbox.checked;
+  try {
+    useWasmCheckbox.disabled = true;
+    statusElement.textContent = shouldUseWasm ? 'Loading WASM...' : 'Disabling WASM...';
+    
+    await oscilloscope.setUseWasm(shouldUseWasm);
+    
+    statusElement.textContent = shouldUseWasm 
+      ? 'WASM processor active' 
+      : (oscilloscope.getIsRunning() ? 'Running - TypeScript processor' : 'Stopped');
+  } catch (error) {
+    console.error('Failed to toggle WASM:', error);
+    statusElement.textContent = 'Error: Could not initialize WASM processor';
+    useWasmCheckbox.checked = false;
+  } finally {
+    useWasmCheckbox.disabled = false;
+  }
 });
 
 // Noise gate threshold slider handler
