@@ -30,17 +30,18 @@ interface WasmProcessorInstance {
  * instances only for configuration and state that needs to be accessed from JS.
  */
 export class WasmDataProcessor {
+  // Asset directory patterns used for base path detection
+  private static readonly ASSET_PATTERNS = ['/assets/', '/js/', '/dist/'] as const;
+  
   private audioManager: AudioManager;
   private gainController: GainController;
   private frequencyEstimator: FrequencyEstimator;
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
-  
-  // Asset directory patterns used for base path detection
-  private static readonly ASSET_PATTERNS = ['/assets/', '/js/', '/dist/'] as const;
 
   private wasmProcessor: WasmProcessorInstance | null = null;
   private isInitialized = false;
+  private cachedBasePath: string | null = null;
 
   constructor(
     audioManager: AudioManager,
@@ -153,8 +154,23 @@ export class WasmDataProcessor {
    * The path is normalized to always end with '/'
    */
   private determineBasePath(): string {
+    // Return cached value if available
+    if (this.cachedBasePath !== null) {
+      return this.cachedBasePath;
+    }
+    
     // Try <base> tag first
     let basePath = document.querySelector('base')?.getAttribute('href');
+
+    // If we got a value from <base>, normalize absolute URLs to pathname only
+    if (basePath) {
+      try {
+        const url = new URL(basePath, window.location.href);
+        basePath = url.pathname;
+      } catch {
+        // If parsing fails, keep the original value (likely already a relative path)
+      }
+    }
     
     // Fall back to script tag analysis
     if (!basePath) {
@@ -171,6 +187,8 @@ export class WasmDataProcessor {
       basePath += '/';
     }
     
+    // Cache the result
+    this.cachedBasePath = basePath;
     return basePath;
   }
   
@@ -194,14 +212,13 @@ export class WasmDataProcessor {
             const index = pathname.indexOf(pattern);
             if (index >= 0) {
               // Extract everything before the asset directory
-              // For '/assets/file.js', index=0, return '/'
+              // For '/assets/file.js', index=0, return '/' (root directory)
               // For '/cat-oscilloscope/assets/file.js', index=17, return '/cat-oscilloscope/'
               return index === 0 ? '/' : pathname.substring(0, index) + '/';
             }
           }
         } catch (error: unknown) {
-          // URL parsing can fail for malformed URLs - continue to next script
-          // Only log in development environments (check for localhost)
+          // URL parsing failed - skip this script and try next one
           if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             console.debug('Failed to parse script URL:', src, error);
           }
