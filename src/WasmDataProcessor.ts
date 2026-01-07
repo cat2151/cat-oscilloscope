@@ -100,10 +100,17 @@ export class WasmDataProcessor {
         reject(new Error('WASM module loading timed out after 10 seconds'));
       }, 10000);
       
+      // Determine the base path for WASM files
+      // This handles both local development (base = '/') and GitHub Pages deployment (base = '/cat-oscilloscope/')
+      const basePath = document.querySelector('base')?.getAttribute('href') || 
+                       this.getBasePathFromScripts() || 
+                       '/';
+      const wasmPath = `${basePath}wasm/wasm_processor.js`;
+      
       const script = document.createElement('script');
       script.type = 'module';
       script.textContent = `
-        import init, { WasmDataProcessor } from '/wasm/wasm_processor.js';
+        import init, { WasmDataProcessor } from '${wasmPath}';
         await init();
         window.wasmProcessor = { WasmDataProcessor };
         window.dispatchEvent(new Event('wasmLoaded'));
@@ -135,6 +142,24 @@ export class WasmDataProcessor {
       
       document.head.appendChild(script);
     });
+  }
+  
+  /**
+   * Extract base path from existing script tags
+   */
+  private getBasePathFromScripts(): string {
+    const scripts = document.querySelectorAll('script[src]');
+    for (const script of scripts) {
+      const src = script.getAttribute('src');
+      if (src && src.includes('/assets/')) {
+        // Extract base path from asset URLs like '/cat-oscilloscope/assets/...'
+        const match = src.match(/^(.*?)\/assets\//);
+        if (match && match[1]) {
+          return match[1] + '/';
+        }
+      }
+    }
+    return '/';
   }
   
   /**
