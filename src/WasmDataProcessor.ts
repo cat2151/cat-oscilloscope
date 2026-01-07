@@ -36,6 +36,9 @@ export class WasmDataProcessor {
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
   
+  // Asset directory patterns used for base path detection
+  private static readonly ASSET_PATTERNS = ['/assets/', '/js/', '/dist/'] as const;
+
   private wasmProcessor: WasmProcessorInstance | null = null;
   private isInitialized = false;
 
@@ -101,16 +104,7 @@ export class WasmDataProcessor {
       }, 10000);
       
       // Determine the base path for WASM files
-      // This handles both local development (base = '/') and GitHub Pages deployment (base = '/cat-oscilloscope/')
-      let basePath = document.querySelector('base')?.getAttribute('href') || 
-                     this.getBasePathFromScripts() || 
-                     '/';
-      
-      // Normalize base path to ensure it ends with '/'
-      if (!basePath.endsWith('/')) {
-        basePath += '/';
-      }
-      
+      const basePath = this.determineBasePath();
       const wasmPath = `${basePath}wasm/wasm_processor.js`;
       
       const script = document.createElement('script');
@@ -151,9 +145,39 @@ export class WasmDataProcessor {
   }
   
   /**
+   * Determine the base path for the application
+   * This method implements a fallback hierarchy:
+   * 1. Check for <base> tag href attribute
+   * 2. Extract from existing script tags
+   * 3. Default to '/'
+   * The path is normalized to always end with '/'
+   */
+  private determineBasePath(): string {
+    // Try <base> tag first
+    let basePath = document.querySelector('base')?.getAttribute('href');
+    
+    // Fall back to script tag analysis
+    if (!basePath) {
+      basePath = this.getBasePathFromScripts();
+    }
+    
+    // Default to root
+    if (!basePath) {
+      basePath = '/';
+    }
+    
+    // Normalize: ensure trailing slash
+    if (!basePath.endsWith('/')) {
+      basePath += '/';
+    }
+    
+    return basePath;
+  }
+  
+  /**
    * Extract base path from existing script tags
    * This method attempts to infer the base path by looking for script tags with src attributes
-   * that might indicate the deployment path. Falls back to '/' if no clear pattern is found.
+   * that might indicate the deployment path. Falls back to empty string if no clear pattern is found.
    */
   private getBasePathFromScripts(): string {
     const scripts = document.querySelectorAll('script[src]');
@@ -165,22 +189,24 @@ export class WasmDataProcessor {
           const url = new URL(src, window.location.href);
           const pathname = url.pathname;
           
-          // Look for common asset directory patterns (e.g., '/assets/', '/js/', '/dist/')
-          const assetPatterns = ['/assets/', '/js/', '/dist/'];
-          for (const pattern of assetPatterns) {
+          // Look for common asset directory patterns
+          for (const pattern of WasmDataProcessor.ASSET_PATTERNS) {
             const index = pathname.indexOf(pattern);
-            if (index > 0) {
+            if (index >= 0) {
               // Extract everything before the asset directory
-              return pathname.substring(0, index + 1);
+              return index === 0 ? '/' : pathname.substring(0, index + 1);
             }
           }
-        } catch {
-          // Ignore URL parsing errors and continue
+        } catch (error: unknown) {
+          // URL parsing can fail for malformed URLs - continue to next script
+          if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+            console.debug('Failed to parse script URL:', src, error);
+          }
           continue;
         }
       }
     }
-    return '/';
+    return '';
   }
   
   /**
