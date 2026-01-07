@@ -36,6 +36,24 @@
       box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
     }
 
+    #frameBufferContainer {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    #frameBufferCanvas {
+      background-color: #000000;
+      border: 2px solid #0088ff;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+      width: 100%;
+    }
+
     #comparisonPanel {
       margin-top: 20px;
       display: flex;
@@ -122,8 +140,18 @@
     id="comparisonPanelDescription"
     style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;"
   >
-    比較パネルには、前回の波形、今回の波形とその類似度、そしてフレームバッファ全体の波形が小さなキャンバスとして表示されます。
+    比較パネルには、前回の波形、今回の波形とその類似度が表示されます。フレームバッファ全体の波形は上部に大きなキャンバスとして表示されます。
   </p>
+  <div id="frameBufferContainer">
+    <span class="canvasLabel">フレームバッファ全体</span>
+    <canvas
+      id="frameBufferCanvas"
+      width="800"
+      height="150"
+      aria-label="フレームバッファ全体に蓄積された波形のプレビュー"
+      aria-describedby="comparisonPanelDescription"
+    ></canvas>
+  </div>
   <div id="comparisonPanel">
     <div class="canvasContainer">
       <span class="canvasLabel">前回の波形</span>
@@ -144,17 +172,6 @@
         width="250"
         height="150"
         aria-label="今回の入力波形と前回の波形との類似度を示すプレビュー"
-        aria-describedby="comparisonPanelDescription"
-      ></canvas>
-    </div>
-    <div class="canvasContainer">
-      <span class="canvasLabel">フレームバッファ全体</span>
-      <canvas
-        id="frameBufferCanvas"
-        class="comparisonCanvas"
-        width="250"
-        height="150"
-        aria-label="フレームバッファ全体に蓄積された波形のプレビュー"
         aria-describedby="comparisonPanelDescription"
       ></canvas>
     </div>
