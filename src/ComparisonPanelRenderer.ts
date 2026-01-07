@@ -57,6 +57,7 @@ export class ComparisonPanelRenderer {
 
   /**
    * Draw a waveform on a canvas
+   * Waveforms are normalized to 80% of vertical height for better visibility
    */
   private drawWaveform(
     ctx: CanvasRenderingContext2D,
@@ -76,7 +77,8 @@ export class ComparisonPanelRenderer {
 
     const sliceWidth = width / dataLength;
     const centerY = height / 2;
-    const amplitude = height / 2;
+    // Normalize to 80% of vertical height (0.8 * height / 2 = 0.4 * height)
+    const amplitude = height * 0.4;
 
     for (let i = 0; i < dataLength; i++) {
       const dataIndex = startIndex + i;
