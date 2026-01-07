@@ -1,4 +1,4 @@
-Last updated: 2026-01-06
+Last updated: 2026-01-08
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -92,12 +92,72 @@ const oscilloscope = new Oscilloscope(canvas);
 await oscilloscope.start();
 ```
 
+## 機能
+
+### 周波数推定
+
+cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートしています：
+
+1. **Zero-Crossing（ゼロクロス法）**: シンプルで高速。単純な波形に適しています。
+2. **Autocorrelation（自己相関法）**: デフォルト。複雑な波形に対してバランスの良い精度。
+3. **FFT（高速フーリエ変換）**: 周波数スペクトラム解析。高周波に強い。
+4. **STFT（短時間フーリエ変換）**: 可変窓長により、低周波の検出精度が向上。
+5. **CQT（定Q変換）**: 低周波域で高い周波数分解能を持つ。音楽分析に適しています。
+
+### バッファサイズマルチプライヤー
+
+低周波の検出精度を向上させるため、過去のフレームバッファを利用した拡張バッファをサポート：
+
+- **1x (Standard)**: 標準バッファサイズ（約1/60秒）
+- **4x (Better Low Freq)**: 4倍の拡張バッファで低周波の検出精度向上
+- **16x (Best Low Freq)**: 16倍の拡張バッファで最高の低周波検出精度
+
+**使用例**: 20-50Hzの低周波を検出する場合、STFT または CQT を選択し、Buffer Size を 16x に設定すると最適です。
+
+**重要な注意事項:**
+- バッファサイズを変更すると、履歴が蓄積されるまで（最大16フレーム）、新しいバッファサイズが有効になりません
+- 大きなバッファサイズ（16x）では、初回の周波数検出に約0.3秒かかります
+
+### 検出可能な周波数範囲
+
+バッファサイズによって、検出可能な最低周波数が異なります：
+
+- **1x (4096サンプル @ 48kHz)**: 約80Hz以上（標準使用）
+- **4x (16384サンプル)**: 約30Hz以上（低周波向上）
+- **16x (65536サンプル)**: 約20Hz以上（最良の低周波検出）
+
 ## メモ
 
 - 周波数推定
   - FFTが正確なときと、FFT以外が正確なとき、それぞれがあります。
-  - デフォルトをFFTにするかは検討中です。
-  - より改善された周波数推定の検討については後回しです。他の多数の優先タスクを優先します。
+  - STFTとCQTは特に低周波（20-100Hz）の検出に優れています。
+  - バッファサイズマルチプライヤーを大きくすると、低周波の精度が向上しますが、レスポンスが若干遅くなります。
+  - **パフォーマンス**: 16xバッファサイズでは、STFT/CQTの計算に時間がかかる場合があります（教育目的の実装のため）。
+
+## WASM実装について
+
+データ処理部分（波形探索、周波数推定、ゼロクロス検出など）は、Rust/WASMでも実装されています。
+
+- **TypeScript実装**: デフォルトで使用されます。互換性が高く、デバッグが容易です。
+- **Rust/WASM実装**: より高速な処理が期待できます。「Use WASM」チェックボックスで切り替え可能です。
+
+両実装は完全に同じ`WaveformRenderData`構造を返すため、レンダリングロジックは共通です。
+
+### WASM実装のビルド
+
+WASM実装は `wasm-processor` ディレクトリにあります。
+
+```bash
+# WASM実装のビルド（wasm-packが必要）
+npm run build:wasm
+
+# アプリ全体のビルド（WASMも含む）
+npm run build
+```
+
+**必要なツール**:
+- Rust toolchain (rustc, cargo)
+- wasm-pack (`cargo install wasm-pack`)
 
 ## 機能
 
@@ -108,6 +168,8 @@ await oscilloscope.start();
 - ⚡ **リアルタイムレンダリング** - 波形の可視化を継続的に更新
 - 🎨 **クラシックなデザイン** - 黒背景にグリーンの波形とグリッドオーバーレイ
 - 🛡️ **エラーハンドリング** - マイクのアクセス許可の問題を適切に処理
+- 🔍 **波形類似探索** - 前フレームとの類似度を計算し、安定した波形表示を実現
+- 🦀 **Rust/WASM対応** - データ処理部分をRust/WASMでも実装、チェックボックスで切り替え可能
 
 ## はじめに
 
@@ -239,12 +301,17 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
+📖 REFACTORING_SUMMARY.md
 📖 TESTING.md
 📄 _config.yml
 🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
 📁 issue-notes/
+  📖 101.md
+  📖 102.md
+  📖 105.md
+  📖 107.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -272,20 +339,33 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 96.md
 📊 package-lock.json
 📊 package.json
+📁 public/
+  📁 wasm/
+    📊 package.json
+    📘 wasm_processor.d.ts
+    📜 wasm_processor.js
+    📄 wasm_processor_bg.wasm
+    📘 wasm_processor_bg.wasm.d.ts
 📁 src/
   📘 AudioManager.ts
+  📘 ComparisonPanelRenderer.ts
   📘 FrequencyEstimator.ts
   📘 GainController.ts
   📘 Oscilloscope.ts
+  📘 WasmDataProcessor.ts
+  📘 WaveformDataProcessor.ts
+  📘 WaveformRenderData.ts
   📘 WaveformRenderer.ts
   📘 WaveformSearcher.ts
   📘 ZeroCrossDetector.ts
   📁 __tests__/
     📘 algorithms.test.ts
+    📘 comparison-panel-renderer.test.ts
     📘 dom-integration.test.ts
     📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 utils.test.ts
+    📘 waveform-data-processor.test.ts
     📘 waveform-searcher.test.ts
   📘 index.ts
   📘 main.ts
@@ -293,21 +373,45 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📊 tsconfig.json
 📊 tsconfig.lib.json
 📘 vite.config.ts
+📁 wasm-processor/
+  📄 Cargo.toml
+  📁 src/
+    📄 frequency_estimator.rs
+    📄 gain_controller.rs
+    📄 lib.rs
+    📄 waveform_searcher.rs
+    📄 zero_cross_detector.rs
 
 ## ファイル詳細分析
 **example-library-usage.html** (292行, 8351バイト)
   - 関数: なし
   - インポート: なし
 
-**index.html** (195行, 6306バイト)
+**index.html** (301行, 9488バイト)
   - 関数: なし
   - インポート: なし
 
-**src/AudioManager.ts** (191行, 5353バイト)
-  - 関数: if, catch, start, startFromFile, stop
+**public/wasm/wasm_processor.d.ts** (98行, 4544バイト)
+  - 関数: initSync, __wbg_init
+  - インポート: なし
+
+**public/wasm/wasm_processor.js** (453行, 14160バイト)
+  - 関数: getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_load, __wbg_get_imports, __wbg_finalize_init, initSync, __wbg_init, if, for, function, __destroy_into_raw, free, processFrame, setAutoGain, setNoiseGate, setUsePeakMode, setNoiseGateThreshold, setFrequencyEstimationMethod, constructor, reset, __wrap, similarity, sampleRate, maxFrequency, waveform_data, frequencyData, displayEndIndex, previousWaveform, displayStartIndex, estimatedFrequency, firstAlignmentPoint, secondAlignmentPoint, usedSimilaritySearch, isSignalAboveNoiseGate, gain, fftSize, catch
+  - インポート: なし
+
+**public/wasm/wasm_processor_bg.wasm.d.ts** (34行, 2337バイト)
+  - 関数: なし
+  - インポート: なし
+
+**src/AudioManager.ts** (263行, 7787バイト)
+  - 関数: if, catch, for, start, startFromFile, stop
   - インポート: ./utils
 
-**src/FrequencyEstimator.ts** (233行, 7853バイト)
+**src/ComparisonPanelRenderer.ts** (244行, 6949バイト)
+  - 関数: constructor, if, for
+  - インポート: なし
+
+**src/FrequencyEstimator.ts** (472行, 17021バイト)
   - 関数: for, if, switch
   - インポート: なし
 
@@ -315,15 +419,27 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (290行, 9938バイト)
-  - 関数: constructor, catch, if, start, startFromFile, stop
+**src/Oscilloscope.ts** (326行, 10151バイト)
+  - 関数: constructor, catch, if, start, startFromFile, stop, setUseWasm
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
+
+**src/WasmDataProcessor.ts** (258行, 8869バイト)
+  - 関数: cleanup, handleLoad, constructor, if, catch, initialize, loadWasmModule
+  - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
+
+**src/WaveformDataProcessor.ts** (186行, 7062バイト)
+  - 関数: constructor, if
+  - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
+
+**src/WaveformRenderData.ts** (59行, 1859バイト)
+  - 関数: なし
+  - インポート: なし
 
 **src/WaveformRenderer.ts** (217行, 6531バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
-**src/WaveformSearcher.ts** (153行, 4512バイト)
+**src/WaveformSearcher.ts** (177行, 5275バイト)
   - 関数: if, for
   - インポート: なし
 
@@ -331,19 +447,23 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: なし
 
-**src/__tests__/algorithms.test.ts** (585行, 20273バイト)
+**src/__tests__/algorithms.test.ts** (708行, 25399バイト)
   - 関数: generateSineWave, generateNoise, generateSquareWave, countZeroCrossings, createMediaStreamSource, createAnalyser, close, getTracks, for, if
   - インポート: vitest, ../Oscilloscope, ../ZeroCrossDetector
+
+**src/__tests__/comparison-panel-renderer.test.ts** (225行, 7685バイト)
+  - 関数: なし
+  - インポート: vitest, ../ComparisonPanelRenderer
 
 **src/__tests__/dom-integration.test.ts** (289行, 9226バイト)
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/library-exports.test.ts** (96行, 2901バイト)
+**src/__tests__/library-exports.test.ts** (141行, 4724バイト)
   - 関数: なし
   - インポート: vitest
 
-**src/__tests__/oscilloscope.test.ts** (518行, 17473バイト)
+**src/__tests__/oscilloscope.test.ts** (550行, 20757バイト)
   - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if
   - インポート: vitest, ../Oscilloscope, ../utils
 
@@ -351,15 +471,19 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
-**src/__tests__/waveform-searcher.test.ts** (208行, 7391バイト)
+**src/__tests__/waveform-data-processor.test.ts** (192行, 7850バイト)
+  - 関数: if
+  - インポート: vitest, ../WaveformDataProcessor, ../AudioManager
+
+**src/__tests__/waveform-searcher.test.ts** (296行, 11300バイト)
   - 関数: for, if
   - インポート: vitest, ../WaveformSearcher
 
-**src/index.ts** (19行, 661バイト)
+**src/index.ts** (24行, 917バイト)
   - 関数: なし
   - インポート: なし
 
-**src/main.ts** (236行, 8796バイト)
+**src/main.ts** (280行, 10873バイト)
   - 関数: sliderValueToThreshold, formatThresholdDisplay, startFrequencyDisplay, stopFrequencyDisplay, for, if, catch
   - インポート: ./Oscilloscope, ./utils
 
@@ -372,6 +496,31 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - インポート: vite, path, vite-plugin-dts
 
 ## 関数呼び出し階層
+- getArrayF32FromWasm0 (public/wasm/wasm_processor.js)
+  - initSync (public/wasm/wasm_processor.d.ts)
+    - free ()
+    - processFrame ()
+    - setAutoGain ()
+    - setNoiseGate ()
+    - setUsePeakMode ()
+    - setNoiseGateThreshold ()
+    - setFrequencyEstimationMethod ()
+    - constructor (undefined)
+  - __wbg_init ()
+  - getArrayU8FromWasm0 ()
+  - getFloat32ArrayMemory0 ()
+  - getStringFromWasm0 ()
+  - getUint8ArrayMemory0 ()
+  - isLikeNone ()
+  - passArray8ToWasm0 ()
+  - passArrayF32ToWasm0 ()
+  - passStringToWasm0 ()
+  - decodeText ()
+  - __wbg_load ()
+  - __wbg_get_imports ()
+  - __wbg_finalize_init ()
+  - function ()
+  - __destroy_into_raw ()
 - if (src/AudioManager.ts)
   - start ()
     - startFromFile ()
@@ -381,8 +530,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - close ()
       - getTracks ()
       - trimSilence ()
+  - isSignalAboveNoiseGate ()
   - dbToAmplitude ()
-  - constructor (undefined)
+  - reset ()
   - generateSineWave (src/__tests__/algorithms.test.ts)
     - generateNoise ()
       - generateSquareWave ()
@@ -392,13 +542,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
+  - setUseWasm ()
   - sliderValueToThreshold (src/main.ts)
     - formatThresholdDisplay ()
       - startFrequencyDisplay ()
       - stopFrequencyDisplay ()
 - catch (src/AudioManager.ts)
-- for (src/FrequencyEstimator.ts)
+- for (src/AudioManager.ts)
 - switch (src/FrequencyEstimator.ts)
+- cleanup (src/WasmDataProcessor.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 
 
@@ -407,9 +559,14 @@ IMPLEMENTATION_SUMMARY.md
 LIBRARY_USAGE.md
 README.ja.md
 README.md
+REFACTORING_SUMMARY.md
 TESTING.md
 example-library-usage.html
 index.html
+issue-notes/101.md
+issue-notes/102.md
+issue-notes/105.md
+issue-notes/107.md
 issue-notes/57.md
 issue-notes/59.md
 issue-notes/62.md
@@ -428,11 +585,6 @@ issue-notes/80.md
 issue-notes/81.md
 issue-notes/83.md
 issue-notes/85.md
-issue-notes/86.md
-issue-notes/88.md
-issue-notes/90.md
-issue-notes/91.md
-issue-notes/92.md
 package-lock.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -445,4 +597,4 @@ package-lock.json
 
 
 ---
-Generated at: 2026-01-06 07:09:00 JST
+Generated at: 2026-01-08 07:08:38 JST

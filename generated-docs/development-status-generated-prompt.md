@@ -1,4 +1,4 @@
-Last updated: 2026-01-06
+Last updated: 2026-01-08
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -205,11 +205,16 @@ Last updated: 2026-01-06
 - LICENSE
 - README.ja.md
 - README.md
+- REFACTORING_SUMMARY.md
 - TESTING.md
 - _config.yml
 - example-library-usage.html
 - generated-docs/project-overview-generated-prompt.md
 - index.html
+- issue-notes/101.md
+- issue-notes/102.md
+- issue-notes/105.md
+- issue-notes/107.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -237,18 +242,29 @@ Last updated: 2026-01-06
 - issue-notes/96.md
 - package-lock.json
 - package.json
+- public/wasm/package.json
+- public/wasm/wasm_processor.d.ts
+- public/wasm/wasm_processor.js
+- public/wasm/wasm_processor_bg.wasm
+- public/wasm/wasm_processor_bg.wasm.d.ts
 - src/AudioManager.ts
+- src/ComparisonPanelRenderer.ts
 - src/FrequencyEstimator.ts
 - src/GainController.ts
 - src/Oscilloscope.ts
+- src/WasmDataProcessor.ts
+- src/WaveformDataProcessor.ts
+- src/WaveformRenderData.ts
 - src/WaveformRenderer.ts
 - src/WaveformSearcher.ts
 - src/ZeroCrossDetector.ts
 - src/__tests__/algorithms.test.ts
+- src/__tests__/comparison-panel-renderer.test.ts
 - src/__tests__/dom-integration.test.ts
 - src/__tests__/library-exports.test.ts
 - src/__tests__/oscilloscope.test.ts
 - src/__tests__/utils.test.ts
+- src/__tests__/waveform-data-processor.test.ts
 - src/__tests__/waveform-searcher.test.ts
 - src/index.ts
 - src/main.ts
@@ -256,107 +272,56 @@ Last updated: 2026-01-06
 - tsconfig.json
 - tsconfig.lib.json
 - vite.config.ts
+- wasm-processor/Cargo.toml
+- wasm-processor/src/frequency_estimator.rs
+- wasm-processor/src/gain_controller.rs
+- wasm-processor/src/lib.rs
+- wasm-processor/src/waveform_searcher.rs
+- wasm-processor/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
-## [Issue #97](../issue-notes/97.md): Add comparison panels for waveform analysis (previous waveform, similarity score, buffer position)
-Adds three comparison panels below the main oscilloscope display showing: (1) previous frame's waveform, (2) current waveform with similarity score, and (3) full frame buffer with position markers.
-
-### Changes
-
-- **`ComparisonPanelRenderer`** (new): Renders three analysis panels
-  - Previous wavefo...
-ラベル: 
---- issue-notes/97.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #96](../issue-notes/96.md): 今の波形エリアの下に、「前回の波形」「今回の波形と、前回との類似度」「現在のframe buffer全体と、その中で今回の波形startとendがどこに位置するか赤い縦線」を横に並べて表示する
-[issue-notes/96.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/96.md)
+## [Issue #107](../issue-notes/107.md): frame buffer、前回波形と今回波形の比較、3つとも振幅表示が小さすぎるので縦いっぱいに振幅を拡大表示する（もし元の振幅peakが0.01なら、100倍するということ）
+[issue-notes/107.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/107.md)
 
 ...
 ラベル: 
---- issue-notes/96.md の内容 ---
+--- issue-notes/107.md の内容 ---
 
 ```markdown
-# issue 今の波形エリアの下に、「前回の波形」「今回の波形と、前回との類似度」「現在のframe buffer全体と、その中で今回の波形startとendがどこに位置するか赤い縦線」を横に並べて表示する #96
-[issues #96](https://github.com/cat2151/cat-oscilloscope/issues/96)
+# issue frame buffer、前回波形と今回波形の比較、3つとも振幅表示が小さすぎるので縦いっぱいに振幅を拡大表示する（もし元の振幅peakが0.01なら、100倍するということ） #107
+[issues #107](https://github.com/cat2151/cat-oscilloscope/issues/107)
 
 
 
 ```
 
-## [Issue #92](../issue-notes/92.md): 類似波形探索など「描画の元情報を作る処理」を、まるごとRust WASM版も実装して、チェックボックスで切り替えできるようにする
-[issue-notes/92.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/92.md)
+## [Issue #106](../issue-notes/106.md): Fix WASM module loading to respect Vite base path configuration
+## WASM使用がエラーになってしまう問題の修正
 
-...
+### 問題の分析
+- WASMモジュールのロード時に、パスが正しく解決されていない
+- `WasmDataProcessor.ts`の106行目で、インラインスクリプトとして`/wasm/wasm_processor.js`をハードコードしているが、これはViteの`base`設定（`/cat-oscilloscope/`）を考慮していない
+- GitHub Pagesデプロイ時には`/cat-oscilloscope/wasm/wasm_processor.js`として参照する必要がある
+
+### 修正内容
+- [x] リポジトリの構造...
 ラベル: 
---- issue-notes/92.md の内容 ---
+--- issue-notes/106.md の内容 ---
 
 ```markdown
-# issue 類似波形探索など「描画の元情報を作る処理」を、まるごとRust WASM版も実装して、チェックボックスで切り替えできるようにする #92
-[issues #92](https://github.com/cat2151/cat-oscilloscope/issues/92)
-
-
 
 ```
 
-## [Issue #91](../issue-notes/91.md): 「描画の元情報を作る処理」の所要時間、「描画処理」の所要時間、をそれぞれms表示する
-[issue-notes/91.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/91.md)
+## [Issue #105](../issue-notes/105.md): WASM使用がエラーになってしまう
+[issue-notes/105.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/105.md)
 
 ...
 ラベル: 
---- issue-notes/91.md の内容 ---
+--- issue-notes/105.md の内容 ---
 
 ```markdown
-# issue 「描画の元情報を作る処理」の所要時間、「描画処理」の所要時間、をそれぞれms表示する #91
-[issues #91](https://github.com/cat2151/cat-oscilloscope/issues/91)
-
-
-
-```
-
-## [Issue #90](../issue-notes/90.md): リファクタリング。類似波形探索処理など「描画の元情報を生成する処理」と、「描画処理」を大きく2分割する。今後、前者のRust WASM版を作るための準備用。
-[issue-notes/90.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/90.md)
-
-...
-ラベル: 
---- issue-notes/90.md の内容 ---
-
-```markdown
-# issue リファクタリング。類似波形探索処理など「描画の元情報を生成する処理」と、「描画処理」を大きく2分割する。今後、前者のRust WASM版を作るための準備用。 #90
-[issues #90](https://github.com/cat2151/cat-oscilloscope/issues/90)
-
-
-
-```
-
-## [Issue #81](../issue-notes/81.md): 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする
-[issue-notes/81.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/81.md)
-
-...
-ラベル: 
---- issue-notes/81.md の内容 ---
-
-```markdown
-# issue 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする #81
-[issues #81](https://github.com/cat2151/cat-oscilloscope/issues/81)
-
-
-
-```
-
-## [Issue #79](../issue-notes/79.md): debug表示の候補それぞれ、類似度が80%overなのに上下反転し、そのときフレームバッファ側の候補は上下反転せず正常なことがある、つまり表示不整合がある
-[issue-notes/79.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/79.md)
-
-...
-ラベル: 
---- issue-notes/79.md の内容 ---
-
-```markdown
-# issue debug表示の候補それぞれの類似度が、80%overなのに上下反転していることがあることがあり、そのときフレームバッファ側は上下反転していないことがある、つまり表示不整合がある #79
-[issues #79](https://github.com/cat2151/cat-oscilloscope/issues/79)
+# issue WASM使用がエラーになってしまう #105
+[issues #105](https://github.com/cat2151/cat-oscilloscope/issues/105)
 
 
 
@@ -407,178 +372,248 @@ Adds three comparison panels below the main oscilloscope display showing: (1) pr
 
 ```
 
+## [Issue #31](../issue-notes/31.md): 灰色のグリッド表示が計測値と関連しておらず、userが混乱する
+
+ラベル: good first issue
+--- issue-notes/31.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #28](../issue-notes/28.md): 表示文言から「Cat Oscilloscope」と「This oscilloscope visualizes audio from your microphone with zero-cross detection for stable waveform display.」をトルツメする
+
+ラベル: good first issue
+--- issue-notes/28.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #26](../issue-notes/26.md): 画面の一番下に、周波数50Hz～1000Hzの範囲のピアノ鍵盤風の画像を表示し、基音の周波数の鍵盤を光らせる
+
+ラベル: 
+--- issue-notes/26.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #25](../issue-notes/25.md): 画面下部の周波数の右に、440Hzなら A4+0cent のように表示する
+
+ラベル: good first issue
+--- issue-notes/25.md の内容 ---
+
+```markdown
+
+```
+
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/2.md
+### .github/actions-tmp/issue-notes/25.md
 ```md
 {% raw %}
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
+# issue project summaryを他projectからcallしたところ、issue-notes参照ディレクトリ誤りが発覚した #25
+[issues #25](https://github.com/cat2151/github-actions/issues/25)
 
+# 事象
+- `Issueノートが存在しません: /home/runner/work/tonejs-mml-to-json/tonejs-mml-to-json/.github/actions-tmp/issue-notes/6.md`
 
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
-まずplanしてください
-```
+# どうする？
+- 当該処理のディレクトリ部分を確認する
+- 日次バッチでGeminiに確認させてみる
+- 結果
+    - Geminiに確認させてpromptを生成させ、agentに投げた
+    - 結果、projectRootの扱いの誤り、と判明
+        - 共通workflow側のdirを引数でわたしてしまっていた
+        - target repository側のdirを引数でわたすべき
+- 修正したつもり
+- 次の日次バッチで動作確認させるつもり
 
 # 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
+- test green
+
+# closeとする
+
+{% endraw %}
 ```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
 
---- 共通ワークフロー
+### .github/actions-tmp/issue-notes/26.md
+```md
+{% raw %}
+# issue userによるcommitがなくなって24時間超経過しているのに、毎日ムダにproject summaryとcallgraphの自動生成が行われてしまっている #26
+[issues #26](https://github.com/cat2151/github-actions/issues/26)
 
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
+# どうする？
+- logを確認する。24時間チェックがバグっている想定。
+- もしlogから判別できない場合は、logを改善する。
 
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+# log確認結果
+- botによるcommitなのに、user commitとして誤判別されている
+```
+Checking for user commits in the last 24 hours...
+User commits found: true
+Recent user commits:
+7654bf7 Update callgraph.html [auto]
+abd2f2d Update project summaries (overview & development status)
+```
+
+# ざっくり調査結果
+- #27 が判明した
+
+# どうする？
+- [x] #27 を修正する。これで自動的に #26 も修正される想定。
+    - 当該処理を修正する。
+    - もしデータ不足なら、より詳細なlog生成を実装する。
+- 別件として、このチェックはむしろworkflow ymlの先頭で行うのが適切と考える。なぜなら、以降のムダな処理をカットできるのでエコ。
+    - [x] #28 を起票したので、そちらで実施する。
+
+# close条件は？
+- 前提
+    - [x] 先行タスクである #27 と #28 が完了済みであること
+- 誤爆がなくなること。
+    - つまり、userによるcommitがなくなって24時間超経過後の日次バッチにて、
+        - ムダなdevelopment status生成、等がないこと
+        - jobのlogに「commitがないので処理しません」的なmessageが出ること
+- どうする？
+    - 日次バッチを本番を流して本番testする
+
+# 結果
+- github-actions logより：
+    - 直近24hのcommitはbotによる1件のみであった
+    - よって後続jobはskipとなった
+    - ことを確認した
+- close条件を満たした、と判断する
+```
+Run node .github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
+BOT: Commit 5897f0c6df6bc2489f9ce3579b4f351754ee0551 | Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> | Message: Update project summaries (overview & development status) [auto]
+has_recent_human_commit=false
+```
+
+# closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/28.md
+```md
+{% raw %}
+# issue 直近24時間でuser commitがあるかどうか、のチェックを、workflowのjobs先頭に新規jobを追加して実施し、本体jobの先頭にneedsを書く #28
+[issues #28](https://github.com/cat2151/github-actions/issues/28)
+
+# これまでの課題は？
+- これまでは各workflow内の終盤のscriptにバラバラに実装されていたので、
+    - ムダにcheckout等、各種処理が走っていた
+
+# 対策案は？
+- 直近24時間でuser commitがあるかどうか、
+    - のチェックを、
+        - workflowのjobs先頭に新規jobを追加して実施し、
+            - 本体jobの先頭にneedsを書く
+- この対策で、各workflow先頭にこれを書くだけでよくなり、エコになる想定
+
+# ChatGPTに生成させた
+## 呼び出し元のサンプル
+- 実際には、共通workflowのjobsの先頭付近を、このサンプルを参考に書き換えるイメージ
+```
+jobs:
+  check_recent_human_commit:
+    uses: ./.github/workflows/check-recent-human-commit.yml
+
+  build:
+    needs: check_recent_human_commit
+    if: needs.check_recent_human_commit.outputs.has_recent_human_commit == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run build
+        run: echo "Building because there is a recent human commit!"
+```
+## 共通ワークフロー側の案
+- シンプルにmailのみを条件とし、mailも1種類のみに明示する
+```
+name: "Check recent human commit"
 
 on:
   workflow_call:
 
 jobs:
-  check-commits:
+  check-recent-human-commit:
     runs-on: ubuntu-latest
     outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
+      has_recent_human_commit: ${{ steps.check.outputs.has_recent_human_commit }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 50 # 過去のコミットを取得
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Check for user commits in last 24 hours
+      - name: Check recent human commit
         id: check
         run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
+          set -e
 
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
+          HAS_HUMAN=false
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+          while IFS=$'\x01' read -r HASH NAME EMAIL SUBJECT; do
+            SUBJECT="${SUBJECT%$'\x02'}"
 
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            if [[ ! "$EMAIL" =~ ^41898282\+github-actions\[bot\]@users\.noreply\.github\.com$ ]]; then
+              echo "HUMAN: Commit $HASH | Author: $NAME <$EMAIL> | Message: $SUBJECT"
+              HAS_HUMAN=true
+              break
+            else
+              echo "BOT: Commit $HASH | Author: $NAME <$EMAIL> | Message: $SUBJECT"
+            fi
+          done <<< "$(git log --since="24 hours ago" --pretty=format:'%H%x01%an%x01%ae%x01%s%x02')"
 
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
-        run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
-
-      - name: Install CodeQL CLI
-        run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
-
-      - name: Install CodeQL query packs
-        run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+          if [ "$HAS_HUMAN" = true ]; then
+            echo "Found recent human commit."
+            echo "has_recent_human_commit=true" >> $GITHUB_OUTPUT
+          else
+            echo "No human commits in last 24h."
+            echo "has_recent_human_commit=false" >> $GITHUB_OUTPUT
 ```
+## 備忘
+- 上記はChatGPTに生成させ、それをレビューさせて改善させる、のサイクルで生成した。
+    - 一発で生成はできなかった
+    - ChatGPTが自分で生成したものに対して自己レビューでミスや改善点が多発していた
+        - ブレも発生し、二転三転気味でもあり、
+            - ハルシネーションに近い低品質状態だと感じた
+                - これは経験則からの感覚的なもの
+    - 生成の品質が低い、ということ
+        - LLMはまだ学習不足、github-actions workflow yml の学習不足である、と解釈する
+        - shell scriptの生成品質も低いかも。
+            - もともとshell scriptで複雑なlogicを書くとtest costが高い、なぜなら読みづらいから。
+                - なのでロジックをcjs側に切り出したほうが全体最適の観点からよりよい、と考える
 
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
+# どうする？
+- shell scriptはやめて、cjsでlogicを担当させる。
+  - 現状のshell scriptを改めて見直すと、これはcjs側にしたほうがよい、と感覚的に、経験則で、わかる。
+- logicをcjs側に切り出す。実際、既存でgitの24hチェックをcjs側でやっている実績がある。そこのロジックを参考にする。
+- 今のmdの仕様をもとに、ymlとcjsを生成させる。
+- 生成させた。ChatGPTに投げた
+- 人力でいくつか変更したり、ChatGPTに投げて修正させるサイクルを回したりした
+- testする
 
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
-- test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+# バグ
+- 結果、バグがあったのでagentにlogを投げ、修正させ、人力修正し、agentにセルフレビューさせ、のサイクルを回した
+- testする
+- 結果、callgraphで、エラーなくhumanを検知したが、callgraphが呼ばれない、というバグが発生
+- ひとまずagentの提案したcodeを切り分けのため試す、バグ状況は変わらない想定
+- 結果、バグ状況は変わらず
+- 対策、trueのlogをagentに投げて、callgraphが呼ばれないことを伝え、可視化を実装させた
+- testする
+- 結果、バグ状況は変わらず
+- 対策、logをagentに投げて、callgraphが呼ばれないことを伝え、さらに可視化を実装させた
+- testする
+- 結果、バグ状況は変わらず
+- 対策、logをagentに投げて、callgraphが呼ばれないことを伝え、さらに可視化を実装させた
+- testする
+- 結果、バグ状況は変わらず
+- 対策、logをagentに投げて、callgraphが呼ばれないことを伝えた
+- ここで、根本的にymlのworkflow記述が間違っていることが判明
+  - agentが最初にcode生成したときから根本的なバグが仕込まれていたということ。
+    - agentの学習不足。github-actionsのworkflowの学習不足。
+- そこをagentに修正させ、test greenとなった
 
 # closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
 
 {% endraw %}
 ```
@@ -741,20 +776,103 @@ jobs:
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/9.md
+### .github/actions-tmp/issue-notes/8.md
 ```md
 {% raw %}
-# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
-[issues #9](https://github.com/cat2151/github-actions/issues/9)
+# issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
+[issues #8](https://github.com/cat2151/github-actions/issues/8)
 
-# agentに修正させたり、人力で修正したりした
-- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
-- 詳しくはcommit logを参照のこと
-- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+# これまでの課題
+- 以下が決め打ちになっていた
+```
+  const allowedFiles = [
+    'src/main.js',
+    'src/mml2json.js',
+    'src/play.js'
+  ];
+```
 
-# test green
+# 対策
+- 呼び出し元ymlで指定できるようにする
+
+# agent
+- agentにやらせることができれば楽なので、初手agentを試した
+- 失敗
+    - ハルシネーションしてscriptを大量破壊した
+- 分析
+    - 修正対象scriptはagentが生成したもの
+    - 低品質な生成結果でありソースが巨大
+    - ハルシネーションで破壊されやすいソース
+    - AIの生成したソースは、必ずしもAIフレンドリーではない
+
+# 人力リファクタリング
+- 低品質コードを、最低限agentが扱えて、ハルシネーションによる大量破壊を防止できる内容、にする
+- 手短にやる
+    - そもそもビジュアライズは、agentに雑に指示してやらせたもので、
+    - 今後別のビジュアライザを選ぶ可能性も高い
+    - 今ここで手間をかけすぎてコンコルド効果（サンクコストバイアス）を増やすのは、project群をトータルで俯瞰して見たとき、損
+- 対象
+    - allowedFiles のあるソース
+        - callgraph-utils.cjs
+            - たかだか300行未満のソースである
+            - この程度でハルシネーションされるのは予想外
+            - やむなし、リファクタリングでソース分割を進める
+
+# agentに修正させる
+## prompt
+```
+allowedFilesを引数で受け取るようにしたいです。
+ないならエラー。
+最終的に呼び出し元すべてに波及して修正したいです。
+
+呼び出し元をたどってエントリポイントも見つけて、
+エントリポイントにおいては、
+引数で受け取ったjsonファイル名 allowedFiles.js から
+jsonファイル allowedFiles.jsonの内容をreadして
+変数 allowedFilesに格納、
+後続処理に引き渡す、としたいです。
+
+まずplanしてください。
+planにおいては、修正対象のソースファイル名と関数名を、呼び出し元を遡ってすべて特定し、listしてください。
+```
+
+# 修正が順調にできた
+- コマンドライン引数から受け取る作りになっていなかったので、そこだけ指示して修正させた
+- yml側は人力で修正した
+
+# 他のリポジトリから呼び出した場合にバグらないよう修正する
+- 気付いた
+    - 共通ワークフローとして他のリポジトリから使った場合はバグるはず。
+        - ymlから、共通ワークフロー側リポジトリのcheckoutが漏れているので。
+- 他のyml同様に修正する
+- あわせて全体にymlをリファクタリングし、修正しやすくし、今後のyml読み書きの学びにしやすくする
+
+# local WSL + act : test green
 
 # closeとする
+- もし生成されたhtmlがNGの場合は、別issueとするつもり
+
+{% endraw %}
+```
+
+### issue-notes/105.md
+```md
+{% raw %}
+# issue WASM使用がエラーになってしまう #105
+[issues #105](https://github.com/cat2151/cat-oscilloscope/issues/105)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/107.md
+```md
+{% raw %}
+# issue frame buffer、前回波形と今回波形の比較、3つとも振幅表示が小さすぎるので縦いっぱいに振幅を拡大表示する（もし元の振幅peakが0.01なら、100倍するということ） #107
+[issues #107](https://github.com/cat2151/cat-oscilloscope/issues/107)
+
+
 
 {% endraw %}
 ```
@@ -792,103 +910,756 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/79.md
-```md
+### public/wasm/wasm_processor.js
+```js
 {% raw %}
-# issue debug表示の候補それぞれの類似度が、80%overなのに上下反転していることがあることがあり、そのときフレームバッファ側は上下反転していないことがある、つまり表示不整合がある #79
-[issues #79](https://github.com/cat2151/cat-oscilloscope/issues/79)
+let wasm;
+
+function getArrayF32FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getFloat32ArrayMemory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
+
+let cachedFloat32ArrayMemory0 = null;
+function getFloat32ArrayMemory0() {
+    if (cachedFloat32ArrayMemory0 === null || cachedFloat32ArrayMemory0.byteLength === 0) {
+        cachedFloat32ArrayMemory0 = new Float32Array(wasm.memory.buffer);
+    }
+    return cachedFloat32ArrayMemory0;
+}
+
+function getStringFromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return decodeText(ptr, len);
+}
+
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayF32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getFloat32ArrayMemory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passStringToWasm0(arg, malloc, realloc) {
+    if (realloc === undefined) {
+        const buf = cachedTextEncoder.encode(arg);
+        const ptr = malloc(buf.length, 1) >>> 0;
+        getUint8ArrayMemory0().subarray(ptr, ptr + buf.length).set(buf);
+        WASM_VECTOR_LEN = buf.length;
+        return ptr;
+    }
+
+    let len = arg.length;
+    let ptr = malloc(len, 1) >>> 0;
+
+    const mem = getUint8ArrayMemory0();
+
+    let offset = 0;
+
+    for (; offset < len; offset++) {
+        const code = arg.charCodeAt(offset);
+        if (code > 0x7F) break;
+        mem[ptr + offset] = code;
+    }
+    if (offset !== len) {
+        if (offset !== 0) {
+            arg = arg.slice(offset);
+        }
+        ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
+        const view = getUint8ArrayMemory0().subarray(ptr + offset, ptr + len);
+        const ret = cachedTextEncoder.encodeInto(arg, view);
+
+        offset += ret.written;
+        ptr = realloc(ptr, len, offset, 1) >>> 0;
+    }
+
+    WASM_VECTOR_LEN = offset;
+    return ptr;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+const cachedTextEncoder = new TextEncoder();
+
+if (!('encodeInto' in cachedTextEncoder)) {
+    cachedTextEncoder.encodeInto = function (arg, view) {
+        const buf = cachedTextEncoder.encode(arg);
+        view.set(buf);
+        return {
+            read: arg.length,
+            written: buf.length
+        };
+    }
+}
+
+let WASM_VECTOR_LEN = 0;
+
+const WasmDataProcessorFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_wasmdataprocessor_free(ptr >>> 0, 1));
+
+const WaveformRenderDataFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_waveformrenderdata_free(ptr >>> 0, 1));
+
+/**
+ * WasmDataProcessor - WASM implementation of WaveformDataProcessor
+ */
+export class WasmDataProcessor {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        WasmDataProcessorFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_wasmdataprocessor_free(ptr, 0);
+    }
+    /**
+     * Process a frame and return WaveformRenderData
+     * @param {Float32Array} waveform_data
+     * @param {Uint8Array | null | undefined} frequency_data
+     * @param {number} sample_rate
+     * @param {number} fft_size
+     * @param {boolean} fft_display_enabled
+     * @returns {WaveformRenderData | undefined}
+     */
+    processFrame(waveform_data, frequency_data, sample_rate, fft_size, fft_display_enabled) {
+        const ptr0 = passArrayF32ToWasm0(waveform_data, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(frequency_data) ? 0 : passArray8ToWasm0(frequency_data, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmdataprocessor_processFrame(this.__wbg_ptr, ptr0, len0, ptr1, len1, sample_rate, fft_size, fft_display_enabled);
+        return ret === 0 ? undefined : WaveformRenderData.__wrap(ret);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setAutoGain(enabled) {
+        wasm.wasmdataprocessor_setAutoGain(this.__wbg_ptr, enabled);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setNoiseGate(enabled) {
+        wasm.wasmdataprocessor_setNoiseGate(this.__wbg_ptr, enabled);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setUsePeakMode(enabled) {
+        wasm.wasmdataprocessor_setUsePeakMode(this.__wbg_ptr, enabled);
+    }
+    /**
+     * @param {number} threshold
+     */
+    setNoiseGateThreshold(threshold) {
+        wasm.wasmdataprocessor_setNoiseGateThreshold(this.__wbg_ptr, threshold);
+    }
+    /**
+     * @param {string} method
+     */
+    setFrequencyEstimationMethod(method) {
+        const ptr0 = passStringToWasm0(method, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.wasmdataprocessor_setFrequencyEstimationMethod(this.__wbg_ptr, ptr0, len0);
+    }
+    constructor() {
+        const ret = wasm.wasmdataprocessor_new();
+        this.__wbg_ptr = ret >>> 0;
+        WasmDataProcessorFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    reset() {
+        wasm.wasmdataprocessor_reset(this.__wbg_ptr);
+    }
+}
+if (Symbol.dispose) WasmDataProcessor.prototype[Symbol.dispose] = WasmDataProcessor.prototype.free;
+
+/**
+ * WaveformRenderData - Complete data structure for waveform rendering
+ * This mirrors the TypeScript interface WaveformRenderData
+ */
+export class WaveformRenderData {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(WaveformRenderData.prototype);
+        obj.__wbg_ptr = ptr;
+        WaveformRenderDataFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        WaveformRenderDataFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_waveformrenderdata_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get similarity() {
+        const ret = wasm.waveformrenderdata_similarity(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get sampleRate() {
+        const ret = wasm.waveformrenderdata_sampleRate(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get maxFrequency() {
+        const ret = wasm.waveformrenderdata_maxFrequency(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get waveform_data() {
+        const ret = wasm.waveformrenderdata_waveform_data(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array | undefined}
+     */
+    get frequencyData() {
+        const ret = wasm.waveformrenderdata_frequencyData(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get displayEndIndex() {
+        const ret = wasm.waveformrenderdata_displayEndIndex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    get previousWaveform() {
+        const ret = wasm.waveformrenderdata_previousWaveform(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        }
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get displayStartIndex() {
+        const ret = wasm.waveformrenderdata_displayStartIndex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get estimatedFrequency() {
+        const ret = wasm.waveformrenderdata_estimatedFrequency(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get firstAlignmentPoint() {
+        const ret = wasm.waveformrenderdata_firstAlignmentPoint(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get secondAlignmentPoint() {
+        const ret = wasm.waveformrenderdata_secondAlignmentPoint(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {boolean}
+     */
+    get usedSimilaritySearch() {
+        const ret = wasm.waveformrenderdata_usedSimilaritySearch(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @returns {boolean}
+     */
+    get isSignalAboveNoiseGate() {
+        const ret = wasm.waveformrenderdata_isSignalAboveNoiseGate(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get gain() {
+        const ret = wasm.waveformrenderdata_gain(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get fftSize() {
+        const ret = wasm.waveformrenderdata_fftSize(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+}
+if (Symbol.dispose) WaveformRenderData.prototype[Symbol.dispose] = WaveformRenderData.prototype.free;
+
+const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
+
+async function __wbg_load(module, imports) {
+    if (typeof Response === 'function' && module instanceof Response) {
+        if (typeof WebAssembly.instantiateStreaming === 'function') {
+            try {
+                return await WebAssembly.instantiateStreaming(module, imports);
+            } catch (e) {
+                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+
+                if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
+                    console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
+
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        const bytes = await module.arrayBuffer();
+        return await WebAssembly.instantiate(bytes, imports);
+    } else {
+        const instance = await WebAssembly.instantiate(module, imports);
+
+        if (instance instanceof WebAssembly.Instance) {
+            return { instance, module };
+        } else {
+            return instance;
+        }
+    }
+}
+
+function __wbg_get_imports() {
+    const imports = {};
+    imports.wbg = {};
+    imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbindgen_init_externref_table = function() {
+        const table = wasm.__wbindgen_externrefs;
+        const offset = table.grow(4);
+        table.set(0, undefined);
+        table.set(offset + 0, undefined);
+        table.set(offset + 1, null);
+        table.set(offset + 2, true);
+        table.set(offset + 3, false);
+    };
+
+    return imports;
+}
+
+function __wbg_finalize_init(instance, module) {
+    wasm = instance.exports;
+    __wbg_init.__wbindgen_wasm_module = module;
+    cachedFloat32ArrayMemory0 = null;
+    cachedUint8ArrayMemory0 = null;
 
 
+    wasm.__wbindgen_start();
+    return wasm;
+}
+
+function initSync(module) {
+    if (wasm !== undefined) return wasm;
+
+
+    if (typeof module !== 'undefined') {
+        if (Object.getPrototypeOf(module) === Object.prototype) {
+            ({module} = module)
+        } else {
+            console.warn('using deprecated parameters for `initSync()`; pass a single object instead')
+        }
+    }
+
+    const imports = __wbg_get_imports();
+    if (!(module instanceof WebAssembly.Module)) {
+        module = new WebAssembly.Module(module);
+    }
+    const instance = new WebAssembly.Instance(module, imports);
+    return __wbg_finalize_init(instance, module);
+}
+
+async function __wbg_init(module_or_path) {
+    if (wasm !== undefined) return wasm;
+
+
+    if (typeof module_or_path !== 'undefined') {
+        if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
+            ({module_or_path} = module_or_path)
+        } else {
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
+        }
+    }
+
+    if (typeof module_or_path === 'undefined') {
+        module_or_path = new URL('wasm_processor_bg.wasm', import.meta.url);
+    }
+    const imports = __wbg_get_imports();
+
+    if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
+        module_or_path = fetch(module_or_path);
+    }
+
+    const { instance, module } = await __wbg_load(await module_or_path, imports);
+
+    return __wbg_finalize_init(instance, module);
+}
+
+export { initSync };
+export default __wbg_init;
 
 {% endraw %}
 ```
 
-### issue-notes/81.md
-```md
+### src/WasmDataProcessor.ts
+```ts
 {% raw %}
-# issue 周波数推定を今の1/60秒のframe buffer長でFFTすると、低周波において失敗しやすい。まず過去frame buferを利用した1,4,16倍のサイズを選べるようにする。さらにFFT以外に可変窓長STFTやCQTも選べるようにする #81
-[issues #81](https://github.com/cat2151/cat-oscilloscope/issues/81)
+import { WaveformRenderData } from './WaveformRenderData';
+import { AudioManager } from './AudioManager';
+import { GainController } from './GainController';
+import { FrequencyEstimator } from './FrequencyEstimator';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
+import { WaveformSearcher } from './WaveformSearcher';
 
+// Type definition for WASM processor instance
+interface WasmProcessorInstance {
+  setAutoGain(enabled: boolean): void;
+  setNoiseGate(enabled: boolean): void;
+  setNoiseGateThreshold(threshold: number): void;
+  setFrequencyEstimationMethod(method: string): void;
+  setUsePeakMode(enabled: boolean): void;
+  reset(): void;
+  processFrame(
+    waveformData: Float32Array,
+    frequencyData: Uint8Array | null,
+    sampleRate: number,
+    fftSize: number,
+    fftDisplayEnabled: boolean
+  ): any;
+}
 
+/**
+ * WasmDataProcessor - Wrapper for the WASM implementation of WaveformDataProcessor
+ * 
+ * This class provides the same interface as WaveformDataProcessor but uses
+ * the Rust/WASM implementation for data processing. It maintains TypeScript
+ * instances only for configuration and state that needs to be accessed from JS.
+ */
+export class WasmDataProcessor {
+  private audioManager: AudioManager;
+  private gainController: GainController;
+  private frequencyEstimator: FrequencyEstimator;
+  private zeroCrossDetector: ZeroCrossDetector;
+  private waveformSearcher: WaveformSearcher;
+  
+  private wasmProcessor: WasmProcessorInstance | null = null;
+  private isInitialized = false;
 
-{% endraw %}
-```
+  constructor(
+    audioManager: AudioManager,
+    gainController: GainController,
+    frequencyEstimator: FrequencyEstimator,
+    zeroCrossDetector: ZeroCrossDetector,
+    waveformSearcher: WaveformSearcher
+  ) {
+    this.audioManager = audioManager;
+    this.gainController = gainController;
+    this.frequencyEstimator = frequencyEstimator;
+    this.zeroCrossDetector = zeroCrossDetector;
+    this.waveformSearcher = waveformSearcher;
+  }
+  
+  /**
+   * Initialize the WASM module
+   * Must be called before processFrame
+   */
+  async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+    
+    // Check if we're in a test or non-browser-like environment
+    if (typeof window === 'undefined' || window.location.protocol === 'file:') {
+      throw new Error('WASM module not available in test/non-browser environment');
+    }
+    
+    try {
+      // Load WASM module using script tag injection (works around Vite restrictions)
+      await this.loadWasmModule();
+      this.isInitialized = true;
+      
+      // Sync initial configuration to WASM
+      this.syncConfigToWasm();
+    } catch (error) {
+      console.error('Failed to initialize WASM module:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Load WASM module dynamically
+   */
+  private async loadWasmModule(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Check if already loaded
+      // @ts-ignore
+      if (window.wasmProcessor && window.wasmProcessor.WasmDataProcessor) {
+        // @ts-ignore
+        this.wasmProcessor = new window.wasmProcessor.WasmDataProcessor();
+        resolve();
+        return;
+      }
+      
+      // Set up timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('WASM module loading timed out after 10 seconds'));
+      }, 10000);
+      
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.textContent = `
+        import init, { WasmDataProcessor } from '/wasm/wasm_processor.js';
+        await init();
+        window.wasmProcessor = { WasmDataProcessor };
+        window.dispatchEvent(new Event('wasmLoaded'));
+      `;
+      
+      const cleanup = () => {
+        clearTimeout(timeout);
+        window.removeEventListener('wasmLoaded', handleLoad);
+      };
+      
+      const handleLoad = () => {
+        cleanup();
+        // @ts-ignore
+        if (window.wasmProcessor && window.wasmProcessor.WasmDataProcessor) {
+          // @ts-ignore
+          this.wasmProcessor = new window.wasmProcessor.WasmDataProcessor();
+          resolve();
+        } else {
+          reject(new Error('WASM module loaded but WasmDataProcessor not found'));
+        }
+      };
+      
+      window.addEventListener('wasmLoaded', handleLoad);
+      
+      script.onerror = () => {
+        cleanup();
+        reject(new Error('Failed to load WASM module script'));
+      };
+      
+      document.head.appendChild(script);
+    });
+  }
+  
+  /**
+   * Sync TypeScript configuration to WASM processor
+   */
+  private syncConfigToWasm(): void {
+    if (!this.wasmProcessor) return;
+    
+    this.wasmProcessor.setAutoGain(this.gainController.getAutoGainEnabled());
+    this.wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled());
+    this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
+    this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
+    this.wasmProcessor.setUsePeakMode(this.zeroCrossDetector.getUsePeakMode());
+  }
+  
+  /**
+   * Sync WASM results back to TypeScript objects
+   * 
+   * Note: This method accesses private members using type assertions.
+   * This is a temporary solution to maintain compatibility with existing code
+   * that uses getters like getEstimatedFrequency(), getCurrentGain(), etc.
+   * 
+   * TODO: Consider adding public setter methods to these classes or
+   * redesigning the synchronization interface for better type safety.
+   */
+  private syncResultsFromWasm(renderData: WaveformRenderData): void {
+    // Update frequency estimator's estimated frequency
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.frequencyEstimator as any).estimatedFrequency = renderData.estimatedFrequency;
+    
+    // Update gain controller's current gain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.gainController as any).currentGain = renderData.gain;
+    
+    // Update waveform searcher's state
+    if (renderData.previousWaveform) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.waveformSearcher as any).previousWaveform = renderData.previousWaveform;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.waveformSearcher as any).lastSimilarity = renderData.similarity;
+  }
 
-### issue-notes/90.md
-```md
-{% raw %}
-# issue リファクタリング。類似波形探索処理など「描画の元情報を生成する処理」と、「描画処理」を大きく2分割する。今後、前者のRust WASM版を作るための準備用。 #90
-[issues #90](https://github.com/cat2151/cat-oscilloscope/issues/90)
+  /**
+   * Process current frame and generate complete render data using WASM
+   */
+  processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
+    if (!this.isInitialized || !this.wasmProcessor) {
+      console.warn('WASM processor not initialized');
+      return null;
+    }
+    
+    // Check if audio is ready
+    if (!this.audioManager.isReady()) {
+      return null;
+    }
 
-
-
-{% endraw %}
-```
-
-### issue-notes/91.md
-```md
-{% raw %}
-# issue 「描画の元情報を作る処理」の所要時間、「描画処理」の所要時間、をそれぞれms表示する #91
-[issues #91](https://github.com/cat2151/cat-oscilloscope/issues/91)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/92.md
-```md
-{% raw %}
-# issue 類似波形探索など「描画の元情報を作る処理」を、まるごとRust WASM版も実装して、チェックボックスで切り替えできるようにする #92
-[issues #92](https://github.com/cat2151/cat-oscilloscope/issues/92)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/96.md
-```md
-{% raw %}
-# issue 今の波形エリアの下に、「前回の波形」「今回の波形と、前回との類似度」「現在のframe buffer全体と、その中で今回の波形startとendがどこに位置するか赤い縦線」を横に並べて表示する #96
-[issues #96](https://github.com/cat2151/cat-oscilloscope/issues/96)
-
-
+    // Get waveform data
+    const dataArray = this.audioManager.getTimeDomainData();
+    if (!dataArray) {
+      return null;
+    }
+    
+    const sampleRate = this.audioManager.getSampleRate();
+    const fftSize = this.audioManager.getFFTSize();
+    
+    // Get frequency data if needed
+    const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
+    const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
+    
+    // Sync configuration before processing
+    this.syncConfigToWasm();
+    
+    // Call WASM processor
+    const wasmResult = this.wasmProcessor.processFrame(
+      dataArray,
+      frequencyData,
+      sampleRate,
+      fftSize,
+      fftDisplayEnabled
+    );
+    
+    if (!wasmResult) {
+      return null;
+    }
+    
+    // Convert WASM result to TypeScript WaveformRenderData
+    const renderData: WaveformRenderData = {
+      waveformData: new Float32Array(wasmResult.waveform_data),
+      displayStartIndex: wasmResult.displayStartIndex,
+      displayEndIndex: wasmResult.displayEndIndex,
+      gain: wasmResult.gain,
+      estimatedFrequency: wasmResult.estimatedFrequency,
+      sampleRate: wasmResult.sampleRate,
+      fftSize: wasmResult.fftSize,
+      firstAlignmentPoint: wasmResult.firstAlignmentPoint,
+      secondAlignmentPoint: wasmResult.secondAlignmentPoint,
+      frequencyData: wasmResult.frequencyData ? new Uint8Array(wasmResult.frequencyData) : undefined,
+      isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
+      maxFrequency: wasmResult.maxFrequency,
+      previousWaveform: wasmResult.previousWaveform ? new Float32Array(wasmResult.previousWaveform) : null,
+      similarity: wasmResult.similarity,
+      usedSimilaritySearch: wasmResult.usedSimilaritySearch,
+    };
+    
+    // Sync results back to TypeScript objects so getters work correctly
+    this.syncResultsFromWasm(renderData);
+    
+    return renderData;
+  }
+  
+  /**
+   * Reset the WASM processor state
+   */
+  reset(): void {
+    if (this.wasmProcessor) {
+      this.wasmProcessor.reset();
+    }
+  }
+}
 
 {% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-405ae52 Add issue note for #96 [auto]
-779e28c Merge pull request #94 from cat2151/copilot/improve-similarity-search
-12b4361 テストとコード改善: 新規メソッドのテスト追加と冗長な計算を削除
-a35ac73 バグ修正: ゼロクロス検出失敗時も波形を保存するよう修正
-afc401e リファクタリング: ヘルパーメソッドの抽出とコードの整理
-f0ddc6e コードレビュー指摘事項の修正: 探索範囲とUI表示ロジックを改善
-c36e09e 実装完了: 波形類似探索機能を追加
-e08a8c9 Initial plan
-fa140d2 Add issue note for #93 [auto]
-e871fc9 Merge pull request #89 from cat2151/copilot/remove-candidate-functionality
+98f855b Add issue note for #107 [auto]
+7d96c27 Add issue note for #105 [auto]
+b190051 Merge pull request #104 from cat2151/copilot/update-frame-buffer-display
+a2d1023 アクセシビリティ説明文を更新して新しいレイアウトに対応
+ae6990e フレームバッファ表示を横幅いっぱいに変更し、波形を80%に正規化
+c5e9c44 Initial plan
+a198014 Merge pull request #103 from cat2151/copilot/update-similar-waveform-search
+35a1407 Improve API consistency and Rust documentation style
+37e83b0 Improve Rust documentation style for constants
+b3de59b Eliminate magic numbers by using constants and getters
 
 ### 変更されたファイル:
+README.md
 index.html
-issue-notes/90.md
-issue-notes/91.md
-issue-notes/92.md
-issue-notes/93.md
-issue-notes/96.md
-src/DebugRenderer.ts
-src/Oscilloscope.ts
-src/WaveformRenderer.ts
+issue-notes/101.md
+issue-notes/102.md
+issue-notes/105.md
+issue-notes/107.md
+src/ComparisonPanelRenderer.ts
+src/WaveformDataProcessor.ts
 src/WaveformSearcher.ts
-src/ZeroCrossDetector.ts
-src/__tests__/library-exports.test.ts
-src/__tests__/oscilloscope.test.ts
 src/__tests__/waveform-searcher.test.ts
-src/index.ts
-src/main.ts
+wasm-processor/src/lib.rs
+wasm-processor/src/waveform_searcher.rs
 
 
 ---
-Generated at: 2026-01-06 07:09:00 JST
+Generated at: 2026-01-08 07:08:38 JST
