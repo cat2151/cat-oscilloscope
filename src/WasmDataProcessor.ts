@@ -102,9 +102,15 @@ export class WasmDataProcessor {
       
       // Determine the base path for WASM files
       // This handles both local development (base = '/') and GitHub Pages deployment (base = '/cat-oscilloscope/')
-      const basePath = document.querySelector('base')?.getAttribute('href') || 
-                       this.getBasePathFromScripts() || 
-                       '/';
+      let basePath = document.querySelector('base')?.getAttribute('href') || 
+                     this.getBasePathFromScripts() || 
+                     '/';
+      
+      // Normalize base path to ensure it ends with '/'
+      if (!basePath.endsWith('/')) {
+        basePath += '/';
+      }
+      
       const wasmPath = `${basePath}wasm/wasm_processor.js`;
       
       const script = document.createElement('script');
@@ -146,16 +152,31 @@ export class WasmDataProcessor {
   
   /**
    * Extract base path from existing script tags
+   * This method attempts to infer the base path by looking for script tags with src attributes
+   * that might indicate the deployment path. Falls back to '/' if no clear pattern is found.
    */
   private getBasePathFromScripts(): string {
     const scripts = document.querySelectorAll('script[src]');
     for (const script of scripts) {
       const src = script.getAttribute('src');
-      if (src && src.includes('/assets/')) {
-        // Extract base path from asset URLs like '/cat-oscilloscope/assets/...'
-        const match = src.match(/^(.*?)\/assets\//);
-        if (match && match[1]) {
-          return match[1] + '/';
+      if (src) {
+        try {
+          // Try to parse as URL to handle both absolute and relative paths
+          const url = new URL(src, window.location.href);
+          const pathname = url.pathname;
+          
+          // Look for common asset directory patterns (e.g., '/assets/', '/js/', '/dist/')
+          const assetPatterns = ['/assets/', '/js/', '/dist/'];
+          for (const pattern of assetPatterns) {
+            const index = pathname.indexOf(pattern);
+            if (index > 0) {
+              // Extract everything before the asset directory
+              return pathname.substring(0, index + 1);
+            }
+          }
+        } catch {
+          // Ignore URL parsing errors and continue
+          continue;
         }
       }
     }
