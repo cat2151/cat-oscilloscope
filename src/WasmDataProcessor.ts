@@ -194,12 +194,15 @@ export class WasmDataProcessor {
             const index = pathname.indexOf(pattern);
             if (index >= 0) {
               // Extract everything before the asset directory
-              return index === 0 ? '/' : pathname.substring(0, index + 1);
+              // For '/assets/file.js', index=0, return '/'
+              // For '/cat-oscilloscope/assets/file.js', index=17, return '/cat-oscilloscope/'
+              return index === 0 ? '/' : pathname.substring(0, index) + '/';
             }
           }
         } catch (error: unknown) {
           // URL parsing can fail for malformed URLs - continue to next script
-          if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+          // Only log in development environments (check for localhost)
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             console.debug('Failed to parse script URL:', src, error);
           }
           continue;
