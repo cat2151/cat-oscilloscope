@@ -320,6 +320,7 @@ export class WasmDataProcessor {
       displayEndIndex: wasmResult.displayEndIndex,
       gain: wasmResult.gain,
       estimatedFrequency: wasmResult.estimatedFrequency,
+      frequencyPlotHistory: this.frequencyEstimator.getFrequencyPlotHistory(),
       sampleRate: wasmResult.sampleRate,
       fftSize: wasmResult.fftSize,
       firstAlignmentPoint: wasmResult.firstAlignmentPoint,

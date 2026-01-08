@@ -185,6 +185,13 @@ export class Oscilloscope {
       );
     }
 
+    // Draw frequency plot in top-right corner
+    this.renderer.drawFrequencyPlot(
+      renderData.frequencyPlotHistory,
+      this.frequencyEstimator.getMinFrequency(),
+      this.frequencyEstimator.getMaxFrequency()
+    );
+
     // Update comparison panels
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,

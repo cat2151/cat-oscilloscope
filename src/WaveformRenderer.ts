@@ -13,6 +13,9 @@ export class WaveformRenderer {
   private fftDisplayEnabled = true;
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
+  private readonly FREQ_PLOT_WIDTH = 280; // Width of frequency plot area
+  private readonly FREQ_PLOT_HEIGHT = 120; // Height of frequency plot area
+  private readonly FREQ_PLOT_PADDING = 10; // Padding from edge
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -278,6 +281,133 @@ export class WaveformRenderer {
       }
       
       this.ctx.fillText(label, labelX, overlayY + 15);
+    }
+
+    this.ctx.restore();
+  }
+
+  /**
+   * Draw frequency plot in top-right corner
+   * Shows the history of estimated frequencies to help users detect spikes
+   */
+  drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
+    if (!frequencyHistory || frequencyHistory.length === 0) {
+      return;
+    }
+
+    const overlayX = this.canvas.width - this.FREQ_PLOT_WIDTH - this.FREQ_PLOT_PADDING;
+    const overlayY = this.FREQ_PLOT_PADDING;
+
+    // Draw semi-transparent background
+    this.ctx.save();
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
+
+    // Draw border
+    this.ctx.strokeStyle = '#ffaa00';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
+
+    // Draw title
+    this.ctx.fillStyle = '#ffaa00';
+    this.ctx.font = 'bold 12px Arial';
+    this.ctx.fillText('周波数推移 (Frequency)', overlayX + 5, overlayY + 15);
+
+    // Calculate plot area (leave space for title and axis labels)
+    const plotX = overlayX + 35;
+    const plotY = overlayY + 25;
+    const plotWidth = this.FREQ_PLOT_WIDTH - 45;
+    const plotHeight = this.FREQ_PLOT_HEIGHT - 35;
+
+    // Draw grid lines
+    this.ctx.strokeStyle = '#333333';
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = plotY + (plotHeight / 4) * i;
+      this.ctx.moveTo(plotX, y);
+      this.ctx.lineTo(plotX + plotWidth, y);
+    }
+    
+    // Vertical grid lines
+    for (let i = 0; i <= 4; i++) {
+      const x = plotX + (plotWidth / 4) * i;
+      this.ctx.moveTo(x, plotY);
+      this.ctx.lineTo(x, plotY + plotHeight);
+    }
+    
+    this.ctx.stroke();
+
+    // Find frequency range in the data (excluding zeros)
+    const validFrequencies = frequencyHistory.filter(f => f > 0);
+    if (validFrequencies.length === 0) {
+      this.ctx.restore();
+      return;
+    }
+
+    const dataMin = Math.min(...validFrequencies);
+    const dataMax = Math.max(...validFrequencies);
+    
+    // Use data range with some padding, constrained by min/max frequency limits
+    const rangePadding = (dataMax - dataMin) * 0.1 || 50; // 10% padding or 50Hz min
+    const displayMin = Math.max(minFrequency, dataMin - rangePadding);
+    const displayMax = Math.min(maxFrequency, dataMax + rangePadding);
+
+    // Draw Y-axis labels (frequency values)
+    this.ctx.fillStyle = '#aaaaaa';
+    this.ctx.font = '10px monospace';
+    this.ctx.textAlign = 'right';
+    this.ctx.textBaseline = 'middle';
+    
+    for (let i = 0; i <= 4; i++) {
+      const freq = displayMax - (displayMax - displayMin) * (i / 4);
+      const y = plotY + (plotHeight / 4) * i;
+      const label = freq >= 1000 ? `${(freq / 1000).toFixed(1)}k` : `${freq.toFixed(0)}`;
+      this.ctx.fillText(label, plotX - 5, y);
+    }
+
+    // Draw the frequency plot line
+    this.ctx.strokeStyle = '#00ff00';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+
+    const xStep = plotWidth / (frequencyHistory.length - 1 || 1);
+    
+    for (let i = 0; i < frequencyHistory.length; i++) {
+      const freq = frequencyHistory[i];
+      const x = plotX + i * xStep;
+      
+      // Skip zero values (no signal) by not drawing
+      if (freq === 0) {
+        continue;
+      }
+      
+      // Clamp frequency to display range
+      const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
+      
+      // Map frequency to y coordinate (inverted: high freq = top)
+      const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
+      const y = plotY + plotHeight - (normalizedFreq * plotHeight);
+      
+      if (i === 0 || frequencyHistory[i - 1] === 0) {
+        this.ctx.moveTo(x, y);
+      } else {
+        this.ctx.lineTo(x, y);
+      }
+    }
+    
+    this.ctx.stroke();
+
+    // Draw current frequency value
+    const currentFreq = frequencyHistory[frequencyHistory.length - 1];
+    if (currentFreq > 0) {
+      this.ctx.fillStyle = '#00ff00';
+      this.ctx.font = 'bold 11px Arial';
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'top';
+      this.ctx.fillText(`${currentFreq.toFixed(1)} Hz`, plotX + 2, plotY + plotHeight + 5);
     }
 
     this.ctx.restore();

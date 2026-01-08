@@ -453,9 +453,9 @@ describe('Algorithm-Specific Tests', () => {
       expect(oscilloscope.getFrequencyEstimationMethod()).toBe('cqt');
     });
 
-    it('should have autocorrelation as default', () => {
+    it('should have FFT as default', () => {
       const defaultMethod = oscilloscope.getFrequencyEstimationMethod();
-      expect(defaultMethod).toBe('autocorrelation');
+      expect(defaultMethod).toBe('fft');
     });
   });
 
@@ -612,9 +612,9 @@ describe('Algorithm-Specific Tests', () => {
       expect(oscilloscope.getBufferSizeMultiplier()).toBe(16);
     });
 
-    it('should have 1x as default buffer size multiplier', () => {
+    it('should have 16x as default buffer size multiplier', () => {
       const defaultMultiplier = oscilloscope.getBufferSizeMultiplier();
-      expect(defaultMultiplier).toBe(1);
+      expect(defaultMultiplier).toBe(16);
     });
   });
 

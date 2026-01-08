@@ -9,7 +9,7 @@
  * - Frequency smoothing and temporal stability
  */
 export class FrequencyEstimator {
-  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'autocorrelation';
+  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'fft';
   private estimatedFrequency = 0;
   private readonly MIN_FREQUENCY_HZ = 20; // Minimum detectable frequency (Hz) - lower limit for STFT/CQT with extended buffers
   private readonly MAX_FREQUENCY_HZ = 5000; // Maximum detectable frequency (Hz) - allows viewing harmonics up to 5th for 880Hz
@@ -17,7 +17,9 @@ export class FrequencyEstimator {
   private readonly FREQUENCY_HISTORY_SIZE = 7; // Number of recent frequency estimates to keep for smoothing
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
-  private bufferSizeMultiplier: 1 | 4 | 16 = 1; // Buffer size multiplier for extended FFT
+  private bufferSizeMultiplier: 1 | 4 | 16 = 16; // Buffer size multiplier for extended FFT
+  private readonly FREQUENCY_PLOT_HISTORY_SIZE = 100; // Number of frequency estimates to keep for plotting
+  private frequencyPlotHistory: number[] = []; // History of estimated frequencies for plotting
 
   /**
    * Estimate frequency using zero-crossing method
@@ -427,6 +429,13 @@ export class FrequencyEstimator {
     
     // Apply temporal smoothing to prevent oscillation between harmonics
     this.estimatedFrequency = this.smoothFrequencyEstimate(rawFrequency);
+    
+    // Add to plot history
+    this.frequencyPlotHistory.push(this.estimatedFrequency);
+    if (this.frequencyPlotHistory.length > this.FREQUENCY_PLOT_HISTORY_SIZE) {
+      this.frequencyPlotHistory.shift();
+    }
+    
     return this.estimatedFrequency;
   }
 
@@ -435,6 +444,7 @@ export class FrequencyEstimator {
    */
   clearHistory(): void {
     this.frequencyHistory = [];
+    this.frequencyPlotHistory = [];
     this.estimatedFrequency = 0;
   }
 
@@ -443,6 +453,7 @@ export class FrequencyEstimator {
     this.frequencyEstimationMethod = method;
     // Clear frequency history when changing methods
     this.frequencyHistory = [];
+    this.frequencyPlotHistory = [];
   }
 
   getFrequencyEstimationMethod(): string {
@@ -467,5 +478,9 @@ export class FrequencyEstimator {
 
   getMaxFrequency(): number {
     return this.MAX_FREQUENCY_HZ;
+  }
+  
+  getFrequencyPlotHistory(): number[] {
+    return this.frequencyPlotHistory;
   }
 }
