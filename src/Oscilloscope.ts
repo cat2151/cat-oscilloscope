@@ -140,8 +140,13 @@ export class Oscilloscope {
    * This method contains only rendering logic - no data processing
    */
   private renderFrame(renderData: WaveformRenderData): void {
-    // Clear canvas and draw grid
-    this.renderer.clearAndDrawGrid();
+    // Clear canvas and draw grid with measurement labels
+    const displaySamples = renderData.displayEndIndex - renderData.displayStartIndex;
+    this.renderer.clearAndDrawGrid(
+      renderData.sampleRate,
+      displaySamples,
+      renderData.gain
+    );
 
     // Draw waveform with calculated gain
     this.renderer.drawWaveform(
