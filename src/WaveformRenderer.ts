@@ -16,6 +16,7 @@ export class WaveformRenderer {
   private readonly FREQ_PLOT_WIDTH = 280; // Width of frequency plot area
   private readonly FREQ_PLOT_HEIGHT = 120; // Height of frequency plot area
   private readonly FREQ_PLOT_PADDING = 10; // Padding from edge
+  private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ = 50; // Minimum padding for frequency range (Hz)
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -351,7 +352,7 @@ export class WaveformRenderer {
     const dataMax = Math.max(...validFrequencies);
     
     // Use data range with some padding, constrained by min/max frequency limits
-    const rangePadding = (dataMax - dataMin) * 0.1 || 50; // 10% padding or 50Hz min
+    const rangePadding = (dataMax - dataMin) * 0.1 || this.FREQ_PLOT_MIN_RANGE_PADDING_HZ; // 10% padding or minimum
     const displayMin = Math.max(minFrequency, dataMin - rangePadding);
     const displayMax = Math.min(maxFrequency, dataMax + rangePadding);
 
@@ -373,7 +374,7 @@ export class WaveformRenderer {
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
 
-    const xStep = plotWidth / (frequencyHistory.length - 1 || 1);
+    const xStep = plotWidth / Math.max(frequencyHistory.length - 1, 1);
     
     for (let i = 0; i < frequencyHistory.length; i++) {
       const freq = frequencyHistory[i];

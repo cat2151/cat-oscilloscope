@@ -18,7 +18,9 @@ export class FrequencyEstimator {
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
   private bufferSizeMultiplier: 1 | 4 | 16 = 16; // Buffer size multiplier for extended FFT
-  private readonly FREQUENCY_PLOT_HISTORY_SIZE = 100; // Number of frequency estimates to keep for plotting
+  // Number of frequency estimates to keep for plotting (100 frames ≈ 1-2 seconds at 60fps)
+  // This provides a good balance between showing recent trends and avoiding excessive memory usage
+  private readonly FREQUENCY_PLOT_HISTORY_SIZE = 100;
   private frequencyPlotHistory: number[] = []; // History of estimated frequencies for plotting
 
   /**
