@@ -1,21 +1,21 @@
-Last updated: 2026-01-08
+Last updated: 2026-01-09
 
 # Project Overview
 
 ## プロジェクト概要
-- ブラウザ上で動作する、リアルタイムのオシロスコープ風波形ビジュアライザーです。
-- マイク入力やWAVファイルから音声を取り込み、ゼロクロス法、自己相関、FFTなど5つのアルゴリズムで周波数推定を行います。
-- 安定した波形表示と、高速なデータ処理のためのRust/WASM実装も特徴です。
+- マイク入力や音声ファイルに対応した、ブラウザ上で動作する高機能なオシロスコープ風波形ビジュアライザーです。
+- ゼロクロス検出や多様な周波数推定アルゴリズムにより、音の波形や周波数をリアルタイムで安定して可視化します。
+- JavaScript（TypeScript）と高速なRust/WASM実装を切り替え可能で、低周波解析の精度向上オプションも提供します。
 
 ## 技術スタック
-- フロントエンド: **TypeScript** (型安全なJavaScriptによるアプリケーション開発), **HTML Canvas** (2D波形レンダリング), **Web Audio API** (マイクからの音声キャプチャ、WAVファイル処理、リアルタイム音声分析)
-- 音楽・オーディオ: **Web Audio API** (音声処理の中核となるブラウザ標準API)
-- 開発ツール: **Node.js** (アプリケーションの実行環境、依存関係管理), **npm / yarn** (パッケージ管理), **Vite** (高速な開発サーバーとビルドツール), **Rust toolchain** (WASMモジュールの開発), **wasm-pack** (RustコードをWebAssemblyにコンパイルするツール), **cross-env** (クロスプラットフォームな環境変数設定)
-- テスト: **Vitest** (高速な単体・統合テストフレームワーク), **@vitest/ui** (VitestのテストUI), **happy-dom** (VitestでDOM環境をシミュレートするためのツール)
-- ビルドツール: **Vite** (本番用ビルドと開発サーバー), **vite-plugin-dts** (TypeScriptの型定義ファイルを生成)
-- 言語機能: **TypeScript** (JavaScriptに静的型付けを追加し、大規模開発の堅牢性を向上)
-- 自動化・CI/CD: (特になし)
-- 開発標準: (特になし)
+- フロントエンド: **TypeScript**: 型安全なJavaScriptで大規模開発を支援し、コードの品質と保守性を向上させます。**HTML Canvas**: 2Dグラフィック描画に使用され、リアルタイムで音の波形を視覚的にレンダリングします。**Web Audio API**: ブラウザでの音声入力（マイク）や音声ファイルの処理、解析を可能にする中核技術です。
+- 音楽・オーディオ: **Web Audio API**: マイク入力や音声ファイルのデータフローを制御し、波形データや周波数データのリアルタイム処理を行います。
+- 開発ツール: **Node.js**: JavaScript実行環境として、開発サーバーの起動やビルドスクリプトの実行に利用されます。**npm/yarn**: プロジェクトの依存関係を管理し、パッケージのインストールやスクリプトの実行をサポートします。**Vite**: 高速な開発サーバーとビルドツールであり、迅速な開発体験を提供します。
+- テスト: **Vitest**: 高速なユニットテストフレームワークで、コードの品質と信頼性を確保するためのテストを実行します。**@vitest/ui**: Vitestのテスト結果をグラフィカルなユーザーインターフェースで表示し、テストのデバッグを容易にします。**Happy DOM**: DOM環境をシミュレートし、ブラウザに依存しないJavaScriptコードのテストを可能にします。
+- ビルドツール: **Vite**: フロントエンド資産（HTML, CSS, JavaScript）を最適化し、本番環境向けにバンドルします。**Rust toolchain**: Rustコードのコンパイルに必要なツール群。**wasm-pack**: Rustで書かれたコードをWebAssembly（WASM）形式に変換します。**vite-plugin-dts**: TypeScriptの型定義ファイル（.d.ts）を自動生成し、ライブラリとしての利用を容易にします。
+- 言語機能: **TypeScript**: 静的型付けを導入することで、開発時のエラーを減らし、コードの可読性と保守性を高めます。**Rust**: 高性能なデータ処理ロジックを記述するために使用され、WebAssemblyとしてブラウザで実行することで高い処理速度を実現します。
+- 自動化・CI/CD: **Vite**: ビルドプロセスを自動化し、開発からデプロイまでのワークフローを効率化するための基盤として機能します。
+- 開発標準: 特定の開発標準ツールは明記されていませんが、TypeScriptの採用によりコードの品質と一貫性を維持しています。
 
 ## ファイル階層ツリー
 ```
@@ -36,6 +36,7 @@ Last updated: 2026-01-08
   📖 102.md
   📖 105.md
   📖 107.md
+  📖 110.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -89,7 +90,9 @@ Last updated: 2026-01-08
     📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 utils.test.ts
+    📘 wasm-data-processor.test.ts
     📘 waveform-data-processor.test.ts
+    📘 waveform-renderer.test.ts
     📘 waveform-searcher.test.ts
   📘 index.ts
   📘 main.ts
@@ -108,86 +111,102 @@ Last updated: 2026-01-08
 ```
 
 ## ファイル詳細説明
-- **example-library-usage.html**: `cat-oscilloscope` ライブラリをHTMLページでどのように使用するかを示すサンプルファイルです。
-- **index.html**: アプリケーションのメインエントリポイントとなるHTMLファイルで、UI要素やスクリプトの読み込みを定義しています。
-- **public/wasm/wasm_processor.d.ts**: WebAssemblyモジュール `wasm_processor.js` のTypeScript型定義ファイルです。
-- **public/wasm/wasm_processor.js**: Rustで実装されたデータ処理ロジックをWebAssemblyとしてコンパイルしたJavaScriptラッパーファイルです。ブラウザからWASM機能を利用するためのインターフェースを提供します。
-- **public/wasm/wasm_processor_bg.wasm.d.ts**: WASMバイナリの型定義ファイルです。
-- **src/AudioManager.ts**: マイクからの音声入力やファイルからの音声読み込みを管理し、Web Audio APIを介して音声データを処理します。
-- **src/ComparisonPanelRenderer.ts**: 複数の波形表示や周波数推定結果を比較表示するUI要素のレンダリングを担当します。
-- **src/FrequencyEstimator.ts**: ゼロクロス法、自己相関、FFT、STFT、CQTなど、複数の周波数推定アルゴリズムを実装しています。
-- **src/GainController.ts**: 波形の振幅を自動調整するオートゲイン機能を提供し、表示の安定化を図ります。
-- **src/Oscilloscope.ts**: オシロスコープアプリケーションのメインクラスで、音声処理、波形描画、UI制御などを統合します。
-- **src/WasmDataProcessor.ts**: Rust/WASMで実装されたデータ処理ロジックをTypeScriptから利用するためのラッパーおよび初期化処理を行います。
-- **src/WaveformDataProcessor.ts**: 音声データから波形データを生成し、周波数推定に必要な前処理を行います。
-- **src/WaveformRenderData.ts**: 波形描画に必要なデータ構造を定義するインターフェースやクラスを含みます。
-- **src/WaveformRenderer.ts**: HTML Canvas要素に実際の波形を描画する処理を担当します。
-- **src/WaveformSearcher.ts**: 波形の類似度を計算し、安定した波形表示のための基準点を探索します。
-- **src/ZeroCrossDetector.ts**: 波形がゼロ点を通過するポイントを検出するアルゴリズムを実装し、安定した表示に利用します。
-- **src/__tests__/**: プロジェクトの各モジュールおよび機能に対するテストコードが格納されています。
-  - `algorithms.test.ts`: 周波数推定アルゴリズムやゼロクロス検出のテスト。
-  - `comparison-panel-renderer.test.ts`: 比較パネルレンダリングのテスト。
-  - `dom-integration.test.ts`: DOM操作とコンポーネントの統合テスト。
-  - `library-exports.test.ts`: ライブラリとしてエクスポートされるAPIのテスト。
-  - `oscilloscope.test.ts`: `Oscilloscope` クラスの主要機能テスト。
-  - `utils.test.ts`: 共通ユーティリティ関数のテスト。
-  - `waveform-data-processor.test.ts`: `WaveformDataProcessor` のテスト。
-  - `waveform-searcher.test.ts`: `WaveformSearcher` のテスト。
-- **src/index.ts**: `cat-oscilloscope` ライブラリとして外部に公開される主要なエクスポートを定義するファイルです。
-- **src/main.ts**: Webアプリケーションの初期化、UI要素のイベントハンドリング、および `Oscilloscope` クラスのインスタンス化と制御を行うメインスクリプトです。
-- **src/utils.ts**: アプリケーション全体で再利用される汎用的なユーティリティ関数を提供します。
-- **vite.config.ts**: Viteビルドツールの設定ファイルで、開発サーバーや本番ビルドの挙動を定義します。
-- **wasm-processor/**: Rust言語でWebAssemblyモジュールを実装するためのソースコードディレクトリです。
-  - `Cargo.toml`: Rustプロジェクトの設定ファイル。
-  - `src/frequency_estimator.rs`: Rust版の周波数推定ロジック。
-  - `src/gain_controller.rs`: Rust版のゲイン制御ロジック。
-  - `src/lib.rs`: WASMモジュールのエントリポイントとなるRustライブラリファイル。
-  - `src/waveform_searcher.rs`: Rust版の波形探索ロジック。
-  - `src/zero_cross_detector.rs`: Rust版のゼロクロス検出ロジック。
+- **IMPLEMENTATION_SUMMARY.md**: プロジェクトの実装に関する概要や設計思想をまとめたドキュメントです。
+- **LIBRARY_USAGE.md**: 本プロジェクトをnpmライブラリとして他のプロジェクトで使用する際の手順やコード例を説明したドキュメントです。
+- **LICENSE**: プロジェクトのライセンス情報（MITライセンス）が記載されています。
+- **README.ja.md**: プロジェクトの概要、機能、使用方法などが日本語で書かれたメインドキュメントです。
+- **README.md**: プロジェクトの概要、機能、使用方法などが英語で書かれたメインドキュメントです。
+- **REFACTORING_SUMMARY.md**: リファクタリングの経緯や内容についてまとめたドキュメントです。
+- **TESTING.md**: プロジェクトのテスト方法、テストスイートの構成、テストコマンドなどが説明されています。
+- **_config.yml**: GitHub Pagesなどの設定ファイルです。
+- **example-library-usage.html**: ライブラリとしての使用例を示すためのHTMLファイルです。
+- **generated-docs/**: ドキュメント生成ツールによって自動生成されたファイルが格納されるディレクトリです。
+- **index.html**: アプリケーションのエントリーポイントとなるHTMLファイルで、ユーザーインターフェースの骨格を定義しています。
+- **issue-notes/**: 過去の課題や不具合追跡用のメモファイル群を格納するディレクトリです。プロジェクトの特定の改善点やバグについて記録されています。
+- **package-lock.json**: `package.json`で定義された依存関係の正確なバージョンと依存ツリーを記録し、ビルドの再現性を保証します。
+- **package.json**: プロジェクトのメタデータ（名前、バージョン、スクリプト、依存関係など）を定義するファイルです。
+- **public/wasm/wasm_processor.d.ts**: WebAssemblyモジュール（`wasm_processor.js`）のTypeScript型定義ファイルです。
+- **public/wasm/wasm_processor.js**: Rustで書かれたWebAssemblyモジュールをJavaScriptから利用するためのラッパーコードです。
+- **public/wasm/wasm_processor_bg.wasm**: Rustでコンパイルされたバイナリ形式のWebAssemblyモジュール本体です。
+- **public/wasm/wasm_processor_bg.wasm.d.ts**: `wasm_processor_bg.wasm`に関する低レベルなTypeScript型定義ファイルです。
+- **src/AudioManager.ts**: マイク入力や音声ファイルの読み込み、Web Audio APIを使った音声データのキャプチャと処理を管理します。
+- **src/ComparisonPanelRenderer.ts**: 波形比較パネルの描画ロジックを実装し、複数の波形を同時に表示するための描画を行います。
+- **src/FrequencyEstimator.ts**: ゼロクロス法、自己相関法、FFT、STFT、CQTなど、複数の周波数推定アルゴリズムを実装しています。
+- **src/GainController.ts**: 波形の振幅を自動的に調整（オートゲイン）し、表示領域に最適化された見やすい波形を提供します。
+- **src/Oscilloscope.ts**: オシロスコープ機能全体の中心となるクラスで、各種モジュール（音声管理、データ処理、レンダリングなど）を統合し、アプリケーションのライフサイクルを管理します。
+- **src/WasmDataProcessor.ts**: Rust/WebAssemblyで実装されたデータ処理ロジックとTypeScriptアプリケーション間の橋渡しを行います。
+- **src/WaveformDataProcessor.ts**: TypeScriptで実装された波形データの処理ロジック（波形整形、サンプリングなど）を担います。
+- **src/WaveformRenderData.ts**: オシロスコープが波形を描画するために必要なデータ構造を定義します。
+- **src/WaveformRenderer.ts**: HTML Canvasに波形データ、グリッド、周波数情報などを描画するためのロジックを実装します。
+- **src/WaveformSearcher.ts**: 安定した波形表示を実現するために、過去のフレームとの類似度を計算し、波形を整列させるロジックを提供します。
+- **src/ZeroCrossDetector.ts**: 波形がゼロを横切るポイント（ゼロクロス）を検出するためのアルゴリズムを実装し、安定した波形表示の基準とします。
+- **src/__tests__/**: 各コンポーネントや機能のユニットテスト、統合テストを格納するディレクトリです。
+- **src/index.ts**: プロジェクトがnpmライブラリとして使用される際のエントリーポイントとなるファイルです。
+- **src/main.ts**: アプリケーションの主要なロジック、UI要素との連携、イベントハンドリングなどを管理するメインスクリプトです。
+- **src/utils.ts**: プロジェクト内で汎用的に使用されるユーティリティ関数（例: dB値と振幅値の変換、無音部分のトリミング）を定義します。
+- **tsconfig.json**: TypeScriptコンパイラの設定ファイルで、プロジェクトのコンパイルオプションを定義します。
+- **tsconfig.lib.json**: ライブラリとしてのビルド時に使用されるTypeScriptコンパイラの追加設定ファイルです。
+- **vite.config.ts**: Viteビルドツールの設定ファイルで、プラグイン、ビルドオプションなどを定義します。
+- **wasm-processor/Cargo.toml**: Rust/WebAssemblyモジュールの依存関係とプロジェクト設定を定義するファイルです。
+- **wasm-processor/src/frequency_estimator.rs**: Rustで実装された周波数推定アルゴリズムのソースコードです。
+- **wasm-processor/src/gain_controller.rs**: Rustで実装された自動ゲイン制御ロジックのソースコードです。
+- **wasm-processor/src/lib.rs**: Rust/WebAssemblyモジュールのエントリポイントとなるファイルで、WASMから呼び出される主要な関数を定義します。
+- **wasm-processor/src/waveform_searcher.rs**: Rustで実装された波形類似探索ロジックのソースコードです。
+- **wasm-processor/src/zero_cross_detector.rs**: Rustで実装されたゼロクロス検出アルゴリズムのソースコードです。
 
 ## 関数詳細説明
-- **initSync(wasm_bytes)** (public/wasm/wasm_processor.d.ts, public/wasm/wasm_processor.js): WebAssemblyモジュールを同期的に初期化します。`wasm_bytes`はWASMバイナリデータです。
-- **__wbg_init()** (public/wasm/wasm_processor.js): WASMモジュールの内部的な初期化処理を行います。
-- **getArrayF32FromWasm0()**, **getArrayU8FromWasm0()**, **getFloat32ArrayMemory0()**, **getStringFromWasm0()**, **getUint8ArrayMemory0()** (public/wasm/wasm_processor.js): WASMメモリとJavaScript間のデータ変換（Float32Array, Uint8Array, 文字列など）を扱う内部ヘルパー関数です。
-- **isLikeNone()**, **passArray8ToWasm0()**, **passArrayF32ToWasm0()**, **passStringToWasm0()** (public/wasm/wasm_processor.js): WASMとJavaScript間のデータ受け渡しに関連する内部ヘルパー関数です。
-- **decodeText()** (public/wasm/wasm_processor.js): テキストデータをデコードします。
-- **__wbg_load()**, **__wbg_get_imports()**, **__wbg_finalize_init()** (public/wasm/wasm_processor.js): WASMモジュールのロードと初期化フェーズにおける内部的な処理を担います。
-- **__destroy_into_raw()** (public/wasm/wasm_processor.js): WASMによって割り当てられたリソースを解放するための内部関数です。
-- **free()** (public/wasm/wasm_processor.js): WASMオブジェクトによって使用されているメモリを解放します。
-- **processFrame(audioDataPtr, sampleRate, bufferSize, ...)** (public/wasm/wasm_processor.js): WASM側で音声フレームのデータ処理（周波数推定、ゼロクロス検出など）を実行します。
-- **setAutoGain(enable)** (public/wasm/wasm_processor.js): WASM側でオートゲイン機能の有効/無効を設定します。
-- **setNoiseGate(enable)** (public/wasm/wasm_processor.js): WASM側でノイズゲート機能の有効/無効を設定します。
-- **setUsePeakMode(enable)** (public/wasm/wasm_processor.js): WASM側でピークモードの使用を設定します。
-- **setNoiseGateThreshold(threshold)** (public/wasm/wasm_processor.js): WASM側でノイズゲートの閾値を設定します。
-- **setFrequencyEstimationMethod(method)** (public/wasm/wasm_processor.js): WASM側で周波数推定アルゴリズムを設定します。
-- **constructor(canvas)** (src/Oscilloscope.ts): `Oscilloscope` クラスのインスタンスを初期化し、HTML Canvas要素を設定します。
-- **start()** (src/AudioManager.ts / src/Oscilloscope.ts): 音声ストリームの処理を開始します。`AudioManager`ではマイク入力、`Oscilloscope`では全体の処理を開始します。
-- **startFromFile(file)** (src/AudioManager.ts / src/Oscilloscope.ts): ファイルからの音声入力処理を開始します。
-- **stop()** (src/AudioManager.ts / src/Oscilloscope.ts): 現在の音声ストリーム処理を停止します。
-- **setUseWasm(useWasm)** (src/Oscilloscope.ts): WASM実装を使用するかどうかを切り替えます。
-- **cleanup()** (src/WasmDataProcessor.ts): WASMデータプロセッサが使用しているリソースをクリーンアップします。
-- **handleLoad()** (src/WasmDataProcessor.ts): WASMモジュールがロードされた後の処理を行います。
-- **initialize()** (src/WasmDataProcessor.ts): WASMデータプロセッサを初期化します。
-- **loadWasmModule()** (src/WasmDataProcessor.ts): WASMモジュールを動的にロードします。
-- **sliderValueToThreshold(value)** (src/main.ts): UIスライダーの値をデシベル閾値に変換します。
-- **formatThresholdDisplay(threshold)** (src/main.ts): デシベル閾値を表示用の文字列にフォーマットします。
-- **startFrequencyDisplay()** (src/main.ts): 周波数表示を開始します。
-- **stopFrequencyDisplay()** (src/main.ts): 周波数表示を停止します。
-- **dbToAmplitude(db)** (src/utils.ts): デシベル値を振幅値に変換します。
-- **trimSilence(audioBuffer, threshold)** (src/utils.ts): 音声バッファから無音部分をトリムします。
-- **generateSineWave(frequency, sampleRate, duration, amplitude)** (src/__tests__/algorithms.test.ts): 指定されたパラメータでサイン波を生成します。
-- **generateNoise(sampleRate, duration)** (src/__tests__/algorithms.test.ts): 指定されたパラメータでノイズ波形を生成します。
-- **generateSquareWave(frequency, sampleRate, duration, amplitude)** (src/__tests__/algorithms.test.ts): 指定されたパラメータで矩形波を生成します。
-- **countZeroCrossings(buffer)** (src/__tests__/algorithms.test.ts): バッファ内のゼロクロス数をカウントします。
-- **createMediaStreamSource(audioContext)** (src/__tests__/algorithms.test.ts, src/__tests__/dom-integration.test.ts, src/__tests__/oscilloscope.test.ts): テスト用にモックの `MediaStreamSource` を作成します。
-- **createAnalyser(audioContext)** (src/__tests__/algorithms.test.ts, src/__tests__/dom-integration.test.ts, src/__tests__/oscilloscope.test.ts): テスト用にモックの `AnalyserNode` を作成します。
-- **close()** (src/__tests__/algorithms.test.ts, src/__tests__/dom-integration.test.ts, src/__tests__/oscilloscope.test.ts): テスト用のAudioContextやストリームを閉じます。
-- **getTracks()** (src/__tests__/algorithms.test.ts, src/__tests__/dom-integration.test.ts, src/__tests__/oscilloscope.test.ts): メディアストリームからトラックを取得します。
-- **createSilentMockAudioContext()** (src/__tests__/oscilloscope.test.ts): 音声処理を行わないモックの `AudioContext` を作成します。
-- **getFFTOverlayDimensions()** (src/__tests__/oscilloscope.test.ts): FFTオーバーレイの寸法を取得します。
-- **findFFTOverlayBorderCall()** (src/__tests__/oscilloscope.test.ts): FFTオーバーレイの境界描画呼び出しを検出します。
-- **getAudioTracks()**, **getVideoTracks()** (src/__tests__/oscilloscope.test.ts): メディアストリームからそれぞれ音声トラック、映像トラックを取得します。
-- **createAudioBuffer()** (src/__tests__/utils.test.ts): テスト用の `AudioBuffer` を作成します。
+- **cleanup()** (src/WasmDataProcessor.ts): WASM関連のリソースを解放し、クリーンアップ処理を行います。
+- **constructor(canvas: HTMLCanvasElement)** (src/Oscilloscope.ts): `Oscilloscope`インスタンスを初期化し、指定されたHTML Canvas要素と連携させて波形描画の準備をします。
+- **constructor()** (src/ComparisonPanelRenderer.ts): `ComparisonPanelRenderer`インスタンスを初期化し、比較パネルの描画に必要な設定を行います。
+- **constructor()** (src/WaveformDataProcessor.ts): `WaveformDataProcessor`インスタンスを初期化し、TypeScriptによる波形データ処理の準備をします。
+- **constructor()** (src/WaveformRenderer.ts): `WaveformRenderer`インスタンスを初期化し、Canvasへの波形描画処理の準備をします。
+- **dbToAmplitude(db: number)** (src/utils.ts): デシベル値を振幅値に変換します。
+    - 引数: `db` (number) - デシベル値。
+    - 戻り値: `number` - 変換された振幅値。
+- **formatThresholdDisplay(threshold: number)** (src/main.ts): ノイズゲート閾値を表示に適した形式の文字列にフォーマットします。
+    - 引数: `threshold` (number) - ノイズゲートの閾値。
+    - 戻り値: `string` - フォーマットされた表示文字列。
+- **generateNoise(duration: number, sampleRate: number)** (src/__tests__/algorithms.test.ts): 指定された期間とサンプルレートでホワイトノイズの音声データを生成します。
+    - 引数: `duration` (number) - 生成するノイズの秒数、`sampleRate` (number) - サンプルレート。
+    - 戻り値: `Float32Array` - 生成されたノイズデータ。
+- **generateSineWave(frequency: number, sampleRate: number, duration: number)** (src/__tests__/algorithms.test.ts): 指定された周波数、サンプルレート、期間でサイン波の音声データを生成します。
+    - 引数: `frequency` (number) - サイン波の周波数、`sampleRate` (number) - サンプルレート、`duration` (number) - 生成するサイン波の秒数。
+    - 戻り値: `Float32Array` - 生成されたサイン波データ。
+- **generateSquareWave(frequency: number, sampleRate: number, duration: number)** (src/__tests__/algorithms.test.ts): 指定された周波数、サンプルレート、期間で矩形波の音声データを生成します。
+    - 引数: `frequency` (number) - 矩形波の周波数、`sampleRate` (number) - サンプルレート、`duration` (number) - 生成する矩形波の秒数。
+    - 戻り値: `Float32Array` - 生成された矩形波データ。
+- **handleLoad(url: string)** (src/WasmDataProcessor.ts): 指定されたURLからWebAssemblyモジュールをロードします。
+    - 引数: `url` (string) - WASMモジュールのURL。
+    - 戻り値: `Promise<void>`。
+- **initialize()** (src/WasmDataProcessor.ts): WebAssemblyモジュールの初期化処理を行います。
+    - 戻り値: `Promise<void>`。
+- **loadWasmModule(wasmPath: string)** (src/WasmDataProcessor.ts): 指定されたパスからWebAssemblyモジュールを動的にロードします。
+    - 引数: `wasmPath` (string) - WASMファイルのパス。
+    - 戻り値: `Promise<void>`。
+- **setUseWasm(useWasm: boolean)** (src/Oscilloscope.ts): データ処理にWebAssemblyを使用するか、TypeScript実装を使用するかを切り替えます。
+    - 引数: `useWasm` (boolean) - trueの場合WASMを使用、falseの場合TypeScriptを使用。
+- **sliderValueToThreshold(value: number)** (src/main.ts): UIスライダーの値をノイズゲートの閾値（dB値）に変換します。
+    - 引数: `value` (number) - スライダーの現在値。
+    - 戻り値: `number` - 変換された閾値（dB）。
+- **start()** (src/AudioManager.ts): マイクからの音声入力ストリームを開始し、オーディオ処理を開始します。
+    - 戻り値: `Promise<void>`。
+- **start()** (src/Oscilloscope.ts): オシロスコープのリアルタイム描画と音声処理を開始します。
+    - 戻り値: `Promise<void>`。
+- **startFromFile(file: File)** (src/AudioManager.ts): 指定された音声ファイル（WAVなど）からの音声入力を開始します。
+    - 引数: `file` (File) - 処理する音声ファイルオブジェクト。
+    - 戻り値: `Promise<void>`。
+- **startFromFile(file: File)** (src/Oscilloscope.ts): 指定されたファイルからの音声入力に基づいてオシロスコープの描画を開始します。
+    - 引数: `file` (File) - 処理する音声ファイルオブジェクト。
+    - 戻り値: `Promise<void>`。
+- **startFrequencyDisplay(data: WaveformRenderData)** (src/main.ts): UI上の周波数表示の更新を開始し、リアルタイムで周波数データを表示します。
+    - 引数: `data` (WaveformRenderData) - 波形レンダリングデータオブジェクト。
+- **stop()** (src/AudioManager.ts): 現在のアクティブな音声入力ストリームを停止し、関連するオーディオリソースを解放します。
+- **stop()** (src/Oscilloscope.ts): オシロスコープのリアルタイム処理と描画を停止し、リソースを解放します。
+- **stopFrequencyDisplay()** (src/main.ts): UI上の周波数表示の更新を停止します。
+- **trimSilence(buffer: Float32Array, threshold: number)** (src/utils.ts): 音声バッファの先頭と末尾にある無音部分を、指定された閾値に基づいてトリミングします。
+    - 引数: `buffer` (Float32Array) - 処理する音声データバッファ、`threshold` (number) - 無音と判断する振幅の閾値。
+    - 戻り値: `Float32Array` - トリミングされた音声データバッファ。
+- **WASMモジュール内部関数群** (public/wasm/wasm_processor.js, public/wasm/wasm_processor.d.ts): `getArrayF32FromWasm0`, `initSync`, `__wbg_init`, `processFrame`, `setAutoGain`など、WebAssemblyモジュール内でデータ処理、初期化、ゲイン制御、ノイズゲート設定、周波数推定方法の変更などを行う低レベル関数群です。これらはJavaScriptラッパーを通じて間接的に利用されます。
 
 ## 関数呼び出し階層ツリー
 ```
@@ -214,34 +233,39 @@ Last updated: 2026-01-08
   - __wbg_load ()
   - __wbg_get_imports ()
   - __wbg_finalize_init ()
+  - function ()
   - __destroy_into_raw ()
-- start (src/AudioManager.ts)
-  - startFromFile (src/AudioManager.ts)
-    - stop (src/AudioManager.ts)
-    - createMediaStreamSource (src/__tests__/algorithms.test.ts)
-    - createAnalyser (src/__tests__/algorithms.test.ts)
-    - close (src/__tests__/algorithms.test.ts)
-    - getTracks (src/__tests__/algorithms.test.ts)
-    - trimSilence (src/utils.ts)
-- isSignalAboveNoiseGate (public/wasm/wasm_processor.js)
-- dbToAmplitude (src/utils.ts)
-- reset (public/wasm/wasm_processor.js)
-- generateSineWave (src/__tests__/algorithms.test.ts)
-  - generateNoise (src/__tests__/algorithms.test.ts)
-    - generateSquareWave (src/__tests__/algorithms.test.ts)
-    - countZeroCrossings (src/__tests__/algorithms.test.ts)
-- createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
-  - getFFTOverlayDimensions (src/__tests__/oscilloscope.test.ts)
-    - findFFTOverlayBorderCall (src/__tests__/oscilloscope.test.ts)
-    - getAudioTracks (src/__tests__/oscilloscope.test.ts)
-    - getVideoTracks (src/__tests__/oscilloscope.test.ts)
-- setUseWasm (src/Oscilloscope.ts)
-- sliderValueToThreshold (src/main.ts)
-  - formatThresholdDisplay (src/main.ts)
-    - startFrequencyDisplay (src/main.ts)
-    - stopFrequencyDisplay (src/main.ts)
+- if (src/AudioManager.ts)
+  - start ()
+    - startFromFile ()
+      - stop ()
+      - createMediaStreamSource ()
+      - createAnalyser ()
+      - close ()
+      - getTracks ()
+      - trimSilence ()
+  - isSignalAboveNoiseGate ()
+  - dbToAmplitude ()
+  - reset ()
+  - generateSineWave (src/__tests__/algorithms.test.ts)
+    - generateNoise ()
+      - generateSquareWave ()
+      - countZeroCrossings ()
+  - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
+    - getFFTOverlayDimensions ()
+      - findFFTOverlayBorderCall ()
+      - getAudioTracks ()
+      - getVideoTracks ()
+  - setUseWasm ()
+  - sliderValueToThreshold (src/main.ts)
+    - formatThresholdDisplay ()
+      - startFrequencyDisplay ()
+      - stopFrequencyDisplay ()
+- catch (src/AudioManager.ts)
+- for (src/AudioManager.ts)
+- switch (src/FrequencyEstimator.ts)
 - cleanup (src/WasmDataProcessor.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 
 ---
-Generated at: 2026-01-08 07:09:20 JST
+Generated at: 2026-01-09 07:09:47 JST

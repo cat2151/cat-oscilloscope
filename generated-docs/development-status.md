@@ -1,65 +1,55 @@
-Last updated: 2026-01-08
+Last updated: 2026-01-09
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #106](../issue-notes/106.md) と [Issue #105](../issue-notes/105.md) は、WASMモジュールのロードパスがViteのベースパス設定を考慮しておらず、GitHub Pages環境でエラーとなる問題を修正する必要があります。
-- [Issue #107](../issue-notes/107.md) は、フレームバッファ、前回波形、今回波形の3つの振幅表示が小さすぎるため、それぞれの波形をキャンバスの縦幅いっぱいに拡大表示する改善が求められています。
-- [Issue #77](../issue-notes/77.md) は、一時停止した瞬間の波形が破綻することがあり、特にマウス操作で発生しやすいという不安定性の問題の調査と修正が必要です。
+- 一時停止時に波形表示が破綻する [Issue #77](../issue-notes/77.md) の根本原因調査が喫緊の課題です。
+- `wavlpf`からのライブラリ利用検討 [Issue #70](../issue-notes/70.md) と、波形探索周期のプルダウンメニュー追加 [Issue #64](../issue-notes/64.md) が機能改善として進行中です。
+- UIの表示文言調整 [Issue #28](../issue-notes/28.md) や、周波数情報のA4+0cent表示 [Issue #25](../issue-notes/25.md)、ピアノ鍵盤風表示 [Issue #26](../issue-notes/26.md) といった改善が予定されています。
 
 ## 次の一手候補
-1. WASMモジュールのロードパスを修正し、GitHub Pagesでのエラーを解消する [Issue #106](../issue-notes/106.md)
-   - 最初の小さな一歩: `src/WasmDataProcessor.ts` 内のWASMモジュールロード処理において、ハードコードされているパスをViteのベースパス設定に対応するよう変更する。
-   - Agent実行プロンプ:
-     ```
-     対象ファイル: `src/WasmDataProcessor.ts`, `public/wasm/wasm_processor.js`
+1.  一時停止時の波形破綻 [Issue #77](../issue-notes/77.md) のデバッグログ追加
+    -   最初の小さな一歩: 一時停止操作を行った際の、波形データ取得、処理、描画ロジックの各段階で詳細なデバッグログを出力するようにコードを追加する。
+    -   Agent実行プロンプ:
+        ```
+        対象ファイル: `src/Oscilloscope.ts`, `src/WaveformDataProcessor.ts`, `src/WaveformRenderer.ts`
 
-     実行内容: `src/WasmDataProcessor.ts` の `loadWasmModule` メソッド内でハードコードされているWASMモジュールのパス `/wasm/wasm_processor.js` を、Viteのベースパス設定（例: `import.meta.env.BASE_URL`）を考慮して動的に解決するように修正してください。具体的には、`script.textContent` 内のパスを修正し、`public/wasm/wasm_processor.js` がどのようにバンドルされるか考慮して適切なパス解決方法を適用してください。
+        実行内容: 一時停止時の波形表示が破綻する [Issue #77](../issue-notes/77.md) の原因を特定するため、以下のファイルにデバッグログを追加してください。`src/Oscilloscope.ts`で一時停止がトリガーされた時刻、`src/WaveformDataProcessor.ts`で処理されるRawデータ、`src/WaveformRenderer.ts`で描画される最終的なデータを、一時停止前後のタイムスタンプと共にコンソールに出力するように実装してください。特に、キーボードとマウス操作で挙動が異なる可能性を考慮し、どの操作で一時停止されたかもログに含めてください。
 
-     確認事項:
-     - 開発環境 (`npm run dev`) でWASMモジュールが正しくロードされること。
-     - プロダクションビルド (`npm run build`) 後、GitHub Pagesなどのサブディレクトリにデプロイされた環境でWASMモジュールが正しくロードされ、機能すること。
-     - `public/wasm/wasm_processor.js` のビルド生成方法とViteの`base`設定との整合性を確認してください。
+        確認事項: 既存の描画やデータ処理ロジックに影響を与えないこと。デバッグログは開発モードでのみ有効化されるように、条件分岐を設けることを検討してください。ログ出力が多すぎないか、パフォーマンスに影響がないかを確認してください。
 
-     期待する出力: `src/WasmDataProcessor.ts` の修正案をMarkdown形式で提示してください。可能であれば、修正後のファイル内容全体を提示してください。
-     ```
+        期待する出力: デバッグログが追加された`src/Oscilloscope.ts`, `src/WaveformDataProcessor.ts`, `src/WaveformRenderer.ts`の修正コード。
+        ```
 
-2. 振幅が小さい波形を縦いっぱいに拡大表示する [Issue #107](../issue-notes/107.md)
-   - 最初の小さな一歩: `src/ComparisonPanelRenderer.ts` で描画される各波形（フレームバッファ、前回波形、今回波形）について、データ内の最大絶対値を見つけ、それを基準にキャンバスの縦幅の80%〜90%になるようにスケーリングするロジックを実装する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/ComparisonPanelRenderer.ts`, `src/WaveformRenderer.ts`
+2.  波形探索周期プルダウンメニュー [Issue #64](../issue-notes/64.md) のUIプレースホルダー追加
+    -   最初の小さな一歩: `index.html`に、自己相関判定に使う周期の倍率（1倍、2倍、3倍、4倍）を選択するプルダウンメニュー（`<select>`要素）を追加し、`src/main.ts`でそのDOM要素への参照を取得する。
+    -   Agent実行プロンプト:
+        ```
+        対象ファイル: `index.html`, `src/main.ts`
 
-     実行内容: [Issue #107](../issue-notes/107.md) に基づき、`src/ComparisonPanelRenderer.ts` および必要であれば共通描画処理を行う `src/WaveformRenderer.ts` において、現在表示されている3つの波形（フレームバッファ、前回波形、今回波形）の振幅が小さすぎる場合、それぞれの波形データ内で最大の絶対値を見つけ、それを基準にキャンバスの縦幅いっぱいに拡大表示するロジックを実装してください。具体的には、ピーク振幅を検出し、そのピークがキャンバスの表示範囲の約80%になるようにゲインを調整してください。
+        実行内容: [Issue #64](../issue-notes/64.md) に対応するため、`index.html`内の適切な位置（例: 既存のコントロール要素の近く）に、自己相関判定に使う周期の倍率を選択する`<select>`要素といくつかの`<option>`要素（1倍, 2倍, 3倍, 4倍）をプレースホルダーとして追加してください。その際、各`<option>`には適切な`value`属性（例: `1`, `2`, `3`, `4`）を設定してください。また、`src/main.ts`に新しいプルダウンメニューのDOM要素を取得し、デフォルト値（例: 1倍）を設定するコードを追加してください。
 
-     確認事項:
-     - 振幅が小さい場合に正しく拡大表示されること。
-     - 振幅が大きい場合に波形がクリッピングされないよう適切に調整されること。
-     - 3つの波形がそれぞれ独立して、かつ適切にスケーリングされること。
-     - 以前のコミット `ae6990e` で行われた「波形を80%に正規化」の変更との整合性を確認すること。
+        確認事項: 既存のUIレイアウトを大幅に崩さないこと。追加するDOM要素に一意のIDを付与すること。`src/main.ts`でのDOM要素取得はページロード完了後に行われるようにすること。
 
-     期待する出力: `src/ComparisonPanelRenderer.ts` と `src/WaveformRenderer.ts` の修正案をMarkdown形式で提示してください。修正後のファイル内容全体を含めてください。
-     ```
+        期待する出力: 新しいプルダウンメニューが追加された`index.html`の修正コードと、そのDOM要素の取得および初期設定が追加された`src/main.ts`の修正コード。
+        ```
 
-3. 一時停止時の波形破綻の原因を特定するためのデバッグログを追加する [Issue #77](../issue-notes/77.md)
-   - 最初の小さな一歩: 一時停止がトリガーされる前後で、`src/main.ts`や`src/WaveformDataProcessor.ts`/`src/WasmDataProcessor.ts`の主要なデータ処理ポイントに、波形データや表示インデックスなどの状態をログ出力する処理を追加する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/main.ts`, `src/WaveformDataProcessor.ts`, `src/WasmDataProcessor.ts`, `src/WaveformRenderer.ts`
+3.  周波数A4+0cent表示 [Issue #25](../issue-notes/25.md) とピアノ鍵盤風表示 [Issue #26](../issue-notes/26.md) の初期設計
+    -   最初の小さな一歩: 現在の周波数表示箇所 (`src/ComparisonPanelRenderer.ts`) を分析し、A4+0cent形式の表示やピアノ鍵盤風の画像をどこに、どのように配置するのが最適か、そしてそれに必要なデータ変換ロジック（周波数からノート名、セント値、鍵盤画像へのマッピング）の実現可能性を検討する。
+    -   Agent実行プロンプト:
+        ```
+        対象ファイル: `src/ComparisonPanelRenderer.ts`, `index.html`, `src/FrequencyEstimator.ts`
 
-     実行内容: [Issue #77](../issue-notes/77.md) に記載されている「一時停止した瞬間の波形が破綻する」問題の原因を特定するため、以下のデバッグロギングを追加してください。
-     1. 一時停止がトリガーされる前後で、`src/main.ts`または関連するイベントハンドラにデバッグログを追加し、トリガーイベント（キーボード/マウス）とタイムスタンプを記録。
-     2. `src/WaveformDataProcessor.ts` または `src/WasmDataProcessor.ts` の `processFrame` メソッド内で、一時停止の前後で `waveformData`, `displayStartIndex`, `displayEndIndex`, `estimatedFrequency`, `gain`, `similarity` などの主要なレンダリングパラメータの値をログ出力。
-     3. `src/WaveformRenderer.ts` の描画関数で、実際に描画に使われる `waveformData` の範囲と値、キャンバスサイズなどをログ出力。
-     デバッグログは、特に「キーボードよりマウスのほうが破綻しやすい」という現象を分析できるように、入力方法を区別して記録してください。
+        実行内容: [Issue #25](../issue-notes/25.md) (A4+0cent表示) と [Issue #26](../issue-notes/26.md) (ピアノ鍵盤風表示) の実装に向けて、以下の観点から初期設計案をMarkdown形式で生成してください。
+        1. 現在の周波数表示 (`src/ComparisonPanelRenderer.ts`, `index.html`) の隣接または代替として、A4+0cent形式の表示をどこに配置するか。
+        2. 画面下部にピアノ鍵盤風の画像をどのように統合するか（例: CSS背景、SVG埋め込み、Canvas描画）。
+        3. 周波数データ (`src/FrequencyEstimator.ts`が生成する周波数) から、A4+0cent表示に必要なノート名とセント値、および鍵盤の光らせる状態を計算するためのロジックの概要。
+        4. これらのUI要素が既存のパフォーマンスやユーザビリティに与える影響。
 
-     確認事項:
-     - 追加されたデバッグログが、アプリケーションのパフォーマンスに大きな影響を与えないこと。
-     - ログ出力が一時停止前後の状態変化を追跡できる十分な情報を提供すること。
-     - 本番環境へのデプロイ前に、デバッグログを容易に削除または無効化できる仕組みがあること。
+        確認事項: 既存のUI要素との視覚的な競合を避けること。パフォーマンスオーバーヘッドを最小限に抑える設計を優先すること。将来的な拡張性を考慮した提案であること。
 
-     期待する出力: デバッグログ追加後のコードスニペットと、ログを追加したファイルの詳細な説明をMarkdown形式で提示してください。
-     ```
+        期待する出力: 新しいUI要素の配置案、必要なデータ変換ロジックの概要、および影響を受けるファイルとその変更点の概説を含む、詳細なMarkdown形式の設計ドキュメント。
+        ```
 
 ---
-Generated at: 2026-01-08 07:09:00 JST
+Generated at: 2026-01-09 07:09:28 JST

@@ -1,4 +1,4 @@
-Last updated: 2026-01-08
+Last updated: 2026-01-09
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -312,6 +312,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 102.md
   📖 105.md
   📖 107.md
+  📖 110.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -365,7 +366,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 utils.test.ts
+    📘 wasm-data-processor.test.ts
     📘 waveform-data-processor.test.ts
+    📘 waveform-renderer.test.ts
     📘 waveform-searcher.test.ts
   📘 index.ts
   📘 main.ts
@@ -407,11 +410,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, catch, for, start, startFromFile, stop
   - インポート: ./utils
 
-**src/ComparisonPanelRenderer.ts** (244行, 6949バイト)
+**src/ComparisonPanelRenderer.ts** (288行, 8719バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
-**src/FrequencyEstimator.ts** (472行, 17021バイト)
+**src/FrequencyEstimator.ts** (489行, 17582バイト)
   - 関数: for, if, switch
   - インポート: なし
 
@@ -419,23 +422,23 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (326行, 10151バイト)
+**src/Oscilloscope.ts** (338行, 10541バイト)
   - 関数: constructor, catch, if, start, startFromFile, stop, setUseWasm
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
-**src/WasmDataProcessor.ts** (258行, 8869バイト)
-  - 関数: cleanup, handleLoad, constructor, if, catch, initialize, loadWasmModule
+**src/WasmDataProcessor.ts** (351行, 12112バイト)
+  - 関数: cleanup, handleLoad, constructor, if, catch, for, initialize, loadWasmModule
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
-**src/WaveformDataProcessor.ts** (186行, 7062バイト)
+**src/WaveformDataProcessor.ts** (187行, 7141バイト)
   - 関数: constructor, if
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
-**src/WaveformRenderData.ts** (59行, 1859バイト)
+**src/WaveformRenderData.ts** (62行, 1920バイト)
   - 関数: なし
   - インポート: なし
 
-**src/WaveformRenderer.ts** (217行, 6531バイト)
+**src/WaveformRenderer.ts** (428行, 14382バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
@@ -447,12 +450,12 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: なし
 
-**src/__tests__/algorithms.test.ts** (708行, 25399バイト)
+**src/__tests__/algorithms.test.ts** (708行, 25377バイト)
   - 関数: generateSineWave, generateNoise, generateSquareWave, countZeroCrossings, createMediaStreamSource, createAnalyser, close, getTracks, for, if
   - インポート: vitest, ../Oscilloscope, ../ZeroCrossDetector
 
-**src/__tests__/comparison-panel-renderer.test.ts** (225行, 7685バイト)
-  - 関数: なし
+**src/__tests__/comparison-panel-renderer.test.ts** (322行, 11586バイト)
+  - 関数: for
   - インポート: vitest, ../ComparisonPanelRenderer
 
 **src/__tests__/dom-integration.test.ts** (289行, 9226バイト)
@@ -463,7 +466,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest
 
-**src/__tests__/oscilloscope.test.ts** (550行, 20757バイト)
+**src/__tests__/oscilloscope.test.ts** (550行, 20733バイト)
   - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if
   - インポート: vitest, ../Oscilloscope, ../utils
 
@@ -471,9 +474,17 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
-**src/__tests__/waveform-data-processor.test.ts** (192行, 7850バイト)
+**src/__tests__/wasm-data-processor.test.ts** (229行, 8829バイト)
+  - 関数: なし
+  - インポート: vitest, ../WasmDataProcessor, ../AudioManager
+
+**src/__tests__/waveform-data-processor.test.ts** (199行, 8337バイト)
   - 関数: if
   - インポート: vitest, ../WaveformDataProcessor, ../AudioManager
+
+**src/__tests__/waveform-renderer.test.ts** (340行, 11624バイト)
+  - 関数: for
+  - インポート: vitest, ../WaveformRenderer
 
 **src/__tests__/waveform-searcher.test.ts** (296行, 11300バイト)
   - 関数: for, if
@@ -567,6 +578,7 @@ issue-notes/101.md
 issue-notes/102.md
 issue-notes/105.md
 issue-notes/107.md
+issue-notes/110.md
 issue-notes/57.md
 issue-notes/59.md
 issue-notes/62.md
@@ -584,7 +596,6 @@ issue-notes/79.md
 issue-notes/80.md
 issue-notes/81.md
 issue-notes/83.md
-issue-notes/85.md
 package-lock.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -597,4 +608,4 @@ package-lock.json
 
 
 ---
-Generated at: 2026-01-08 07:08:38 JST
+Generated at: 2026-01-09 07:09:09 JST
