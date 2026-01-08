@@ -89,9 +89,10 @@ describe('WaveformRenderer', () => {
       // Should draw labels when measurement data is provided
       expect(mockContext.fillText).toHaveBeenCalled();
       
-      // Should draw both time and amplitude labels
+      // Should draw both time and amplitude labels (11 time labels + 6 amplitude labels = 17 total)
       const fillTextCalls = mockContext.fillText.mock.calls;
-      expect(fillTextCalls.length).toBeGreaterThan(10); // At least 11 time labels + 6 amplitude labels
+      const expectedLabelCount = 17; // 11 vertical grid lines + 6 horizontal grid lines
+      expect(fillTextCalls.length).toBe(expectedLabelCount);
     });
 
     it('should draw time labels with appropriate units', () => {
@@ -182,6 +183,42 @@ describe('WaveformRenderer', () => {
         label.includes('s') && !label.includes('ms') && !label.includes('μs')
       );
       expect(hasSeconds).toBe(true);
+    });
+
+    it('should not draw labels when gain is zero', () => {
+      const sampleRate = 48000;
+      const displaySamples = 4096;
+      const gain = 0; // Invalid gain
+
+      mockContext.fillText.mockClear();
+      renderer.clearAndDrawGrid(sampleRate, displaySamples, gain);
+
+      // Should not draw labels with zero gain
+      expect(mockContext.fillText).not.toHaveBeenCalled();
+    });
+
+    it('should not draw labels when displaySamples is zero', () => {
+      const sampleRate = 48000;
+      const displaySamples = 0; // Invalid
+      const gain = 1.0;
+
+      mockContext.fillText.mockClear();
+      renderer.clearAndDrawGrid(sampleRate, displaySamples, gain);
+
+      // Should not draw labels with zero samples
+      expect(mockContext.fillText).not.toHaveBeenCalled();
+    });
+
+    it('should not draw labels when sampleRate is zero', () => {
+      const sampleRate = 0; // Invalid
+      const displaySamples = 4096;
+      const gain = 1.0;
+
+      mockContext.fillText.mockClear();
+      renderer.clearAndDrawGrid(sampleRate, displaySamples, gain);
+
+      // Should not draw labels with zero sample rate
+      expect(mockContext.fillText).not.toHaveBeenCalled();
     });
   });
 

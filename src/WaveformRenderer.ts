@@ -75,8 +75,8 @@ export class WaveformRenderer {
     this.ctx.lineTo(this.canvas.width, this.canvas.height / 2);
     this.ctx.stroke();
 
-    // Draw measurement labels if data is available
-    if (sampleRate && displaySamples && gain !== undefined) {
+    // Draw measurement labels if data is available and valid
+    if (sampleRate && sampleRate > 0 && displaySamples && displaySamples > 0 && gain !== undefined && gain > 0) {
       this.drawGridLabels(sampleRate, displaySamples, gain);
     }
   }
