@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { dbToAmplitude, trimSilence } from '../utils';
+import { dbToAmplitude, trimSilence, frequencyToNote } from '../utils';
 
 // Mock AudioBuffer for the test environment
 class MockAudioBuffer {
@@ -240,5 +240,81 @@ describe('trimSilence', () => {
     // Should start from index 1 (earliest sound across all channels)
     // and end at index 4 (latest sound across all channels)
     expect(trimmed.length).toBe(4); // indices 1, 2, 3, 4
+  });
+});
+
+describe('frequencyToNote', () => {
+  it('should convert 440 Hz to A4+0cent', () => {
+    const result = frequencyToNote(440);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A4');
+    expect(result?.cents).toBe(0);
+  });
+
+  it('should convert 880 Hz to A5+0cent', () => {
+    const result = frequencyToNote(880);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A5');
+    expect(result?.cents).toBe(0);
+  });
+
+  it('should convert 261.63 Hz to C4 (approximately)', () => {
+    const result = frequencyToNote(261.63);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('C4');
+    expect(Math.abs(result!.cents)).toBeLessThan(5); // Within 5 cents
+  });
+
+  it('should convert 277.18 Hz to C#4 (approximately)', () => {
+    const result = frequencyToNote(277.18);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('C#4');
+    expect(Math.abs(result!.cents)).toBeLessThan(5);
+  });
+
+  it('should detect sharp notes', () => {
+    const result = frequencyToNote(233.08); // A#3
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A#3');
+    expect(Math.abs(result!.cents)).toBeLessThan(5);
+  });
+
+  it('should handle slightly off-tune frequency with positive cents', () => {
+    // 445 Hz is slightly sharp of A4 (440 Hz)
+    const result = frequencyToNote(445);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A4');
+    expect(result!.cents).toBeGreaterThan(0);
+    expect(result!.cents).toBeLessThanOrEqual(50);
+  });
+
+  it('should handle slightly off-tune frequency with negative cents', () => {
+    // 435 Hz is slightly flat of A4 (440 Hz)
+    const result = frequencyToNote(435);
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A4');
+    expect(result!.cents).toBeLessThan(0);
+    expect(result!.cents).toBeGreaterThanOrEqual(-50);
+  });
+
+  it('should handle low frequencies', () => {
+    const result = frequencyToNote(27.5); // A0
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('A0');
+    expect(Math.abs(result!.cents)).toBeLessThan(5);
+  });
+
+  it('should handle high frequencies', () => {
+    const result = frequencyToNote(4186.01); // C8
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('C8');
+    expect(Math.abs(result!.cents)).toBeLessThan(5);
+  });
+
+  it('should return null for invalid frequencies', () => {
+    expect(frequencyToNote(0)).toBeNull();
+    expect(frequencyToNote(-10)).toBeNull();
+    expect(frequencyToNote(NaN)).toBeNull();
+    expect(frequencyToNote(Infinity)).toBeNull();
   });
 });

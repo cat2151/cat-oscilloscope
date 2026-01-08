@@ -1,5 +1,5 @@
 /**
- * Utility functions for threshold conversions
+ * Utility functions for threshold conversions and audio processing
  */
 
 /**
@@ -9,6 +9,42 @@
  */
 export function dbToAmplitude(db: number): number {
   return Math.pow(10, db / 20);
+}
+
+/**
+ * Convert frequency to musical note name and cent deviation
+ * @param frequency - Frequency in Hz
+ * @returns Object with note name (e.g., "A4") and cent deviation (e.g., 0), or null if frequency is invalid
+ */
+export function frequencyToNote(frequency: number): { noteName: string; cents: number } | null {
+  if (frequency <= 0 || !isFinite(frequency)) {
+    return null;
+  }
+
+  // A4 = 440 Hz is our reference
+  const A4 = 440;
+  const C0 = A4 * Math.pow(2, -4.75); // C0 frequency
+
+  // Calculate the number of half steps from C0
+  const halfSteps = 12 * Math.log2(frequency / C0);
+  
+  // Round to nearest half step to get the note
+  const noteIndex = Math.round(halfSteps);
+  
+  // Calculate cent deviation from the nearest note (-50 to +50)
+  const cents = Math.round((halfSteps - noteIndex) * 100);
+  
+  // Note names in chromatic scale
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  
+  // Calculate octave and note name
+  const octave = Math.floor(noteIndex / 12);
+  const note = noteNames[noteIndex % 12];
+  
+  return {
+    noteName: `${note}${octave}`,
+    cents: cents
+  };
 }
 
 /**
