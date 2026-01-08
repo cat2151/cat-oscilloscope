@@ -14,7 +14,7 @@ export class ComparisonPanelRenderer {
   private bufferCtx: CanvasRenderingContext2D;
   
   // Auto-scaling constants
-  private readonly TARGET_FILL_RATIO = 0.9;    // Target 90% of vertical height for auto-scaled waveforms
+  private readonly TARGET_FILL_RATIO = 0.9;    // Target 90% of distance from center to edge (canvas half-height) for auto-scaled waveforms
   private readonly MIN_PEAK_THRESHOLD = 0.001; // Minimum peak to trigger auto-scaling (below this uses default)
   private readonly DEFAULT_AMPLITUDE_RATIO = 0.4; // Default scaling factor when peak is too small
 
@@ -85,8 +85,9 @@ export class ComparisonPanelRenderer {
 
   /**
    * Draw a waveform on a canvas with auto-scaling
-   * Waveforms are automatically scaled to fill 90% of vertical height
-   * If peak amplitude is 0.01, it will be scaled 100x to fill the display
+   * Waveforms are automatically scaled so that peaks reach 90% of the distance
+   * from the vertical center line to the top/bottom edge (i.e. 90% of half the height).
+   * For example, if peak amplitude is 0.01, it will be scaled 90x relative to that center-to-edge range.
    */
   private drawWaveform(
     ctx: CanvasRenderingContext2D,
@@ -110,12 +111,12 @@ export class ComparisonPanelRenderer {
     const sliceWidth = width / dataLength;
     const centerY = height / 2;
     
-    // Auto-scale to fill 90% of vertical height
+    // Auto-scale so peaks reach 90% of distance from center to edge (90% of half-height)
     // If peak is 0 or very small (< MIN_PEAK_THRESHOLD), use default scaling to avoid division by zero
     let amplitude: number;
     
     if (peak > this.MIN_PEAK_THRESHOLD) {
-      // Calculate scaling factor so peak reaches TARGET_FILL_RATIO of half-height
+      // Calculate scaling factor so peak reaches TARGET_FILL_RATIO of the distance from center to edge
       const scalingFactor = this.TARGET_FILL_RATIO / peak;
       amplitude = (height / 2) * scalingFactor;
     } else {
