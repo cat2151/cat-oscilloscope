@@ -179,7 +179,7 @@ function startFrequencyDisplay(): void {
         // Update note display
         const noteInfo = frequencyToNote(frequency);
         if (noteInfo) {
-          const centsSign = noteInfo.cents > 0 ? '+' : '';
+          const centsSign = noteInfo.cents >= 0 ? '+' : '';
           noteValue.textContent = `${noteInfo.noteName}${centsSign}${noteInfo.cents}cent`;
         } else {
           noteValue.textContent = '---';
