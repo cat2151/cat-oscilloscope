@@ -1,5 +1,5 @@
 import { Oscilloscope } from './Oscilloscope';
-import { dbToAmplitude } from './utils';
+import { dbToAmplitude, frequencyToNote } from './utils';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -21,6 +21,7 @@ const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
 const bufferSizeMultiplier = document.getElementById('bufferSizeMultiplier') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
+const noteValue = document.getElementById('noteValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
 const similarityValue = document.getElementById('similarityValue') as HTMLSpanElement;
 
@@ -45,6 +46,7 @@ const requiredElements = [
   { element: frequencyMethod, name: 'frequencyMethod' },
   { element: bufferSizeMultiplier, name: 'bufferSizeMultiplier' },
   { element: frequencyValue, name: 'frequencyValue' },
+  { element: noteValue, name: 'noteValue' },
   { element: gainValue, name: 'gainValue' },
   { element: similarityValue, name: 'similarityValue' },
 ];
@@ -173,8 +175,18 @@ function startFrequencyDisplay(): void {
       const frequency = oscilloscope.getEstimatedFrequency();
       if (frequency > 0) {
         frequencyValue.textContent = `${frequency.toFixed(1)} Hz`;
+        
+        // Update note display
+        const noteInfo = frequencyToNote(frequency);
+        if (noteInfo) {
+          const centsSign = noteInfo.cents >= 0 ? '+' : '';
+          noteValue.textContent = `${noteInfo.noteName}${centsSign}${noteInfo.cents}cent`;
+        } else {
+          noteValue.textContent = '---';
+        }
       } else {
         frequencyValue.textContent = '--- Hz';
+        noteValue.textContent = '---';
       }
       
       // Update gain display
@@ -197,6 +209,7 @@ function stopFrequencyDisplay(): void {
     clearInterval(frequencyUpdateInterval);
     frequencyUpdateInterval = null;
     frequencyValue.textContent = '--- Hz';
+    noteValue.textContent = '---';
     gainValue.textContent = '---x';
     similarityValue.textContent = '---';
   }
