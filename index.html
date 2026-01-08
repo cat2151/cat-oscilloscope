@@ -82,6 +82,13 @@
       text-align: center;
     }
 
+    #pianoKeyboardCanvas {
+      background-color: #1a1a1a;
+      border: 2px solid #ff8800;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(255, 136, 0, 0.3);
+    }
+
     #controls {
       margin-top: 20px;
       display: flex;
@@ -293,6 +300,15 @@
       <span style="font-weight: bold;">Similarity:</span>
       <span id="similarityValue" style="min-width: 80px; font-family: monospace; font-size: 18px; color: #00aaff;" aria-live="polite">---</span>
     </div>
+  </div>
+  <div id="pianoKeyboardContainer" style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+    <span class="canvasLabel">ピアノ鍵盤 (Piano Keyboard) - 50Hz～1000Hz</span>
+    <canvas
+      id="pianoKeyboardCanvas"
+      width="800"
+      height="80"
+      aria-label="Piano keyboard visualization showing highlighted key for detected fundamental frequency"
+    ></canvas>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
