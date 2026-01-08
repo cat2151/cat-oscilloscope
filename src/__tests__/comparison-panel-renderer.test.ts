@@ -258,7 +258,8 @@ describe('ComparisonPanelRenderer', () => {
     });
 
     it('should handle very small amplitude waveforms (below threshold)', () => {
-      // Create a waveform with very small amplitude (0.0001, below MIN_PEAK_THRESHOLD)
+      // Create a waveform with very small amplitude (0.0001, below MIN_PEAK_THRESHOLD of 0.001)
+      // This should trigger the default scaling behavior
       const tinyWaveform = new Float32Array(100);
       for (let i = 0; i < tinyWaveform.length; i++) {
         tinyWaveform[i] = 0.0001 * Math.sin((i / tinyWaveform.length) * Math.PI * 2);

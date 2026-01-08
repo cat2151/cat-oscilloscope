@@ -12,6 +12,11 @@ export class ComparisonPanelRenderer {
   private previousCtx: CanvasRenderingContext2D;
   private currentCtx: CanvasRenderingContext2D;
   private bufferCtx: CanvasRenderingContext2D;
+  
+  // Auto-scaling constants
+  private readonly TARGET_FILL_RATIO = 0.9;    // Target 90% of vertical height for auto-scaled waveforms
+  private readonly MIN_PEAK_THRESHOLD = 0.001; // Minimum peak to trigger auto-scaling (below this uses default)
+  private readonly DEFAULT_AMPLITUDE_RATIO = 0.4; // Default scaling factor when peak is too small
 
   constructor(
     previousCanvas: HTMLCanvasElement,
@@ -106,18 +111,16 @@ export class ComparisonPanelRenderer {
     const centerY = height / 2;
     
     // Auto-scale to fill 90% of vertical height
-    // If peak is 0 or very small (< 0.001), use a default scaling to avoid division by zero
-    const TARGET_FILL_RATIO = 0.9;
-    const MIN_PEAK_THRESHOLD = 0.001;
+    // If peak is 0 or very small (< MIN_PEAK_THRESHOLD), use default scaling to avoid division by zero
     let amplitude: number;
     
-    if (peak > MIN_PEAK_THRESHOLD) {
-      // Calculate scaling factor so peak reaches 90% of half-height
-      const scalingFactor = TARGET_FILL_RATIO / peak;
+    if (peak > this.MIN_PEAK_THRESHOLD) {
+      // Calculate scaling factor so peak reaches TARGET_FILL_RATIO of half-height
+      const scalingFactor = this.TARGET_FILL_RATIO / peak;
       amplitude = (height / 2) * scalingFactor;
     } else {
       // For very small or zero signals, use default scaling
-      amplitude = height * 0.4;
+      amplitude = height * this.DEFAULT_AMPLITUDE_RATIO;
     }
 
     for (let i = 0; i < dataLength; i++) {
