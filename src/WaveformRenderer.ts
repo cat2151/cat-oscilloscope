@@ -132,7 +132,9 @@ export class WaveformRenderer {
       const amplitude = divisionsFromCenterLine * amplitudePerDivision;
       
       let label: string;
-      if (Math.abs(amplitude) >= 1) {
+      if (amplitude === 0) {
+        label = '0.000';
+      } else if (Math.abs(amplitude) >= 1) {
         label = amplitude.toFixed(2);
       } else if (Math.abs(amplitude) >= 0.01) {
         label = amplitude.toFixed(3);
