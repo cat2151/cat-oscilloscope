@@ -56,8 +56,32 @@ export class ComparisonPanelRenderer {
   }
 
   /**
-   * Draw a waveform on a canvas
-   * Waveforms are normalized to 80% of vertical height for better visibility
+   * Calculate peak amplitude in a given range of data
+   * Used for auto-scaling waveforms to fill the vertical space
+   */
+  private findPeakAmplitude(
+    data: Float32Array,
+    startIndex: number,
+    endIndex: number
+  ): number {
+    let peak = 0;
+    const clampedStart = Math.max(0, startIndex);
+    const clampedEnd = Math.min(data.length, endIndex);
+
+    for (let i = clampedStart; i < clampedEnd; i++) {
+      const value = Math.abs(data[i]);
+      if (value > peak) {
+        peak = value;
+      }
+    }
+
+    return peak;
+  }
+
+  /**
+   * Draw a waveform on a canvas with auto-scaling
+   * Waveforms are automatically scaled to fill 90% of vertical height
+   * If peak amplitude is 0.01, it will be scaled 100x to fill the display
    */
   private drawWaveform(
     ctx: CanvasRenderingContext2D,
@@ -71,14 +95,30 @@ export class ComparisonPanelRenderer {
     const dataLength = endIndex - startIndex;
     if (dataLength <= 0) return;
 
+    // Find peak amplitude for auto-scaling
+    const peak = this.findPeakAmplitude(data, startIndex, endIndex);
+    
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
 
     const sliceWidth = width / dataLength;
     const centerY = height / 2;
-    // Normalize to 80% of vertical height (0.8 * height / 2 = 0.4 * height)
-    const amplitude = height * 0.4;
+    
+    // Auto-scale to fill 90% of vertical height
+    // If peak is 0 or very small (< 0.001), use a default scaling to avoid division by zero
+    const TARGET_FILL_RATIO = 0.9;
+    const MIN_PEAK_THRESHOLD = 0.001;
+    let amplitude: number;
+    
+    if (peak > MIN_PEAK_THRESHOLD) {
+      // Calculate scaling factor so peak reaches 90% of half-height
+      const scalingFactor = TARGET_FILL_RATIO / peak;
+      amplitude = (height / 2) * scalingFactor;
+    } else {
+      // For very small or zero signals, use default scaling
+      amplitude = height * 0.4;
+    }
 
     for (let i = 0; i < dataLength; i++) {
       const dataIndex = startIndex + i;

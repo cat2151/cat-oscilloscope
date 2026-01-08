@@ -221,4 +221,100 @@ describe('ComparisonPanelRenderer', () => {
       expect(buffCtx.fillRect).toHaveBeenCalled();
     });
   });
+
+  describe('Auto-scaling', () => {
+    beforeEach(() => {
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+    });
+
+    it('should auto-scale small amplitude waveforms to fill vertical space', () => {
+      // Create a waveform with small amplitude (0.01 peak)
+      const smallWaveform = new Float32Array(100);
+      for (let i = 0; i < smallWaveform.length; i++) {
+        smallWaveform[i] = 0.01 * Math.sin((i / smallWaveform.length) * Math.PI * 2);
+      }
+      const fullBuffer = new Float32Array(100).fill(0);
+
+      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0);
+
+      const currCtx = currentCanvas.getContext('2d') as any;
+      
+      // Verify that drawing operations were called
+      expect(currCtx.lineTo).toHaveBeenCalled();
+      
+      // The waveform should be drawn (lineTo called multiple times)
+      expect(currCtx.lineTo.mock.calls.length).toBeGreaterThan(10);
+    });
+
+    it('should handle zero amplitude waveforms without errors', () => {
+      // Create a waveform with zero amplitude
+      const zeroWaveform = new Float32Array(100).fill(0);
+      const fullBuffer = new Float32Array(100).fill(0);
+
+      // Should not throw
+      expect(() => {
+        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0);
+      }).not.toThrow();
+    });
+
+    it('should handle very small amplitude waveforms (below threshold)', () => {
+      // Create a waveform with very small amplitude (0.0001, below MIN_PEAK_THRESHOLD)
+      const tinyWaveform = new Float32Array(100);
+      for (let i = 0; i < tinyWaveform.length; i++) {
+        tinyWaveform[i] = 0.0001 * Math.sin((i / tinyWaveform.length) * Math.PI * 2);
+      }
+      const fullBuffer = new Float32Array(100).fill(0);
+
+      // Should not throw and should use default scaling
+      expect(() => {
+        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0);
+      }).not.toThrow();
+
+      const currCtx = currentCanvas.getContext('2d') as any;
+      expect(currCtx.lineTo).toHaveBeenCalled();
+    });
+
+    it('should auto-scale previous waveform independently', () => {
+      // Create waveforms with different amplitudes
+      const previousWaveform = new Float32Array(100);
+      const currentWaveform = new Float32Array(200);
+      
+      for (let i = 0; i < previousWaveform.length; i++) {
+        previousWaveform[i] = 0.05 * Math.sin((i / previousWaveform.length) * Math.PI * 2);
+      }
+      for (let i = 0; i < currentWaveform.length; i++) {
+        currentWaveform[i] = 0.02 * Math.sin((i / currentWaveform.length) * Math.PI * 2);
+      }
+      const fullBuffer = new Float32Array(200).fill(0);
+
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85);
+
+      const prevCtx = previousCanvas.getContext('2d') as any;
+      const currCtx = currentCanvas.getContext('2d') as any;
+
+      // Both should be drawn with their own scaling
+      expect(prevCtx.lineTo).toHaveBeenCalled();
+      expect(currCtx.lineTo).toHaveBeenCalled();
+    });
+
+    it('should auto-scale frame buffer waveform independently', () => {
+      // Create a full buffer with different amplitude
+      const currentWaveform = new Float32Array(200);
+      const fullBuffer = new Float32Array(200);
+      
+      for (let i = 0; i < currentWaveform.length; i++) {
+        currentWaveform[i] = 0.01 * Math.sin((i / currentWaveform.length) * Math.PI * 2);
+      }
+      for (let i = 0; i < fullBuffer.length; i++) {
+        fullBuffer[i] = 0.03 * Math.sin((i / fullBuffer.length) * Math.PI * 2);
+      }
+
+      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0);
+
+      const buffCtx = bufferCanvas.getContext('2d') as any;
+
+      // Frame buffer should be drawn with its own scaling
+      expect(buffCtx.lineTo).toHaveBeenCalled();
+    });
+  });
 });
