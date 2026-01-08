@@ -23,7 +23,9 @@ export function frequencyToNote(frequency: number): { noteName: string; cents: n
 
   // A4 = 440 Hz is our reference
   const A4 = 440;
-  const C0 = A4 * Math.pow(2, -4.75); // C0 frequency
+  // C0 is 4 octaves and 9 semitones (4.75 octaves) below A4
+  // Each octave is a factor of 2, so C0 = A4 / 2^4.75
+  const C0 = A4 * Math.pow(2, -4.75);
 
   // Calculate the number of half steps from C0
   const halfSteps = 12 * Math.log2(frequency / C0);
@@ -39,7 +41,8 @@ export function frequencyToNote(frequency: number): { noteName: string; cents: n
   
   // Calculate octave and note name
   const octave = Math.floor(noteIndex / 12);
-  const note = noteNames[noteIndex % 12];
+  // Use ((noteIndex % 12) + 12) % 12 to handle negative values correctly
+  const note = noteNames[((noteIndex % 12) + 12) % 12];
   
   return {
     noteName: `${note}${octave}`,

@@ -311,6 +311,13 @@ describe('frequencyToNote', () => {
     expect(Math.abs(result!.cents)).toBeLessThan(5);
   });
 
+  it('should handle very low frequencies correctly', () => {
+    const result = frequencyToNote(16.35); // C0
+    expect(result).not.toBeNull();
+    expect(result?.noteName).toBe('C0');
+    expect(Math.abs(result!.cents)).toBeLessThan(5);
+  });
+
   it('should return null for invalid frequencies', () => {
     expect(frequencyToNote(0)).toBeNull();
     expect(frequencyToNote(-10)).toBeNull();
