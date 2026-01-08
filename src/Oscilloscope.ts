@@ -185,6 +185,13 @@ export class Oscilloscope {
       );
     }
 
+    // 右上に周波数プロットを描画
+    this.renderer.drawFrequencyPlot(
+      renderData.frequencyPlotHistory,
+      this.frequencyEstimator.getMinFrequency(),
+      this.frequencyEstimator.getMaxFrequency()
+    );
+
     // Update comparison panels
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,

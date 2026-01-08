@@ -170,6 +170,7 @@ export class WaveformDataProcessor {
       displayEndIndex,
       gain,
       estimatedFrequency,
+      frequencyPlotHistory: this.frequencyEstimator.getFrequencyPlotHistory(),
       sampleRate,
       fftSize,
       firstAlignmentPoint,

@@ -261,9 +261,9 @@ describe('Oscilloscope Class', () => {
   });
   
   describe('Frequency Estimation Methods', () => {
-    it('should have autocorrelation as default method', () => {
+    it('should have FFT as default method', () => {
       const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
-      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('autocorrelation');
+      expect(oscilloscope.getFrequencyEstimationMethod()).toBe('fft');
     });
     
     it('should allow setting zero-crossing method', () => {

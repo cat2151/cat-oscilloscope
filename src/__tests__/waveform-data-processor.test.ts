@@ -155,7 +155,14 @@ describe('WaveformDataProcessor', () => {
     it('should store waveform and have previousWaveform on second frame', () => {
       vi.spyOn(audioManager, 'isReady').mockReturnValue(true);
       const mockData = new Float32Array(4096).fill(0.5);
+      const extendedMockData = new Float32Array(4096 * 16).fill(0.5); // Mock extended data for 16x buffer
+      const mockFrequencyData = new Uint8Array(2048);
+      // Create a mock frequency spectrum with a peak at bin 10 (simulating ~220 Hz at 48kHz sample rate)
+      mockFrequencyData[10] = 100;
+      
       vi.spyOn(audioManager, 'getTimeDomainData').mockReturnValue(mockData);
+      vi.spyOn(audioManager, 'getExtendedTimeDomainData').mockReturnValue(extendedMockData);
+      vi.spyOn(audioManager, 'getFrequencyData').mockReturnValue(mockFrequencyData);
       vi.spyOn(audioManager, 'getSampleRate').mockReturnValue(48000);
       vi.spyOn(audioManager, 'getFFTSize').mockReturnValue(4096);
 

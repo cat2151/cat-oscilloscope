@@ -23,6 +23,9 @@ export interface WaveformRenderData {
   /** Estimated fundamental frequency in Hz */
   estimatedFrequency: number;
   
+  /** プロット用の推定周波数の履歴 */
+  frequencyPlotHistory: number[];
+  
   /** Sample rate in Hz */
   sampleRate: number;
   
