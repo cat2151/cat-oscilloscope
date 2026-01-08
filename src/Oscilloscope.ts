@@ -185,7 +185,7 @@ export class Oscilloscope {
       );
     }
 
-    // Draw frequency plot in top-right corner
+    // 右上に周波数プロットを描画
     this.renderer.drawFrequencyPlot(
       renderData.frequencyPlotHistory,
       this.frequencyEstimator.getMinFrequency(),

@@ -18,10 +18,10 @@ export class FrequencyEstimator {
   private frequencyHistory: number[] = []; // Circular buffer of recent frequency estimates
   private readonly FREQUENCY_GROUPING_TOLERANCE = 0.05; // 5% tolerance for grouping similar frequencies in mode filter
   private bufferSizeMultiplier: 1 | 4 | 16 = 16; // Buffer size multiplier for extended FFT
-  // Number of frequency estimates to keep for plotting (100 frames ≈ 1-2 seconds at 60fps)
-  // This provides a good balance between showing recent trends and avoiding excessive memory usage
+  // プロット用に保持する周波数推定値の数（100フレーム ≈ 60fpsで1-2秒）
+  // 最近の傾向を表示しつつ過度なメモリ使用を避けるバランスを提供
   private readonly FREQUENCY_PLOT_HISTORY_SIZE = 100;
-  private frequencyPlotHistory: number[] = []; // History of estimated frequencies for plotting
+  private frequencyPlotHistory: number[] = []; // プロット用の推定周波数の履歴
 
   /**
    * Estimate frequency using zero-crossing method
@@ -432,7 +432,7 @@ export class FrequencyEstimator {
     // Apply temporal smoothing to prevent oscillation between harmonics
     this.estimatedFrequency = this.smoothFrequencyEstimate(rawFrequency);
     
-    // Add to plot history
+    // プロット履歴に追加
     this.frequencyPlotHistory.push(this.estimatedFrequency);
     if (this.frequencyPlotHistory.length > this.FREQUENCY_PLOT_HISTORY_SIZE) {
       this.frequencyPlotHistory.shift();

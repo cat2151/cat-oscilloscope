@@ -13,11 +13,11 @@ export class WaveformRenderer {
   private fftDisplayEnabled = true;
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
-  private readonly FREQ_PLOT_WIDTH = 280; // Width of frequency plot area
-  private readonly FREQ_PLOT_HEIGHT = 120; // Height of frequency plot area
-  private readonly FREQ_PLOT_PADDING = 10; // Padding from edge
-  private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ = 50; // Minimum padding for frequency range (Hz)
-  private readonly FREQ_PLOT_RANGE_PADDING_RATIO = 0.1; // Percentage padding for frequency range (10%)
+  private readonly FREQ_PLOT_WIDTH = 280; // 周波数プロット領域の幅
+  private readonly FREQ_PLOT_HEIGHT = 120; // 周波数プロット領域の高さ
+  private readonly FREQ_PLOT_PADDING = 10; // エッジからのパディング
+  private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ = 50; // 周波数範囲の最小パディング (Hz)
+  private readonly FREQ_PLOT_RANGE_PADDING_RATIO = 0.1; // 周波数範囲のパディング比率 (10%)
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -289,8 +289,8 @@ export class WaveformRenderer {
   }
 
   /**
-   * Draw frequency plot in top-right corner
-   * Shows the history of estimated frequencies to help users detect spikes
+   * 右上に周波数プロットを描画
+   * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
    */
   drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
     if (!frequencyHistory || frequencyHistory.length === 0) {
@@ -300,40 +300,40 @@ export class WaveformRenderer {
     const overlayX = this.canvas.width - this.FREQ_PLOT_WIDTH - this.FREQ_PLOT_PADDING;
     const overlayY = this.FREQ_PLOT_PADDING;
 
-    // Draw semi-transparent background
+    // 半透明背景を描画
     this.ctx.save();
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     this.ctx.fillRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
 
-    // Draw border
+    // 枠線を描画
     this.ctx.strokeStyle = '#ffaa00';
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
 
-    // Draw title
+    // タイトルを描画
     this.ctx.fillStyle = '#ffaa00';
     this.ctx.font = 'bold 12px Arial';
     this.ctx.fillText('周波数推移 (Frequency)', overlayX + 5, overlayY + 15);
 
-    // Calculate plot area (leave space for title and axis labels)
+    // プロット領域を計算（タイトルと軸ラベルのためのスペースを確保）
     const plotX = overlayX + 35;
     const plotY = overlayY + 25;
     const plotWidth = this.FREQ_PLOT_WIDTH - 45;
     const plotHeight = this.FREQ_PLOT_HEIGHT - 35;
 
-    // Draw grid lines
+    // グリッド線を描画
     this.ctx.strokeStyle = '#333333';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
     
-    // Horizontal grid lines
+    // 水平グリッド線
     for (let i = 0; i <= 4; i++) {
       const y = plotY + (plotHeight / 4) * i;
       this.ctx.moveTo(plotX, y);
       this.ctx.lineTo(plotX + plotWidth, y);
     }
     
-    // Vertical grid lines
+    // 垂直グリッド線
     for (let i = 0; i <= 4; i++) {
       const x = plotX + (plotWidth / 4) * i;
       this.ctx.moveTo(x, plotY);
@@ -342,7 +342,7 @@ export class WaveformRenderer {
     
     this.ctx.stroke();
 
-    // Find frequency range in the data (excluding zeros)
+    // データ内の周波数範囲を検出（ゼロ値を除外）
     const validFrequencies = frequencyHistory.filter(f => f > 0);
     if (validFrequencies.length === 0) {
       this.ctx.restore();
@@ -352,12 +352,12 @@ export class WaveformRenderer {
     const dataMin = Math.min(...validFrequencies);
     const dataMax = Math.max(...validFrequencies);
     
-    // Use data range with some padding, constrained by min/max frequency limits
+    // データ範囲にパディングを追加し、最小/最大周波数制限で制約
     const rangePadding = (dataMax - dataMin) * this.FREQ_PLOT_RANGE_PADDING_RATIO || this.FREQ_PLOT_MIN_RANGE_PADDING_HZ;
     const displayMin = Math.max(minFrequency, dataMin - rangePadding);
     const displayMax = Math.min(maxFrequency, dataMax + rangePadding);
 
-    // Draw Y-axis labels (frequency values)
+    // Y軸ラベルを描画（周波数値）
     this.ctx.fillStyle = '#aaaaaa';
     this.ctx.font = '10px monospace';
     this.ctx.textAlign = 'right';
@@ -370,7 +370,7 @@ export class WaveformRenderer {
       this.ctx.fillText(label, plotX - 5, y);
     }
 
-    // Draw the frequency plot line
+    // 周波数プロットの線を描画
     this.ctx.strokeStyle = '#00ff00';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
@@ -381,15 +381,15 @@ export class WaveformRenderer {
       const freq = frequencyHistory[i];
       const x = plotX + i * xStep;
       
-      // Skip zero values (no signal) by not drawing
+      // ゼロ値（無信号）はスキップして描画しない
       if (freq === 0) {
         continue;
       }
       
-      // Clamp frequency to display range
+      // 周波数を表示範囲にクランプ
       const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
       
-      // Map frequency to y coordinate (inverted: high freq = top)
+      // 周波数をY座標にマッピング（反転：高周波数 = 上）
       const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
       const y = plotY + plotHeight - (normalizedFreq * plotHeight);
       
@@ -402,7 +402,7 @@ export class WaveformRenderer {
     
     this.ctx.stroke();
 
-    // Draw current frequency value
+    // 現在の周波数値を描画
     const currentFreq = frequencyHistory[frequencyHistory.length - 1];
     if (currentFreq > 0) {
       this.ctx.fillStyle = '#00ff00';
