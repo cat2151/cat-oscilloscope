@@ -1,55 +1,51 @@
-Last updated: 2026-01-09
+Last updated: 2026-01-10
 
 # Development Status
 
 ## 現在のIssues
-- 一時停止時に波形表示が破綻する [Issue #77](../issue-notes/77.md) の根本原因調査が喫緊の課題です。
-- `wavlpf`からのライブラリ利用検討 [Issue #70](../issue-notes/70.md) と、波形探索周期のプルダウンメニュー追加 [Issue #64](../issue-notes/64.md) が機能改善として進行中です。
-- UIの表示文言調整 [Issue #28](../issue-notes/28.md) や、周波数情報のA4+0cent表示 [Issue #25](../issue-notes/25.md)、ピアノ鍵盤風表示 [Issue #26](../issue-notes/26.md) といった改善が予定されています。
+- [Issue #121](../issue-notes/121.md) と [Issue #120](../issue-notes/120.md) は、Rust WASM版で周波数推移グラフの履歴が毎フレームクリアされ、結果として折れ線グラフが表示されないという密接に関連するバグを報告しています。
+- [Issue #119](../issue-notes/119.md) は、Rust WASM版の安定稼働後、TypeScriptとWASMで重複する機能をWASMに一本化し、メンテナンスコストを削減する方針を定めています。
+- [Issue #77](../issue-notes/77.md) は、波形の一時停止時に波形表示が破綻するという、特にマウス操作時に頻発する表示バグについて言及しています。
 
 ## 次の一手候補
-1.  一時停止時の波形破綻 [Issue #77](../issue-notes/77.md) のデバッグログ追加
-    -   最初の小さな一歩: 一時停止操作を行った際の、波形データ取得、処理、描画ロジックの各段階で詳細なデバッグログを出力するようにコードを追加する。
-    -   Agent実行プロンプ:
-        ```
-        対象ファイル: `src/Oscilloscope.ts`, `src/WaveformDataProcessor.ts`, `src/WaveformRenderer.ts`
-
-        実行内容: 一時停止時の波形表示が破綻する [Issue #77](../issue-notes/77.md) の原因を特定するため、以下のファイルにデバッグログを追加してください。`src/Oscilloscope.ts`で一時停止がトリガーされた時刻、`src/WaveformDataProcessor.ts`で処理されるRawデータ、`src/WaveformRenderer.ts`で描画される最終的なデータを、一時停止前後のタイムスタンプと共にコンソールに出力するように実装してください。特に、キーボードとマウス操作で挙動が異なる可能性を考慮し、どの操作で一時停止されたかもログに含めてください。
-
-        確認事項: 既存の描画やデータ処理ロジックに影響を与えないこと。デバッグログは開発モードでのみ有効化されるように、条件分岐を設けることを検討してください。ログ出力が多すぎないか、パフォーマンスに影響がないかを確認してください。
-
-        期待する出力: デバッグログが追加された`src/Oscilloscope.ts`, `src/WaveformDataProcessor.ts`, `src/WaveformRenderer.ts`の修正コード。
-        ```
-
-2.  波形探索周期プルダウンメニュー [Issue #64](../issue-notes/64.md) のUIプレースホルダー追加
-    -   最初の小さな一歩: `index.html`に、自己相関判定に使う周期の倍率（1倍、2倍、3倍、4倍）を選択するプルダウンメニュー（`<select>`要素）を追加し、`src/main.ts`でそのDOM要素への参照を取得する。
+1.  [Issue #121](../issue-notes/121.md) および [Issue #120](../issue-notes/120.md) の解決: WASM周波数プロット履歴クリアバグとグラフ表示不具合の修正
+    -   最初の小さな一歩: `src/WasmDataProcessor.ts` 内の `wasmProcessor.processFrame` の呼び出しと、Rust側の `wasm-processor/src/frequency_estimator.rs` にて周波数プロット履歴が適切に保持・更新されているかを確認する。
     -   Agent実行プロンプト:
         ```
-        対象ファイル: `index.html`, `src/main.ts`
+        対象ファイル: `src/WasmDataProcessor.ts`, `wasm-processor/src/lib.rs`, `wasm-processor/src/frequency_estimator.rs`
 
-        実行内容: [Issue #64](../issue-notes/64.md) に対応するため、`index.html`内の適切な位置（例: 既存のコントロール要素の近く）に、自己相関判定に使う周期の倍率を選択する`<select>`要素といくつかの`<option>`要素（1倍, 2倍, 3倍, 4倍）をプレースホルダーとして追加してください。その際、各`<option>`には適切な`value`属性（例: `1`, `2`, `3`, `4`）を設定してください。また、`src/main.ts`に新しいプルダウンメニューのDOM要素を取得し、デフォルト値（例: 1倍）を設定するコードを追加してください。
+        実行内容: `src/WasmDataProcessor.ts` の `processFrame` メソッドにおいて、`wasmResult.frequencyPlotHistory` が毎フレーム初期化されていないか、または正しく履歴が保持・更新されているかをRust側の実装と合わせて分析してください。特に、Rust側の `wasm-processor/src/frequency_estimator.rs` で履歴がクリアされるロジックがないか確認してください。
 
-        確認事項: 既存のUIレイアウトを大幅に崩さないこと。追加するDOM要素に一意のIDを付与すること。`src/main.ts`でのDOM要素取得はページロード完了後に行われるようにすること。
+        確認事項: `WaveformRenderData` 構造体と `WasmProcessorInstance` インターフェースにおける `frequencyPlotHistory` の型定義と、Rust側の対応する構造体・メソッドでの履歴管理ロジックを確認してください。関連する最近のコミット (5337359など) を参照し、変更意図を理解してください。
 
-        期待する出力: 新しいプルダウンメニューが追加された`index.html`の修正コードと、そのDOM要素の取得および初期設定が追加された`src/main.ts`の修正コード。
+        期待する出力: `src/WasmDataProcessor.ts` と `wasm-processor/src/frequency_estimator.rs` における `frequencyPlotHistory` のクリアまたは不正な更新ロジックを特定し、修正案をmarkdown形式で提案してください。
         ```
 
-3.  周波数A4+0cent表示 [Issue #25](../issue-notes/25.md) とピアノ鍵盤風表示 [Issue #26](../issue-notes/26.md) の初期設計
-    -   最初の小さな一歩: 現在の周波数表示箇所 (`src/ComparisonPanelRenderer.ts`) を分析し、A4+0cent形式の表示やピアノ鍵盤風の画像をどこに、どのように配置するのが最適か、そしてそれに必要なデータ変換ロジック（周波数からノート名、セント値、鍵盤画像へのマッピング）の実現可能性を検討する。
+2.  [Issue #119](../issue-notes/119.md) に向けたWASMモジュールの安定化とTypeScript側の重複機能特定
+    -   最初の小さな一歩: 現在TypeScriptとRust WASMの両方に存在すると思われる周波数推定、ゲイン制御、ゼロクロス検出、波形探索の機能について、TypeScript側の実装とRust側の実装を比較し、重複している機能を特定する。
     -   Agent実行プロンプト:
         ```
-        対象ファイル: `src/ComparisonPanelRenderer.ts`, `index.html`, `src/FrequencyEstimator.ts`
+        対象ファイル: `src/FrequencyEstimator.ts`, `src/GainController.ts`, `src/ZeroCrossDetector.ts`, `src/WaveformSearcher.ts`, `wasm-processor/src/frequency_estimator.rs`, `wasm-processor/src/gain_controller.rs`, `wasm-processor/src/zero_cross_detector.rs`, `wasm-processor/src/waveform_searcher.rs`
 
-        実行内容: [Issue #25](../issue-notes/25.md) (A4+0cent表示) と [Issue #26](../issue-notes/26.md) (ピアノ鍵盤風表示) の実装に向けて、以下の観点から初期設計案をMarkdown形式で生成してください。
-        1. 現在の周波数表示 (`src/ComparisonPanelRenderer.ts`, `index.html`) の隣接または代替として、A4+0cent形式の表示をどこに配置するか。
-        2. 画面下部にピアノ鍵盤風の画像をどのように統合するか（例: CSS背景、SVG埋め込み、Canvas描画）。
-        3. 周波数データ (`src/FrequencyEstimator.ts`が生成する周波数) から、A4+0cent表示に必要なノート名とセント値、および鍵盤の光らせる状態を計算するためのロジックの概要。
-        4. これらのUI要素が既存のパフォーマンスやユーザビリティに与える影響。
+        実行内容: 上記TypeScriptファイルとRustファイルの機能を比較し、現在重複して実装されている機能のリストをmarkdown形式で出力してください。各機能について、Rust版への一本化の難易度や必要な作業の概要も簡潔にまとめてください。
 
-        確認事項: 既存のUI要素との視覚的な競合を避けること。パフォーマンスオーバーヘッドを最小限に抑える設計を優先すること。将来的な拡張性を考慮した提案であること。
+        確認事項: WASM版がTypeScript版の機能を完全に代替可能であるか、また、TypeScript版にしかない、またはWASM版に移行する際に考慮すべき特殊なロジックがないかを確認してください。
 
-        期待する出力: 新しいUI要素の配置案、必要なデータ変換ロジックの概要、および影響を受けるファイルとその変更点の概説を含む、詳細なMarkdown形式の設計ドキュメント。
+        期待する出力: TypeScriptとRust WASMで重複している機能のリスト、それぞれの機能における現状の依存関係、およびRust WASMへの一本化を進める上での考慮事項をmarkdown形式で出力してください。
+        ```
+
+3.  [Issue #77](../issue-notes/77.md) の波形表示破綻バグの初期調査
+    -   最初の小さな一歩: `src/WaveformRenderer.ts` および関連する波形データ処理 (`src/WaveformDataProcessor.ts` や `src/WasmDataProcessor.ts`) の一時停止時のデータ処理ロジックを確認し、波形データがどのように取得・処理され、描画されているかを理解する。
+    -   Agent実行プロンプト:
+        ```
+        対象ファイル: `src/WaveformRenderer.ts`, `src/WaveformDataProcessor.ts`, `src/WasmDataProcessor.ts`, `src/WaveformRenderData.ts`
+
+        実行内容: `Issue #77` に記述されている「一時停止した瞬間の波形破綻」の原因となる可能性のある、一時停止時の波形データ処理や描画ロジックの不整合を分析してください。特に、`WaveformRenderData` の `displayStartIndex` や `displayEndIndex` が一時停止時に適切に設定されているか、またはデータが不適切に再利用されていないかを確認してください。
+
+        確認事項: `AudioManager` からのデータ取得 (`getTimeDomainData()`) が一時停止時に停止しているか、または以前のデータが適切に保持・利用されているかを確認してください。キーボードとマウスでの挙動の違いが示唆するイベントハンドリングの差異も考慮に入れてください。
+
+        期待する出力: `Issue #77` の波形破綻の原因となりうる仮説と、その検証のための次のステップをmarkdown形式で出力してください。
         ```
 
 ---
-Generated at: 2026-01-09 07:09:28 JST
+Generated at: 2026-01-10 07:09:14 JST
