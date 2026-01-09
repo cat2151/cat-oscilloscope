@@ -1,11 +1,13 @@
 import { Oscilloscope } from './Oscilloscope';
 import { dbToAmplitude, frequencyToNote } from './utils';
+import { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
 // Main application logic
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const previousWaveformCanvas = document.getElementById('previousWaveformCanvas') as HTMLCanvasElement;
 const currentWaveformCanvas = document.getElementById('currentWaveformCanvas') as HTMLCanvasElement;
 const frameBufferCanvas = document.getElementById('frameBufferCanvas') as HTMLCanvasElement;
+const pianoKeyboardCanvas = document.getElementById('pianoKeyboardCanvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const loadFileButton = document.getElementById('loadFileButton') as HTMLButtonElement;
 const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -31,6 +33,7 @@ const requiredElements = [
   { element: previousWaveformCanvas, name: 'previousWaveformCanvas' },
   { element: currentWaveformCanvas, name: 'currentWaveformCanvas' },
   { element: frameBufferCanvas, name: 'frameBufferCanvas' },
+  { element: pianoKeyboardCanvas, name: 'pianoKeyboardCanvas' },
   { element: startButton, name: 'startButton' },
   { element: loadFileButton, name: 'loadFileButton' },
   { element: fileInput, name: 'fileInput' },
@@ -75,6 +78,10 @@ function formatThresholdDisplay(db: number, amplitude: number): string {
 }
 
 const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
+const pianoKeyboardRenderer = new PianoKeyboardRenderer(pianoKeyboardCanvas);
+
+// 初期状態で空の鍵盤を描画
+pianoKeyboardRenderer.render(0);
 
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
 oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -184,9 +191,13 @@ function startFrequencyDisplay(): void {
         } else {
           noteValue.textContent = '---';
         }
+        
+        // Update piano keyboard
+        pianoKeyboardRenderer.render(frequency);
       } else {
         frequencyValue.textContent = '--- Hz';
         noteValue.textContent = '---';
+        pianoKeyboardRenderer.render(0);
       }
       
       // Update gain display
@@ -212,6 +223,7 @@ function stopFrequencyDisplay(): void {
     noteValue.textContent = '---';
     gainValue.textContent = '---x';
     similarityValue.textContent = '---';
+    pianoKeyboardRenderer.clear();
   }
 }
 

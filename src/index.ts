@@ -14,6 +14,7 @@ export { WaveformRenderer } from './WaveformRenderer';
 export { ZeroCrossDetector } from './ZeroCrossDetector';
 export { WaveformSearcher } from './WaveformSearcher';
 export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
 // Data processing and types - for Rust WASM integration
 export { WaveformDataProcessor } from './WaveformDataProcessor';
