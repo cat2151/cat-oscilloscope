@@ -179,6 +179,12 @@ export class WasmDataProcessor {
         wasm.wasmdataprocessor_setNoiseGateThreshold(this.__wbg_ptr, threshold);
     }
     /**
+     * @param {number} multiplier
+     */
+    setBufferSizeMultiplier(multiplier) {
+        wasm.wasmdataprocessor_setBufferSizeMultiplier(this.__wbg_ptr, multiplier);
+    }
+    /**
      * @param {string} method
      */
     setFrequencyEstimationMethod(method) {
@@ -301,6 +307,15 @@ export class WaveformRenderData {
     get firstAlignmentPoint() {
         const ret = wasm.waveformrenderdata_firstAlignmentPoint(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get frequencyPlotHistory() {
+        const ret = wasm.waveformrenderdata_frequencyPlotHistory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
     }
     /**
      * @returns {number | undefined}

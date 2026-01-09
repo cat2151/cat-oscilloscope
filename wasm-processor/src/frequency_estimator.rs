@@ -3,20 +3,25 @@ pub struct FrequencyEstimator {
     frequency_estimation_method: String,
     estimated_frequency: f32,
     frequency_history: Vec<f32>,
+    frequency_plot_history: Vec<f32>,
+    buffer_size_multiplier: u32,
 }
 
 impl FrequencyEstimator {
-    const MIN_FREQUENCY_HZ: f32 = 50.0;
+    const MIN_FREQUENCY_HZ: f32 = 20.0;
     const MAX_FREQUENCY_HZ: f32 = 5000.0;
     const FFT_MAGNITUDE_THRESHOLD: u8 = 10;
     const FREQUENCY_HISTORY_SIZE: usize = 7;
     const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.05;
+    const FREQUENCY_PLOT_HISTORY_SIZE: usize = 100;
     
     pub fn new() -> Self {
         FrequencyEstimator {
             frequency_estimation_method: "autocorrelation".to_string(),
             estimated_frequency: 0.0,
             frequency_history: Vec::new(),
+            frequency_plot_history: Vec::new(),
+            buffer_size_multiplier: 16,
         }
     }
     
@@ -38,11 +43,20 @@ impl FrequencyEstimator {
                     0.0
                 }
             }
+            "stft" => self.estimate_frequency_stft(data, sample_rate, is_signal_above_noise_gate),
+            "cqt" => self.estimate_frequency_cqt(data, sample_rate, is_signal_above_noise_gate),
             _ => self.estimate_frequency_autocorrelation(data, sample_rate), // default: autocorrelation
         };
         
         // Apply frequency smoothing
         self.estimated_frequency = self.smooth_frequency(raw_frequency);
+        
+        // Add to plot history
+        self.frequency_plot_history.push(self.estimated_frequency);
+        if self.frequency_plot_history.len() > Self::FREQUENCY_PLOT_HISTORY_SIZE {
+            self.frequency_plot_history.remove(0);
+        }
+        
         self.estimated_frequency
     }
     
@@ -153,6 +167,192 @@ impl FrequencyEstimator {
         }
     }
     
+    /// Estimate frequency using STFT (Short-Time Fourier Transform) method
+    /// Uses overlapping windows to improve frequency resolution for low frequencies
+    fn estimate_frequency_stft(&self, data: &[f32], sample_rate: f32, is_signal_above_noise_gate: bool) -> f32 {
+        if !is_signal_above_noise_gate {
+            return 0.0;
+        }
+        
+        // Window size depends on buffer multiplier for better low-frequency resolution
+        const MIN_WINDOW_SIZE: usize = 512;
+        let desired_window_size = 2048 * self.buffer_size_multiplier as usize;
+        let window_size = MIN_WINDOW_SIZE.max(desired_window_size.min(data.len()));
+        
+        // If data is too short, skip STFT analysis
+        if data.len() < MIN_WINDOW_SIZE {
+            return 0.0;
+        }
+        
+        let hop_size = window_size / 2; // 50% overlap
+        
+        // Apply Hann window to reduce spectral leakage
+        let hann_window = self.create_hann_window(window_size);
+        
+        // Process multiple windows and collect frequency candidates
+        let num_windows = ((data.len() - window_size) / hop_size) + 1;
+        let mut frequency_candidates = Vec::new();
+        
+        for w in 0..num_windows.min(4) { // Limit to 4 windows for performance
+            let start_index = w * hop_size;
+            let end_index = start_index + window_size;
+            
+            if end_index > data.len() {
+                break;
+            }
+            
+            // Extract windowed segment
+            let mut segment = vec![0.0f32; window_size];
+            for i in 0..window_size {
+                segment[i] = data[start_index + i] * hann_window[i];
+            }
+            
+            // Compute peak frequency using DFT
+            let frequency = self.compute_peak_frequency_from_dft(&segment, sample_rate, window_size);
+            
+            if frequency > 0.0 {
+                frequency_candidates.push(frequency);
+            }
+        }
+        
+        // Return median frequency to reduce outliers
+        if frequency_candidates.is_empty() {
+            return 0.0;
+        }
+        
+        frequency_candidates.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let median_index = frequency_candidates.len() / 2;
+        frequency_candidates[median_index]
+    }
+    
+    /// Estimate frequency using CQT (Constant-Q Transform) method
+    /// Provides better frequency resolution at low frequencies
+    fn estimate_frequency_cqt(&self, data: &[f32], sample_rate: f32, is_signal_above_noise_gate: bool) -> f32 {
+        if !is_signal_above_noise_gate {
+            return 0.0;
+        }
+        
+        // CQT parameters: logarithmically spaced frequency bins
+        const BINS_PER_OCTAVE: usize = 12; // 12 bins per octave (one per semitone)
+        let min_freq = Self::MIN_FREQUENCY_HZ;
+        let max_freq = Self::MAX_FREQUENCY_HZ;
+        
+        // Calculate number of bins
+        let num_octaves = (max_freq / min_freq).log2();
+        let num_bins = (num_octaves * BINS_PER_OCTAVE as f32).floor() as usize;
+        
+        // Quality factor Q - determines filter bandwidth
+        let q = 1.0 / (2.0f32.powf(1.0 / BINS_PER_OCTAVE as f32) - 1.0);
+        
+        // Compute CQT bins
+        let mut max_magnitude = 0.0f32;
+        let mut peak_frequency = 0.0f32;
+        
+        for k in 0..num_bins {
+            // Calculate center frequency for this bin
+            let center_freq = min_freq * 2.0f32.powf(k as f32 / BINS_PER_OCTAVE as f32);
+            
+            // Window length for this frequency
+            let ideal_window_length = (q * sample_rate / center_freq).floor() as usize;
+            
+            // Adjust window length to available data, but skip if too short
+            let min_window_length = (2.0 * sample_rate / center_freq).floor() as usize;
+            if data.len() < min_window_length {
+                continue;
+            }
+            
+            let window_length = ideal_window_length.min(data.len());
+            
+            // Compute magnitude at this frequency using Goertzel algorithm
+            let magnitude = self.goertzel_magnitude(data, center_freq, sample_rate, window_length);
+            
+            if magnitude > max_magnitude {
+                max_magnitude = magnitude;
+                peak_frequency = center_freq;
+            }
+        }
+        
+        // Apply threshold
+        let threshold = Self::FFT_MAGNITUDE_THRESHOLD as f32 / 255.0;
+        if max_magnitude < threshold {
+            return 0.0;
+        }
+        
+        peak_frequency
+    }
+    
+    /// Create Hann window for STFT
+    fn create_hann_window(&self, size: usize) -> Vec<f32> {
+        let mut window = vec![0.0f32; size];
+        for i in 0..size {
+            window[i] = 0.5 * (1.0 - (2.0 * std::f32::consts::PI * i as f32 / (size - 1) as f32).cos());
+        }
+        window
+    }
+    
+    /// Compute peak frequency from DFT of a windowed segment
+    fn compute_peak_frequency_from_dft(&self, data: &[f32], sample_rate: f32, fft_size: usize) -> f32 {
+        let bin_frequency = sample_rate / fft_size as f32;
+        let min_bin = 1.max((Self::MIN_FREQUENCY_HZ / bin_frequency).floor() as usize);
+        let max_bin = (fft_size / 2).min((Self::MAX_FREQUENCY_HZ / bin_frequency).ceil() as usize);
+        
+        let mut max_magnitude = 0.0f32;
+        let mut peak_bin = 0;
+        
+        // Compute magnitude spectrum for frequency range of interest
+        for k in min_bin..max_bin {
+            let mut real = 0.0f32;
+            let mut imag = 0.0f32;
+            let omega = 2.0 * std::f32::consts::PI * k as f32 / fft_size as f32;
+            
+            // Compute DFT bin
+            for n in 0..data.len() {
+                let angle = omega * n as f32;
+                real += data[n] * angle.cos();
+                imag -= data[n] * angle.sin();
+            }
+            
+            let magnitude = (real * real + imag * imag).sqrt();
+            
+            if magnitude > max_magnitude {
+                max_magnitude = magnitude;
+                peak_bin = k;
+            }
+        }
+        
+        // Threshold scales with buffer length
+        let normalized_threshold = Self::FFT_MAGNITUDE_THRESHOLD as f32 * data.len() as f32 / 255.0;
+        if max_magnitude < normalized_threshold {
+            return 0.0;
+        }
+        
+        peak_bin as f32 * bin_frequency
+    }
+    
+    /// Goertzel algorithm for efficient single-frequency DFT
+    fn goertzel_magnitude(&self, data: &[f32], target_freq: f32, sample_rate: f32, window_length: usize) -> f32 {
+        let k = (0.5 + (window_length as f32 * target_freq) / sample_rate).floor() as usize;
+        let omega = (2.0 * std::f32::consts::PI * k as f32) / window_length as f32;
+        let coeff = 2.0 * omega.cos();
+        
+        let mut s_prev = 0.0f32;
+        let mut s_prev2 = 0.0f32;
+        
+        let actual_length = window_length.min(data.len());
+        
+        for i in 0..actual_length {
+            let s = data[i] + coeff * s_prev - s_prev2;
+            s_prev2 = s_prev;
+            s_prev = s;
+        }
+        
+        // Compute magnitude
+        let real = s_prev - s_prev2 * omega.cos();
+        let imag = s_prev2 * omega.sin();
+        
+        ((real * real + imag * imag).sqrt()) / actual_length as f32
+    }
+    
     /// Apply frequency smoothing using mode filter
     fn smooth_frequency(&mut self, raw_frequency: f32) -> f32 {
         // Add to history
@@ -206,14 +406,34 @@ impl FrequencyEstimator {
     
     pub fn set_frequency_estimation_method(&mut self, method: &str) {
         self.frequency_estimation_method = method.to_string();
+        // Clear histories when changing methods
+        self.frequency_history.clear();
+        self.frequency_plot_history.clear();
     }
     
     pub fn get_max_frequency(&self) -> f32 {
         Self::MAX_FREQUENCY_HZ
     }
     
+    pub fn get_min_frequency(&self) -> f32 {
+        Self::MIN_FREQUENCY_HZ
+    }
+    
+    pub fn get_frequency_plot_history(&self) -> Vec<f32> {
+        self.frequency_plot_history.clone()
+    }
+    
+    pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
+        self.buffer_size_multiplier = multiplier;
+    }
+    
+    pub fn get_buffer_size_multiplier(&self) -> u32 {
+        self.buffer_size_multiplier
+    }
+    
     pub fn clear_history(&mut self) {
         self.frequency_history.clear();
+        self.frequency_plot_history.clear();
         self.estimated_frequency = 0.0;
     }
 }

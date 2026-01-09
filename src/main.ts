@@ -101,6 +101,21 @@ oscilloscope.setUsePeakMode(usePeakModeCheckbox.checked);
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
+// Initialize WASM if checkbox is checked by default
+if (useWasmCheckbox.checked) {
+  (async () => {
+    try {
+      statusElement.textContent = 'Loading WASM...';
+      await oscilloscope.setUseWasm(true);
+      statusElement.textContent = 'WASM processor active';
+    } catch (error) {
+      console.error('Failed to initialize WASM on startup:', error);
+      statusElement.textContent = 'Error: Could not initialize WASM processor';
+      useWasmCheckbox.checked = false;
+    }
+  })();
+}
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);

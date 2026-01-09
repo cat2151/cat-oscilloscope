@@ -11,6 +11,7 @@ interface WasmProcessorInstance {
   setNoiseGate(enabled: boolean): void;
   setNoiseGateThreshold(threshold: number): void;
   setFrequencyEstimationMethod(method: string): void;
+  setBufferSizeMultiplier(multiplier: number): void;
   setUsePeakMode(enabled: boolean): void;
   reset(): void;
   processFrame(
@@ -239,6 +240,7 @@ export class WasmDataProcessor {
     this.wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled());
     this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
     this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
+    this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
     this.wasmProcessor.setUsePeakMode(this.zeroCrossDetector.getUsePeakMode());
   }
   
@@ -320,7 +322,7 @@ export class WasmDataProcessor {
       displayEndIndex: wasmResult.displayEndIndex,
       gain: wasmResult.gain,
       estimatedFrequency: wasmResult.estimatedFrequency,
-      frequencyPlotHistory: this.frequencyEstimator.getFrequencyPlotHistory(),
+      frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
       sampleRate: wasmResult.sampleRate,
       fftSize: wasmResult.fftSize,
       firstAlignmentPoint: wasmResult.firstAlignmentPoint,

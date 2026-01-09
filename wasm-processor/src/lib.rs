@@ -24,6 +24,7 @@ pub struct WaveformRenderData {
     
     // Frequency information
     estimated_frequency: f32,
+    frequency_plot_history: Vec<f32>,
     sample_rate: f32,
     fft_size: usize,
     
@@ -69,6 +70,11 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = estimatedFrequency)]
     pub fn estimated_frequency(&self) -> f32 {
         self.estimated_frequency
+    }
+    
+    #[wasm_bindgen(getter, js_name = frequencyPlotHistory)]
+    pub fn frequency_plot_history(&self) -> Vec<f32> {
+        self.frequency_plot_history.clone()
     }
     
     #[wasm_bindgen(getter, js_name = sampleRate)]
@@ -247,6 +253,7 @@ impl WasmDataProcessor {
             display_end_index,
             gain,
             estimated_frequency,
+            frequency_plot_history: self.frequency_estimator.get_frequency_plot_history(),
             sample_rate,
             fft_size,
             first_alignment_point,
@@ -279,6 +286,11 @@ impl WasmDataProcessor {
     #[wasm_bindgen(js_name = setFrequencyEstimationMethod)]
     pub fn set_frequency_estimation_method(&mut self, method: &str) {
         self.frequency_estimator.set_frequency_estimation_method(method);
+    }
+    
+    #[wasm_bindgen(js_name = setBufferSizeMultiplier)]
+    pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
+        self.frequency_estimator.set_buffer_size_multiplier(multiplier);
     }
     
     #[wasm_bindgen(js_name = setUsePeakMode)]
