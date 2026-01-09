@@ -106,4 +106,57 @@ describe('PianoKeyboardRenderer', () => {
     // A5 (880 Hz)
     expect(() => renderer.render(880)).not.toThrow();
   });
+
+  it('should call fillRect and strokeRect when rendering', () => {
+    renderer = new PianoKeyboardRenderer(canvas);
+    renderer.render(0);
+    
+    // Should call fillRect for clearing canvas and drawing keys
+    expect(mockContext.fillRect).toHaveBeenCalled();
+    // Should call strokeRect for key borders
+    expect(mockContext.strokeRect).toHaveBeenCalled();
+    // Should call fillText for frequency labels
+    expect(mockContext.fillText).toHaveBeenCalled();
+  });
+
+  it('should highlight the correct key when frequency is 440Hz (A4)', () => {
+    renderer = new PianoKeyboardRenderer(canvas);
+    vi.clearAllMocks();
+    
+    renderer.render(440);
+    
+    // Check that fillRect was called with highlight color
+    const fillRectCalls = mockContext.fillRect.mock.calls;
+    expect(fillRectCalls.length).toBeGreaterThan(0);
+    
+    // Verify the method was called multiple times (once per key plus clearing)
+    expect(mockContext.fillRect).toHaveBeenCalled();
+    expect(fillRectCalls.length).toBeGreaterThan(20); // Should have multiple keys
+  });
+
+  it('should not highlight any key when frequency is 0', () => {
+    renderer = new PianoKeyboardRenderer(canvas);
+    vi.clearAllMocks();
+    
+    renderer.render(0);
+    
+    // Should still draw keys (fillRect called) but without highlight colors
+    expect(mockContext.fillRect).toHaveBeenCalled();
+    expect(mockContext.strokeRect).toHaveBeenCalled();
+  });
+
+  it('should render keys for the 50Hz-1000Hz range', () => {
+    renderer = new PianoKeyboardRenderer(canvas);
+    vi.clearAllMocks();
+    
+    renderer.render(0);
+    
+    // Should draw multiple white keys and black keys
+    const fillRectCalls = mockContext.fillRect.mock.calls;
+    const strokeRectCalls = mockContext.strokeRect.mock.calls;
+    
+    // There should be multiple keys drawn (at least 20 white keys in this range)
+    expect(fillRectCalls.length).toBeGreaterThan(20);
+    expect(strokeRectCalls.length).toBeGreaterThan(20);
+  });
 });

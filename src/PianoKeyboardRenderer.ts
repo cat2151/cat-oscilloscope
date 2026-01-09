@@ -1,3 +1,5 @@
+import { frequencyToNote } from './utils';
+
 /**
  * PianoKeyboardRenderer handles rendering of piano keyboard visualization
  * Displays a piano keyboard for the frequency range 50Hz - 1000Hz
@@ -24,10 +26,14 @@ export class PianoKeyboardRenderer {
   private readonly BLACK_KEY_HIGHLIGHT = '#00cc00';
   private readonly KEY_BORDER = '#333333';
   
-  // 1オクターブ内の音名パターン（白鍵と黒鍵の配置）
-  // C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-  // 白鍵: C, D, E, F, G, A, B (7つ)
-  // 黒鍵: C#, D#, F#, G#, A# (5つ、EとBの後ろにはない)
+  // 音名パターン定数（配列アロケーションを避けるため）
+  // 白鍵: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
+  private readonly WHITE_KEY_NOTES = [0, 2, 4, 5, 7, 9, 11];
+  // 黒鍵: C#(1), D#(3), F#(6), G#(8), A#(10)
+  private readonly BLACK_KEY_NOTES = [1, 3, 6, 8, 10];
+  
+  // キャッシュされた鍵盤範囲（コンストラクタで一度だけ計算）
+  private readonly keyboardRange: { startNote: number; endNote: number };
   
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -36,43 +42,52 @@ export class PianoKeyboardRenderer {
       throw new Error('Could not get 2D context for piano keyboard');
     }
     this.ctx = context;
+    
+    // 鍵盤範囲を一度だけ計算してキャッシュ
+    this.keyboardRange = this.calculateKeyboardRange();
   }
   
   /**
-   * 周波数から音名とオクターブを計算
-   * A4 (440Hz) を基準とする
+   * 周波数から音名情報を取得
+   * utils.tsのfrequencyToNote関数を使用し、内部形式に変換
    */
-  private frequencyToNote(frequency: number): { note: number; octave: number; noteInOctave: number } {
-    if (frequency <= 0 || !isFinite(frequency)) {
+  private frequencyToNoteInfo(frequency: number): { note: number; octave: number; noteInOctave: number } {
+    const noteInfo = frequencyToNote(frequency);
+    
+    if (!noteInfo) {
       return { note: -1, octave: -1, noteInOctave: -1 };
     }
     
-    const A4 = 440;
-    const C0 = A4 * Math.pow(2, -4.75);
+    // noteName (e.g., "A4", "C#3") から音名とオクターブを抽出
+    const matches = noteInfo.noteName.match(/^([A-G]#?)(\d+)$/);
+    if (!matches) {
+      return { note: -1, octave: -1, noteInOctave: -1 };
+    }
     
-    // C0からの半音数
-    const halfSteps = 12 * Math.log2(frequency / C0);
-    const noteIndex = Math.round(halfSteps);
+    const noteName = matches[1];
+    const octave = parseInt(matches[2], 10);
     
-    const octave = Math.floor(noteIndex / 12);
-    const noteInOctave = ((noteIndex % 12) + 12) % 12; // 0-11: C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+    // 音名から noteInOctave (0-11) を計算
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const noteInOctave = noteNames.indexOf(noteName);
     
-    return { note: noteIndex, octave, noteInOctave };
+    // noteIndex を計算 (C0 = 0)
+    const note = octave * 12 + noteInOctave;
+    
+    return { note, octave, noteInOctave };
   }
   
   /**
-   * 表示する鍵盤の範囲を決定
+   * 表示する鍵盤の範囲を計算
    * MIN_FREQからMAX_FREQまでの範囲をカバーする
    */
-  private getKeyboardRange(): { startNote: number; endNote: number; startOctave: number; endOctave: number } {
-    const startNoteInfo = this.frequencyToNote(this.MIN_FREQ);
-    const endNoteInfo = this.frequencyToNote(this.MAX_FREQ);
+  private calculateKeyboardRange(): { startNote: number; endNote: number } {
+    const startNoteInfo = this.frequencyToNoteInfo(this.MIN_FREQ);
+    const endNoteInfo = this.frequencyToNoteInfo(this.MAX_FREQ);
     
     return {
       startNote: startNoteInfo.note,
-      endNote: endNoteInfo.note,
-      startOctave: startNoteInfo.octave,
-      endOctave: endNoteInfo.octave
+      endNote: endNoteInfo.note
     };
   }
   
@@ -85,10 +100,10 @@ export class PianoKeyboardRenderer {
     this.ctx.fillStyle = '#1a1a1a';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    const range = this.getKeyboardRange();
+    const range = this.keyboardRange;
     
     // ハイライトする音名を計算
-    const highlightNoteInfo = highlightFrequency > 0 ? this.frequencyToNote(highlightFrequency) : null;
+    const highlightNoteInfo = highlightFrequency > 0 ? this.frequencyToNoteInfo(highlightFrequency) : null;
     
     // 白鍵を描画
     let whiteKeyIndex = 0;
@@ -96,7 +111,7 @@ export class PianoKeyboardRenderer {
       const noteInOctave = ((note % 12) + 12) % 12;
       
       // 白鍵の場合
-      if ([0, 2, 4, 5, 7, 9, 11].includes(noteInOctave)) {
+      if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
         const x = whiteKeyIndex * this.WHITE_KEY_WIDTH;
         const isHighlighted = highlightNoteInfo && highlightNoteInfo.note === note;
         
@@ -117,12 +132,12 @@ export class PianoKeyboardRenderer {
       const noteInOctave = ((note % 12) + 12) % 12;
       
       // 白鍵の位置をカウント
-      if ([0, 2, 4, 5, 7, 9, 11].includes(noteInOctave)) {
+      if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
         whiteKeyIndex++;
       }
       
       // 黒鍵の場合
-      if ([1, 3, 6, 8, 10].includes(noteInOctave)) {
+      if (this.BLACK_KEY_NOTES.includes(noteInOctave)) {
         // 黒鍵は直前の白鍵の右端に配置
         const x = whiteKeyIndex * this.WHITE_KEY_WIDTH - this.BLACK_KEY_WIDTH / 2;
         const isHighlighted = highlightNoteInfo && highlightNoteInfo.note === note;

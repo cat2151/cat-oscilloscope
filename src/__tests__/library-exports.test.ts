@@ -12,6 +12,7 @@ import {
   ZeroCrossDetector,
   WaveformSearcher,
   ComparisonPanelRenderer,
+  PianoKeyboardRenderer,
   WaveformDataProcessor,
   dbToAmplitude,
   trimSilence
@@ -56,6 +57,11 @@ describe('Library exports', () => {
   it('should export ComparisonPanelRenderer class', () => {
     expect(ComparisonPanelRenderer).toBeDefined();
     expect(typeof ComparisonPanelRenderer).toBe('function');
+  });
+
+  it('should export PianoKeyboardRenderer class', () => {
+    expect(PianoKeyboardRenderer).toBeDefined();
+    expect(typeof PianoKeyboardRenderer).toBe('function');
   });
 
   it('should export WaveformDataProcessor class (new for Rust WASM)', () => {
@@ -118,6 +124,7 @@ describe('Library exports', () => {
     expect(new ZeroCrossDetector()).toBeInstanceOf(ZeroCrossDetector);
     expect(new WaveformSearcher()).toBeInstanceOf(WaveformSearcher);
     expect(new ComparisonPanelRenderer(canvas, canvas, canvas)).toBeInstanceOf(ComparisonPanelRenderer);
+    expect(new PianoKeyboardRenderer(canvas)).toBeInstanceOf(PianoKeyboardRenderer);
   });
 
   it('should be able to instantiate WaveformDataProcessor', () => {
