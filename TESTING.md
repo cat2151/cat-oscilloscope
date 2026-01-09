@@ -2,7 +2,27 @@
 
 ## Overview
 
-This document describes the test suite for the Cat Oscilloscope project. The tests are designed to ensure refactoring safety before splitting the monolithic `Oscilloscope` class into smaller, more maintainable modules.
+This document describes the test suite for the Cat Oscilloscope project. The tests ensure code quality and provide confidence for refactoring.
+
+## Important Note: WASM Implementation
+
+**All data processing algorithms (frequency estimation, gain control, zero-cross detection, waveform search) are implemented in Rust WASM.** TypeScript classes only hold configuration state.
+
+### Test Environment Limitations
+
+- **WASM cannot be loaded in the test environment** (requires browser with script loading)
+- Tests that require WASM initialization (integration tests with `oscilloscope.start()`) will timeout
+- Algorithm implementation tests are removed from TypeScript tests
+- Algorithm correctness is tested in Rust using `wasm-bindgen-test`
+
+### Test Focus
+
+TypeScript tests focus on:
+- Configuration management (getters/setters)
+- API surface verification
+- Library exports
+- DOM integration
+- Non-WASM components (rendering, UI)
 
 ## Test Infrastructure
 
@@ -30,52 +50,63 @@ Tests are configured in `vite.config.ts`:
 
 ### Test Files
 
-| File | Purpose | Test Count |
-|------|---------|-----------|
-| `oscilloscope.test.ts` | Core Oscilloscope class functionality | 20 tests |
-| `dom-integration.test.ts` | DOM elements and UI integration | 16 tests |
-| `algorithms.test.ts` | Signal processing algorithms | 20 tests |
-| **Total** | **Complete test coverage** | **56 tests** |
+| File | Purpose | Status |
+|------|---------|--------|
+| `oscilloscope.test.ts` | Core Oscilloscope class configuration | ⚠️ Integration tests skip (need WASM) |
+| `dom-integration.test.ts` | DOM elements and UI integration | ✅ Passing |
+| `algorithms.test.ts` | Configuration API tests | ✅ Passing (impl in Rust) |
+| `waveform-searcher.test.ts` | WaveformSearcher configuration | ✅ Passing |
+| `waveform-data-processor.test.ts` | WaveformDataProcessor | ⚠️ Limited (needs WASM) |
+| `library-exports.test.ts` | Library API surface | ✅ Passing |
+| **Rust WASM Tests** | Algorithm implementations | ✅ Tested with wasm-bindgen-test |
 
 ## Test Categories
 
-### 1. Core Oscilloscope Tests (`oscilloscope.test.ts`)
+### 1. Configuration API Tests (`algorithms.test.ts`)
 
-#### Constructor Tests
-- ✓ Creates instance with valid canvas
-- ✓ Throws error when canvas context unavailable
+Tests configuration management for data processing modules:
 
-#### Lifecycle Tests
-- ✓ Starts oscilloscope successfully
-- ✓ Stops oscilloscope successfully
-- ✓ Cleans up resources on stop
+#### FrequencyEstimator Configuration
+- ✓ Defines valid frequency range (20-5000 Hz)
+- ✓ Can switch between all estimation methods
+- ✓ Has FFT as default
+- ✓ Supports buffer size multipliers (1x, 4x, 16x)
+- ✓ Clears history correctly
 
-#### Auto Gain Tests
+#### GainController Configuration
+- ✓ Toggles auto gain on/off
 - ✓ Auto gain enabled by default
-- ✓ Can disable auto gain
-- ✓ Resets gain to 1.0 when disabled
+- ✓ Toggles noise gate on/off
+- ✓ Sets noise gate threshold
+- ✓ Clamps threshold at boundaries
 
-#### Noise Gate Tests
-- ✓ Noise gate enabled by default
-- ✓ Can enable/disable noise gate
-- ✓ Default threshold is 0.01
-- ✓ Can set threshold
-- ✓ Clamps threshold between 0 and 1
+#### ZeroCrossDetector Configuration
+- ✓ Toggles peak mode on/off
+- ✓ Peak mode disabled by default
+- ✓ Has reset method for API compatibility
 
-#### Frequency Estimation Tests
-- ✓ Autocorrelation is default method
-- ✓ Can switch to zero-crossing method
-- ✓ Can switch to FFT method
-- ✓ Initializes estimated frequency to 0
+#### WaveformSearcher Configuration
+- ✓ No previous waveform initially
+- ✓ Zero similarity initially
+- ✓ Resets state correctly
 
-#### FFT Display Tests
-- ✓ FFT display enabled by default
-- ✓ Can enable/disable FFT display
+### 2. Core Oscilloscope Tests (`oscilloscope.test.ts`)
 
-#### Gain Tests
-- ✓ Initializes current gain to 1.0
+⚠️ **Note**: Tests requiring `oscilloscope.start()` will timeout because WASM cannot initialize in test environment.
 
-### 2. DOM Integration Tests (`dom-integration.test.ts`)
+Passing tests (configuration only):
+- ✓ Constructor validates canvas
+- ✓ Configuration getters/setters work
+- ✓ Auto gain configuration
+- ✓ Noise gate configuration
+- ✓ Frequency method configuration
+- ✓ FFT display configuration
+
+Skipped tests (require WASM):
+- ⏭️ Start/stop lifecycle (needs WASM init)
+- ⏭️ Integration with audio processing (needs WASM)
+
+### 3. DOM Integration Tests (`dom-integration.test.ts`)
 
 #### Element Validation
 - ✓ Finds all required DOM elements
@@ -83,12 +114,8 @@ Tests are configured in `vite.config.ts`:
 - ✓ Validates initial threshold value
 - ✓ Validates default frequency method selection
 
-#### Slider Conversion
-- ✓ Converts slider value 0 → 0.00
-- ✓ Converts slider value 1 → 0.01
-- ✓ Converts slider value 50 → 0.50
-- ✓ Converts slider value 100 → 1.00
-- ✓ Handles invalid slider values
+- ✓ Validates initial threshold value
+- ✓ Validates default frequency method selection
 
 #### Canvas Properties
 - ✓ Verifies canvas dimensions (800x400)
@@ -103,39 +130,34 @@ Tests are configured in `vite.config.ts`:
 - ✓ Has placeholder frequency value
 - ✓ Has placeholder gain value
 
+### 4. Library Exports Tests (`library-exports.test.ts`)
+
+- ✓ Exports all public classes
+- ✓ Exports utility functions
+- ✓ Can instantiate all classes
+- ✓ WaveformDataProcessor exports correctly
+
+## Rust WASM Tests
+
+Algorithm implementations are tested in Rust:
+
+```bash
+cd wasm-processor
+wasm-pack test --headless --chrome  # or --firefox
+```
+
+Tests include:
+- Frequency estimation algorithms (zero-crossing, autocorrelation, FFT, STFT, CQT)
+- Gain control and noise gate
+- Zero-cross and peak detection
+- Waveform similarity search
+- Edge cases and error handling
+
 ### 3. Algorithm Tests (`algorithms.test.ts`)
 
-#### Zero-Crossing Detection
-- ✓ Detects zero-crossings in sine wave (±5% tolerance)
-- ✓ Detects zero-crossings in square wave (±2 samples)
-- ✓ Finds no zero-crossings in DC signal
-- ✓ Finds no zero-crossings in silence
+⚠️ **Deprecated**: Algorithm implementation tests removed. Algorithms are now tested in Rust.
 
-#### Noise Gate RMS Calculation
-- ✓ Calculates correct RMS for sine wave (RMS = A/√2)
-- ✓ Calculates RMS close to zero for low noise
-- ✓ Calculates RMS of zero for silence
-
-#### Auto Gain Edge Cases
-- ✓ Handles very low amplitude signals
-- ✓ Handles very high amplitude signals
-- ✓ Resets gain to 1.0 when disabled
-- ✓ Maintains gain within MIN/MAX bounds (0.5-99.0)
-
-#### Signal Characteristics
-- ✓ Sine wave has correct peak amplitude
-- ✓ Square wave has correct peak amplitude
-- ✓ Noise has bounded amplitude
-
-#### Frequency Estimation
-- ✓ Can switch between all methods
-- ✓ Has autocorrelation as default
-- ✓ Defines valid frequency range (50-1000 Hz)
-
-#### Noise Gate Behavior
-- ✓ Applies noise gate when enabled
-- ✓ Doesn't apply when disabled
-- ✓ Clamps threshold at boundaries
+Kept tests focus on configuration API only.
 
 ## Test Helpers
 
@@ -155,28 +177,17 @@ class MockMediaStream {
 }
 ```
 
-### Signal Generators
-Utility functions for generating test signals:
-
-```typescript
-// Generate sine wave at specific frequency
-generateSineWave(frequency, sampleRate, length, amplitude)
-
-// Generate square wave
-generateSquareWave(frequency, sampleRate, length, amplitude)
-
-// Generate white noise
-generateNoise(length, amplitude)
-
-// Count zero-crossings in signal
-countZeroCrossings(data)
-```
-
 ## Running Tests
 
-### Run All Tests
+### Run TypeScript Tests
 ```bash
 npm test
+```
+
+### Run Rust WASM Tests
+```bash
+cd wasm-processor
+wasm-pack test --headless --chrome
 ```
 
 ### Run Tests in Watch Mode
@@ -197,31 +208,49 @@ npm run test:coverage
 ## Test Coverage Goals
 
 Current test coverage ensures:
-- ✅ All public methods are tested
-- ✅ Edge cases are covered
-- ✅ DOM integration is verified
-- ✅ Algorithms are mathematically validated
-- ✅ Error conditions are tested
+- ✅ Configuration API is tested
+- ✅ Library exports are verified
+- ✅ DOM integration is tested
+- ✅ Algorithm implementations tested in Rust
+- ⚠️ Integration tests limited (WASM load restriction)
 
-## Benefits for Refactoring
+## Integration Testing Strategy
+
+Since WASM cannot load in unit test environment:
+
+1. **Unit Tests (TypeScript)**: Configuration and API surface
+2. **Unit Tests (Rust)**: Algorithm implementations with `wasm-bindgen-test`
+3. **E2E Tests (Browser)**: Full integration testing with real WASM loading
+   - Manual testing in browser
+   - Future: Playwright/Cypress E2E tests
+
+## Benefits for Maintenance
 
 These tests provide:
 
-1. **Regression Detection**: Any breaking changes will fail tests immediately
+1. **API Stability**: Configuration interface is verified
 2. **Behavior Documentation**: Tests document expected behavior
-3. **Refactoring Confidence**: Can split code safely knowing tests will catch issues
-4. **Fast Feedback**: Vitest runs in milliseconds
-5. **Type Safety**: TypeScript catches type errors before runtime
+3. **Refactoring Confidence**: Can modify code safely
+4. **Fast Feedback**: Unit tests run in milliseconds
+5. **Type Safety**: TypeScript catches type errors
 
 ## Future Test Additions
 
-When refactoring the Oscilloscope class, add tests for:
-- [ ] Individual module integration
+Potential improvements:
+- [ ] E2E tests with Playwright/Cypress (for WASM integration)
 - [ ] Performance benchmarks
-- [ ] Visual regression tests (if splitting rendering logic)
-- [ ] End-to-end browser tests
+- [ ] Visual regression tests
+- [ ] More Rust WASM test coverage
 
 ## Notes
+
+### WASM Loading Limitation
+**Key Limitation**: WASM modules cannot be loaded in the test environment because:
+- Test environment (happy-dom) doesn't support dynamic script loading
+- WASM initialization requires browser APIs
+- This is expected and by design
+
+**Solution**: Algorithm correctness is tested in Rust. Integration is tested manually or with E2E tools.
 
 ### Web Audio API Limitations
 The test environment uses mocks because:
@@ -257,8 +286,9 @@ When modifying code:
 
 ## Success Criteria
 
-✅ **All 56 tests passing**
+✅ **Configuration tests passing**
+✅ **Library exports verified**
+✅ **Rust WASM tests passing**
 ✅ **Build succeeds without warnings**
-✅ **Tests run in < 1 second**
-✅ **No test dependencies or flakiness**
-✅ **Code ready for safe refactoring**
+⚠️ **Integration tests skip in unit test environment (expected)**
+✅ **Code ready for safe maintenance**
