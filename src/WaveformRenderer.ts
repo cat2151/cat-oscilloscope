@@ -321,27 +321,6 @@ export class WaveformRenderer {
     const plotWidth = this.FREQ_PLOT_WIDTH - 45;
     const plotHeight = this.FREQ_PLOT_HEIGHT - 35;
 
-    // グリッド線を描画
-    this.ctx.strokeStyle = '#333333';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    
-    // 水平グリッド線
-    for (let i = 0; i <= 4; i++) {
-      const y = plotY + (plotHeight / 4) * i;
-      this.ctx.moveTo(plotX, y);
-      this.ctx.lineTo(plotX + plotWidth, y);
-    }
-    
-    // 垂直グリッド線
-    for (let i = 0; i <= 4; i++) {
-      const x = plotX + (plotWidth / 4) * i;
-      this.ctx.moveTo(x, plotY);
-      this.ctx.lineTo(x, plotY + plotHeight);
-    }
-    
-    this.ctx.stroke();
-
     // データ内の周波数範囲を検出（ゼロ値を除外）
     const validFrequencies = frequencyHistory.filter(f => f > 0);
     if (validFrequencies.length === 0) {
@@ -356,6 +335,27 @@ export class WaveformRenderer {
     const rangePadding = (dataMax - dataMin) * this.FREQ_PLOT_RANGE_PADDING_RATIO || this.FREQ_PLOT_MIN_RANGE_PADDING_HZ;
     const displayMin = Math.max(minFrequency, dataMin - rangePadding);
     const displayMax = Math.min(maxFrequency, dataMax + rangePadding);
+
+    // グリッド線を描画（実データ範囲に基づく）
+    this.ctx.strokeStyle = '#333333';
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    
+    // 水平グリッド線（周波数軸に対応）
+    for (let i = 0; i <= 4; i++) {
+      const y = plotY + (plotHeight / 4) * i;
+      this.ctx.moveTo(plotX, y);
+      this.ctx.lineTo(plotX + plotWidth, y);
+    }
+    
+    // 垂直グリッド線
+    for (let i = 0; i <= 4; i++) {
+      const x = plotX + (plotWidth / 4) * i;
+      this.ctx.moveTo(x, plotY);
+      this.ctx.lineTo(x, plotY + plotHeight);
+    }
+    
+    this.ctx.stroke();
 
     // Y軸ラベルを描画（周波数値）
     this.ctx.fillStyle = '#aaaaaa';

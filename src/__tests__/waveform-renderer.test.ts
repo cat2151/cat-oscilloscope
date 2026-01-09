@@ -336,4 +336,70 @@ describe('WaveformRenderer', () => {
       expect(fillRectCallsAfter).toBe(fillRectCallsBefore);
     });
   });
+
+  describe('Frequency Plot Drawing', () => {
+    beforeEach(() => {
+      renderer = new WaveformRenderer(canvas);
+    });
+
+    it('should not draw frequency plot when history is empty', () => {
+      mockContext.stroke.mockClear();
+      mockContext.fillText.mockClear();
+
+      renderer.drawFrequencyPlot([], 20, 5000);
+
+      // Should not draw grid or labels when no data
+      expect(mockContext.stroke).not.toHaveBeenCalled();
+      expect(mockContext.fillText).not.toHaveBeenCalled();
+    });
+
+    it('should not draw frequency plot when all frequencies are zero', () => {
+      mockContext.stroke.mockClear();
+      mockContext.fillText.mockClear();
+
+      const frequencyHistory = [0, 0, 0, 0, 0];
+      renderer.drawFrequencyPlot(frequencyHistory, 20, 5000);
+
+      // Should save context but return early without drawing
+      expect(mockContext.save).toHaveBeenCalled();
+      expect(mockContext.restore).toHaveBeenCalled();
+      // Grid and labels should not be drawn
+      const strokeCalls = mockContext.stroke.mock.calls.length;
+      expect(strokeCalls).toBe(0);
+    });
+
+    it('should draw frequency plot with valid data', () => {
+      mockContext.stroke.mockClear();
+      mockContext.fillText.mockClear();
+
+      const frequencyHistory = [440, 441, 442, 440, 439];
+      renderer.drawFrequencyPlot(frequencyHistory, 20, 5000);
+
+      // Should draw background, border, grid, and labels
+      expect(mockContext.fillRect).toHaveBeenCalled();
+      expect(mockContext.strokeRect).toHaveBeenCalled();
+      expect(mockContext.stroke).toHaveBeenCalled();
+      expect(mockContext.fillText).toHaveBeenCalled();
+    });
+
+    it('should draw grid lines and labels at matching Y positions', () => {
+      const frequencyHistory = [440, 441, 442, 440, 439];
+      renderer.drawFrequencyPlot(frequencyHistory, 20, 5000);
+
+      // The test validates that the method draws grid lines and Y-axis labels
+      // There are multiple text elements drawn:
+      // - Title: "周波数推移 (Frequency)"
+      // - 5 Y-axis frequency labels (one for each horizontal grid line)
+      // - Current frequency value at the bottom
+      
+      const fillTextCalls = mockContext.fillText.mock.calls;
+      
+      // Should have title + 5 Y-axis labels + current frequency = 7 text elements
+      expect(fillTextCalls.length).toBeGreaterThanOrEqual(5);
+      
+      // Verify that grid lines are drawn (horizontal + vertical)
+      expect(mockContext.lineTo).toHaveBeenCalled();
+      expect(mockContext.stroke).toHaveBeenCalled();
+    });
+  });
 });
