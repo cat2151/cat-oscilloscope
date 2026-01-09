@@ -6,21 +6,19 @@ import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 import { WaveformDataProcessor } from './WaveformDataProcessor';
-import { WasmDataProcessor } from './WasmDataProcessor';
 import { WaveformRenderData } from './WaveformRenderData';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
  * Delegates responsibilities to specialized modules:
  * - AudioManager: Web Audio API integration
- * - GainController: Auto-gain and noise gate
- * - FrequencyEstimator: Frequency detection algorithms
+ * - GainController: Auto-gain and noise gate configuration
+ * - FrequencyEstimator: Frequency detection configuration
  * - WaveformRenderer: Canvas rendering
- * - ZeroCrossDetector: Zero-crossing detection and display range calculation
- * - WaveformSearcher: Waveform similarity search
+ * - ZeroCrossDetector: Zero-crossing detection configuration
+ * - WaveformSearcher: Waveform similarity search state
  * - ComparisonPanelRenderer: Comparison panel rendering
- * - WaveformDataProcessor: Data generation and processing (separated from rendering)
- * - WasmDataProcessor: WASM implementation of data processing (can be toggled)
+ * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -31,8 +29,6 @@ export class Oscilloscope {
   private waveformSearcher: WaveformSearcher;
   private comparisonRenderer: ComparisonPanelRenderer;
   private dataProcessor: WaveformDataProcessor;
-  private wasmDataProcessor: WasmDataProcessor | null = null;
-  private useWasm = false;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
@@ -72,17 +68,23 @@ export class Oscilloscope {
 
   async start(): Promise<void> {
     try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
       await this.audioManager.start();
       this.isRunning = true;
       this.render();
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('Error starting oscilloscope:', error);
       throw error;
     }
   }
 
   async startFromFile(file: File): Promise<void> {
     try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
       await this.audioManager.startFromFile(file);
       this.isRunning = true;
       this.render();
@@ -103,9 +105,7 @@ export class Oscilloscope {
     this.zeroCrossDetector.reset();
     this.waveformSearcher.reset();
     this.comparisonRenderer.clear();
-    if (this.wasmDataProcessor) {
-      this.wasmDataProcessor.reset();
-    }
+    this.dataProcessor.reset();
   }
 
   private render(): void {
@@ -116,13 +116,8 @@ export class Oscilloscope {
     // If paused, skip processing and drawing but continue the animation loop
     if (!this.isPaused) {
       // === DATA GENERATION PHASE ===
-      // Process frame and generate all data needed for rendering
-      // Use WASM processor if enabled, otherwise use TypeScript processor
-      const processor = (this.useWasm && this.wasmDataProcessor) 
-        ? this.wasmDataProcessor 
-        : this.dataProcessor;
-      
-      const renderData = processor.processFrame(this.renderer.getFFTDisplayEnabled());
+      // Process frame and generate all data needed for rendering using WASM processor
+      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
       
       if (renderData) {
         // === RENDERING PHASE ===
@@ -286,52 +281,5 @@ export class Oscilloscope {
 
   getPauseDrawing(): boolean {
     return this.isPaused;
-  }
-  
-  /**
-   * Enable or disable WASM processing
-   * @param enabled - Whether to use WASM implementation
-   * @returns Promise that resolves when WASM is ready (if enabling)
-   */
-  async setUseWasm(enabled: boolean): Promise<void> {
-    if (enabled && !this.wasmDataProcessor) {
-      // Initialize WASM processor on first use
-      this.wasmDataProcessor = new WasmDataProcessor(
-        this.audioManager,
-        this.gainController,
-        this.frequencyEstimator,
-        this.zeroCrossDetector,
-        this.waveformSearcher
-      );
-      try {
-        await this.wasmDataProcessor.initialize();
-        this.useWasm = true;
-      } catch (error) {
-        console.error('Failed to initialize WASM processor:', error);
-        this.wasmDataProcessor = null;
-        this.useWasm = false;
-        throw error;
-      }
-    } else if (enabled && this.wasmDataProcessor) {
-      // WASM processor already initialized
-      this.useWasm = true;
-    } else {
-      // Disable WASM
-      this.useWasm = false;
-    }
-  }
-  
-  /**
-   * Check if WASM processing is enabled
-   */
-  getUseWasm(): boolean {
-    return this.useWasm;
-  }
-  
-  /**
-   * Check if WASM is available and initialized
-   */
-  isWasmAvailable(): boolean {
-    return this.wasmDataProcessor !== null;
   }
 }
