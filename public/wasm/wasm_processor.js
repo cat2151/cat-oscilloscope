@@ -179,6 +179,12 @@ export class WasmDataProcessor {
         wasm.wasmdataprocessor_setNoiseGateThreshold(this.__wbg_ptr, threshold);
     }
     /**
+     * @param {number} multiplier
+     */
+    setBufferSizeMultiplier(multiplier) {
+        wasm.wasmdataprocessor_setBufferSizeMultiplier(this.__wbg_ptr, multiplier);
+    }
+    /**
      * @param {string} method
      */
     setFrequencyEstimationMethod(method) {
@@ -303,6 +309,15 @@ export class WaveformRenderData {
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
+     * @returns {Float32Array}
+     */
+    get frequencyPlotHistory() {
+        const ret = wasm.waveformrenderdata_frequencyPlotHistory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
      * @returns {number | undefined}
      */
     get secondAlignmentPoint() {
@@ -377,6 +392,9 @@ function __wbg_get_imports() {
     imports.wbg = {};
     imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
+    };
+    imports.wbg.__wbg_error_1529ada434ef54b4 = function(arg0, arg1) {
+        console.error(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
         const table = wasm.__wbindgen_externrefs;

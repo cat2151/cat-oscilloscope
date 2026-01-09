@@ -12,6 +12,7 @@ export class WasmDataProcessor {
   setNoiseGate(enabled: boolean): void;
   setUsePeakMode(enabled: boolean): void;
   setNoiseGateThreshold(threshold: number): void;
+  setBufferSizeMultiplier(multiplier: number): void;
   setFrequencyEstimationMethod(method: string): void;
   constructor();
   reset(): void;
@@ -31,6 +32,7 @@ export class WaveformRenderData {
   readonly displayStartIndex: number;
   readonly estimatedFrequency: number;
   readonly firstAlignmentPoint: number | undefined;
+  readonly frequencyPlotHistory: Float32Array;
   readonly secondAlignmentPoint: number | undefined;
   readonly usedSimilaritySearch: boolean;
   readonly isSignalAboveNoiseGate: boolean;
@@ -48,6 +50,7 @@ export interface InitOutput {
   readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
   readonly wasmdataprocessor_reset: (a: number) => void;
   readonly wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
+  readonly wasmdataprocessor_setBufferSizeMultiplier: (a: number, b: number) => void;
   readonly wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;
   readonly wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
   readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
@@ -58,6 +61,7 @@ export interface InitOutput {
   readonly waveformrenderdata_fftSize: (a: number) => number;
   readonly waveformrenderdata_firstAlignmentPoint: (a: number) => number;
   readonly waveformrenderdata_frequencyData: (a: number) => [number, number];
+  readonly waveformrenderdata_frequencyPlotHistory: (a: number) => [number, number];
   readonly waveformrenderdata_gain: (a: number) => number;
   readonly waveformrenderdata_isSignalAboveNoiseGate: (a: number) => number;
   readonly waveformrenderdata_maxFrequency: (a: number) => number;
