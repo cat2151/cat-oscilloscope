@@ -293,6 +293,16 @@ export class WaveformRenderer {
    * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
    */
   drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
+    // Debug logging - can be removed after investigation
+    if (frequencyHistory && frequencyHistory.length > 0 && frequencyHistory.length % 20 === 0) {
+      console.log('[Renderer Debug] drawFrequencyPlot called:', {
+        length: frequencyHistory.length,
+        sample: frequencyHistory.slice(-5),
+        minFrequency,
+        maxFrequency
+      });
+    }
+    
     if (!frequencyHistory || frequencyHistory.length === 0) {
       return;
     }
