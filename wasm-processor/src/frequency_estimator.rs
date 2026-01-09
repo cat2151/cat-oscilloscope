@@ -405,10 +405,13 @@ impl FrequencyEstimator {
     }
     
     pub fn set_frequency_estimation_method(&mut self, method: &str) {
-        self.frequency_estimation_method = method.to_string();
-        // Clear histories when changing methods
-        self.frequency_history.clear();
-        self.frequency_plot_history.clear();
+        // Only clear histories if the method actually changes
+        if self.frequency_estimation_method != method {
+            self.frequency_estimation_method = method.to_string();
+            // Clear histories when changing methods
+            self.frequency_history.clear();
+            self.frequency_plot_history.clear();
+        }
     }
     
     pub fn get_max_frequency(&self) -> f32 {
