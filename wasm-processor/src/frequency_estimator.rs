@@ -424,7 +424,11 @@ impl FrequencyEstimator {
     }
     
     pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
-        self.buffer_size_multiplier = multiplier;
+        // Validate multiplier is one of the allowed values (1, 4, or 16)
+        // If invalid, keep the current value
+        if multiplier == 1 || multiplier == 4 || multiplier == 16 {
+            self.buffer_size_multiplier = multiplier;
+        }
     }
     
     pub fn get_buffer_size_multiplier(&self) -> u32 {
