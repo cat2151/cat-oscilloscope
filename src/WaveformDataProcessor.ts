@@ -154,7 +154,8 @@ export class WaveformDataProcessor {
    * This method implements a fallback hierarchy:
    * 1. Check for <base> tag href attribute
    * 2. Extract from existing script tags
-   * 3. Default to '/'
+   * 3. Check if running in Vite dev mode (import.meta.env.DEV)
+   * 4. Default to '/'
    * The path is normalized to always end with '/'
    */
   private determineBasePath(): string {
@@ -179,6 +180,16 @@ export class WaveformDataProcessor {
     // Fall back to script tag analysis
     if (!basePath) {
       basePath = this.getBasePathFromScripts();
+    }
+    
+    // Check if running in Vite dev mode (window.location.pathname contains the base)
+    if (!basePath && window.location.pathname && window.location.pathname !== '/') {
+      // In dev mode, Vite serves from a base path like /cat-oscilloscope/
+      // Extract the first path segment
+      const pathMatch = window.location.pathname.match(/^(\/[^/]+)\//);
+      if (pathMatch) {
+        basePath = pathMatch[1] + '/';
+      }
     }
     
     // Default to root
@@ -335,6 +346,7 @@ export class WaveformDataProcessor {
       maxFrequency: wasmResult.maxFrequency,
       previousWaveform: wasmResult.previousWaveform ? new Float32Array(wasmResult.previousWaveform) : null,
       similarity: wasmResult.similarity,
+      similarityPlotHistory: wasmResult.similarityPlotHistory ? Array.from(wasmResult.similarityPlotHistory) : [],
       usedSimilaritySearch: wasmResult.usedSimilaritySearch,
     };
     

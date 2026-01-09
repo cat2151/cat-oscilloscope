@@ -332,6 +332,15 @@ export class WaveformRenderData {
         return ret !== 0;
     }
     /**
+     * @returns {Float32Array}
+     */
+    get similarityPlotHistory() {
+        const ret = wasm.waveformrenderdata_similarityPlotHistory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
      * @returns {boolean}
      */
     get isSignalAboveNoiseGate() {

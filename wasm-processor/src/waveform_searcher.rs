@@ -15,13 +15,18 @@ pub const CYCLES_TO_SEARCH: usize = 4;
 pub struct WaveformSearcher {
     previous_waveform: Option<Vec<f32>>,
     last_similarity: f32,
+    similarity_history: Vec<f32>,
 }
+
+/// Maximum number of similarity values to store in history
+const SIMILARITY_HISTORY_SIZE: usize = 100;
 
 impl WaveformSearcher {
     pub fn new() -> Self {
         WaveformSearcher {
             previous_waveform: None,
             last_similarity: 0.0,
+            similarity_history: Vec::new(),
         }
     }
     
@@ -107,6 +112,12 @@ impl WaveformSearcher {
         // Update last similarity
         self.last_similarity = best_similarity;
         
+        // Add to similarity history
+        self.similarity_history.push(best_similarity);
+        if self.similarity_history.len() > SIMILARITY_HISTORY_SIZE {
+            self.similarity_history.remove(0);
+        }
+        
         // Return result only if we found a good match
         if best_similarity > -1.0 {
             Some(SearchResult {
@@ -140,9 +151,15 @@ impl WaveformSearcher {
         self.last_similarity
     }
     
+    /// Get similarity history for plotting
+    pub fn get_similarity_history(&self) -> Vec<f32> {
+        self.similarity_history.clone()
+    }
+    
     /// Reset searcher state
     pub fn reset(&mut self) {
         self.previous_waveform = None;
         self.last_similarity = 0.0;
+        self.similarity_history.clear();
     }
 }

@@ -56,6 +56,9 @@ export interface WaveformRenderData {
   /** Similarity score between current and previous waveform (-1 to +1) */
   similarity: number;
   
+  /** プロット用の類似度の履歴 */
+  similarityPlotHistory: number[];
+  
   /** Whether similarity search was used for alignment */
   usedSimilaritySearch: boolean;
 }
