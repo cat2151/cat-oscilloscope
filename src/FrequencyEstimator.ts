@@ -452,10 +452,13 @@ export class FrequencyEstimator {
 
   // Getters and setters
   setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt'): void {
-    this.frequencyEstimationMethod = method;
-    // Clear frequency history when changing methods
-    this.frequencyHistory = [];
-    this.frequencyPlotHistory = [];
+    // Only clear frequency history if the method actually changes
+    if (this.frequencyEstimationMethod !== method) {
+      this.frequencyEstimationMethod = method;
+      // Clear frequency history when changing methods
+      this.frequencyHistory = [];
+      this.frequencyPlotHistory = [];
+    }
   }
 
   getFrequencyEstimationMethod(): string {
