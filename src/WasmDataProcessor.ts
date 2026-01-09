@@ -316,25 +316,13 @@ export class WasmDataProcessor {
     }
     
     // Convert WASM result to TypeScript WaveformRenderData
-    const frequencyPlotHistoryArray: number[] = wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [];
-    
-    // Debug logging - can be removed after investigation
-    if (frequencyPlotHistoryArray.length > 0 && frequencyPlotHistoryArray.length % 20 === 0) {
-      console.log('[WASM Debug] frequencyPlotHistory:', {
-        length: frequencyPlotHistoryArray.length,
-        sample: frequencyPlotHistoryArray.slice(-5),
-        hasNaN: frequencyPlotHistoryArray.some(v => isNaN(v)),
-        allZero: frequencyPlotHistoryArray.every(v => v === 0)
-      });
-    }
-    
     const renderData: WaveformRenderData = {
       waveformData: new Float32Array(wasmResult.waveform_data),
       displayStartIndex: wasmResult.displayStartIndex,
       displayEndIndex: wasmResult.displayEndIndex,
       gain: wasmResult.gain,
       estimatedFrequency: wasmResult.estimatedFrequency,
-      frequencyPlotHistory: frequencyPlotHistoryArray,
+      frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
       sampleRate: wasmResult.sampleRate,
       fftSize: wasmResult.fftSize,
       firstAlignmentPoint: wasmResult.firstAlignmentPoint,
