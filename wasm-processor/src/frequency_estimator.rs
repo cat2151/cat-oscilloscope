@@ -425,9 +425,32 @@ impl FrequencyEstimator {
     
     pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
         // Validate multiplier is one of the allowed values (1, 4, or 16)
-        // If invalid, keep the current value
+        // If invalid, keep the current value and log an error
         if multiplier == 1 || multiplier == 4 || multiplier == 16 {
             self.buffer_size_multiplier = multiplier;
+        } else {
+            #[cfg(target_arch = "wasm32")]
+            {
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = console)]
+                    fn error(s: &str);
+                }
+                error(&format!(
+                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
+                    multiplier,
+                    self.buffer_size_multiplier
+                ));
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                eprintln!(
+                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
+                    multiplier,
+                    self.buffer_size_multiplier
+                );
+            }
         }
     }
     
