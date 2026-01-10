@@ -17,7 +17,7 @@ export class GainController {
   private currentGain = 1.0;
   
   private noiseGateEnabled = true;
-  private noiseGateThreshold = dbToAmplitude(-48); // Default threshold (-48dB)
+  private noiseGateThreshold = dbToAmplitude(-60); // Default threshold (-60dB)
 
   setAutoGain(enabled: boolean): void {
     this.autoGainEnabled = enabled;
