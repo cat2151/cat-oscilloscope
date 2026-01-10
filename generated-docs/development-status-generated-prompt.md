@@ -1,4 +1,4 @@
-Last updated: 2026-01-10
+Last updated: 2026-01-11
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -200,6 +200,7 @@ Last updated: 2026-01-10
 - .github/workflows/call-translate-readme.yml
 - .github/workflows/deploy.yml
 - .gitignore
+- CONSOLIDATION_SUMMARY.md
 - IMPLEMENTATION_NOTES_117.md
 - IMPLEMENTATION_SUMMARY.md
 - LIBRARY_USAGE.md
@@ -221,6 +222,13 @@ Last updated: 2026-01-10
 - issue-notes/117.md
 - issue-notes/119.md
 - issue-notes/120.md
+- issue-notes/123.md
+- issue-notes/125.md
+- issue-notes/127.md
+- issue-notes/129.md
+- issue-notes/130.md
+- issue-notes/132.md
+- issue-notes/133.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -259,7 +267,6 @@ Last updated: 2026-01-10
 - src/GainController.ts
 - src/Oscilloscope.ts
 - src/PianoKeyboardRenderer.ts
-- src/WasmDataProcessor.ts
 - src/WaveformDataProcessor.ts
 - src/WaveformRenderData.ts
 - src/WaveformRenderer.ts
@@ -272,7 +279,6 @@ Last updated: 2026-01-10
 - src/__tests__/oscilloscope.test.ts
 - src/__tests__/piano-keyboard-renderer.test.ts
 - src/__tests__/utils.test.ts
-- src/__tests__/wasm-data-processor.test.ts
 - src/__tests__/waveform-data-processor.test.ts
 - src/__tests__/waveform-renderer.test.ts
 - src/__tests__/waveform-searcher.test.ts
@@ -290,44 +296,31 @@ Last updated: 2026-01-10
 - wasm-processor/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
-## [Issue #121](../issue-notes/121.md): Fix WASM frequency plot history being cleared every frame
-The issue reported that the frequency transition graph line chart doesn't display when using Rust WASM. Investigation revealed an actual bug where the frequency history was being cleared every frame.
-
-## Root Cause
-
-The bug was in `WasmDataProcessor.ts`. The `syncConfigToWasm()` method was being cal...
-ラベル: 
---- issue-notes/121.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #120](../issue-notes/120.md): Rust WASM時、周波数推移グラフの折れ線グラフが表示されない（あるいは上か下に張り付いているのかもしれないが見た目では判断できなかった）
-[issue-notes/120.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/120.md)
+## [Issue #133](../issue-notes/133.md): 「前回の波形」「周波数の推移」「類似度の推移」は安定しているのに、「今回の波形」だけまるで瞬間的に対象sample数が少なくなって時間軸拡大したようなブレをすることが多い
+[issue-notes/133.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/133.md)
 
 ...
 ラベル: 
---- issue-notes/120.md の内容 ---
+--- issue-notes/133.md の内容 ---
 
 ```markdown
-# issue Rust WASM時、周波数推移グラフの折れ線グラフが表示されない（あるいは上か下に張り付いているのかもしれないが見た目では判断できなかった） #120
-[issues #120](https://github.com/cat2151/cat-oscilloscope/issues/120)
+# issue 「前回の波形」「周波数の推移」「類似度の推移」は安定しているのに、「今回の波形」だけまるで瞬間的に対象sample数が少なくなって時間軸拡大したようなブレをすることが多い #133
+[issues #133](https://github.com/cat2151/cat-oscilloscope/issues/133)
 
 
 
 ```
 
-## [Issue #119](../issue-notes/119.md): （Rust WASM版が一通り動いたのを確認したら）Rust WASMとTypeScript両方にある機能は、Rust WASMに一本化し、多重メンテによるトラブルを防止する
-[issue-notes/119.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/119.md)
+## [Issue #129](../issue-notes/129.md): ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする
+[issue-notes/129.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/129.md)
 
 ...
 ラベル: 
---- issue-notes/119.md の内容 ---
+--- issue-notes/129.md の内容 ---
 
 ```markdown
-# issue （Rust WASM版が一通り動いたのを確認したら）Rust WASMとTypeScript両方にある機能は、Rust WASMに一本化し、多重メンテによるトラブルを防止する #119
-[issues #119](https://github.com/cat2151/cat-oscilloscope/issues/119)
+# issue ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする #129
+[issues #129](https://github.com/cat2151/cat-oscilloscope/issues/129)
 
 
 
@@ -364,177 +357,124 @@ The bug was in `WasmDataProcessor.ts`. The `syncConfigToWasm()` method was being
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/19.md
+### .github/actions-tmp/issue-notes/29.md
 ```md
 {% raw %}
-# issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
-[issues #19](https://github.com/cat2151/github-actions/issues/19)
+# issue project-overviewで、Nuked-OPMを使ったプロジェクトが、ハルシネーションでTone.jsと表示されてしまっている #29
+[issues #29](https://github.com/cat2151/github-actions/issues/29)
 
-# 何が困るの？
-- issue解決に向けての次の一手の内容が実態に即していないことが多い。
+# 分析
+- 技術スタック欄について、
+    - agentが実装した、
+        - 今までの実装そのものに問題がある
+- 問題
+    - ハードコーディングされた「Tone.js」
+    - などの文字列を使って、
+    - 「検出」をしている
+    - メンテ必須になるし、新たな音楽ライブラリに対応できない（今回の問題はこれ）
+- 考え方
+    - 根本的に「技術スタック説明に、ハードコーディングされたlistベースの検出を入れようとした」のが間違い
+    - デメリットが大きすぎて、逆効果になっている
 
-# 対策案
-- issue-notes/ 配下のmdファイルの内容を参照させる
-
-# 備考
-- さらにmd内に書かれているfileも、project内をcjsに検索させて添付させると、よりGeminiの生成品質が向上する可能性がある。
-    - [issues #20](https://github.com/cat2151/github-actions/issues/20)
-- さらにproject overviewでGeminiがまとめたmdも、Geminiに与えると、よりGeminiの生成品質が向上する可能性がある。
-    - [issues #21](https://github.com/cat2151/github-actions/issues/21)
-- さらに、Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
-    - [issues #22](https://github.com/cat2151/github-actions/issues/22)
+# 対策
+- 技術スタック欄について、「検出」機能を削除する
+    - LLMには、「README、ソースのtree、ソースの呼び出し階層tree」がわたる
+        - LLMは、それを元に、LLMの知識による技術スタック説明を生成する
 
 # close条件
-- issues #22 がcloseされること。
-- commitされたpromptを確認し、issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できること。
+- 当該プロジェクトの、project-overviewの生成結果において、ハルシネーションの「Tone.js」が出力されないこと
+- ついでに
+    - READMEの文字数制限を撤廃した。
+        - より高精度な生成を可能にするため。Geminiなので入力データ量に余裕があるので。
+        - 結果、READMEが全量出力され、体感で生成品質が向上したこと
+    - promptをcommit pushするようにした。
+        - より高精度な生成のため。本件のような場合の調査を効率化するため。
+        - 結果、promptが出力されること
 
-# 状況
-- 課題、実装したがtestができていない
-- 対策、issues #22 が実装されれば、testができる
-- 対策、issues #22 のcloseを待つ
+# test green
 
-# 状況
-- issues #22 がcloseされた
-- testできるようになった
-- commitされたpromptを確認した。issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できた
-
-# closeする
+# closeとする
 
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/20.md
+### .github/actions-tmp/issue-notes/3.md
 ```md
 {% raw %}
-# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
-[issues #20](https://github.com/cat2151/github-actions/issues/20)
+# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
+[issues #3](https://github.com/cat2151/github-actions/issues/3)
 
-# 何が困るの？
-- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
+- 前提
+  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
+  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
 
-# 案
-## outputのimage
-- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
-    - 軸は、projectのfilename一覧である。
-        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
-- 方向性
-    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
-    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
-- 備考
-    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
-        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
-## 実現方法の案
-- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
-    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
-- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
-- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
-- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
-- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
-## 備忘
-- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
+- prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlはまだ共通ワークフロー化されず、
+呼び出し元からコピーされたままの状態です。
+このymlファイル名のまま、
+中身を共通ワークフロー化してください。
+呼び出し元ymlは別途書きますので気にしないでください。
+まずplanしてください
+```
 
-# どうする？
-- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
-- 投げた、実装させた、レビューして人力リファクタリングした
-- testする
+- plan 生成結果
+```
+共通ワークフロー化のためのplanは以下の通りです。
 
-# 結果
-- バグ
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-    - issue-notesで言及されていないfileまで添付されてしまっている
-- 分析
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-        - 原因
-            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
-            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
-            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
-                - 20.md が置換対象となってしまったため。
-        - 対策案
-            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
-                - つまり文中やcode中のプレースホルダーは置換対象外とする。
-            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
-    - issue-notesで言及されていないfileまで添付されてしまっている
-        - 原因
-            - promptに、既にprojectの全file listが書き込まれたあとなので、
-                - issue-noteで言及されていなくても、
-                - promptの全file listを対象に検索してしまっている
-        - 対策案の候補
-            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
-            - file添付の対象を変更し、promptでなく、issue-notesとする
-                - これが範囲が絞られているので安全である、と考える
-        - 備忘
-            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
+1. 目的
+現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
+2. 主な変更点
+on: トリガーを workflow_call に変更（直接イベントで起動しない）。
+必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
+github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
+既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
+3. 具体的な修正内容
+on: issues: → on: workflow_call: に変更。
+inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
+スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
+github-script ステップも同様にinputsを参照。
+必要に応じて secrets も workflow_call で受け取れるようにする。
+4. ファイル名・配置
+ファイル名はそのまま issue-note.yml。
+配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
+5. 呼び出し元への影響
+呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
+このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+```
 
-# どうする？
-- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
-- で実装した。
-- testする
+- userがplanレビューし、OKを出した
+- agentに生成結果ymlをレビューさせた、OKとなった
+  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
+-  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
+```
+原因の分析：
 
-# 結果
+呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
+共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
+しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
+エラーの本質的な原因：
+
+actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
+script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
+そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
+正しい書き方：
+
+actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
+例（修正版）：
+
+このように、inputs の値を env で渡し、script 内では process.env で参照してください。
+
+まとめ：
+
+actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
+env: で値を渡し、process.env で参照するのが正しい
+修正が必要です。修正版のワークフローが必要な場合はお知らせください。
+```
+
 - test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/21.md
-```md
-{% raw %}
-# issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
-[issues #21](https://github.com/cat2151/github-actions/issues/21)
-
-# 何が困るの？
-- project-overview.mdがpromptに添付されていたほうが、Geminiの生成品質が改善できる可能性がある。
-    - メリットは、ファイル一覧、関数一覧、をGeminiにわたせること
-
-# 検討事項
-- 課題、その一覧に付記されている「ファイルや関数の要約」は、Geminiが「ファイル名や関数名を元に生成しただけ」で、「ファイル内容や関数内容を参照せずに生成した」可能性が高い
-    - 対策、project-overview.mdに依存しない。
-        - 方法、新規関数をagentに実装させる
-            - 新規関数で、ファイル一覧と関数一覧を生成する
-        - 根拠、そのほうが、シンプルに目的を達成できる可能性が高そう。
-        - 根拠、project-overview.mdだと、不具合として.github 配下のymlがlistに含まれておらず、ymlに関するissue、に関する生成、をするとき不具合の可能性がありそう。そういった、別機能の不具合に影響されがち。
-- 課題、早期に実施したほうが毎日好影響が出る可能性がある
-    - 対策、上記検討事項の対処は後回しにして、先に実装してみる
-    - agentに投げる
-- 課題、ProjectSummaryCoordinator をみたところ、並列処理されている
-    - なので、project-overview.mdを参照したいときに、まだ生成されていない、という可能性が高い
-    - 対策、前述の、新規関数で、ファイル一覧と関数一覧を生成させる
-
-# agentに投げるための整理
-- 編集対象ファイル
-    - prompt
-        - .github_automation/project_summary/prompts/development-status-prompt.md
-        - 編集内容
-            - projectのファイル一覧を埋め込む用の、プレースホルダーを追加する
-    - source
-        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
-        - 編集内容
-            - projectのファイル一覧を生成する関数、を実装し、
-            - それを前述のプレースホルダーに埋め込む
-
-# agentに投げて実装させた
-
-# test結果
-- 以下が不要
-    - .git/
-    - node_modules/
-
-# どうする？
-- agentに上記を変更させた
-- testする
-
-# 結果
-- test greenとなった
-
-# まとめ
-- issueのtitleからは仕様変更した。
-    - projectのfile一覧をpromptに含める、とした。
-    - そのほうがpromptとして、よい生成結果が期待できる、と判断した。
-- test greenとなった
-
-# closeとする
+- closeとする
 
 {% endraw %}
 ```
@@ -569,22 +509,22 @@ The bug was in `WasmDataProcessor.ts`. The `syncConfigToWasm()` method was being
 {% endraw %}
 ```
 
-### issue-notes/119.md
+### issue-notes/129.md
 ```md
 {% raw %}
-# issue （Rust WASM版が一通り動いたのを確認したら）Rust WASMとTypeScript両方にある機能は、Rust WASMに一本化し、多重メンテによるトラブルを防止する #119
-[issues #119](https://github.com/cat2151/cat-oscilloscope/issues/119)
+# issue ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする #129
+[issues #129](https://github.com/cat2151/cat-oscilloscope/issues/129)
 
 
 
 {% endraw %}
 ```
 
-### issue-notes/120.md
+### issue-notes/133.md
 ```md
 {% raw %}
-# issue Rust WASM時、周波数推移グラフの折れ線グラフが表示されない（あるいは上か下に張り付いているのかもしれないが見た目では判断できなかった） #120
-[issues #120](https://github.com/cat2151/cat-oscilloscope/issues/120)
+# issue 「前回の波形」「周波数の推移」「類似度の推移」は安定しているのに、「今回の波形」だけまるで瞬間的に対象sample数が少なくなって時間軸拡大したようなブレをすることが多い #133
+[issues #133](https://github.com/cat2151/cat-oscilloscope/issues/133)
 
 
 
@@ -613,400 +553,35 @@ The bug was in `WasmDataProcessor.ts`. The `syncConfigToWasm()` method was being
 {% endraw %}
 ```
 
-### src/WasmDataProcessor.ts
-```ts
-{% raw %}
-import { WaveformRenderData } from './WaveformRenderData';
-import { AudioManager } from './AudioManager';
-import { GainController } from './GainController';
-import { FrequencyEstimator } from './FrequencyEstimator';
-import { ZeroCrossDetector } from './ZeroCrossDetector';
-import { WaveformSearcher } from './WaveformSearcher';
-
-// Type definition for WASM processor instance
-interface WasmProcessorInstance {
-  setAutoGain(enabled: boolean): void;
-  setNoiseGate(enabled: boolean): void;
-  setNoiseGateThreshold(threshold: number): void;
-  setFrequencyEstimationMethod(method: string): void;
-  setBufferSizeMultiplier(multiplier: number): void;
-  setUsePeakMode(enabled: boolean): void;
-  reset(): void;
-  processFrame(
-    waveformData: Float32Array,
-    frequencyData: Uint8Array | null,
-    sampleRate: number,
-    fftSize: number,
-    fftDisplayEnabled: boolean
-  ): any;
-}
-
-/**
- * WasmDataProcessor - Wrapper for the WASM implementation of WaveformDataProcessor
- * 
- * This class provides the same interface as WaveformDataProcessor but uses
- * the Rust/WASM implementation for data processing. It maintains TypeScript
- * instances only for configuration and state that needs to be accessed from JS.
- */
-export class WasmDataProcessor {
-  // Asset directory patterns used for base path detection
-  private static readonly ASSET_PATTERNS = ['/assets/', '/js/', '/dist/'] as const;
-  
-  private audioManager: AudioManager;
-  private gainController: GainController;
-  private frequencyEstimator: FrequencyEstimator;
-  private zeroCrossDetector: ZeroCrossDetector;
-  private waveformSearcher: WaveformSearcher;
-
-  private wasmProcessor: WasmProcessorInstance | null = null;
-  private isInitialized = false;
-  private cachedBasePath: string | null = null;
-
-  constructor(
-    audioManager: AudioManager,
-    gainController: GainController,
-    frequencyEstimator: FrequencyEstimator,
-    zeroCrossDetector: ZeroCrossDetector,
-    waveformSearcher: WaveformSearcher
-  ) {
-    this.audioManager = audioManager;
-    this.gainController = gainController;
-    this.frequencyEstimator = frequencyEstimator;
-    this.zeroCrossDetector = zeroCrossDetector;
-    this.waveformSearcher = waveformSearcher;
-  }
-  
-  /**
-   * Initialize the WASM module
-   * Must be called before processFrame
-   */
-  async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      return;
-    }
-    
-    // Check if we're in a test or non-browser-like environment
-    if (typeof window === 'undefined' || window.location.protocol === 'file:') {
-      throw new Error('WASM module not available in test/non-browser environment');
-    }
-    
-    try {
-      // Load WASM module using script tag injection (works around Vite restrictions)
-      await this.loadWasmModule();
-      this.isInitialized = true;
-      
-      // Sync initial configuration to WASM
-      this.syncConfigToWasm();
-    } catch (error) {
-      console.error('Failed to initialize WASM module:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Load WASM module dynamically
-   */
-  private async loadWasmModule(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // Check if already loaded
-      // @ts-ignore
-      if (window.wasmProcessor && window.wasmProcessor.WasmDataProcessor) {
-        // @ts-ignore
-        this.wasmProcessor = new window.wasmProcessor.WasmDataProcessor();
-        resolve();
-        return;
-      }
-      
-      // Set up timeout to prevent hanging
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error('WASM module loading timed out after 10 seconds'));
-      }, 10000);
-      
-      // Determine the base path for WASM files
-      const basePath = this.determineBasePath();
-      const wasmPath = `${basePath}wasm/wasm_processor.js`;
-      
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.textContent = `
-        import init, { WasmDataProcessor } from '${wasmPath}';
-        await init();
-        window.wasmProcessor = { WasmDataProcessor };
-        window.dispatchEvent(new Event('wasmLoaded'));
-      `;
-      
-      const cleanup = () => {
-        clearTimeout(timeout);
-        window.removeEventListener('wasmLoaded', handleLoad);
-      };
-      
-      const handleLoad = () => {
-        cleanup();
-        // @ts-ignore
-        if (window.wasmProcessor && window.wasmProcessor.WasmDataProcessor) {
-          // @ts-ignore
-          this.wasmProcessor = new window.wasmProcessor.WasmDataProcessor();
-          resolve();
-        } else {
-          reject(new Error('WASM module loaded but WasmDataProcessor not found'));
-        }
-      };
-      
-      window.addEventListener('wasmLoaded', handleLoad);
-      
-      script.onerror = () => {
-        cleanup();
-        reject(new Error('Failed to load WASM module script'));
-      };
-      
-      document.head.appendChild(script);
-    });
-  }
-  
-  /**
-   * Determine the base path for the application
-   * This method implements a fallback hierarchy:
-   * 1. Check for <base> tag href attribute
-   * 2. Extract from existing script tags
-   * 3. Default to '/'
-   * The path is normalized to always end with '/'
-   */
-  private determineBasePath(): string {
-    // Return cached value if available
-    if (this.cachedBasePath !== null) {
-      return this.cachedBasePath;
-    }
-    
-    // Try <base> tag first
-    let basePath = document.querySelector('base')?.getAttribute('href');
-
-    // If we got a value from <base>, normalize absolute URLs to pathname only
-    if (basePath) {
-      try {
-        const url = new URL(basePath, window.location.href);
-        basePath = url.pathname;
-      } catch {
-        // If parsing fails, keep the original value (likely already a relative path)
-      }
-    }
-    
-    // Fall back to script tag analysis
-    if (!basePath) {
-      basePath = this.getBasePathFromScripts();
-    }
-    
-    // Default to root
-    if (!basePath) {
-      basePath = '/';
-    }
-    
-    // Normalize: ensure trailing slash
-    if (!basePath.endsWith('/')) {
-      basePath += '/';
-    }
-    
-    // Cache the result
-    this.cachedBasePath = basePath;
-    return basePath;
-  }
-  
-  /**
-   * Extract base path from existing script tags
-   * This method attempts to infer the base path by looking for script tags with src attributes
-   * that might indicate the deployment path. Falls back to empty string if no clear pattern is found.
-   */
-  private getBasePathFromScripts(): string {
-    const scripts = document.querySelectorAll('script[src]');
-    for (const script of scripts) {
-      const src = script.getAttribute('src');
-      if (src) {
-        try {
-          // Try to parse as URL to handle both absolute and relative paths
-          const url = new URL(src, window.location.href);
-          const pathname = url.pathname;
-          
-          // Look for common asset directory patterns
-          for (const pattern of WasmDataProcessor.ASSET_PATTERNS) {
-            const index = pathname.indexOf(pattern);
-            if (index >= 0) {
-              // Extract everything before the asset directory
-              // For '/assets/file.js', index=0, return '/' (root directory)
-              // For '/cat-oscilloscope/assets/file.js', index=17, return '/cat-oscilloscope/'
-              return index === 0 ? '/' : pathname.substring(0, index) + '/';
-            }
-          }
-        } catch (error: unknown) {
-          // URL parsing failed - skip this script and try next one
-          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.debug('Failed to parse script URL:', src, error);
-          }
-          continue;
-        }
-      }
-    }
-    return '';
-  }
-  
-  /**
-   * Sync TypeScript configuration to WASM processor
-   */
-  private syncConfigToWasm(): void {
-    if (!this.wasmProcessor) return;
-    
-    this.wasmProcessor.setAutoGain(this.gainController.getAutoGainEnabled());
-    this.wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled());
-    this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
-    this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
-    this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
-    this.wasmProcessor.setUsePeakMode(this.zeroCrossDetector.getUsePeakMode());
-  }
-  
-  /**
-   * Sync WASM results back to TypeScript objects
-   * 
-   * Note: This method accesses private members using type assertions.
-   * This is a temporary solution to maintain compatibility with existing code
-   * that uses getters like getEstimatedFrequency(), getCurrentGain(), etc.
-   * 
-   * TODO: Consider adding public setter methods to these classes or
-   * redesigning the synchronization interface for better type safety.
-   */
-  private syncResultsFromWasm(renderData: WaveformRenderData): void {
-    // Update frequency estimator's estimated frequency
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.frequencyEstimator as any).estimatedFrequency = renderData.estimatedFrequency;
-    
-    // Update gain controller's current gain
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.gainController as any).currentGain = renderData.gain;
-    
-    // Update waveform searcher's state
-    if (renderData.previousWaveform) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this.waveformSearcher as any).previousWaveform = renderData.previousWaveform;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.waveformSearcher as any).lastSimilarity = renderData.similarity;
-  }
-
-  /**
-   * Process current frame and generate complete render data using WASM
-   */
-  processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
-    if (!this.isInitialized || !this.wasmProcessor) {
-      console.warn('WASM processor not initialized');
-      return null;
-    }
-    
-    // Check if audio is ready
-    if (!this.audioManager.isReady()) {
-      return null;
-    }
-
-    // Get waveform data
-    const dataArray = this.audioManager.getTimeDomainData();
-    if (!dataArray) {
-      return null;
-    }
-    
-    const sampleRate = this.audioManager.getSampleRate();
-    const fftSize = this.audioManager.getFFTSize();
-    
-    // Get frequency data if needed
-    const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
-    const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
-    
-    // Sync configuration before processing
-    this.syncConfigToWasm();
-    
-    // Call WASM processor
-    const wasmResult = this.wasmProcessor.processFrame(
-      dataArray,
-      frequencyData,
-      sampleRate,
-      fftSize,
-      fftDisplayEnabled
-    );
-    
-    if (!wasmResult) {
-      return null;
-    }
-    
-    // Convert WASM result to TypeScript WaveformRenderData
-    const renderData: WaveformRenderData = {
-      waveformData: new Float32Array(wasmResult.waveform_data),
-      displayStartIndex: wasmResult.displayStartIndex,
-      displayEndIndex: wasmResult.displayEndIndex,
-      gain: wasmResult.gain,
-      estimatedFrequency: wasmResult.estimatedFrequency,
-      frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
-      sampleRate: wasmResult.sampleRate,
-      fftSize: wasmResult.fftSize,
-      firstAlignmentPoint: wasmResult.firstAlignmentPoint,
-      secondAlignmentPoint: wasmResult.secondAlignmentPoint,
-      frequencyData: wasmResult.frequencyData ? new Uint8Array(wasmResult.frequencyData) : undefined,
-      isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
-      maxFrequency: wasmResult.maxFrequency,
-      previousWaveform: wasmResult.previousWaveform ? new Float32Array(wasmResult.previousWaveform) : null,
-      similarity: wasmResult.similarity,
-      usedSimilaritySearch: wasmResult.usedSimilaritySearch,
-    };
-    
-    // Sync results back to TypeScript objects so getters work correctly
-    this.syncResultsFromWasm(renderData);
-    
-    return renderData;
-  }
-  
-  /**
-   * Reset the WASM processor state
-   */
-  reset(): void {
-    if (this.wasmProcessor) {
-      this.wasmProcessor.reset();
-    }
-  }
-}
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-5f961d0 Add issue note for #120 [auto]
-4221604 Add issue note for #119 [auto]
-eeede2b Merge pull request #118 from cat2151/copilot/move-feature-to-rust-wasm
-53beefe Address PR review comments: add error logging for invalid buffer size and improve WASM init error messages
-01e219b Add implementation documentation for issue #117
-d16c4f1 Add validation for buffer size multiplier in WASM FrequencyEstimator
-5337359 Add missing features to Rust WASM: frequency plot history, STFT, CQT, buffer size multiplier
-1309f2c Initial plan
-e5aba85 Merge pull request #116 from cat2151/copilot/fix-gray-grid-frequency-issue
-1e4dc90 Fix frequency plot grid alignment - ensure grid drawn after data validation
+2128160 Merge pull request #134 from cat2151/copilot/update-bar-graph-position
+fc36824 Fix: Move similarity plot to third canvas in comparison panel (line chart format)
+a319f6e Add safety check to prevent division by zero in bar spacing calculation
+c867ee0 Update tests and add documentation for similarity bar visualization
+b8bceec Fix bar height calculation in similarity bar graph
+97e7718 Move similarity bar graph to comparison panel canvases
+d1c225e Initial plan
+c27cb7c Merge pull request #131 from cat2151/copilot/set-threshold-to-minimum
+d0c97dc Change default threshold from -48dB to -60dB for better mic sensitivity
+d35e802 Add issue note for #133 [auto]
 
 ### 変更されたファイル:
-IMPLEMENTATION_NOTES_117.md
 index.html
-issue-notes/115.md
-issue-notes/117.md
-issue-notes/119.md
-issue-notes/120.md
-public/wasm/wasm_processor.d.ts
-public/wasm/wasm_processor.js
-public/wasm/wasm_processor_bg.wasm
-public/wasm/wasm_processor_bg.wasm.d.ts
+issue-notes/129.md
+issue-notes/130.md
+issue-notes/132.md
+issue-notes/133.md
+src/ComparisonPanelRenderer.ts
+src/GainController.ts
+src/Oscilloscope.ts
 src/PianoKeyboardRenderer.ts
-src/WasmDataProcessor.ts
 src/WaveformRenderer.ts
-src/__tests__/library-exports.test.ts
-src/__tests__/piano-keyboard-renderer.test.ts
-src/__tests__/waveform-renderer.test.ts
-src/index.ts
+src/__tests__/comparison-panel-renderer.test.ts
+src/__tests__/dom-integration.test.ts
+src/__tests__/oscilloscope.test.ts
 src/main.ts
-wasm-processor/src/frequency_estimator.rs
-wasm-processor/src/lib.rs
 
 
 ---
-Generated at: 2026-01-10 07:08:51 JST
+Generated at: 2026-01-11 07:08:26 JST
