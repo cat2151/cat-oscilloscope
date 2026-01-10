@@ -384,7 +384,14 @@ export class WaveformRenderer {
     // X軸ラベルのフォント設定を事前に準備
     const labelInterval = Math.max(1, Math.floor(frequencyHistory.length / 4));
     
-    // 線を描画（1回のループで線、マーカー、X軸ラベルを処理）
+    // Helper function: 周波数値をY座標に変換
+    const frequencyToY = (freq: number): number => {
+      const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
+      const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
+      return plotY + plotHeight - (normalizedFreq * plotHeight);
+    };
+    
+    // 線を描画（状態管理が必要なため独立ループ）
     let hasValidPoint = false;
     for (let i = 0; i < frequencyHistory.length; i++) {
       const freq = frequencyHistory[i];
@@ -396,12 +403,7 @@ export class WaveformRenderer {
         continue;
       }
       
-      // 周波数を表示範囲にクランプ
-      const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
-      
-      // 周波数をY座標にマッピング（反転：高周波数 = 上）
-      const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
-      const y = plotY + plotHeight - (normalizedFreq * plotHeight);
+      const y = frequencyToY(freq);
       
       // 線の描画
       if (!hasValidPoint) {
@@ -414,7 +416,7 @@ export class WaveformRenderer {
     
     this.ctx.stroke();
     
-    // データポイントマーカーとX軸ラベルを1回のループで描画
+    // データポイントマーカーとX軸ラベルを描画（統合ループ）
     this.ctx.font = '9px monospace';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'top';
@@ -425,9 +427,7 @@ export class WaveformRenderer {
       
       // データポイントマーカーを描画（周波数値が0でない場合）
       if (freq !== 0) {
-        const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
-        const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
-        const y = plotY + plotHeight - (normalizedFreq * plotHeight);
+        const y = frequencyToY(freq);
         
         this.ctx.fillStyle = '#00ff00';
         this.ctx.beginPath();
