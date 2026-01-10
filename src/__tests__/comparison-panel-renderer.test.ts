@@ -4,6 +4,7 @@ import { ComparisonPanelRenderer } from '../ComparisonPanelRenderer';
 describe('ComparisonPanelRenderer', () => {
   let previousCanvas: HTMLCanvasElement;
   let currentCanvas: HTMLCanvasElement;
+  let similarityCanvas: HTMLCanvasElement;
   let bufferCanvas: HTMLCanvasElement;
   let renderer: ComparisonPanelRenderer;
 
@@ -17,6 +18,10 @@ describe('ComparisonPanelRenderer', () => {
     currentCanvas.width = 250;
     currentCanvas.height = 150;
 
+    similarityCanvas = document.createElement('canvas');
+    similarityCanvas.width = 250;
+    similarityCanvas.height = 150;
+
     bufferCanvas = document.createElement('canvas');
     bufferCanvas.width = 250;
     bufferCanvas.height = 150;
@@ -27,6 +32,8 @@ describe('ComparisonPanelRenderer', () => {
       strokeStyle: '',
       lineWidth: 0,
       font: '',
+      textAlign: '',
+      textBaseline: '',
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
@@ -44,6 +51,27 @@ describe('ComparisonPanelRenderer', () => {
       strokeStyle: '',
       lineWidth: 0,
       font: '',
+      textAlign: '',
+      textBaseline: '',
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 100 })),
+      save: vi.fn(),
+      restore: vi.fn(),
+    };
+
+    const simMockContext = {
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 0,
+      font: '',
+      textAlign: '',
+      textBaseline: '',
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
@@ -61,6 +89,8 @@ describe('ComparisonPanelRenderer', () => {
       strokeStyle: '',
       lineWidth: 0,
       font: '',
+      textAlign: '',
+      textBaseline: '',
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
@@ -75,23 +105,26 @@ describe('ComparisonPanelRenderer', () => {
 
     previousCanvas.getContext = vi.fn(() => prevMockContext) as any;
     currentCanvas.getContext = vi.fn(() => currMockContext) as any;
+    similarityCanvas.getContext = vi.fn(() => simMockContext) as any;
     bufferCanvas.getContext = vi.fn(() => buffMockContext) as any;
 
     document.body.appendChild(previousCanvas);
     document.body.appendChild(currentCanvas);
+    document.body.appendChild(similarityCanvas);
     document.body.appendChild(bufferCanvas);
   });
 
   afterEach(() => {
     if (previousCanvas.parentNode) previousCanvas.parentNode.removeChild(previousCanvas);
     if (currentCanvas.parentNode) currentCanvas.parentNode.removeChild(currentCanvas);
+    if (similarityCanvas.parentNode) similarityCanvas.parentNode.removeChild(similarityCanvas);
     if (bufferCanvas.parentNode) bufferCanvas.parentNode.removeChild(bufferCanvas);
     vi.clearAllMocks();
   });
 
   describe('Constructor', () => {
     it('should create a renderer with valid canvases', () => {
-      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, similarityCanvas, bufferCanvas);
       expect(renderer).toBeDefined();
     });
 
@@ -100,27 +133,29 @@ describe('ComparisonPanelRenderer', () => {
         getContext: () => null,
       } as any;
 
-      expect(() => new ComparisonPanelRenderer(mockCanvas, currentCanvas, bufferCanvas))
+      expect(() => new ComparisonPanelRenderer(mockCanvas, currentCanvas, similarityCanvas, bufferCanvas))
         .toThrow('Could not get 2D context for comparison canvases');
     });
 
     it('should initialize all canvases with black background', () => {
-      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, similarityCanvas, bufferCanvas);
       
       const prevCtx = previousCanvas.getContext('2d') as any;
       const currCtx = currentCanvas.getContext('2d') as any;
+      const simCtx = similarityCanvas.getContext('2d') as any;
       const buffCtx = bufferCanvas.getContext('2d') as any;
 
       // Each canvas should be cleared (fillRect called)
       expect(prevCtx.fillRect).toHaveBeenCalled();
       expect(currCtx.fillRect).toHaveBeenCalled();
+      expect(simCtx.fillRect).toHaveBeenCalled();
       expect(buffCtx.fillRect).toHaveBeenCalled();
     });
   });
 
   describe('updatePanels', () => {
     beforeEach(() => {
-      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, similarityCanvas, bufferCanvas);
     });
 
     it('should update all panels with valid data', () => {
@@ -128,9 +163,8 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.95;
-      const similarityHistory = [0.9, 0.92, 0.95];
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
 
       // Verify that drawing operations were called on all contexts
       const prevCtx = previousCanvas.getContext('2d') as any;
@@ -146,9 +180,8 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0;
-      const similarityHistory = [0.0];
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
+      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, similarity);
 
       // Should still work without errors
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -160,9 +193,8 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.87;
-      const similarityHistory = [0.85, 0.86, 0.87];
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       expect(currCtx.fillText).toHaveBeenCalled();
@@ -175,34 +207,15 @@ describe('ComparisonPanelRenderer', () => {
       expect(similarityTextCall).toBeDefined();
     });
 
-    it('should draw similarity bar graph when history is provided', () => {
-      const previousWaveform = new Float32Array(100).fill(0.5);
-      const currentWaveform = new Float32Array(200).fill(0.3);
-      const fullBuffer = new Float32Array(200).fill(0.3);
-      const similarity = 0.87;
-      const similarityHistory = [0.8, 0.82, 0.85, 0.86, 0.87];
-
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
-
-      // Verify that bar graph drawing operations were called
-      const prevCtx = previousCanvas.getContext('2d') as any;
-      const currCtx = currentCanvas.getContext('2d') as any;
-      
-      // Bar graph should draw rectangles for bars
-      expect(prevCtx.fillRect).toHaveBeenCalled();
-      expect(currCtx.fillRect).toHaveBeenCalled();
-    });
-
     it('should draw position markers on buffer canvas', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.9;
-      const similarityHistory = [0.88, 0.89, 0.9];
       const startIndex = 50;
       const endIndex = 150;
 
-      renderer.updatePanels(previousWaveform, currentWaveform, startIndex, endIndex, fullBuffer, similarity, similarityHistory);
+      renderer.updatePanels(previousWaveform, currentWaveform, startIndex, endIndex, fullBuffer, similarity);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
       
@@ -222,17 +235,19 @@ describe('ComparisonPanelRenderer', () => {
 
   describe('clear', () => {
     beforeEach(() => {
-      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, similarityCanvas, bufferCanvas);
     });
 
     it('should clear all canvases', () => {
       const prevCtx = previousCanvas.getContext('2d') as any;
       const currCtx = currentCanvas.getContext('2d') as any;
+      const simCtx = similarityCanvas.getContext('2d') as any;
       const buffCtx = bufferCanvas.getContext('2d') as any;
 
       // Clear the mocks
       prevCtx.fillRect.mockClear();
       currCtx.fillRect.mockClear();
+      simCtx.fillRect.mockClear();
       buffCtx.fillRect.mockClear();
 
       renderer.clear();
@@ -240,13 +255,14 @@ describe('ComparisonPanelRenderer', () => {
       // All canvases should be cleared
       expect(prevCtx.fillRect).toHaveBeenCalled();
       expect(currCtx.fillRect).toHaveBeenCalled();
+      expect(simCtx.fillRect).toHaveBeenCalled();
       expect(buffCtx.fillRect).toHaveBeenCalled();
     });
   });
 
   describe('Auto-scaling', () => {
     beforeEach(() => {
-      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, bufferCanvas);
+      renderer = new ComparisonPanelRenderer(previousCanvas, currentCanvas, similarityCanvas, bufferCanvas);
     });
 
     it('should auto-scale small amplitude waveforms to fill vertical space', () => {
@@ -257,7 +273,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(100).fill(0);
 
-      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0, []);
+      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       
@@ -275,7 +291,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw
       expect(() => {
-        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0, []);
+        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0);
       }).not.toThrow();
     });
 
@@ -290,7 +306,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw and should use default scaling
       expect(() => {
-        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0, []);
+        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0);
       }).not.toThrow();
 
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -310,7 +326,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(200).fill(0);
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85, []);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85);
 
       const prevCtx = previousCanvas.getContext('2d') as any;
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -332,7 +348,7 @@ describe('ComparisonPanelRenderer', () => {
         fullBuffer[i] = 0.03 * Math.sin((i / fullBuffer.length) * Math.PI * 2);
       }
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0, []);
+      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
 

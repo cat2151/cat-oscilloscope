@@ -170,13 +170,24 @@
       ></canvas>
     </div>
     <div class="canvasContainer">
-      <span class="canvasLabel">今回の波形と類似度</span>
+      <span class="canvasLabel">今回の波形</span>
       <canvas
         id="currentWaveformCanvas"
         class="comparisonCanvas"
         width="250"
         height="150"
-        aria-label="今回の入力波形と前回の波形との類似度を示すプレビュー"
+        aria-label="今回の入力波形のプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">類似度推移</span>
+      <canvas
+        id="similarityPlotCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="前回の波形と今回の波形の類似度推移グラフ"
         aria-describedby="comparisonPanelDescription"
       ></canvas>
     </div>
