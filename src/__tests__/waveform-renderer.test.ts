@@ -28,6 +28,10 @@ describe('WaveformRenderer', () => {
       measureText: vi.fn(() => ({ width: 50 })),
       save: vi.fn(),
       restore: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      textAlign: '',
+      textBaseline: '',
     };
 
     canvas.getContext = vi.fn(() => mockContext) as any;
@@ -388,18 +392,24 @@ describe('WaveformRenderer', () => {
 
       // The test validates that the method draws grid lines and Y-axis labels
       // There are multiple text elements drawn:
-      // - Title: "周波数推移 (Frequency)"
+      // - Title: "周波数推移 (5frame)" (with frame count)
       // - 5 Y-axis frequency labels (one for each horizontal grid line)
+      // - X-axis frame labels (variable number depending on labelInterval)
       // - Current frequency value at the bottom
       
       const fillTextCalls = mockContext.fillText.mock.calls;
       
-      // Should have title + 5 Y-axis labels + current frequency = 7 text elements
-      expect(fillTextCalls.length).toBeGreaterThanOrEqual(5);
+      // Should have title + 5 Y-axis labels + X-axis labels + current frequency
+      // Minimum: 1 title + 5 Y-axis + 1 current = 7 text elements
+      expect(fillTextCalls.length).toBeGreaterThanOrEqual(7);
       
       // Verify that grid lines are drawn (horizontal + vertical)
       expect(mockContext.lineTo).toHaveBeenCalled();
       expect(mockContext.stroke).toHaveBeenCalled();
+      
+      // Verify that data point markers are drawn
+      expect(mockContext.arc).toHaveBeenCalled();
+      expect(mockContext.fill).toHaveBeenCalled();
     });
   });
 });
