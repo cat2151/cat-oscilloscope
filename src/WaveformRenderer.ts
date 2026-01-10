@@ -381,7 +381,10 @@ export class WaveformRenderer {
 
     const xStep = plotWidth / Math.max(frequencyHistory.length - 1, 1);
     
-    // 線を描画
+    // X軸ラベルのフォント設定を事前に準備
+    const labelInterval = Math.max(1, Math.floor(frequencyHistory.length / 4));
+    
+    // 線を描画（1回のループで線、マーカー、X軸ラベルを処理）
     let hasValidPoint = false;
     for (let i = 0; i < frequencyHistory.length; i++) {
       const freq = frequencyHistory[i];
@@ -400,6 +403,7 @@ export class WaveformRenderer {
       const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
       const y = plotY + plotHeight - (normalizedFreq * plotHeight);
       
+      // 線の描画
       if (!hasValidPoint) {
         this.ctx.moveTo(x, y);
         hasValidPoint = true;
@@ -410,35 +414,37 @@ export class WaveformRenderer {
     
     this.ctx.stroke();
     
-    // データポイントにマーカーを描画（1フレーム単位を視覚的に示す）
-    this.ctx.fillStyle = '#00ff00';
-    for (let i = 0; i < frequencyHistory.length; i++) {
-      const freq = frequencyHistory[i];
-      if (freq === 0) continue;
-      
-      const x = plotX + i * xStep;
-      const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
-      const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
-      const y = plotY + plotHeight - (normalizedFreq * plotHeight);
-      
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, 2, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
-    
-    // X軸ラベルを描画（フレーム番号）
-    this.ctx.fillStyle = '#aaaaaa';
+    // データポイントマーカーとX軸ラベルを1回のループで描画
     this.ctx.font = '9px monospace';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'top';
     
-    // 適切な間隔でフレーム番号を表示
-    const labelInterval = Math.max(1, Math.floor(frequencyHistory.length / 4));
-    for (let i = 0; i < frequencyHistory.length; i += labelInterval) {
+    for (let i = 0; i < frequencyHistory.length; i++) {
+      const freq = frequencyHistory[i];
       const x = plotX + i * xStep;
-      // 最新のフレームからの相対位置を表示（例：-50, -25, 0）
-      const frameOffset = i - frequencyHistory.length + 1;
-      this.ctx.fillText(`${frameOffset}`, x, plotY + plotHeight + 2);
+      
+      // データポイントマーカーを描画（周波数値が0でない場合）
+      if (freq !== 0) {
+        const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
+        const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
+        const y = plotY + plotHeight - (normalizedFreq * plotHeight);
+        
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      
+      // X軸ラベルを描画（labelIntervalごと、または最新フレーム）
+      const isLatestFrame = i === frequencyHistory.length - 1;
+      const shouldDrawLabel = (i % labelInterval === 0) || isLatestFrame;
+      
+      if (shouldDrawLabel) {
+        this.ctx.fillStyle = '#aaaaaa';
+        // 最新のフレームからの相対位置を表示（例：-50, -25, 0）
+        const frameOffset = i - frequencyHistory.length + 1;
+        this.ctx.fillText(`${frameOffset}`, x, plotY + plotHeight + 2);
+      }
     }
 
     // 現在の周波数値を描画
