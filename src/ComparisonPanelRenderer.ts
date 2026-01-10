@@ -209,6 +209,11 @@ export class ComparisonPanelRenderer {
     const startIdx = Math.max(0, similarityHistory.length - this.MAX_BARS);
     const barsToShow = similarityHistory.slice(startIdx);
     
+    // Safety check: ensure we have bars to show
+    if (barsToShow.length === 0) {
+      return;
+    }
+    
     // Calculate bar spacing
     const availableWidth = graphWidth - 2 * this.BAR_GRAPH_PADDING;
     const barSpacing = availableWidth / barsToShow.length;
