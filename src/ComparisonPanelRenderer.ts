@@ -244,7 +244,7 @@ export class ComparisonPanelRenderer {
       ctx.fillStyle = `rgb(0, ${Math.floor(intensity * 0.66)}, ${intensity})`;
       
       // Draw bar
-      ctx.fillRect(barX, barY, Math.max(1, this.BAR_WIDTH), graphHeight - (barY - graphY));
+      ctx.fillRect(barX, barY, Math.max(1, this.BAR_WIDTH), barHeight);
     });
 
     // Draw current value text at bottom
