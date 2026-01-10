@@ -128,8 +128,9 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.95;
+      const similarityHistory = [0.9, 0.92, 0.95];
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
 
       // Verify that drawing operations were called on all contexts
       const prevCtx = previousCanvas.getContext('2d') as any;
@@ -145,8 +146,9 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0;
+      const similarityHistory = [0.0];
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
 
       // Should still work without errors
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -158,8 +160,9 @@ describe('ComparisonPanelRenderer', () => {
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.87;
+      const similarityHistory = [0.85, 0.86, 0.87];
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       expect(currCtx.fillText).toHaveBeenCalled();
@@ -172,15 +175,34 @@ describe('ComparisonPanelRenderer', () => {
       expect(similarityTextCall).toBeDefined();
     });
 
+    it('should draw similarity bar graph when history is provided', () => {
+      const previousWaveform = new Float32Array(100).fill(0.5);
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const similarity = 0.87;
+      const similarityHistory = [0.8, 0.82, 0.85, 0.86, 0.87];
+
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity, similarityHistory);
+
+      // Verify that bar graph drawing operations were called
+      const prevCtx = previousCanvas.getContext('2d') as any;
+      const currCtx = currentCanvas.getContext('2d') as any;
+      
+      // Bar graph should draw rectangles for bars
+      expect(prevCtx.fillRect).toHaveBeenCalled();
+      expect(currCtx.fillRect).toHaveBeenCalled();
+    });
+
     it('should draw position markers on buffer canvas', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
       const currentWaveform = new Float32Array(200).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.9;
+      const similarityHistory = [0.88, 0.89, 0.9];
       const startIndex = 50;
       const endIndex = 150;
 
-      renderer.updatePanels(previousWaveform, currentWaveform, startIndex, endIndex, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, startIndex, endIndex, fullBuffer, similarity, similarityHistory);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
       

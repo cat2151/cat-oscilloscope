@@ -17,6 +17,12 @@ export class ComparisonPanelRenderer {
   private readonly TARGET_FILL_RATIO = 0.9;    // Target 90% of distance from center to edge (canvas half-height) for auto-scaled waveforms
   private readonly MIN_PEAK_THRESHOLD = 0.001; // Minimum peak to trigger auto-scaling (below this uses default)
   private readonly DEFAULT_AMPLITUDE_RATIO = 0.4; // Default scaling factor when peak is too small
+  
+  // Similarity bar graph constants
+  private readonly BAR_GRAPH_WIDTH = 100;  // Width of the bar graph area
+  private readonly BAR_GRAPH_PADDING = 5;  // Padding around bars
+  private readonly BAR_WIDTH = 3;          // Width of each bar
+  private readonly MAX_BARS = 30;          // Maximum number of bars to display
 
   constructor(
     previousCanvas: HTMLCanvasElement,
@@ -168,6 +174,93 @@ export class ComparisonPanelRenderer {
   }
 
   /**
+   * Draw similarity bar graph on the right side of a canvas
+   * @param ctx - Canvas rendering context
+   * @param width - Canvas width
+   * @param height - Canvas height
+   * @param similarityHistory - Array of similarity values (-1.0 to 1.0)
+   */
+  private drawSimilarityBars(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    similarityHistory: number[]
+  ): void {
+    if (!similarityHistory || similarityHistory.length === 0) {
+      return;
+    }
+
+    // Calculate bar graph area
+    const graphX = width - this.BAR_GRAPH_WIDTH;
+    const graphY = this.BAR_GRAPH_PADDING;
+    const graphWidth = this.BAR_GRAPH_WIDTH - this.BAR_GRAPH_PADDING;
+    const graphHeight = height - 2 * this.BAR_GRAPH_PADDING;
+
+    // Draw background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+
+    // Draw border
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(graphX, graphY, graphWidth, graphHeight);
+
+    // Get the most recent bars (up to MAX_BARS)
+    const startIdx = Math.max(0, similarityHistory.length - this.MAX_BARS);
+    const barsToShow = similarityHistory.slice(startIdx);
+    
+    // Calculate bar spacing
+    const availableWidth = graphWidth - 2 * this.BAR_GRAPH_PADDING;
+    const barSpacing = availableWidth / barsToShow.length;
+    const barX0 = graphX + this.BAR_GRAPH_PADDING;
+
+    // Draw center line (similarity = 0)
+    const centerY = graphY + graphHeight / 2;
+    ctx.strokeStyle = '#444444';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(graphX, centerY);
+    ctx.lineTo(graphX + graphWidth, centerY);
+    ctx.stroke();
+
+    // Draw bars
+    const displayMin = -1.0;
+    const displayMax = 1.0;
+    
+    barsToShow.forEach((similarity, idx) => {
+      // Clamp similarity value
+      const clampedSimilarity = Math.max(displayMin, Math.min(displayMax, similarity));
+      
+      // Map similarity to bar height (-1 to 1 -> full height range)
+      const normalizedSimilarity = (clampedSimilarity - displayMin) / (displayMax - displayMin);
+      const barHeight = normalizedSimilarity * graphHeight;
+      
+      // Bar position
+      const barX = barX0 + idx * barSpacing;
+      const barY = graphY + graphHeight - barHeight;
+      
+      // Color based on similarity value (blue gradient)
+      const intensity = Math.floor(normalizedSimilarity * 255);
+      ctx.fillStyle = `rgb(0, ${Math.floor(intensity * 0.66)}, ${intensity})`;
+      
+      // Draw bar
+      ctx.fillRect(barX, barY, Math.max(1, this.BAR_WIDTH), graphHeight - (barY - graphY));
+    });
+
+    // Draw current value text at bottom
+    const currentSimilarity = similarityHistory[similarityHistory.length - 1];
+    ctx.fillStyle = '#00aaff';
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(
+      currentSimilarity.toFixed(2),
+      graphX + graphWidth / 2,
+      graphY + graphHeight - 2
+    );
+  }
+
+  /**
    * Draw vertical position markers
    */
   private drawPositionMarkers(
@@ -213,6 +306,7 @@ export class ComparisonPanelRenderer {
    * @param currentEnd - End index of the extracted waveform within currentWaveform (exclusive)
    * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
    * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
+   * @param similarityHistory - Array of similarity values over time for bar graph display
    */
   updatePanels(
     previousWaveform: Float32Array | null,
@@ -220,7 +314,8 @@ export class ComparisonPanelRenderer {
     currentStart: number,
     currentEnd: number,
     fullBuffer: Float32Array,
-    similarity: number
+    similarity: number,
+    similarityHistory: number[] = []
   ): void {
     // Clear all canvases
     this.clearAllCanvases();
@@ -237,6 +332,15 @@ export class ComparisonPanelRenderer {
         previousWaveform.length,
         '#ffaa00'
       );
+      // Draw similarity bar graph on the right side of previous waveform
+      if (similarityHistory.length > 0) {
+        this.drawSimilarityBars(
+          this.previousCtx,
+          this.previousCanvas.width,
+          this.previousCanvas.height,
+          similarityHistory
+        );
+      }
     }
 
     // Draw current waveform with similarity score
@@ -255,6 +359,15 @@ export class ComparisonPanelRenderer {
     }
     if (previousWaveform) {
       this.drawSimilarityText(similarity);
+    }
+    // Draw similarity bar graph on the right side of current waveform
+    if (similarityHistory.length > 0) {
+      this.drawSimilarityBars(
+        this.currentCtx,
+        this.currentCanvas.width,
+        this.currentCanvas.height,
+        similarityHistory
+      );
     }
 
     // Draw full frame buffer with position markers
