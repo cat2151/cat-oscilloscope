@@ -294,6 +294,7 @@ export class WaveformRenderer {
   /**
    * 右上に周波数プロットを描画
    * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
+   * 1フレームごとに1つのデータポイントが追加される
    */
   drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
     if (!frequencyHistory || frequencyHistory.length === 0) {
@@ -313,16 +314,16 @@ export class WaveformRenderer {
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
 
-    // タイトルを描画
+    // タイトルを描画（フレーム数を含む）
     this.ctx.fillStyle = '#ffaa00';
     this.ctx.font = 'bold 12px Arial';
-    this.ctx.fillText('周波数推移 (Frequency)', overlayX + 5, overlayY + 15);
+    this.ctx.fillText(`周波数推移 (${frequencyHistory.length}frame)`, overlayX + 5, overlayY + 15);
 
     // プロット領域を計算（タイトルと軸ラベルのためのスペースを確保）
     const plotX = overlayX + 35;
     const plotY = overlayY + 25;
     const plotWidth = this.FREQ_PLOT_WIDTH - 45;
-    const plotHeight = this.FREQ_PLOT_HEIGHT - 35;
+    const plotHeight = this.FREQ_PLOT_HEIGHT - 45; // X軸ラベル用にスペースを増やす
 
     // データ内の周波数範囲を検出（ゼロ値を除外）
     const validFrequencies = frequencyHistory.filter(f => f > 0);
@@ -380,6 +381,9 @@ export class WaveformRenderer {
 
     const xStep = plotWidth / Math.max(frequencyHistory.length - 1, 1);
     
+    // 線を描画し、同時に座標を記録
+    const dataPoints: Array<{x: number, y: number}> = [];
+    
     for (let i = 0; i < frequencyHistory.length; i++) {
       const freq = frequencyHistory[i];
       const x = plotX + i * xStep;
@@ -396,6 +400,8 @@ export class WaveformRenderer {
       const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
       const y = plotY + plotHeight - (normalizedFreq * plotHeight);
       
+      dataPoints.push({x, y});
+      
       if (i === 0 || frequencyHistory[i - 1] === 0) {
         this.ctx.moveTo(x, y);
       } else {
@@ -404,6 +410,29 @@ export class WaveformRenderer {
     }
     
     this.ctx.stroke();
+    
+    // データポイントにマーカーを描画（1フレーム単位を視覚的に示す）
+    this.ctx.fillStyle = '#00ff00';
+    for (const point of dataPoints) {
+      this.ctx.beginPath();
+      this.ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+    
+    // X軸ラベルを描画（フレーム番号）
+    this.ctx.fillStyle = '#aaaaaa';
+    this.ctx.font = '9px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    
+    // 適切な間隔でフレーム番号を表示
+    const labelInterval = Math.max(1, Math.floor(frequencyHistory.length / 4));
+    for (let i = 0; i < frequencyHistory.length; i += labelInterval) {
+      const x = plotX + i * xStep;
+      // 最新のフレームからの相対位置を表示（例：-50, -25, 0）
+      const frameOffset = i - frequencyHistory.length + 1;
+      this.ctx.fillText(`${frameOffset}`, x, plotY + plotHeight + 2);
+    }
 
     // 現在の周波数値を描画
     const currentFreq = frequencyHistory[frequencyHistory.length - 1];
@@ -412,7 +441,7 @@ export class WaveformRenderer {
       this.ctx.font = 'bold 11px Arial';
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'top';
-      this.ctx.fillText(`${currentFreq.toFixed(1)} Hz`, plotX + 2, plotY + plotHeight + 5);
+      this.ctx.fillText(`${currentFreq.toFixed(1)} Hz`, plotX + 2, plotY + plotHeight + 15);
     }
 
     this.ctx.restore();
