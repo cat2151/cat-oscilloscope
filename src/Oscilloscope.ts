@@ -37,13 +37,15 @@ export class Oscilloscope {
    * Create a new Oscilloscope instance
    * @param canvas - Main oscilloscope display canvas (recommended: 800x400px)
    * @param previousWaveformCanvas - Canvas for displaying previous frame's waveform (recommended: 250x150px)
-   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform with similarity score (recommended: 250x150px)
-   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 250x150px)
+   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x150px)
+   * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x150px)
+   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x150px)
    */
   constructor(
     canvas: HTMLCanvasElement,
     previousWaveformCanvas: HTMLCanvasElement,
     currentWaveformCanvas: HTMLCanvasElement,
+    similarityPlotCanvas: HTMLCanvasElement,
     frameBufferCanvas: HTMLCanvasElement
   ) {
     this.audioManager = new AudioManager();
@@ -55,6 +57,7 @@ export class Oscilloscope {
     this.comparisonRenderer = new ComparisonPanelRenderer(
       previousWaveformCanvas,
       currentWaveformCanvas,
+      similarityPlotCanvas,
       frameBufferCanvas
     );
     this.dataProcessor = new WaveformDataProcessor(
@@ -187,19 +190,15 @@ export class Oscilloscope {
       this.frequencyEstimator.getMaxFrequency()
     );
 
-    // 左下に類似度プロットを描画（類似度検索が有効な場合）
-    if (renderData.similarityPlotHistory.length > 0) {
-      this.renderer.drawSimilarityPlot(renderData.similarityPlotHistory);
-    }
-
-    // Update comparison panels
+    // Update comparison panels with similarity history
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,
       renderData.waveformData,
       renderData.displayStartIndex,
       renderData.displayEndIndex,
       renderData.waveformData,
-      renderData.similarity
+      renderData.similarity,
+      renderData.similarityPlotHistory
     );
   }
 

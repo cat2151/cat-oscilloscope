@@ -3,14 +3,17 @@
  * Responsible for:
  * - Drawing previous waveform
  * - Drawing current waveform with similarity score
+ * - Drawing similarity history plot
  * - Drawing full frame buffer with position indicators
  */
 export class ComparisonPanelRenderer {
   private previousCanvas: HTMLCanvasElement;
   private currentCanvas: HTMLCanvasElement;
+  private similarityCanvas: HTMLCanvasElement;
   private bufferCanvas: HTMLCanvasElement;
   private previousCtx: CanvasRenderingContext2D;
   private currentCtx: CanvasRenderingContext2D;
+  private similarityCtx: CanvasRenderingContext2D;
   private bufferCtx: CanvasRenderingContext2D;
   
   // Auto-scaling constants
@@ -21,22 +24,26 @@ export class ComparisonPanelRenderer {
   constructor(
     previousCanvas: HTMLCanvasElement,
     currentCanvas: HTMLCanvasElement,
+    similarityCanvas: HTMLCanvasElement,
     bufferCanvas: HTMLCanvasElement
   ) {
     this.previousCanvas = previousCanvas;
     this.currentCanvas = currentCanvas;
+    this.similarityCanvas = similarityCanvas;
     this.bufferCanvas = bufferCanvas;
 
     const prevCtx = previousCanvas.getContext('2d');
     const currCtx = currentCanvas.getContext('2d');
+    const simCtx = similarityCanvas.getContext('2d');
     const buffCtx = bufferCanvas.getContext('2d');
 
-    if (!prevCtx || !currCtx || !buffCtx) {
+    if (!prevCtx || !currCtx || !simCtx || !buffCtx) {
       throw new Error('Could not get 2D context for comparison canvases');
     }
 
     this.previousCtx = prevCtx;
     this.currentCtx = currCtx;
+    this.similarityCtx = simCtx;
     this.bufferCtx = buffCtx;
 
     // Initialize all canvases
@@ -49,6 +56,7 @@ export class ComparisonPanelRenderer {
   private clearAllCanvases(): void {
     this.clearCanvas(this.previousCtx, this.previousCanvas.width, this.previousCanvas.height);
     this.clearCanvas(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
+    this.clearCanvas(this.similarityCtx, this.similarityCanvas.width, this.similarityCanvas.height);
     this.clearCanvas(this.bufferCtx, this.bufferCanvas.width, this.bufferCanvas.height);
   }
 
@@ -168,6 +176,119 @@ export class ComparisonPanelRenderer {
   }
 
   /**
+   * Draw similarity history plot on similarity canvas
+   * 類似度の時系列変化を表示し、瞬間的な類似度低下を検出しやすくする
+   * 
+   * @param similarityHistory Array of correlation coefficients (-1.0 to 1.0).
+   *                          Values are ordered chronologically from oldest to newest.
+   */
+  private drawSimilarityPlot(similarityHistory: number[]): void {
+    if (!similarityHistory || similarityHistory.length === 0) {
+      return;
+    }
+
+    const ctx = this.similarityCtx;
+    const width = this.similarityCanvas.width;
+    const height = this.similarityCanvas.height;
+
+    // Clear and draw background
+    ctx.save();
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw border
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, width, height);
+
+    // Title
+    ctx.fillStyle = '#00aaff';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText('類似度推移 (Similarity)', 5, 15);
+
+    // Calculate plot area (reserve space for title and axis labels)
+    const plotX = 40;
+    const plotY = 25;
+    const plotWidth = width - 50;
+    const plotHeight = height - 35;
+
+    // Similarity range is -1.0 to 1.0 (correlation coefficient range)
+    const displayMin = -1.0;
+    const displayMax = 1.0;
+
+    // Draw grid lines
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    
+    // Horizontal grid lines (corresponding to similarity axis)
+    for (let i = 0; i <= 4; i++) {
+      const y = plotY + (plotHeight / 4) * i;
+      ctx.moveTo(plotX, y);
+      ctx.lineTo(plotX + plotWidth, y);
+    }
+    
+    // Vertical grid lines
+    for (let i = 0; i <= 4; i++) {
+      const x = plotX + (plotWidth / 4) * i;
+      ctx.moveTo(x, plotY);
+      ctx.lineTo(x, plotY + plotHeight);
+    }
+    
+    ctx.stroke();
+
+    // Draw Y-axis labels (similarity values)
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    
+    for (let i = 0; i <= 4; i++) {
+      const similarity = displayMax - (displayMax - displayMin) * (i / 4);
+      const y = plotY + (plotHeight / 4) * i;
+      const label = similarity.toFixed(2);
+      ctx.fillText(label, plotX - 5, y);
+    }
+
+    // Draw similarity plot line
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    const xStep = plotWidth / Math.max(similarityHistory.length - 1, 1);
+    
+    for (let i = 0; i < similarityHistory.length; i++) {
+      const similarity = similarityHistory[i];
+      const x = plotX + i * xStep;
+      
+      // Clamp similarity to display range
+      const clampedSimilarity = Math.max(displayMin, Math.min(displayMax, similarity));
+      
+      // Map similarity to Y coordinate (inverted: high similarity = top)
+      const normalizedSimilarity = (clampedSimilarity - displayMin) / (displayMax - displayMin);
+      const y = plotY + plotHeight - (normalizedSimilarity * plotHeight);
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    
+    ctx.stroke();
+
+    // Draw current similarity value
+    const currentSimilarity = similarityHistory[similarityHistory.length - 1];
+    ctx.fillStyle = '#00aaff';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`${currentSimilarity.toFixed(3)}`, plotX + 2, plotY + plotHeight + 5);
+
+    ctx.restore();
+  }
+
+  /**
    * Draw vertical position markers
    */
   private drawPositionMarkers(
@@ -213,6 +334,7 @@ export class ComparisonPanelRenderer {
    * @param currentEnd - End index of the extracted waveform within currentWaveform (exclusive)
    * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
    * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
+   * @param similarityHistory - Array of similarity values over time for history plot
    */
   updatePanels(
     previousWaveform: Float32Array | null,
@@ -220,7 +342,8 @@ export class ComparisonPanelRenderer {
     currentStart: number,
     currentEnd: number,
     fullBuffer: Float32Array,
-    similarity: number
+    similarity: number,
+    similarityHistory: number[] = []
   ): void {
     // Clear all canvases
     this.clearAllCanvases();
@@ -255,6 +378,11 @@ export class ComparisonPanelRenderer {
     }
     if (previousWaveform) {
       this.drawSimilarityText(similarity);
+    }
+
+    // Draw similarity plot
+    if (similarityHistory.length > 0) {
+      this.drawSimilarityPlot(similarityHistory);
     }
 
     // Draw full frame buffer with position markers
