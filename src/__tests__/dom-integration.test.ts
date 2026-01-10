@@ -105,8 +105,8 @@ describe('DOM Integration Tests', () => {
         </label>
         <label>
           <span>Threshold:</span>
-          <input type="range" id="noiseGateThreshold" min="-60" max="0" value="-48" step="1">
-          <span id="thresholdValue">-48 dB (0.004)</span>
+          <input type="range" id="noiseGateThreshold" min="-60" max="0" value="-60" step="1">
+          <span id="thresholdValue">-60 dB (0.001)</span>
         </label>
         <span id="status">Click Start to begin</span>
       </div>
@@ -201,8 +201,8 @@ describe('DOM Integration Tests', () => {
     });
 
     it('should have correct initial threshold value', () => {
-      expect(noiseGateThreshold.value).toBe('-48');
-      expect(thresholdValue.textContent).toBe('-48 dB (0.004)');
+      expect(noiseGateThreshold.value).toBe('-60');
+      expect(thresholdValue.textContent).toBe('-60 dB (0.001)');
     });
 
     it('should have autocorrelation selected by default', () => {

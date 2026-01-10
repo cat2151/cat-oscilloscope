@@ -238,9 +238,9 @@ describe('Oscilloscope Class', () => {
       expect(oscilloscope.getNoiseGateEnabled()).toBe(true);
     });
     
-    it('should have default noise gate threshold of dbToAmplitude(-48)', () => {
+    it('should have default noise gate threshold of dbToAmplitude(-60)', () => {
       const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
-      expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-48), 10);
+      expect(oscilloscope.getNoiseGateThreshold()).toBeCloseTo(dbToAmplitude(-60), 10);
     });
     
     it('should allow setting noise gate threshold', () => {
