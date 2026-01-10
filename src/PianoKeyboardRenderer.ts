@@ -2,16 +2,16 @@ import { frequencyToNote } from './utils';
 
 /**
  * PianoKeyboardRenderer handles rendering of piano keyboard visualization
- * Displays a piano keyboard for the frequency range 50Hz - 1000Hz
+ * Displays a piano keyboard for the frequency range 50Hz - 2000Hz
  * Highlights the key corresponding to the fundamental frequency
  */
 export class PianoKeyboardRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   
-  // 周波数範囲 (50Hz～1000Hz)
+  // 周波数範囲 (50Hz～2000Hz)
   private readonly MIN_FREQ = 50;
-  private readonly MAX_FREQ = 1000;
+  private readonly MAX_FREQ = 2000;
   
   // ピアノ鍵盤の定数
   private readonly WHITE_KEY_WIDTH = 20;
@@ -35,6 +35,12 @@ export class PianoKeyboardRenderer {
   // キャッシュされた鍵盤範囲（コンストラクタで一度だけ計算）
   private readonly keyboardRange: { startNote: number; endNote: number };
   
+  // センタリング用のオフセット（コンストラクタで一度だけ計算）
+  private readonly xOffset: number;
+  
+  // 白鍵の総数（コンストラクタで一度だけ計算）
+  private readonly whiteKeyCount: number;
+  
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const context = canvas.getContext('2d');
@@ -45,6 +51,12 @@ export class PianoKeyboardRenderer {
     
     // 鍵盤範囲を一度だけ計算してキャッシュ
     this.keyboardRange = this.calculateKeyboardRange();
+    
+    // 白鍵の数を計算してキャッシュ
+    this.whiteKeyCount = this.countWhiteKeys();
+    
+    // センタリング用のオフセットを計算
+    this.xOffset = this.calculateCenteringOffset();
   }
   
   /**
@@ -92,6 +104,32 @@ export class PianoKeyboardRenderer {
   }
   
   /**
+   * 白鍵の数をカウント
+   */
+  private countWhiteKeys(): number {
+    const range = this.keyboardRange;
+    let count = 0;
+    for (let note = range.startNote; note <= range.endNote; note++) {
+      const noteInOctave = ((note % 12) + 12) % 12;
+      if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
+        count++;
+      }
+    }
+    return count;
+  }
+  
+  /**
+   * 鍵盤をセンタリングするためのX座標オフセットを計算
+   */
+  private calculateCenteringOffset(): number {
+    // 鍵盤全体の幅
+    const totalKeyboardWidth = this.whiteKeyCount * this.WHITE_KEY_WIDTH;
+    
+    // センタリング用のオフセット
+    return (this.canvas.width - totalKeyboardWidth) / 2;
+  }
+  
+  /**
    * ピアノ鍵盤を描画
    * @param highlightFrequency - ハイライトする周波数 (0の場合はハイライトなし)
    */
@@ -112,7 +150,7 @@ export class PianoKeyboardRenderer {
       
       // 白鍵の場合
       if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
-        const x = whiteKeyIndex * this.WHITE_KEY_WIDTH;
+        const x = this.xOffset + whiteKeyIndex * this.WHITE_KEY_WIDTH;
         const isHighlighted = highlightNoteInfo && highlightNoteInfo.note === note;
         
         this.ctx.fillStyle = isHighlighted ? this.WHITE_KEY_HIGHLIGHT : this.WHITE_KEY_COLOR;
@@ -139,7 +177,7 @@ export class PianoKeyboardRenderer {
       // 黒鍵の場合
       if (this.BLACK_KEY_NOTES.includes(noteInOctave)) {
         // 黒鍵は直前の白鍵の右端に配置
-        const x = whiteKeyIndex * this.WHITE_KEY_WIDTH - this.BLACK_KEY_WIDTH / 2;
+        const x = this.xOffset + whiteKeyIndex * this.WHITE_KEY_WIDTH - this.BLACK_KEY_WIDTH / 2;
         const isHighlighted = highlightNoteInfo && highlightNoteInfo.note === note;
         
         this.ctx.fillStyle = isHighlighted ? this.BLACK_KEY_HIGHLIGHT : this.BLACK_KEY_COLOR;
@@ -154,8 +192,13 @@ export class PianoKeyboardRenderer {
     // 周波数範囲を表示
     this.ctx.fillStyle = '#888888';
     this.ctx.font = '10px monospace';
-    this.ctx.fillText(`${this.MIN_FREQ}Hz`, 5, this.WHITE_KEY_HEIGHT - 5);
-    this.ctx.fillText(`${this.MAX_FREQ}Hz`, this.canvas.width - 50, this.WHITE_KEY_HEIGHT - 5);
+    this.ctx.fillText(`${this.MIN_FREQ}Hz`, this.xOffset + 5, this.WHITE_KEY_HEIGHT - 5);
+    
+    // 右端の周波数表示の位置を計算
+    const text = `${this.MAX_FREQ}Hz`;
+    const textWidth = this.ctx.measureText(text).width;
+    const rightEdge = this.xOffset + this.whiteKeyCount * this.WHITE_KEY_WIDTH;
+    this.ctx.fillText(text, rightEdge - textWidth - 5, this.WHITE_KEY_HEIGHT - 5);
   }
   
   /**
