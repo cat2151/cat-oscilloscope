@@ -38,6 +38,9 @@ export class PianoKeyboardRenderer {
   // センタリング用のオフセット（コンストラクタで一度だけ計算）
   private readonly xOffset: number;
   
+  // 白鍵の総数（コンストラクタで一度だけ計算）
+  private readonly whiteKeyCount: number;
+  
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     const context = canvas.getContext('2d');
@@ -48,6 +51,9 @@ export class PianoKeyboardRenderer {
     
     // 鍵盤範囲を一度だけ計算してキャッシュ
     this.keyboardRange = this.calculateKeyboardRange();
+    
+    // 白鍵の数を計算してキャッシュ
+    this.whiteKeyCount = this.countWhiteKeys();
     
     // センタリング用のオフセットを計算
     this.xOffset = this.calculateCenteringOffset();
@@ -98,22 +104,26 @@ export class PianoKeyboardRenderer {
   }
   
   /**
-   * 鍵盤をセンタリングするためのX座標オフセットを計算
+   * 白鍵の数をカウント
    */
-  private calculateCenteringOffset(): number {
+  private countWhiteKeys(): number {
     const range = this.keyboardRange;
-    
-    // 白鍵の数をカウント
-    let whiteKeyCount = 0;
+    let count = 0;
     for (let note = range.startNote; note <= range.endNote; note++) {
       const noteInOctave = ((note % 12) + 12) % 12;
       if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
-        whiteKeyCount++;
+        count++;
       }
     }
-    
+    return count;
+  }
+  
+  /**
+   * 鍵盤をセンタリングするためのX座標オフセットを計算
+   */
+  private calculateCenteringOffset(): number {
     // 鍵盤全体の幅
-    const totalKeyboardWidth = whiteKeyCount * this.WHITE_KEY_WIDTH;
+    const totalKeyboardWidth = this.whiteKeyCount * this.WHITE_KEY_WIDTH;
     
     // センタリング用のオフセット
     return (this.canvas.width - totalKeyboardWidth) / 2;
@@ -187,15 +197,7 @@ export class PianoKeyboardRenderer {
     // 右端の周波数表示の位置を計算
     const text = `${this.MAX_FREQ}Hz`;
     const textWidth = this.ctx.measureText(text).width;
-    // 白鍵の数を計算（再利用のため）
-    let totalWhiteKeys = 0;
-    for (let note = range.startNote; note <= range.endNote; note++) {
-      const noteInOctave = ((note % 12) + 12) % 12;
-      if (this.WHITE_KEY_NOTES.includes(noteInOctave)) {
-        totalWhiteKeys++;
-      }
-    }
-    const rightEdge = this.xOffset + totalWhiteKeys * this.WHITE_KEY_WIDTH;
+    const rightEdge = this.xOffset + this.whiteKeyCount * this.WHITE_KEY_WIDTH;
     this.ctx.fillText(text, rightEdge - textWidth - 5, this.WHITE_KEY_HEIGHT - 5);
   }
   
