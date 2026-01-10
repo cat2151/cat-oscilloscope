@@ -56,6 +56,9 @@ export interface WaveformRenderData {
   /** Similarity score between current and previous waveform (-1 to +1) */
   similarity: number;
   
+  /** Similarity history for plotting (correlation coefficient values from -1 to +1) */
+  similarityPlotHistory: number[];
+  
   /** Whether similarity search was used for alignment */
   usedSimilaritySearch: boolean;
 }

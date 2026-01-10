@@ -26,6 +26,7 @@ export const waveformrenderdata_previousWaveform: (a: number) => [number, number
 export const waveformrenderdata_sampleRate: (a: number) => number;
 export const waveformrenderdata_secondAlignmentPoint: (a: number) => number;
 export const waveformrenderdata_similarity: (a: number) => number;
+export const waveformrenderdata_similarityPlotHistory: (a: number) => [number, number];
 export const waveformrenderdata_usedSimilaritySearch: (a: number) => number;
 export const waveformrenderdata_waveform_data: (a: number) => [number, number];
 export const __wbindgen_externrefs: WebAssembly.Table;

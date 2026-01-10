@@ -187,6 +187,11 @@ export class Oscilloscope {
       this.frequencyEstimator.getMaxFrequency()
     );
 
+    // 左下に類似度プロットを描画（類似度検索が有効な場合）
+    if (renderData.similarityPlotHistory.length > 0) {
+      this.renderer.drawSimilarityPlot(renderData.similarityPlotHistory);
+    }
+
     // Update comparison panels
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,

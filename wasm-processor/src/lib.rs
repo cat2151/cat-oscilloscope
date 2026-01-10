@@ -41,6 +41,7 @@ pub struct WaveformRenderData {
     // Waveform search information
     previous_waveform: Option<Vec<f32>>,
     similarity: f32,
+    similarity_plot_history: Vec<f32>,
     used_similarity_search: bool,
 }
 
@@ -120,6 +121,11 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter)]
     pub fn similarity(&self) -> f32 {
         self.similarity
+    }
+    
+    #[wasm_bindgen(getter, js_name = similarityPlotHistory)]
+    pub fn similarity_plot_history(&self) -> Vec<f32> {
+        self.similarity_plot_history.clone()
     }
     
     #[wasm_bindgen(getter, js_name = usedSimilaritySearch)]
@@ -246,6 +252,7 @@ impl WasmDataProcessor {
         // Get waveform search data
         let previous_waveform = self.waveform_searcher.get_previous_waveform();
         let similarity = self.waveform_searcher.get_last_similarity();
+        let similarity_plot_history = self.waveform_searcher.get_similarity_history();
         
         Some(WaveformRenderData {
             waveform_data: data,
@@ -263,6 +270,7 @@ impl WasmDataProcessor {
             max_frequency: self.frequency_estimator.get_max_frequency(),
             previous_waveform,
             similarity,
+            similarity_plot_history,
             used_similarity_search,
         })
     }

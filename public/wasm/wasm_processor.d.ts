@@ -35,6 +35,7 @@ export class WaveformRenderData {
   readonly frequencyPlotHistory: Float32Array;
   readonly secondAlignmentPoint: number | undefined;
   readonly usedSimilaritySearch: boolean;
+  readonly similarityPlotHistory: Float32Array;
   readonly isSignalAboveNoiseGate: boolean;
   readonly gain: number;
   readonly fftSize: number;
@@ -69,6 +70,7 @@ export interface InitOutput {
   readonly waveformrenderdata_sampleRate: (a: number) => number;
   readonly waveformrenderdata_secondAlignmentPoint: (a: number) => number;
   readonly waveformrenderdata_similarity: (a: number) => number;
+  readonly waveformrenderdata_similarityPlotHistory: (a: number) => [number, number];
   readonly waveformrenderdata_usedSimilaritySearch: (a: number) => number;
   readonly waveformrenderdata_waveform_data: (a: number) => [number, number];
   readonly __wbindgen_externrefs: WebAssembly.Table;
