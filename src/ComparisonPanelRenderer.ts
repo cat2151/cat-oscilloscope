@@ -224,6 +224,10 @@ export class ComparisonPanelRenderer {
     ctx.stroke();
 
     // Draw bars
+    // Note: Bars extend from bottom (graphY + graphHeight) upward
+    // This "higher is better" visualization works well for similarity values
+    // which are typically positive (0 to 1.0) when waveforms match.
+    // For the full -1 to +1 range, bars grow from 0 height (at -1.0) to full height (at +1.0).
     const displayMin = -1.0;
     const displayMax = 1.0;
     

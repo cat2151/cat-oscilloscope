@@ -257,7 +257,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(100).fill(0);
 
-      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0);
+      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0, []);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       
@@ -275,7 +275,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw
       expect(() => {
-        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0);
+        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0, []);
       }).not.toThrow();
     });
 
@@ -290,7 +290,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw and should use default scaling
       expect(() => {
-        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0);
+        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0, []);
       }).not.toThrow();
 
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -310,7 +310,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(200).fill(0);
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85);
+      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85, []);
 
       const prevCtx = previousCanvas.getContext('2d') as any;
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -332,7 +332,7 @@ describe('ComparisonPanelRenderer', () => {
         fullBuffer[i] = 0.03 * Math.sin((i / fullBuffer.length) * Math.PI * 2);
       }
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0);
+      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0, []);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
 
