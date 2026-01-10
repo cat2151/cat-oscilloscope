@@ -421,6 +421,13 @@ export class WaveformRenderer {
   /**
    * 左下に類似度プロットを描画
    * 類似度の時系列変化を表示し、瞬間的な類似度低下を検出しやすくする
+   * 
+   * Draw similarity plot in the bottom-left corner of the canvas.
+   * Displays time-series changes in similarity (correlation coefficient) as a line chart,
+   * making it easy to detect transient similarity drops.
+   * 
+   * @param similarityHistory Array of correlation coefficients (-1.0 to 1.0).
+   *                          Values are ordered chronologically from oldest to newest.
    */
   drawSimilarityPlot(similarityHistory: number[]): void {
     if (!similarityHistory || similarityHistory.length === 0) {

@@ -184,11 +184,12 @@ export class WaveformDataProcessor {
     
     // Check if running in Vite dev mode (window.location.pathname contains the base)
     if (!basePath && window.location.pathname && window.location.pathname !== '/') {
-      // In dev mode, Vite serves from a base path like /cat-oscilloscope/
-      // Extract the first path segment
-      const pathMatch = window.location.pathname.match(/^(\/[^/]+)\//);
-      if (pathMatch) {
-        basePath = pathMatch[1] + '/';
+      // In dev mode, Vite may serve from a base path like /cat-oscilloscope or /cat-oscilloscope/
+      // Extract the first path segment robustly (handles /cat-oscilloscope, /cat-oscilloscope/, /cat-oscilloscope/page, etc.)
+      const pathname = window.location.pathname;
+      const segments = pathname.split('/').filter((segment) => segment.length > 0);
+      if (segments.length > 0) {
+        basePath = `/${segments[0]}/`;
       }
     }
     

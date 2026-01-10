@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 /// SearchResult contains the best match information
 pub struct SearchResult {
     pub start_index: usize,
@@ -15,7 +17,7 @@ pub const CYCLES_TO_SEARCH: usize = 4;
 pub struct WaveformSearcher {
     previous_waveform: Option<Vec<f32>>,
     last_similarity: f32,
-    similarity_history: Vec<f32>,
+    similarity_history: VecDeque<f32>,
 }
 
 /// Maximum number of similarity values to store in history
@@ -26,7 +28,7 @@ impl WaveformSearcher {
         WaveformSearcher {
             previous_waveform: None,
             last_similarity: 0.0,
-            similarity_history: Vec::new(),
+            similarity_history: VecDeque::new(),
         }
     }
     
@@ -112,10 +114,10 @@ impl WaveformSearcher {
         // Update last similarity
         self.last_similarity = best_similarity;
         
-        // Add to similarity history
-        self.similarity_history.push(best_similarity);
+        // Add to similarity history (using VecDeque for O(1) operations)
+        self.similarity_history.push_back(best_similarity);
         if self.similarity_history.len() > SIMILARITY_HISTORY_SIZE {
-            self.similarity_history.remove(0);
+            self.similarity_history.pop_front();
         }
         
         // Return result only if we found a good match
@@ -153,7 +155,7 @@ impl WaveformSearcher {
     
     /// Get similarity history for plotting
     pub fn get_similarity_history(&self) -> Vec<f32> {
-        self.similarity_history.clone()
+        self.similarity_history.iter().copied().collect()
     }
     
     /// Reset searcher state
