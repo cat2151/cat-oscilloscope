@@ -381,15 +381,15 @@ export class WaveformRenderer {
 
     const xStep = plotWidth / Math.max(frequencyHistory.length - 1, 1);
     
-    // 線を描画し、同時に座標を記録
-    const dataPoints: Array<{x: number, y: number}> = [];
-    
+    // 線を描画
+    let hasValidPoint = false;
     for (let i = 0; i < frequencyHistory.length; i++) {
       const freq = frequencyHistory[i];
       const x = plotX + i * xStep;
       
       // ゼロ値（無信号）はスキップして描画しない
       if (freq === 0) {
+        hasValidPoint = false;
         continue;
       }
       
@@ -400,10 +400,9 @@ export class WaveformRenderer {
       const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
       const y = plotY + plotHeight - (normalizedFreq * plotHeight);
       
-      dataPoints.push({x, y});
-      
-      if (i === 0 || frequencyHistory[i - 1] === 0) {
+      if (!hasValidPoint) {
         this.ctx.moveTo(x, y);
+        hasValidPoint = true;
       } else {
         this.ctx.lineTo(x, y);
       }
@@ -413,9 +412,17 @@ export class WaveformRenderer {
     
     // データポイントにマーカーを描画（1フレーム単位を視覚的に示す）
     this.ctx.fillStyle = '#00ff00';
-    for (const point of dataPoints) {
+    for (let i = 0; i < frequencyHistory.length; i++) {
+      const freq = frequencyHistory[i];
+      if (freq === 0) continue;
+      
+      const x = plotX + i * xStep;
+      const clampedFreq = Math.max(displayMin, Math.min(displayMax, freq));
+      const normalizedFreq = (clampedFreq - displayMin) / (displayMax - displayMin);
+      const y = plotY + plotHeight - (normalizedFreq * plotHeight);
+      
       this.ctx.beginPath();
-      this.ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+      this.ctx.arc(x, y, 2, 0, Math.PI * 2);
       this.ctx.fill();
     }
     
