@@ -15,6 +15,8 @@ pub struct ZeroCrossDetector {
 
 impl ZeroCrossDetector {
     const ZERO_CROSS_SEARCH_TOLERANCE_CYCLES: f32 = 0.5;
+    /// Number of cycles to display (must match CYCLES_TO_STORE in waveform_searcher)
+    const CYCLES_TO_DISPLAY: usize = 4;
     
     pub fn new() -> Self {
         ZeroCrossDetector {
@@ -168,10 +170,10 @@ impl ZeroCrossDetector {
                 None
             };
             
-            let end_index = if let Some(second) = second_peak {
-                second
-            } else if estimated_cycle_length > 0.0 {
-                (first_peak + estimated_cycle_length as usize).min(data.len())
+            // Display CYCLES_TO_DISPLAY (4) cycles worth of waveform
+            let end_index = if estimated_cycle_length > 0.0 {
+                let waveform_length = (estimated_cycle_length * Self::CYCLES_TO_DISPLAY as f32).floor() as usize;
+                (first_peak + waveform_length).min(data.len())
             } else {
                 data.len()
             };
@@ -187,10 +189,10 @@ impl ZeroCrossDetector {
             let first_zero = self.find_stable_zero_cross(data, estimated_cycle_length)?;
             let second_zero = self.find_next_zero_cross(data, first_zero);
             
-            let end_index = if let Some(second) = second_zero {
-                second
-            } else if estimated_cycle_length > 0.0 {
-                (first_zero + estimated_cycle_length as usize).min(data.len())
+            // Display CYCLES_TO_DISPLAY (4) cycles worth of waveform
+            let end_index = if estimated_cycle_length > 0.0 {
+                let waveform_length = (estimated_cycle_length * Self::CYCLES_TO_DISPLAY as f32).floor() as usize;
+                (first_zero + waveform_length).min(data.len())
             } else {
                 data.len()
             };
