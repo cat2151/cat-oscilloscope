@@ -58,6 +58,14 @@ npm test         # テスト実行 (Vitest)
 - `requestAnimationFrame`ループは`isRunning`フラグで制御
 - オーディオファイル読み込み時は`trimSilence()`で前後の無音を除去してループ再生の隙間を防ぐ
 
+## ドキュメント編集の注意
+
+### README編集について
+- **README.mdへ追記せず、README.ja.mdのみに追記すること**
+- 理由: README.mdはGitHub Actionsで自動生成されるため
+- README.ja.mdが更新されると、GitHub Actionsが自動的にREADME.mdを英訳して生成する
+- ワークフロー: `.github/workflows/call-translate-readme.yml`
+
 # プルリクエストとレビュー
 - プルリクエストは日本語で記述してください
 - レビューは日本語で記述してください
