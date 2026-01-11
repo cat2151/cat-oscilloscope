@@ -173,6 +173,14 @@ export class WasmDataProcessor {
         wasm.wasmdataprocessor_setUsePeakMode(this.__wbg_ptr, enabled);
     }
     /**
+     * @param {string} mode
+     */
+    setAlignmentMode(mode) {
+        const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.wasmdataprocessor_setAlignmentMode(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
      * @param {number} threshold
      */
     setNoiseGateThreshold(threshold) {

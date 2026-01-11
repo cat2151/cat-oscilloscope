@@ -1,27 +1,48 @@
 /**
- * ZeroCrossDetector - Configuration holder for zero-cross/peak detection
+ * ZeroCrossDetector - Configuration holder for zero-cross/peak/phase detection
  * 
- * This class only holds configuration state. All actual zero-crossing and peak
- * detection algorithms are implemented in Rust WASM (wasm-processor module).
+ * This class only holds configuration state. All actual zero-crossing, peak,
+ * and phase detection algorithms are implemented in Rust WASM (wasm-processor module).
  * 
  * Responsible for:
- * - Storing peak mode enabled/disabled state
+ * - Storing alignment mode (zero-cross, peak, or phase)
  */
+export type AlignmentMode = 'zero-cross' | 'peak' | 'phase';
+
 export class ZeroCrossDetector {
-  private usePeakMode: boolean = false; // Use peak detection instead of zero-crossing
+  private alignmentMode: AlignmentMode = 'zero-cross';
 
   /**
-   * Set whether to use peak mode instead of zero-crossing mode
+   * Set alignment mode for waveform synchronization
+   * - 'zero-cross': Align on negative-to-positive zero crossings
+   * - 'peak': Align on peak (maximum absolute amplitude) points
+   * - 'phase': Align based on fundamental frequency phase (best for waveforms with subharmonics)
    */
-  setUsePeakMode(enabled: boolean): void {
-    this.usePeakMode = enabled;
+  setAlignmentMode(mode: AlignmentMode): void {
+    this.alignmentMode = mode;
   }
 
   /**
-   * Get whether peak mode is enabled
+   * Get current alignment mode
+   */
+  getAlignmentMode(): AlignmentMode {
+    return this.alignmentMode;
+  }
+
+  /**
+   * Set whether to use peak mode instead of zero-crossing mode (legacy compatibility)
+   * @deprecated Use setAlignmentMode instead
+   */
+  setUsePeakMode(enabled: boolean): void {
+    this.alignmentMode = enabled ? 'peak' : 'zero-cross';
+  }
+
+  /**
+   * Get whether peak mode is enabled (legacy compatibility)
+   * @deprecated Use getAlignmentMode instead
    */
   getUsePeakMode(): boolean {
-    return this.usePeakMode;
+    return this.alignmentMode === 'peak';
   }
 
   /**
