@@ -209,6 +209,26 @@ This application requires:
 -   User permission for microphone access
 -   HTTPS or localhost (required for microphone access)
 
+## Microphone Input Limitations
+
+When using microphone input, the following limitations apply:
+
+### Environmental Sound Effects
+
+The microphone picks up all surrounding sounds, so the following environmental noises will affect the waveform:
+
+- **Mouse Click Sounds**: The mechanical sound of clicking the mouse will appear in the waveform. In particular, the waveform may appear distorted when you click the pause button with the mouse.
+- **Keyboard Typing Sounds**: Keyboard typing sounds also affect the waveform. However, if you use a keyboard with high quietness, the impact will be reduced.
+- **Other Environmental Sounds**: Voices, indoor air conditioning sounds, and external noise will also appear in the waveform.
+
+### Practical Tips
+
+- **How to Pause**: Instead of mouse clicks, using the spacebar on a quiet keyboard can minimize the impact on the waveform when pausing.
+- **Audio Source Selection**: Since microphone input is susceptible to environmental sounds, we recommend using audio files such as WAV files if you want to observe a noise-free waveform.
+- **Measurement Environment**: Using the application in a quiet environment as much as possible allows for more accurate waveform observation.
+
+These are characteristics of the microphone device, not limitations of the application.
+
 ## License
 
 MIT License - See the [LICENSE](LICENSE) file for details
