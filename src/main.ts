@@ -1,4 +1,5 @@
 import { Oscilloscope } from './Oscilloscope';
+import type { AlignmentMode } from './ZeroCrossDetector';
 import { dbToAmplitude, frequencyToNote } from './utils';
 import { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
@@ -96,7 +97,7 @@ thresholdValue.textContent = formatThresholdDisplay(initialThreshold.db, initial
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 
 // Synchronize alignment mode control
-oscilloscope.setAlignmentMode(alignmentModeSelect.value as 'zero-cross' | 'peak' | 'phase');
+oscilloscope.setAlignmentMode(alignmentModeSelect.value as AlignmentMode);
 
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
@@ -118,7 +119,7 @@ fftDisplayCheckbox.addEventListener('change', () => {
 
 // Alignment mode selector handler
 alignmentModeSelect.addEventListener('change', () => {
-  oscilloscope.setAlignmentMode(alignmentModeSelect.value as 'zero-cross' | 'peak' | 'phase');
+  oscilloscope.setAlignmentMode(alignmentModeSelect.value as AlignmentMode);
 });
 
 // Pause drawing checkbox handler
