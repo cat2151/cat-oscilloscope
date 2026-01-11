@@ -63,7 +63,7 @@ npm test         # テスト実行 (Vitest)
 ### README編集について
 - **README.mdへ追記せず、README.ja.mdのみに追記すること**
 - 理由: README.mdはGitHub Actionsで自動生成されるため
-- README.ja.mdが更新されると、GitHub Actionsが自動的にREADME.mdを英訳して生成する
+- README.ja.mdがmainブランチにpushされると、GitHub Actionsが自動的にREADME.mdを英訳して生成する
 - ワークフロー: `.github/workflows/call-translate-readme.yml`
 
 # プルリクエストとレビュー
