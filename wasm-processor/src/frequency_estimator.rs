@@ -15,6 +15,12 @@ impl FrequencyEstimator {
     const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.05;
     const FREQUENCY_PLOT_HISTORY_SIZE: usize = 100;
     
+    // Harmonic detection constants
+    const HARMONIC_RELATIVE_THRESHOLD: f32 = 0.3; // Harmonics must be at least 30% of fundamental magnitude
+    const MAX_HARMONICS_TO_CHECK: usize = 8; // Check up to 8x harmonic
+    const MIN_HARMONICS_REQUIRED: usize = 2; // Require at least 2 harmonics to consider it a harmonic series
+    const HARMONIC_FREQUENCY_TOLERANCE: f32 = 0.05; // 5% tolerance for harmonic matching
+    
     pub fn new() -> Self {
         FrequencyEstimator {
             frequency_estimation_method: "autocorrelation".to_string(),
@@ -117,7 +123,7 @@ impl FrequencyEstimator {
         }
     }
     
-    /// Estimate frequency using FFT method
+    /// Estimate frequency using FFT method with harmonic detection
     fn estimate_frequency_fft(
         &self,
         frequency_data: &[u8],
@@ -133,38 +139,131 @@ impl FrequencyEstimator {
         let min_bin = ((Self::MIN_FREQUENCY_HZ / bin_frequency).floor() as usize).max(1);
         let max_bin = ((Self::MAX_FREQUENCY_HZ / bin_frequency).ceil() as usize).min(frequency_data.len());
         
-        let mut max_magnitude: u8 = 0;
-        let mut peak_bin = 0;
+        // Find all significant peaks
+        let mut peaks = self.find_peaks(frequency_data, min_bin, max_bin, bin_frequency);
         
-        for bin in min_bin..max_bin {
-            if frequency_data[bin] > max_magnitude {
-                max_magnitude = frequency_data[bin];
-                peak_bin = bin;
-            }
-        }
-        
-        if max_magnitude < Self::FFT_MAGNITUDE_THRESHOLD {
+        if peaks.is_empty() {
             return 0.0;
         }
         
-        // Parabolic interpolation for better frequency resolution
-        if peak_bin > 0 && peak_bin < frequency_data.len() - 1 {
-            let y_minus = frequency_data[peak_bin - 1] as f32;
-            let y_peak = frequency_data[peak_bin] as f32;
-            let y_plus = frequency_data[peak_bin + 1] as f32;
-            
-            let denominator = 2.0 * y_peak - y_minus - y_plus;
-            let threshold = (f32::EPSILON * denominator.abs().max(1.0)).max(0.01);
-            if denominator.abs() > threshold {
-                let delta = 0.5 * (y_plus - y_minus) / denominator;
-                let interpolated_bin = peak_bin as f32 + delta;
-                interpolated_bin * bin_frequency
-            } else {
-                peak_bin as f32 * bin_frequency
+        // Sort peaks by magnitude (descending)
+        peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        
+        // Get the strongest peak
+        let strongest_peak_freq = peaks[0].0;
+        let strongest_peak_magnitude = peaks[0].1;
+        
+        // Try to find if this is part of a harmonic series
+        let fundamental_candidate = self.find_fundamental_frequency(&peaks, strongest_peak_magnitude);
+        
+        // Use frequency history for stability if available
+        if let Some(candidate) = fundamental_candidate {
+            // If we have history, prefer frequencies close to previous estimates
+            if !self.frequency_history.is_empty() {
+                let last_freq = self.frequency_history.last().unwrap();
+                if *last_freq > 0.0 {
+                    // Check if candidate is close to last frequency
+                    let candidate_diff = (candidate - last_freq).abs() / last_freq;
+                    let strongest_diff = (strongest_peak_freq - last_freq).abs() / last_freq;
+                    
+                    // If both are reasonably close, prefer the fundamental
+                    // If strongest is much closer, prefer strongest (might be correct)
+                    if candidate_diff < 0.2 || (candidate_diff < 0.5 && strongest_diff > candidate_diff * 1.5) {
+                        return candidate;
+                    }
+                }
             }
-        } else {
-            peak_bin as f32 * bin_frequency
+            
+            // No history or not conclusive, return the fundamental candidate
+            return candidate;
         }
+        
+        // No harmonic series detected, return strongest peak
+        strongest_peak_freq
+    }
+    
+    /// Find peaks in the frequency spectrum
+    fn find_peaks(&self, frequency_data: &[u8], min_bin: usize, max_bin: usize, bin_frequency: f32) -> Vec<(f32, f32)> {
+        let mut peaks = Vec::new();
+        
+        for bin in min_bin..max_bin {
+            let magnitude = frequency_data[bin];
+            
+            if magnitude < Self::FFT_MAGNITUDE_THRESHOLD {
+                continue;
+            }
+            
+            // Simple peak detection: local maximum
+            let is_peak = (bin == min_bin || frequency_data[bin - 1] <= magnitude) &&
+                          (bin == max_bin - 1 || frequency_data[bin + 1] < magnitude);
+            
+            if is_peak {
+                // Apply parabolic interpolation for better frequency resolution
+                let freq = if bin > 0 && bin < frequency_data.len() - 1 {
+                    let y_minus = frequency_data[bin - 1] as f32;
+                    let y_peak = magnitude as f32;
+                    let y_plus = frequency_data[bin + 1] as f32;
+                    
+                    let denominator = 2.0 * y_peak - y_minus - y_plus;
+                    let threshold = (f32::EPSILON * denominator.abs().max(1.0)).max(0.01);
+                    if denominator.abs() > threshold {
+                        let delta = 0.5 * (y_plus - y_minus) / denominator;
+                        (bin as f32 + delta) * bin_frequency
+                    } else {
+                        bin as f32 * bin_frequency
+                    }
+                } else {
+                    bin as f32 * bin_frequency
+                };
+                
+                peaks.push((freq, magnitude as f32));
+            }
+        }
+        
+        peaks
+    }
+    
+    /// Find the fundamental frequency from a list of peaks by detecting harmonic series
+    /// Returns the fundamental if a harmonic series is detected, otherwise None
+    fn find_fundamental_frequency(&self, peaks: &[(f32, f32)], reference_magnitude: f32) -> Option<f32> {
+        if peaks.len() < Self::MIN_HARMONICS_REQUIRED + 1 {
+            return None;
+        }
+        
+        // Try each peak as a potential fundamental
+        for &(candidate_fundamental, magnitude) in peaks.iter() {
+            // Skip if magnitude is too weak
+            if magnitude < reference_magnitude * Self::HARMONIC_RELATIVE_THRESHOLD {
+                continue;
+            }
+            
+            // Count how many harmonics of this candidate are present
+            let mut harmonic_count = 0;
+            
+            for harmonic_num in 2..=Self::MAX_HARMONICS_TO_CHECK {
+                let expected_harmonic_freq = candidate_fundamental * harmonic_num as f32;
+                
+                // Check if this harmonic frequency exists in our peaks
+                let found_harmonic = peaks.iter().any(|&(peak_freq, peak_mag)| {
+                    let freq_diff = (peak_freq - expected_harmonic_freq).abs();
+                    let tolerance = candidate_fundamental * Self::HARMONIC_FREQUENCY_TOLERANCE;
+                    
+                    // Harmonic must be within tolerance and have sufficient magnitude
+                    freq_diff <= tolerance && peak_mag >= reference_magnitude * Self::HARMONIC_RELATIVE_THRESHOLD
+                });
+                
+                if found_harmonic {
+                    harmonic_count += 1;
+                }
+            }
+            
+            // If we found enough harmonics, this is likely the fundamental
+            if harmonic_count >= Self::MIN_HARMONICS_REQUIRED {
+                return Some(candidate_fundamental);
+            }
+        }
+        
+        None
     }
     
     /// Estimate frequency using STFT (Short-Time Fourier Transform) method
