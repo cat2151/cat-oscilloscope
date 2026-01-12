@@ -30,7 +30,7 @@ impl ZeroCrossDetector {
         ZeroCrossDetector {
             previous_zero_cross_index: None,
             previous_peak_index: None,
-            alignment_mode: AlignmentMode::ZeroCross,
+            alignment_mode: AlignmentMode::Phase,
         }
     }
     

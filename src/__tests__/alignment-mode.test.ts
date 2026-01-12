@@ -9,8 +9,8 @@ describe('ZeroCrossDetector - Alignment Mode', () => {
   });
 
   describe('setAlignmentMode / getAlignmentMode', () => {
-    it('should default to zero-cross mode', () => {
-      expect(detector.getAlignmentMode()).toBe('zero-cross');
+    it('should default to phase mode', () => {
+      expect(detector.getAlignmentMode()).toBe('phase');
     });
 
     it('should set and get zero-cross mode', () => {
