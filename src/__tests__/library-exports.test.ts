@@ -87,6 +87,7 @@ describe('Library exports', () => {
     const canvas = document.createElement('canvas');
     const previousWaveformCanvas = document.createElement('canvas');
     const currentWaveformCanvas = document.createElement('canvas');
+    const similarityPlotCanvas = document.createElement('canvas');
     const frameBufferCanvas = document.createElement('canvas');
     
     // Mock getContext for happy-dom
@@ -100,9 +101,10 @@ describe('Library exports', () => {
     canvas.getContext = (() => mockContext) as any;
     previousWaveformCanvas.getContext = (() => mockContext) as any;
     currentWaveformCanvas.getContext = (() => mockContext) as any;
+    similarityPlotCanvas.getContext = (() => mockContext) as any;
     frameBufferCanvas.getContext = (() => mockContext) as any;
     
-    const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, frameBufferCanvas);
+    const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
     expect(oscilloscope).toBeInstanceOf(Oscilloscope);
   });
 
@@ -123,7 +125,7 @@ describe('Library exports', () => {
     expect(new WaveformRenderer(canvas)).toBeInstanceOf(WaveformRenderer);
     expect(new ZeroCrossDetector()).toBeInstanceOf(ZeroCrossDetector);
     expect(new WaveformSearcher()).toBeInstanceOf(WaveformSearcher);
-    expect(new ComparisonPanelRenderer(canvas, canvas, canvas)).toBeInstanceOf(ComparisonPanelRenderer);
+    expect(new ComparisonPanelRenderer(canvas, canvas, canvas, canvas)).toBeInstanceOf(ComparisonPanelRenderer);
     expect(new PianoKeyboardRenderer(canvas)).toBeInstanceOf(PianoKeyboardRenderer);
   });
 

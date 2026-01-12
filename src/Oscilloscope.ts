@@ -35,11 +35,11 @@ export class Oscilloscope {
 
   /**
    * Create a new Oscilloscope instance
-   * @param canvas - Main oscilloscope display canvas (recommended: 800x400px)
-   * @param previousWaveformCanvas - Canvas for displaying previous frame's waveform (recommended: 250x150px)
-   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x150px)
-   * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x150px)
-   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x150px)
+   * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
+   * @param previousWaveformCanvas - Canvas for displaying previous frame's waveform (recommended: 250x120px)
+   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
+   * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
+   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
    */
   constructor(
     canvas: HTMLCanvasElement,

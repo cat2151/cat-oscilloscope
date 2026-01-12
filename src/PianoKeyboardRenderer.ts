@@ -15,9 +15,9 @@ export class PianoKeyboardRenderer {
   
   // ピアノ鍵盤の定数
   private readonly WHITE_KEY_WIDTH = 20;
-  private readonly WHITE_KEY_HEIGHT = 80;
+  private readonly WHITE_KEY_HEIGHT = 60;
   private readonly BLACK_KEY_WIDTH = 12;
-  private readonly BLACK_KEY_HEIGHT = 50;
+  private readonly BLACK_KEY_HEIGHT = 38;
   
   // 色定義
   private readonly WHITE_KEY_COLOR = '#ffffff';

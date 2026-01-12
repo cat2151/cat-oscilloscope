@@ -37,7 +37,7 @@
     }
 
     #frameBufferContainer {
-      margin-top: 20px;
+      margin-top: 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -55,9 +55,9 @@
     }
 
     #comparisonPanel {
-      margin-top: 20px;
+      margin-top: 15px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
       flex-wrap: wrap;
     }
@@ -90,7 +90,7 @@
     }
 
     #controls {
-      margin-top: 20px;
+      margin-top: 15px;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -138,7 +138,7 @@
   <canvas
     id="canvas"
     width="800"
-    height="400"
+    height="350"
     aria-label="Oscilloscope waveform visualization canvas for microphone audio"
   ></canvas>
   <p
@@ -152,7 +152,7 @@
     <canvas
       id="frameBufferCanvas"
       width="800"
-      height="150"
+      height="120"
       aria-label="フレームバッファ全体に蓄積された波形のプレビュー"
       aria-describedby="comparisonPanelDescription"
     ></canvas>
@@ -164,7 +164,7 @@
         id="previousWaveformCanvas"
         class="comparisonCanvas"
         width="250"
-        height="150"
+        height="120"
         aria-label="前回の入力から取得した波形のプレビュー"
         aria-describedby="comparisonPanelDescription"
       ></canvas>
@@ -175,7 +175,7 @@
         id="currentWaveformCanvas"
         class="comparisonCanvas"
         width="250"
-        height="150"
+        height="120"
         aria-label="今回の入力波形のプレビュー"
         aria-describedby="comparisonPanelDescription"
       ></canvas>
@@ -186,7 +186,7 @@
         id="similarityPlotCanvas"
         class="comparisonCanvas"
         width="250"
-        height="150"
+        height="120"
         aria-label="前回の波形と今回の波形の類似度推移グラフ"
         aria-describedby="comparisonPanelDescription"
       ></canvas>
@@ -269,7 +269,7 @@
     </label>
     <span id="status">Click Start to begin</span>
   </div>
-  <div id="frequencyDisplay" style="margin-top: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
+  <div id="frequencyDisplay" style="margin-top: 12px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
     <label style="display: flex; align-items: center; gap: 10px;">
       <span>Frequency Estimation:</span>
       <select id="frequencyMethod" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select frequency estimation method">
@@ -305,12 +305,12 @@
       <span id="similarityValue" style="min-width: 80px; font-family: monospace; font-size: 18px; color: #00aaff;" aria-live="polite">---</span>
     </div>
   </div>
-  <div id="pianoKeyboardContainer" style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+  <div id="pianoKeyboardContainer" style="margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
     <span class="canvasLabel">ピアノ鍵盤 (Piano Keyboard) - 50Hz～2000Hz</span>
     <canvas
       id="pianoKeyboardCanvas"
       width="800"
-      height="80"
+      height="60"
       aria-label="Piano keyboard visualization showing highlighted key for detected fundamental frequency"
     ></canvas>
   </div>

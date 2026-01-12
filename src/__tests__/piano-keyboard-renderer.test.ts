@@ -10,7 +10,7 @@ describe('PianoKeyboardRenderer', () => {
     // Create mock canvas element
     canvas = document.createElement('canvas');
     canvas.width = 800;
-    canvas.height = 80;
+    canvas.height = 60;
 
     // Create mock context
     mockContext = {
