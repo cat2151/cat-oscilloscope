@@ -203,7 +203,7 @@ impl FrequencyEstimator {
             // Simple peak detection: local maximum
             // Check left neighbor (if not at start) and right neighbor (if not at end)
             let is_peak = (bin == min_bin || frequency_data[bin - 1] <= magnitude) &&
-                          (bin + 1 >= max_bin || bin + 1 >= frequency_data.len() || frequency_data[bin + 1] <= magnitude);
+                          (bin + 1 >= max_bin || frequency_data[bin + 1] <= magnitude);
             
             if is_peak {
                 // Apply parabolic interpolation for better frequency resolution
