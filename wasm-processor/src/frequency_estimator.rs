@@ -177,11 +177,14 @@ impl FrequencyEstimator {
                        (candidate_diff < Self::FREQ_HISTORY_ACCEPTABLE_THRESHOLD && 
                         strongest_diff > candidate_diff * Self::FREQ_HISTORY_PREFERENCE_FACTOR) {
                         return candidate;
+                    } else {
+                        // History suggests the strongest peak is more reliable
+                        return strongest_peak_freq;
                     }
                 }
             }
             
-            // No history or not conclusive, return the fundamental candidate
+            // No history or not conclusive (no usable last_freq), return the fundamental candidate
             return candidate;
         }
         
