@@ -1,3 +1,5 @@
+import { frequencyToNote } from './utils';
+
 /**
  * WaveformRenderer handles all canvas drawing operations
  * Responsible for:
@@ -358,7 +360,7 @@ export class WaveformRenderer {
     
     this.ctx.stroke();
 
-    // Y軸ラベルを描画（周波数値）
+    // Y軸ラベルを描画（周波数値 - 左側）
     this.ctx.fillStyle = '#aaaaaa';
     this.ctx.font = '10px monospace';
     this.ctx.textAlign = 'right';
@@ -369,6 +371,22 @@ export class WaveformRenderer {
       const y = plotY + (plotHeight / 4) * i;
       const label = freq >= 1000 ? `${(freq / 1000).toFixed(1)}k` : `${freq.toFixed(0)}`;
       this.ctx.fillText(label, plotX - 5, y);
+    }
+
+    // 右Y軸ラベルを描画（cent単位 - 各周波数の最寄り音符からの偏差）
+    this.ctx.fillStyle = '#88ccff';
+    this.ctx.font = '9px monospace';
+    this.ctx.textAlign = 'left';
+    this.ctx.textBaseline = 'middle';
+    
+    for (let i = 0; i <= 4; i++) {
+      const freq = displayMax - (displayMax - displayMin) * (i / 4);
+      const y = plotY + (plotHeight / 4) * i;
+      const noteInfo = frequencyToNote(freq);
+      if (noteInfo) {
+        const centsSign = noteInfo.cents >= 0 ? '+' : '';
+        this.ctx.fillText(`${centsSign}${noteInfo.cents}¢`, plotX + plotWidth + 5, y);
+      }
     }
 
     // 周波数プロットの線を描画
@@ -444,14 +462,21 @@ export class WaveformRenderer {
       }
     }
 
-    // 現在の周波数値を描画
+    // 現在の周波数値とcent偏差を描画
     const currentFreq = frequencyHistory[frequencyHistory.length - 1];
     if (currentFreq > 0) {
+      const noteInfo = frequencyToNote(currentFreq);
       this.ctx.fillStyle = '#00ff00';
       this.ctx.font = 'bold 11px Arial';
       this.ctx.textAlign = 'left';
       this.ctx.textBaseline = 'top';
-      this.ctx.fillText(`${currentFreq.toFixed(1)} Hz`, plotX + 2, plotY + plotHeight + 15);
+      
+      let displayText = `${currentFreq.toFixed(1)} Hz`;
+      if (noteInfo) {
+        const centsSign = noteInfo.cents >= 0 ? '+' : '';
+        displayText += ` (${noteInfo.noteName} ${centsSign}${noteInfo.cents}¢)`;
+      }
+      this.ctx.fillText(displayText, plotX + 2, plotY + plotHeight + 15);
     }
 
     this.ctx.restore();
