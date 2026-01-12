@@ -157,7 +157,7 @@ describe('WaveformRenderer', () => {
       expect(lowGainLabels.length).toBeGreaterThan(0);
     });
 
-    it('should display zero amplitude as "0.000" not exponential notation', () => {
+    it('should display amplitude labels in dB format', () => {
       // Note: With horizontalLines=5, the center is at 2.5, so no grid line lands exactly at zero.
       // This test verifies the special case handling for when amplitude === 0 (which can occur
       // with different grid configurations or floating point calculations).
@@ -174,23 +174,19 @@ describe('WaveformRenderer', () => {
       const fillTextCalls = mockContext.fillText.mock.calls;
       const labels = fillTextCalls.map((call: any) => call[0]);
       
-      // Filter amplitude labels (numeric only, not time labels with units)
+      // Filter amplitude labels (not time labels with units like ms, μs, s)
       const amplitudeLabels = labels.filter((label: string) => 
         !label.includes('ms') && !label.includes('μs') && !label.includes('s')
       );
       
-      // Verify that very small values near zero don't use exponential notation inappropriately
-      // All amplitude labels should be in fixed-point format (not exponential for values near zero)
+      // Verify that amplitude labels are in dB format
+      // All amplitude labels should be in dB format: "+X.XdB", "-X.XdB", or "0dB*"
       const hasReasonableFormat = amplitudeLabels.every((label: string) => {
-        // Label should be numeric
-        const num = parseFloat(label);
-        if (isNaN(num)) return false;
+        // Check if it's the center line reference
+        if (label === '0dB*') return true;
         
-        // If it's close to zero, it should use fixed format "0.000" not exponential
-        if (Math.abs(num) < 0.001) {
-          return !label.includes('e') || label === '0.000';
-        }
-        return true;
+        // Check if it matches dB format: optional sign, number, "dB"
+        return /^[+-]?\d+\.?\d*dB$/.test(label);
       });
       expect(hasReasonableFormat).toBe(true);
     });

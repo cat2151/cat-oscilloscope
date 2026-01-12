@@ -144,14 +144,14 @@ export class WaveformRenderer {
         label = '0dB*';
       } else {
         const db = amplitudeToDb(Math.abs(amplitude));
-        // Format dB value with sign
+        // The sign indicates waveform polarity (top=positive, bottom=negative)
+        // The dB magnitude is calculated from absolute amplitude
         const sign = amplitude > 0 ? '+' : '-';
-        if (db === -Infinity) {
-          label = '-∞dB';
-        } else if (Math.abs(db) >= 100) {
-          label = `${sign}${Math.abs(db).toFixed(0)}dB`;
+        const absDb = Math.abs(db);
+        if (absDb >= 100) {
+          label = `${sign}${absDb.toFixed(0)}dB`;
         } else {
-          label = `${sign}${Math.abs(db).toFixed(1)}dB`;
+          label = `${sign}${absDb.toFixed(1)}dB`;
         }
       }
       
