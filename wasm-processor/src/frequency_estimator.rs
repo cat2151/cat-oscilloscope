@@ -21,6 +21,11 @@ impl FrequencyEstimator {
     const MIN_HARMONICS_REQUIRED: usize = 2; // Require at least 2 harmonics to consider it a harmonic series
     const HARMONIC_FREQUENCY_TOLERANCE: f32 = 0.05; // 5% tolerance for harmonic matching
     
+    // Frequency stability constants for history-based smoothing
+    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.2; // 20% difference considered close to history
+    const FREQ_HISTORY_ACCEPTABLE_THRESHOLD: f32 = 0.5; // 50% difference considered acceptable
+    const FREQ_HISTORY_PREFERENCE_FACTOR: f32 = 1.5; // Prefer fundamental if candidate is 1.5x closer to history
+    
     pub fn new() -> Self {
         FrequencyEstimator {
             frequency_estimation_method: "autocorrelation".to_string(),
@@ -168,7 +173,9 @@ impl FrequencyEstimator {
                     
                     // If both are reasonably close, prefer the fundamental
                     // If strongest is much closer, prefer strongest (might be correct)
-                    if candidate_diff < 0.2 || (candidate_diff < 0.5 && strongest_diff > candidate_diff * 1.5) {
+                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD || 
+                       (candidate_diff < Self::FREQ_HISTORY_ACCEPTABLE_THRESHOLD && 
+                        strongest_diff > candidate_diff * Self::FREQ_HISTORY_PREFERENCE_FACTOR) {
                         return candidate;
                     }
                 }
@@ -194,8 +201,9 @@ impl FrequencyEstimator {
             }
             
             // Simple peak detection: local maximum
+            // Check left neighbor (if not at start) and right neighbor (if not at end)
             let is_peak = (bin == min_bin || frequency_data[bin - 1] <= magnitude) &&
-                          (bin == max_bin - 1 || frequency_data[bin + 1] < magnitude);
+                          (bin >= max_bin - 1 || bin >= frequency_data.len() - 1 || frequency_data[bin + 1] < magnitude);
             
             if is_peak {
                 // Apply parabolic interpolation for better frequency resolution
@@ -226,6 +234,8 @@ impl FrequencyEstimator {
     /// Find the fundamental frequency from a list of peaks by detecting harmonic series
     /// Returns the fundamental if a harmonic series is detected, otherwise None
     fn find_fundamental_frequency(&self, peaks: &[(f32, f32)], reference_magnitude: f32) -> Option<f32> {
+        // Need at least fundamental + MIN_HARMONICS_REQUIRED harmonics
+        // For example, if MIN_HARMONICS_REQUIRED = 2, we need: f0 (fundamental), 2*f0, 3*f0 = 3 peaks minimum
         if peaks.len() < Self::MIN_HARMONICS_REQUIRED + 1 {
             return None;
         }
