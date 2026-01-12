@@ -22,4 +22,4 @@ export { WaveformDataProcessor } from './WaveformDataProcessor';
 export type { WaveformRenderData } from './WaveformRenderData';
 
 // Utility functions
-export { dbToAmplitude, trimSilence } from './utils';
+export { dbToAmplitude, amplitudeToDb, trimSilence } from './utils';

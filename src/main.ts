@@ -1,6 +1,6 @@
 import { Oscilloscope } from './Oscilloscope';
 import type { AlignmentMode } from './ZeroCrossDetector';
-import { dbToAmplitude, frequencyToNote } from './utils';
+import { dbToAmplitude, amplitudeToDb, frequencyToNote } from './utils';
 import { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
 // Main application logic
@@ -182,7 +182,9 @@ function startFrequencyDisplay(): void {
       
       // Update gain display
       const gain = oscilloscope.getCurrentGain();
-      gainValue.textContent = `${gain.toFixed(2)}x`;
+      const gainDb = amplitudeToDb(gain);
+      const gainSign = gainDb >= 0 ? '+' : '';
+      gainValue.textContent = `${gainSign}${gainDb.toFixed(2)} dB`;
       
       // Update similarity display - show value if similarity search is active
       if (oscilloscope.isSimilaritySearchActive()) {
@@ -201,7 +203,7 @@ function stopFrequencyDisplay(): void {
     frequencyUpdateInterval = null;
     frequencyValue.textContent = '--- Hz';
     noteValue.textContent = '---';
-    gainValue.textContent = '---x';
+    gainValue.textContent = '--- dB';
     similarityValue.textContent = '---';
     pianoKeyboardRenderer.clear();
   }
