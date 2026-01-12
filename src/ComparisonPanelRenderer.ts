@@ -277,13 +277,13 @@ export class ComparisonPanelRenderer {
     
     ctx.stroke();
 
-    // Draw current similarity value
+    // Draw current similarity value (inside plot area at bottom left)
     const currentSimilarity = similarityHistory[similarityHistory.length - 1];
     ctx.fillStyle = '#00aaff';
     ctx.font = 'bold 11px Arial';
     ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(`${currentSimilarity.toFixed(3)}`, plotX + 2, plotY + plotHeight + 5);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${currentSimilarity.toFixed(3)}`, plotX + 2, plotY + plotHeight - 2);
 
     ctx.restore();
   }
