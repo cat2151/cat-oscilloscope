@@ -185,7 +185,8 @@ describe('WaveformRenderer', () => {
         // Check if it's the center line reference
         if (label === '0dB*') return true;
         
-        // Check if it matches dB format: optional sign, number, "dB"
+        // Check if it matches dB format: optional sign, number (integer or decimal), "dB"
+        // Examples: "+0.0dB", "-6.5dB", "+120dB", "-4dB"
         return /^[+-]?\d+\.?\d*dB$/.test(label);
       });
       expect(hasReasonableFormat).toBe(true);
