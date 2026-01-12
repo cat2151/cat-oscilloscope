@@ -382,7 +382,7 @@ export class WaveformRenderer {
     // 右Y軸ラベルを描画（cent単位 - 各周波数の最寄り音符からの偏差）
     this.ctx.fillStyle = '#88ccff';
     this.ctx.font = '9px monospace';
-    this.ctx.textAlign = 'left';
+    this.ctx.textAlign = 'right';
     this.ctx.textBaseline = 'middle';
     
     for (let i = 0; i <= 4; i++) {
@@ -391,7 +391,7 @@ export class WaveformRenderer {
       const noteInfo = frequencyToNote(freq);
       if (noteInfo) {
         const centsSign = noteInfo.cents >= 0 ? '+' : '';
-        this.ctx.fillText(`${centsSign}${noteInfo.cents}¢`, plotX + plotWidth + 5, y);
+        this.ctx.fillText(`${centsSign}${noteInfo.cents}¢`, plotX + plotWidth - 5, y);
       }
     }
 
@@ -468,21 +468,21 @@ export class WaveformRenderer {
       }
     }
 
-    // 現在の周波数値とcent偏差を描画
+    // 現在の周波数値とcent偏差を描画 (inside plot area at bottom)
     const currentFreq = frequencyHistory[frequencyHistory.length - 1];
     if (currentFreq > 0) {
       const noteInfo = frequencyToNote(currentFreq);
       this.ctx.fillStyle = '#00ff00';
       this.ctx.font = 'bold 11px Arial';
       this.ctx.textAlign = 'left';
-      this.ctx.textBaseline = 'top';
+      this.ctx.textBaseline = 'bottom';
       
       let displayText = `${currentFreq.toFixed(1)} Hz`;
       if (noteInfo) {
         const centsSign = noteInfo.cents >= 0 ? '+' : '';
         displayText += ` (${noteInfo.noteName} ${centsSign}${noteInfo.cents}¢)`;
       }
-      this.ctx.fillText(displayText, plotX + 2, plotY + plotHeight + 15);
+      this.ctx.fillText(displayText, plotX + 2, plotY + plotHeight - 2);
     }
 
     this.ctx.restore();
