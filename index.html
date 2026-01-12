@@ -230,14 +230,17 @@
       <span>FFT Display</span>
     </label>
     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
-      <input
-        type="checkbox"
-        id="usePeakModeCheckbox"
-        style="cursor: pointer;"
-        aria-label="Use peak detection instead of zero-crossing for phase alignment"
-        title="Use peak detection for better high-frequency stability"
+      <span>Alignment: </span>
+      <select
+        id="alignmentModeSelect"
+        style="cursor: pointer; padding: 5px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px;"
+        aria-label="Select alignment mode for waveform synchronization"
+        title="Choose alignment mode: Zero-Cross (default), Peak (high-freq), or Phase (subharmonics)"
       >
-      <span>Peak Mode</span>
+        <option value="zero-cross">Zero-Cross</option>
+        <option value="peak">Peak</option>
+        <option value="phase">Phase</option>
+      </select>
     </label>
     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
       <input

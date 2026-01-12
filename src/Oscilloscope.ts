@@ -279,6 +279,14 @@ export class Oscilloscope {
     return this.zeroCrossDetector.getUsePeakMode();
   }
   
+  setAlignmentMode(mode: 'zero-cross' | 'peak' | 'phase'): void {
+    this.zeroCrossDetector.setAlignmentMode(mode);
+  }
+  
+  getAlignmentMode(): 'zero-cross' | 'peak' | 'phase' {
+    return this.zeroCrossDetector.getAlignmentMode();
+  }
+  
   setPauseDrawing(paused: boolean): void {
     this.isPaused = paused;
   }

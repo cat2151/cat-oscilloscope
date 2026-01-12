@@ -11,6 +11,7 @@ export class WasmDataProcessor {
   setAutoGain(enabled: boolean): void;
   setNoiseGate(enabled: boolean): void;
   setUsePeakMode(enabled: boolean): void;
+  setAlignmentMode(mode: string): void;
   setNoiseGateThreshold(threshold: number): void;
   setBufferSizeMultiplier(multiplier: number): void;
   setFrequencyEstimationMethod(method: string): void;
@@ -50,6 +51,7 @@ export interface InitOutput {
   readonly wasmdataprocessor_new: () => number;
   readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
   readonly wasmdataprocessor_reset: (a: number) => void;
+  readonly wasmdataprocessor_setAlignmentMode: (a: number, b: number, c: number) => void;
   readonly wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
   readonly wasmdataprocessor_setBufferSizeMultiplier: (a: number, b: number) => void;
   readonly wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;

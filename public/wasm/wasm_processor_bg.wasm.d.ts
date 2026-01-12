@@ -6,6 +6,7 @@ export const __wbg_waveformrenderdata_free: (a: number, b: number) => void;
 export const wasmdataprocessor_new: () => number;
 export const wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
 export const wasmdataprocessor_reset: (a: number) => void;
+export const wasmdataprocessor_setAlignmentMode: (a: number, b: number, c: number) => void;
 export const wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
 export const wasmdataprocessor_setBufferSizeMultiplier: (a: number, b: number) => void;
 export const wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;
