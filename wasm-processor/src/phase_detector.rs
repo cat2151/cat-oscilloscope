@@ -4,7 +4,6 @@ use std::f32::consts::PI;
 /// This is particularly useful for waveforms with subharmonics (e.g., 1/4 harmonic)
 /// where zero-crossing detection may be unstable
 pub struct PhaseDetector {
-    previous_phase: Option<f32>,
     previous_alignment_index: Option<usize>,
 }
 
@@ -15,14 +14,12 @@ impl PhaseDetector {
     
     pub fn new() -> Self {
         PhaseDetector {
-            previous_phase: None,
             previous_alignment_index: None,
         }
     }
     
     /// Reset detector state
     pub fn reset(&mut self) {
-        self.previous_phase = None;
         self.previous_alignment_index = None;
     }
     
@@ -172,18 +169,9 @@ impl PhaseDetector {
             let tolerance = (cycle_length * Self::PHASE_SEARCH_TOLERANCE_CYCLES) as usize;
             
             // If too far from previous position, it might be unstable
+            // Phase continuity check could be added here in the future if needed
             if distance > tolerance {
-                // Try to detect phase and see if it's consistent
-                let window_size = cycle_length.max(16.0) as usize;
-                if let Some(phase) = self.detect_phase_at_position(
-                    data,
-                    alignment_index,
-                    frequency,
-                    sample_rate,
-                    window_size,
-                ) {
-                    self.previous_phase = Some(phase);
-                }
+                // Position jump detected - may indicate unstable detection
             }
         }
         
