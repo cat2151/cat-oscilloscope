@@ -203,7 +203,7 @@ impl FrequencyEstimator {
             // Simple peak detection: local maximum
             // Check left neighbor (if not at start) and right neighbor (if not at end)
             let is_peak = (bin == min_bin || frequency_data[bin - 1] <= magnitude) &&
-                          (bin >= max_bin - 1 || bin >= frequency_data.len() - 1 || frequency_data[bin + 1] < magnitude);
+                          (bin + 1 >= max_bin || bin + 1 >= frequency_data.len() || frequency_data[bin + 1] <= magnitude);
             
             if is_peak {
                 // Apply parabolic interpolation for better frequency resolution
@@ -234,8 +234,9 @@ impl FrequencyEstimator {
     /// Find the fundamental frequency from a list of peaks by detecting harmonic series
     /// Returns the fundamental if a harmonic series is detected, otherwise None
     fn find_fundamental_frequency(&self, peaks: &[(f32, f32)], reference_magnitude: f32) -> Option<f32> {
-        // Need at least fundamental + MIN_HARMONICS_REQUIRED harmonics
-        // For example, if MIN_HARMONICS_REQUIRED = 2, we need: f0 (fundamental), 2*f0, 3*f0 = 3 peaks minimum
+        // Need at least: 1 fundamental + MIN_HARMONICS_REQUIRED harmonics
+        // If MIN_HARMONICS_REQUIRED = 2, we need at least 3 peaks total:
+        // one for the fundamental, and at least 2 more that are harmonics (e.g., 2*f0, 3*f0)
         if peaks.len() < Self::MIN_HARMONICS_REQUIRED + 1 {
             return None;
         }
