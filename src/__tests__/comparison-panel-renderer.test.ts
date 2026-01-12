@@ -12,19 +12,19 @@ describe('ComparisonPanelRenderer', () => {
     // Create mock canvas elements
     previousCanvas = document.createElement('canvas');
     previousCanvas.width = 250;
-    previousCanvas.height = 150;
+    previousCanvas.height = 120;
 
     currentCanvas = document.createElement('canvas');
     currentCanvas.width = 250;
-    currentCanvas.height = 150;
+    currentCanvas.height = 120;
 
     similarityCanvas = document.createElement('canvas');
     similarityCanvas.width = 250;
-    similarityCanvas.height = 150;
+    similarityCanvas.height = 120;
 
     bufferCanvas = document.createElement('canvas');
-    bufferCanvas.width = 250;
-    bufferCanvas.height = 150;
+    bufferCanvas.width = 800;
+    bufferCanvas.height = 120;
 
     // Create mock contexts
     const prevMockContext = {

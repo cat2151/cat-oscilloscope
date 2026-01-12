@@ -84,7 +84,7 @@ describe('DOM Integration Tests', () => {
   beforeEach(() => {
     // Setup DOM elements as they appear in index.html
     document.body.innerHTML = `
-      <canvas id="canvas" width="800" height="400"></canvas>
+      <canvas id="canvas" width="800" height="350"></canvas>
       <div id="controls">
         <button id="startButton">Start</button>
         <label>
@@ -249,7 +249,7 @@ describe('DOM Integration Tests', () => {
   describe('Canvas Properties', () => {
     it('should have correct canvas dimensions', () => {
       expect(canvas.width).toBe(800);
-      expect(canvas.height).toBe(400);
+      expect(canvas.height).toBe(350);
     });
 
     it('should be able to get 2D context', () => {

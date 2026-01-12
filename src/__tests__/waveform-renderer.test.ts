@@ -10,7 +10,7 @@ describe('WaveformRenderer', () => {
     // Create mock canvas element
     canvas = document.createElement('canvas');
     canvas.width = 800;
-    canvas.height = 400;
+    canvas.height = 350;
 
     // Create mock context
     mockContext = {
