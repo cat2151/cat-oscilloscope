@@ -12,6 +12,18 @@ export function dbToAmplitude(db: number): number {
 }
 
 /**
+ * Convert amplitude (linear) to dB value
+ * @param amplitude - Amplitude value (typically 0.001 to infinity)
+ * @returns Decibel value
+ */
+export function amplitudeToDb(amplitude: number): number {
+  if (amplitude <= 0) {
+    return -Infinity;
+  }
+  return 20 * Math.log10(amplitude);
+}
+
+/**
  * Convert frequency to musical note name and cent deviation
  * @param frequency - Frequency in Hz
  * @returns Object with note name (e.g., "A4") and cent deviation (e.g., 0), or null if frequency is invalid

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { dbToAmplitude, trimSilence, frequencyToNote } from '../utils';
+import { dbToAmplitude, amplitudeToDb, trimSilence, frequencyToNote } from '../utils';
 
 // Mock AudioBuffer for the test environment
 class MockAudioBuffer {
@@ -47,6 +47,45 @@ describe('dbToAmplitude', () => {
   it('should convert -48 dB to amplitude 0.003981...', () => {
     const result = dbToAmplitude(-48);
     expect(result).toBeCloseTo(dbToAmplitude(-48), 10);
+  });
+});
+
+describe('amplitudeToDb', () => {
+  it('should convert amplitude 1.0 to 0 dB', () => {
+    expect(amplitudeToDb(1.0)).toBeCloseTo(0, 5);
+  });
+
+  it('should convert amplitude 0.1 to -20 dB', () => {
+    expect(amplitudeToDb(0.1)).toBeCloseTo(-20, 5);
+  });
+
+  it('should convert amplitude 0.01 to -40 dB', () => {
+    expect(amplitudeToDb(0.01)).toBeCloseTo(-40, 5);
+  });
+
+  it('should convert amplitude 2.0 to approximately +6 dB', () => {
+    expect(amplitudeToDb(2.0)).toBeCloseTo(6.02, 2);
+  });
+
+  it('should convert amplitude 10.0 to 20 dB', () => {
+    expect(amplitudeToDb(10.0)).toBeCloseTo(20, 5);
+  });
+
+  it('should return -Infinity for amplitude 0', () => {
+    expect(amplitudeToDb(0)).toBe(-Infinity);
+  });
+
+  it('should return -Infinity for negative amplitude', () => {
+    expect(amplitudeToDb(-1)).toBe(-Infinity);
+  });
+
+  it('should be inverse of dbToAmplitude', () => {
+    const testValues = [-60, -40, -20, -6, 0, 6, 20];
+    testValues.forEach(db => {
+      const amplitude = dbToAmplitude(db);
+      const backToDb = amplitudeToDb(amplitude);
+      expect(backToDb).toBeCloseTo(db, 5);
+    });
   });
 });
 

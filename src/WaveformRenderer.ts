@@ -1,4 +1,4 @@
-import { frequencyToNote } from './utils';
+import { amplitudeToDb, frequencyToNote } from './utils';
 
 /**
  * WaveformRenderer handles all canvas drawing operations
@@ -131,7 +131,7 @@ export class WaveformRenderer {
     const divisionsFromCenter = horizontalLines / 2; // 2.5 divisions from center to edge
     const amplitudePerDivision = 1.0 / (divisionsFromCenter * gain); // Raw amplitude per division
 
-    // Draw amplitude labels on the left side
+    // Draw amplitude labels on the left side (in dB format)
     for (let i = 0; i <= horizontalLines; i++) {
       const y = (this.canvas.height / horizontalLines) * i;
       // Calculate amplitude: center is 0, top is positive, bottom is negative
@@ -140,13 +140,19 @@ export class WaveformRenderer {
       
       let label: string;
       if (amplitude === 0) {
-        label = '0.000';
-      } else if (Math.abs(amplitude) >= 1) {
-        label = amplitude.toFixed(2);
-      } else if (Math.abs(amplitude) >= 0.01) {
-        label = amplitude.toFixed(3);
+        // Center line is -Infinity dB in theory, but we show it as a reference
+        label = '0dB*';
       } else {
-        label = amplitude.toExponential(1);
+        const db = amplitudeToDb(Math.abs(amplitude));
+        // The sign indicates waveform polarity (top=positive, bottom=negative)
+        // The dB magnitude is calculated from absolute amplitude
+        const sign = amplitude > 0 ? '+' : '-';
+        const absDb = Math.abs(db);
+        if (absDb >= 100) {
+          label = `${sign}${absDb.toFixed(0)}dB`;
+        } else {
+          label = `${sign}${absDb.toFixed(1)}dB`;
+        }
       }
       
       // Draw label on left side with padding
