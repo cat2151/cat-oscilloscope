@@ -23,7 +23,7 @@ describe('ComparisonPanelRenderer', () => {
     similarityCanvas.height = 120;
 
     bufferCanvas = document.createElement('canvas');
-    bufferCanvas.width = 250;
+    bufferCanvas.width = 800;
     bufferCanvas.height = 120;
 
     // Create mock contexts

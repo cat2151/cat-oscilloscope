@@ -111,7 +111,7 @@ describe('Oscilloscope Class', () => {
     similarityPlotCanvas.height = 120;
 
     frameBufferCanvas = document.createElement('canvas');
-    frameBufferCanvas.width = 250;
+    frameBufferCanvas.width = 800;
     frameBufferCanvas.height = 120;
     
     // Mock getContext to return a valid 2D context
