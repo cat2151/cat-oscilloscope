@@ -10,7 +10,7 @@
 export type AlignmentMode = 'zero-cross' | 'peak' | 'phase';
 
 export class ZeroCrossDetector {
-  private alignmentMode: AlignmentMode = 'zero-cross';
+  private alignmentMode: AlignmentMode = 'phase';
 
   /**
    * Set alignment mode for waveform synchronization
