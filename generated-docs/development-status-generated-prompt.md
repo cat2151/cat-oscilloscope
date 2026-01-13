@@ -1,4 +1,4 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-14
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -210,6 +210,7 @@ Last updated: 2026-01-12
 - REFACTORING_SUMMARY.md
 - TESTING.md
 - _config.yml
+- docs/PHASE_ALIGNMENT.md
 - example-library-usage.html
 - generated-docs/project-overview-generated-prompt.md
 - index.html
@@ -229,6 +230,14 @@ Last updated: 2026-01-12
 - issue-notes/130.md
 - issue-notes/132.md
 - issue-notes/133.md
+- issue-notes/137.md
+- issue-notes/138.md
+- issue-notes/139.md
+- issue-notes/140.md
+- issue-notes/145.md
+- issue-notes/147.md
+- issue-notes/149.md
+- issue-notes/151.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -273,6 +282,7 @@ Last updated: 2026-01-12
 - src/WaveformSearcher.ts
 - src/ZeroCrossDetector.ts
 - src/__tests__/algorithms.test.ts
+- src/__tests__/alignment-mode.test.ts
 - src/__tests__/comparison-panel-renderer.test.ts
 - src/__tests__/dom-integration.test.ts
 - src/__tests__/library-exports.test.ts
@@ -292,6 +302,7 @@ Last updated: 2026-01-12
 - wasm-processor/src/frequency_estimator.rs
 - wasm-processor/src/gain_controller.rs
 - wasm-processor/src/lib.rs
+- wasm-processor/src/phase_detector.rs
 - wasm-processor/src/waveform_searcher.rs
 - wasm-processor/src/zero_cross_detector.rs
 
@@ -306,21 +317,6 @@ Last updated: 2026-01-12
 ```markdown
 # issue ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする #129
 [issues #129](https://github.com/cat2151/cat-oscilloscope/issues/129)
-
-
-
-```
-
-## [Issue #77](../issue-notes/77.md): 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある。そしてキーボードよりマウスのほうが破綻しやすい
-[issue-notes/77.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/77.md)
-
-...
-ラベル: 
---- issue-notes/77.md の内容 ---
-
-```markdown
-# issue 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある #77
-[issues #77](https://github.com/cat2151/cat-oscilloscope/issues/77)
 
 
 
@@ -383,18 +379,6 @@ Last updated: 2026-01-12
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/7.md
-```md
-{% raw %}
-# issue issue note生成できるかのtest用 #7
-[issues #7](https://github.com/cat2151/github-actions/issues/7)
-
-- 生成できた
-- closeとする
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/9.md
 ```md
 {% raw %}
@@ -435,50 +419,40 @@ Last updated: 2026-01-12
 {% endraw %}
 ```
 
-### issue-notes/77.md
-```md
-{% raw %}
-# issue 一時停止していないときの見た目は正常なのに、一時停止した瞬間の波形が破綻していることが半数以上ある #77
-[issues #77](https://github.com/cat2151/cat-oscilloscope/issues/77)
-
-
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-cbd76dd Merge pull request #135 from cat2151/copilot/analyze-oscilloscope-waveform-issue
-0625287 Fix: Display 4 cycles consistently in zero-cross detection mode
-5be5f7a Initial plan
-2ddfd2e Update project summaries (overview & development status) [auto]
-2128160 Merge pull request #134 from cat2151/copilot/update-bar-graph-position
-fc36824 Fix: Move similarity plot to third canvas in comparison panel (line chart format)
-a319f6e Add safety check to prevent division by zero in bar spacing calculation
-c867ee0 Update tests and add documentation for similarity bar visualization
-b8bceec Fix bar height calculation in similarity bar graph
-97e7718 Move similarity bar graph to comparison panel canvases
+5dca79c Merge pull request #152 from cat2151/copilot/fix-frequency-and-similarity-labels
+af95797 Changes before error encountered
+8e8aca8 Add issue note for #151 [auto]
+4abd372 Initial plan
+f8164b7 Merge pull request #150 from cat2151/copilot/adjust-layout-for-1000px-height
+eaf3e76 テストのframeBufferCanvas/bufferCanvasの幅を800pxに修正
+d9bb7e6 縦1000pxに収まるようレイアウト調整完了
+cf53c7a Add issue note for #149 [auto]
+abefa91 Initial plan
+8766a9d Merge pull request #148 from cat2151/copilot/adjust-frequency-estimation-algorithm
 
 ### 変更されたファイル:
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
 index.html
-issue-notes/130.md
-issue-notes/132.md
-issue-notes/133.md
+issue-notes/147.md
+issue-notes/149.md
+issue-notes/151.md
 public/wasm/wasm_processor_bg.wasm
 src/ComparisonPanelRenderer.ts
-src/GainController.ts
 src/Oscilloscope.ts
+src/PianoKeyboardRenderer.ts
 src/WaveformRenderer.ts
+src/ZeroCrossDetector.ts
+src/__tests__/alignment-mode.test.ts
 src/__tests__/comparison-panel-renderer.test.ts
 src/__tests__/dom-integration.test.ts
+src/__tests__/library-exports.test.ts
 src/__tests__/oscilloscope.test.ts
-src/main.ts
+src/__tests__/piano-keyboard-renderer.test.ts
+src/__tests__/waveform-renderer.test.ts
+wasm-processor/src/frequency_estimator.rs
 wasm-processor/src/zero_cross_detector.rs
 
 
 ---
-Generated at: 2026-01-12 07:08:13 JST
+Generated at: 2026-01-14 07:09:11 JST

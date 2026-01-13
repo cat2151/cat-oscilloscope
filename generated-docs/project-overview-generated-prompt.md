@@ -1,4 +1,4 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-14
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -161,14 +161,28 @@ npm run build
 ## 機能
 
 - 🎤 **マイク入力** - マイクからの音声をリアルタイムでキャプチャ
-- 🎯 **ゼロクロス検出** - 音声がマイナスからプラスに交差するポイントを自動検出
-- 📊 **安定した表示** - ゼロクロスポイントに基づいて波形表示を整列し、安定した表示を実現
-- 🔊 **オートゲイン** - 波形の振幅を自動調整し、キャンバスの高さを最適に活用
-- ⚡ **リアルタイムレンダリング** - 波形の可視化を継続的に更新
-- 🎨 **クラシックなデザイン** - 黒背景にグリーンの波形とグリッドオーバーレイ
-- 🛡️ **エラーハンドリング** - マイクのアクセス許可の問題を適切に処理
-- 🔍 **波形類似探索** - 前フレームとの類似度を計算し、安定した波形表示を実現
-- 🦀 **Rust/WASM実装** - すべてのデータ処理アルゴリズムをRust/WASMで実装
+- 📂 **オーディオファイル** - WAVファイルのループ再生に対応
+- 📊 **周波数推定** - ゼロクロス、自己相関、FFT、STFT、CQTの5つの方式
+- 🎹 **ピアノ鍵盤表示** - 検出した周波数を鍵盤上に表示
+- 🎚️ **自動ゲイン** - 波形の振幅を自動調整
+- 🔇 **ノイズゲート** - 閾値以下の信号をカット
+- 🎯 **3つのアライメントモード**
+  - **Zero-Cross**: ゼロクロス点で同期（デフォルト）
+  - **Peak**: ピーク点で同期（高周波向け）
+  - **Phase**: 位相同期（サブハーモニクス向け、Issue #139対応）
+- 📈 **FFTスペクトラム** - 周波数スペクトラムをオーバーレイ表示
+- 🔍 **波形比較パネル** - 前回と今回の波形の類似度を表示
+- ⏸️ **描画の一時停止** - 波形を静止して観察可能
+
+### アライメントモードについて
+
+**Phase Alignment Mode（位相同期モード）** は、1/4倍音などのサブハーモニクスを含む波形の位相ブレを解決するために追加されました。
+
+- **Zero-Cross（ゼロクロス）**: 最も軽量。単純な波形に適しています
+- **Peak（ピーク）**: 高周波やノイズの多い環境で安定
+- **Phase（位相同期）**: DFTベースの位相検出により、サブハーモニクスを含む複雑な波形でも安定した表示が可能
+
+詳細は [docs/PHASE_ALIGNMENT.md](./docs/PHASE_ALIGNMENT.md) を参照してください。
 
 ## はじめに
 
@@ -272,6 +286,26 @@ npm run test:ui
 - ユーザーによるマイクのアクセス許可
 - HTTPSまたはlocalhost（マイクアクセスに必要）
 
+## マイク入力時の制約
+
+マイクからの入力を使用する場合、以下の制約があります：
+
+### 環境音の影響
+
+マイクは周囲のすべての音を拾うため、以下のような環境音が波形に影響を与えます：
+
+- **マウスクリック音**: マウスをクリックする際の機械的な音が波形に現れます。特に一時停止ボタンをマウスでクリックした瞬間、波形が乱れて見えることがあります。
+- **キーボード打鍵音**: キーボードのタイプ音も波形に影響します。ただし、静音性の高いキーボードを使用している場合は、影響が少なくなります。
+- **その他の環境音**: 話し声、室内の空調音、外部からの騒音なども波形に現れます。
+
+### 実用上のヒント
+
+- **一時停止の方法**: マウスクリックの代わりに、静音性の高いキーボードのスペースキーを使用することで、一時停止時の波形への影響を最小限に抑えることができます。
+- **音源の選択**: マイク入力は環境音の影響を受けやすいため、ノイズのない波形を観察したい場合は、WAVファイルなどのオーディオファイルを使用することをお勧めします。
+- **測定環境**: できるだけ静かな環境で使用することで、より正確な波形を観察できます。
+
+これらはアプリケーションの制限ではなく、マイクというデバイスの特性によるものです。
+
 ## ライセンス
 
 MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
@@ -305,6 +339,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📖 REFACTORING_SUMMARY.md
 📖 TESTING.md
 📄 _config.yml
+📁 docs/
+  📖 PHASE_ALIGNMENT.md
 🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
@@ -325,6 +361,14 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 130.md
   📖 132.md
   📖 133.md
+  📖 137.md
+  📖 138.md
+  📖 139.md
+  📖 140.md
+  📖 145.md
+  📖 147.md
+  📖 149.md
+  📖 151.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -373,6 +417,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📘 ZeroCrossDetector.ts
   📁 __tests__/
     📘 algorithms.test.ts
+    📘 alignment-mode.test.ts
     📘 comparison-panel-renderer.test.ts
     📘 dom-integration.test.ts
     📘 library-exports.test.ts
@@ -394,6 +439,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📄 frequency_estimator.rs
     📄 gain_controller.rs
     📄 lib.rs
+    📄 phase_detector.rs
     📄 waveform_searcher.rs
     📄 zero_cross_detector.rs
 
@@ -402,19 +448,19 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**index.html** (317行, 10020バイト)
+**index.html** (320行, 10291バイト)
   - 関数: なし
   - インポート: なし
 
-**public/wasm/wasm_processor.d.ts** (104行, 4949バイト)
+**public/wasm/wasm_processor.d.ts** (106行, 5079バイト)
   - 関数: initSync, __wbg_init
   - インポート: なし
 
-**public/wasm/wasm_processor.js** (480行, 15082バイト)
-  - 関数: getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_load, __wbg_get_imports, __wbg_finalize_init, initSync, __wbg_init, if, for, function, __destroy_into_raw, free, processFrame, setAutoGain, setNoiseGate, setUsePeakMode, setNoiseGateThreshold, setBufferSizeMultiplier, setFrequencyEstimationMethod, constructor, reset, __wrap, similarity, sampleRate, maxFrequency, waveform_data, frequencyData, displayEndIndex, previousWaveform, displayStartIndex, estimatedFrequency, firstAlignmentPoint, frequencyPlotHistory, secondAlignmentPoint, usedSimilaritySearch, similarityPlotHistory, isSignalAboveNoiseGate, gain, fftSize, catch
+**public/wasm/wasm_processor.js** (488行, 15371バイト)
+  - 関数: getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_load, __wbg_get_imports, __wbg_finalize_init, initSync, __wbg_init, if, for, function, __destroy_into_raw, free, processFrame, setAutoGain, setNoiseGate, setUsePeakMode, setAlignmentMode, setNoiseGateThreshold, setBufferSizeMultiplier, setFrequencyEstimationMethod, constructor, reset, __wrap, similarity, sampleRate, maxFrequency, waveform_data, frequencyData, displayEndIndex, previousWaveform, displayStartIndex, estimatedFrequency, firstAlignmentPoint, frequencyPlotHistory, secondAlignmentPoint, usedSimilaritySearch, similarityPlotHistory, isSignalAboveNoiseGate, gain, fftSize, catch
   - インポート: なし
 
-**public/wasm/wasm_processor_bg.wasm.d.ts** (37行, 2600バイト)
+**public/wasm/wasm_processor_bg.wasm.d.ts** (38行, 2692バイト)
   - 関数: なし
   - インポート: なし
 
@@ -422,7 +468,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, catch, for, start, startFromFile, stop
   - インポート: ./utils
 
-**src/ComparisonPanelRenderer.ts** (416行, 12789バイト)
+**src/ComparisonPanelRenderer.ts** (416行, 12826バイト)
   - 関数: constructor, if, for
   - インポート: なし
 
@@ -434,7 +480,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (290行, 9269バイト)
+**src/Oscilloscope.ts** (298行, 9510バイト)
   - 関数: constructor, catch, if, start, startFromFile, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
@@ -442,7 +488,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: constructor, if, for
   - インポート: ./utils
 
-**src/WaveformDataProcessor.ts** (369行, 13246バイト)
+**src/WaveformDataProcessor.ts** (370行, 13290バイト)
   - 関数: cleanup, handleLoad, constructor, if, catch, for, initialize, loadWasmModule
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
@@ -450,21 +496,25 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**src/WaveformRenderer.ts** (471行, 15778バイト)
+**src/WaveformRenderer.ts** (502行, 17038バイト)
   - 関数: constructor, if, for
-  - インポート: なし
+  - インポート: ./utils
 
 **src/WaveformSearcher.ts** (54行, 1276バイト)
   - 関数: なし
   - インポート: なし
 
-**src/ZeroCrossDetector.ts** (34行, 862バイト)
+**src/ZeroCrossDetector.ts** (55行, 1585バイト)
   - 関数: なし
   - インポート: なし
 
 **src/__tests__/algorithms.test.ts** (173行, 5364バイト)
   - 関数: なし
   - インポート: vitest, ../FrequencyEstimator, ../GainController
+
+**src/__tests__/alignment-mode.test.ts** (94行, 3090バイト)
+  - 関数: for
+  - インポート: vitest, ../ZeroCrossDetector
 
 **src/__tests__/comparison-panel-renderer.test.ts** (360行, 12904バイト)
   - 関数: for
@@ -474,11 +524,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/library-exports.test.ts** (148行, 5007バイト)
+**src/__tests__/library-exports.test.ts** (150行, 5170バイト)
   - 関数: なし
   - インポート: vitest
 
-**src/__tests__/oscilloscope.test.ts** (550行, 20733バイト)
+**src/__tests__/oscilloscope.test.ts** (560行, 21792バイト)
   - 関数: createSilentMockAudioContext, getFFTOverlayDimensions, findFFTOverlayBorderCall, createMediaStreamSource, createAnalyser, for, close, getTracks, getAudioTracks, getVideoTracks, stop, if
   - インポート: vitest, ../Oscilloscope, ../utils
 
@@ -486,7 +536,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../PianoKeyboardRenderer
 
-**src/__tests__/utils.test.ts** (328行, 11005バイト)
+**src/__tests__/utils.test.ts** (367行, 12152バイト)
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
@@ -494,7 +544,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../WaveformDataProcessor, ../AudioManager
 
-**src/__tests__/waveform-renderer.test.ts** (416行, 14562バイト)
+**src/__tests__/waveform-renderer.test.ts** (413行, 14451バイト)
   - 関数: for
   - インポート: vitest, ../WaveformRenderer
 
@@ -502,16 +552,16 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../WaveformSearcher
 
-**src/index.ts** (25行, 982バイト)
+**src/index.ts** (26行, 1055バイト)
   - 関数: なし
   - インポート: なし
 
-**src/main.ts** (284行, 11246バイト)
+**src/main.ts** (285行, 11349バイト)
   - 関数: sliderValueToThreshold, formatThresholdDisplay, startFrequencyDisplay, stopFrequencyDisplay, for, if, catch
-  - インポート: ./Oscilloscope, ./utils, ./PianoKeyboardRenderer
+  - インポート: ./Oscilloscope, ./ZeroCrossDetector, ./utils
 
-**src/utils.ts** (155行, 4843バイト)
-  - 関数: dbToAmplitude, frequencyToNote, trimSilence, for, if
+**src/utils.ts** (167行, 5136バイト)
+  - 関数: dbToAmplitude, amplitudeToDb, frequencyToNote, trimSilence, if, for
   - インポート: なし
 
 **vite.config.ts** (54行, 1525バイト)
@@ -526,6 +576,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     - setAutoGain ()
     - setNoiseGate ()
     - setUsePeakMode ()
+    - setAlignmentMode ()
     - setNoiseGateThreshold ()
     - setBufferSizeMultiplier ()
     - setFrequencyEstimationMethod ()
@@ -565,8 +616,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - startFrequencyDisplay ()
       - stopFrequencyDisplay ()
       - frequencyToNote ()
+  - amplitudeToDb ()
 - catch (src/AudioManager.ts)
 - for (src/AudioManager.ts)
+  - reset ()
 - cleanup (src/WaveformDataProcessor.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 
@@ -580,6 +633,7 @@ README.ja.md
 README.md
 REFACTORING_SUMMARY.md
 TESTING.md
+docs/PHASE_ALIGNMENT.md
 example-library-usage.html
 index.html
 issue-notes/101.md
@@ -598,10 +652,9 @@ issue-notes/129.md
 issue-notes/130.md
 issue-notes/132.md
 issue-notes/133.md
-issue-notes/57.md
-issue-notes/59.md
-issue-notes/62.md
-issue-notes/64.md
+issue-notes/137.md
+issue-notes/138.md
+issue-notes/139.md
 package-lock.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
@@ -614,4 +667,4 @@ package-lock.json
 
 
 ---
-Generated at: 2026-01-12 07:08:13 JST
+Generated at: 2026-01-14 07:09:11 JST
