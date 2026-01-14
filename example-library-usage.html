@@ -87,6 +87,7 @@
     <button id="stopBtn" disabled>Stop</button>
     <input type="file" id="fileInput" accept="audio/*" style="display: none;">
     <button id="loadFileBtn">Load Audio File</button>
+    <button id="demoBufferBtn">Demo: Sine Wave (BufferSource)</button>
     <br>
     <label>
       <input type="checkbox" id="autoGain" checked>
@@ -148,10 +149,10 @@ await oscilloscope.stop();</code></pre>
 
   <script type="module">
     // この例では、ライブラリがグローバルにインストールされていると仮定しています
-    // 実際の使用では: import { Oscilloscope } from 'cat-oscilloscope';
+    // 実際の使用では: import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
     
     // ローカル開発用にsrcからインポート
-    import { Oscilloscope } from './src/index.ts';
+    import { Oscilloscope, BufferSource } from './src/index.ts';
 
     const canvas = document.getElementById('oscilloscope');
     const oscilloscope = new Oscilloscope(canvas);
@@ -159,6 +160,7 @@ await oscilloscope.stop();</code></pre>
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const loadFileBtn = document.getElementById('loadFileBtn');
+    const demoBufferBtn = document.getElementById('demoBufferBtn');
     const fileInput = document.getElementById('fileInput');
     const autoGainCheckbox = document.getElementById('autoGain');
     const noiseGateCheckbox = document.getElementById('noiseGate');
@@ -200,6 +202,7 @@ await oscilloscope.stop();</code></pre>
       try {
         startBtn.disabled = true;
         loadFileBtn.disabled = true;
+        demoBufferBtn.disabled = true;
         statusElement.textContent = 'Requesting microphone access...';
         
         await oscilloscope.start();
@@ -213,6 +216,7 @@ await oscilloscope.stop();</code></pre>
         statusElement.textContent = 'Error: Could not access microphone';
         startBtn.disabled = false;
         loadFileBtn.disabled = false;
+        demoBufferBtn.disabled = false;
       }
     });
 
@@ -226,6 +230,7 @@ await oscilloscope.stop();</code></pre>
         startBtn.disabled = false;
         stopBtn.disabled = true;
         loadFileBtn.disabled = false;
+        demoBufferBtn.disabled = false;
         stopUpdates();
       } catch (error) {
         console.error('Failed to stop oscilloscope:', error);
@@ -249,6 +254,7 @@ await oscilloscope.stop();</code></pre>
       try {
         startBtn.disabled = true;
         loadFileBtn.disabled = true;
+        demoBufferBtn.disabled = true;
         stopBtn.disabled = true;
         statusElement.textContent = `Loading: ${file.name}...`;
         
@@ -264,10 +270,54 @@ await oscilloscope.stop();</code></pre>
         startBtn.style.display = 'inline-block';
         startBtn.disabled = false;
         loadFileBtn.disabled = false;
+        demoBufferBtn.disabled = false;
         stopBtn.disabled = true;
       }
       
       fileInput.value = '';
+    });
+
+    // BufferSource デモボタン
+    demoBufferBtn.addEventListener('click', async () => {
+      if (oscilloscope.getIsRunning()) {
+        await oscilloscope.stop();
+        stopUpdates();
+      }
+      
+      try {
+        startBtn.disabled = true;
+        loadFileBtn.disabled = true;
+        demoBufferBtn.disabled = true;
+        statusElement.textContent = 'Generating sine wave...';
+        
+        // 440Hz サイン波を生成 (1秒分)
+        const sampleRate = 44100;
+        const duration = 1; // seconds
+        const frequency = 440; // Hz
+        const audioData = new Float32Array(sampleRate * duration);
+        
+        for (let i = 0; i < audioData.length; i++) {
+          audioData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+        }
+        
+        // BufferSourceを作成してループ再生
+        const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
+        
+        await oscilloscope.startFromBuffer(bufferSource);
+        
+        statusElement.textContent = `BufferSource Demo: 440Hz Sine Wave (loop)`;
+        startBtn.style.display = 'none';
+        stopBtn.disabled = false;
+        startUpdates();
+      } catch (error) {
+        console.error('Failed to start BufferSource demo:', error);
+        statusElement.textContent = 'Error: Could not start BufferSource demo';
+        startBtn.style.display = 'inline-block';
+        startBtn.disabled = false;
+        loadFileBtn.disabled = false;
+        demoBufferBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
     });
 
     // 設定変更
