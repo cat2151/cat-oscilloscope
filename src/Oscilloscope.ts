@@ -7,6 +7,7 @@ import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 import { WaveformDataProcessor } from './WaveformDataProcessor';
 import { WaveformRenderData } from './WaveformRenderData';
+import { BufferSource } from './BufferSource';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -93,6 +94,25 @@ export class Oscilloscope {
       this.render();
     } catch (error) {
       console.error('Error loading audio file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Start visualization from a static buffer without audio playback
+   * Useful for visualizing pre-recorded audio data or processing results
+   * @param bufferSource - BufferSource instance containing audio data
+   */
+  async startFromBuffer(bufferSource: BufferSource): Promise<void> {
+    try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
+      this.audioManager.startFromBuffer(bufferSource);
+      this.isRunning = true;
+      this.render();
+    } catch (error) {
+      console.error('Error starting from buffer:', error);
       throw error;
     }
   }

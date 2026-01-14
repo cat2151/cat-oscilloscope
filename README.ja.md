@@ -39,12 +39,22 @@
 cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
 
 ```typescript
-import { Oscilloscope } from 'cat-oscilloscope';
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const oscilloscope = new Oscilloscope(canvas);
+
+// マイク入力から可視化
 await oscilloscope.start();
+
+// 静的バッファから可視化（オーディオ再生なし）
+const audioData = new Float32Array(44100); // 1秒分のデータ
+const bufferSource = new BufferSource(audioData, 44100, { loop: true });
+await oscilloscope.startFromBuffer(bufferSource);
 ```
+
+**BufferSource機能**: wavlpfなどの音声処理ライブラリとの統合に最適な、静的バッファからの可視化機能を提供します。
+
 
 ## 機能
 

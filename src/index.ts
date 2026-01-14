@@ -17,6 +17,9 @@ export { WaveformSearcher } from './WaveformSearcher';
 export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
+// BufferSource - for static buffer visualization
+export { BufferSource } from './BufferSource';
+
 // Data processing and types - for Rust WASM integration
 export { WaveformDataProcessor } from './WaveformDataProcessor';
 export type { WaveformRenderData } from './WaveformRenderData';

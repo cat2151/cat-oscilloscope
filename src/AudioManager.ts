@@ -1,4 +1,5 @@
 import { trimSilence } from './utils';
+import { BufferSource } from './BufferSource';
 
 /**
  * AudioManager handles Web Audio API integration
@@ -7,12 +8,14 @@ import { trimSilence } from './utils';
  * - MediaStream management
  * - AnalyserNode configuration
  * - Audio data retrieval
+ * - BufferSource support for static buffer visualization
  */
 export class AudioManager {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private mediaStream: MediaStream | null = null;
   private audioBufferSource: AudioBufferSourceNode | null = null;
+  private bufferSource: BufferSource | null = null;
   private dataArray: Float32Array | null = null;
   private frequencyData: Uint8Array | null = null;
   private frameBufferHistory: Float32Array[] = []; // History of frame buffers for extended FFT
@@ -105,6 +108,40 @@ export class AudioManager {
   }
 
   /**
+   * Start visualization from a static buffer without audio playback
+   * Useful for visualizing pre-recorded audio data or processing results
+   * @param bufferSource - BufferSource instance containing audio data
+   */
+  startFromBuffer(bufferSource: BufferSource): void {
+    try {
+      // Close existing AudioContext if present to avoid resource leak
+      if (this.audioContext && this.audioContext.state !== 'closed') {
+        this.audioContext.close();
+      }
+
+      // Create a minimal AudioContext for sample rate info
+      // We don't actually use Web Audio API for playback in buffer mode
+      this.audioContext = new AudioContext();
+      
+      // Store the buffer source
+      this.bufferSource = bufferSource;
+      
+      // Set chunk size to match our FFT size
+      this.bufferSource.setChunkSize(4096);
+      
+      // Initialize data arrays manually (no analyser node needed for buffer mode)
+      this.dataArray = new Float32Array(4096);
+      this.frequencyData = new Uint8Array(2048); // Half of FFT size
+      
+      // Note: We don't create an analyser node in buffer mode
+      // The data will be provided directly from the BufferSource
+    } catch (error) {
+      console.error('Error starting from buffer:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Stop audio capture and clean up resources
    */
   async stop(): Promise<void> {
@@ -125,6 +162,9 @@ export class AudioManager {
       this.mediaStream.getTracks().forEach(track => track.stop());
       this.mediaStream = null;
     }
+    if (this.bufferSource) {
+      this.bufferSource = null;
+    }
     if (this.audioContext) {
       try {
         await this.audioContext.close();
@@ -144,6 +184,18 @@ export class AudioManager {
    * Also updates the frame buffer history for extended FFT
    */
   getTimeDomainData(): Float32Array | null {
+    // Buffer mode: get data directly from BufferSource
+    if (this.bufferSource && this.dataArray) {
+      const chunk = this.bufferSource.getNextChunk();
+      if (chunk) {
+        this.dataArray.set(chunk);
+        this.updateFrameBufferHistory(this.dataArray);
+        return this.dataArray;
+      }
+      return null;
+    }
+    
+    // Normal mode: get data from analyser node
     if (!this.analyser || !this.dataArray) {
       return null;
     }
@@ -222,8 +274,18 @@ export class AudioManager {
 
   /**
    * Get frequency-domain data (FFT)
+   * In buffer mode, FFT is computed from time-domain data
    */
   getFrequencyData(): Uint8Array | null {
+    // Buffer mode: compute FFT from time-domain data
+    if (this.bufferSource && this.dataArray && this.frequencyData) {
+      // Simple FFT computation would go here
+      // For now, we return null to indicate FFT is not available in buffer mode
+      // This can be enhanced later with a proper FFT implementation
+      return null;
+    }
+    
+    // Normal mode: get data from analyser node
     if (!this.analyser || !this.frequencyData) {
       return null;
     }
@@ -236,6 +298,9 @@ export class AudioManager {
    * Get sample rate
    */
   getSampleRate(): number {
+    if (this.bufferSource) {
+      return this.bufferSource.getSampleRate();
+    }
     return this.audioContext?.sampleRate || 0;
   }
 
@@ -243,6 +308,9 @@ export class AudioManager {
    * Get FFT size
    */
   getFFTSize(): number {
+    if (this.bufferSource) {
+      return 4096; // Fixed FFT size for buffer mode
+    }
     return this.analyser?.fftSize || 0;
   }
 
@@ -250,6 +318,9 @@ export class AudioManager {
    * Get frequency bin count
    */
   getFrequencyBinCount(): number {
+    if (this.bufferSource) {
+      return 2048; // Half of FFT size
+    }
     return this.analyser?.frequencyBinCount || 0;
   }
 
@@ -257,6 +328,11 @@ export class AudioManager {
    * Check if audio system is ready
    */
   isReady(): boolean {
+    // Buffer mode: check if buffer source and data array are ready
+    if (this.bufferSource) {
+      return this.dataArray !== null;
+    }
+    // Normal mode: check if audio context and analyser are ready
     return this.audioContext !== null && this.analyser !== null;
   }
 }
