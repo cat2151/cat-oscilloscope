@@ -1,4 +1,4 @@
-Last updated: 2026-01-14
+Last updated: 2026-01-15
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -63,6 +63,13 @@ Last updated: 2026-01-14
 名前: cat-oscilloscope
 説明: # cat-oscilloscope
 
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+  <a href="https://deepwiki.com/cat2151/cat-oscilloscope"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+  <a href="https://cat2151.github.io/cat-oscilloscope/"><img src="https://img.shields.io/badge/🌐-Live_Demo-green.svg" alt="Live Demo"></a>
+</p>
+
 ブラウザで動く、オシロスコープ風の波形ビジュアライザー
 
 ## 🌐 ライブデモ
@@ -71,26 +78,46 @@ Last updated: 2026-01-14
 
 上記のURLでアプリケーションを試すことができます。マイクへのアクセス許可が必要です。
 
-※このドキュメントは仮のため大部分がLLMによって生成されました。今後修正していきます
+## 実装状況
 
-## 状況
-- 大きなバグは一通り取った状態です。
-- 細かい不具合はあります。
-- micからの音の場合、位相が揃ったり揃わなかったりが不安定で、実用度が低いです。
-- WAVファイルからのチップチューンのモノラルの単純波形の場合、実用度が高いです。
-- ライブラリとしてどれくらい楽に使えるかは、これから検証予定です。
+### ✅ 完了済みの主要実装
+
+- **Rust/WASM統合**: すべてのデータ処理アルゴリズムがRust/WASMで実装され、高速で型安全な処理を実現
+- **ライブラリ対応**: npmライブラリとして他のプロジェクトから利用可能（ESM/CJS両対応、完全な型定義サポート）
+- **Phase Alignment Mode**: サブハーモニクス（1/4倍音など）を含む波形の位相ブレを解決する新しいアライメントモード
+- **5つの周波数推定方式**: Zero-Crossing、Autocorrelation、FFT、STFT、CQTをサポート
+- **バッファサイズマルチプライヤー**: 低周波検出精度を向上させる拡張バッファ機能（1x/4x/16x）
+- **波形比較パネル**: 前回と今回の波形の類似度をリアルタイム表示
+- **ピアノ鍵盤表示**: 検出した周波数を視覚的に表示
+
+### 現在の安定性
+
+- ✅ 大きなバグは解決済み
+- ✅ WAVファイルからのオーディオ再生時は高い実用性
+- ✅ マイク入力時は、Phase Alignmentモードにより位相の安定性が大幅に向上
+- ⚠️ マイク入力は環境音の影響を受けるため、静かな環境での使用を推奨
 
 ## 📚 ライブラリとしての使用
 
 cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
 
 ```typescript
-import { Oscilloscope } from 'cat-oscilloscope';
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const oscilloscope = new Oscilloscope(canvas);
+
+// マイク入力から可視化
 await oscilloscope.start();
+
+// 静的バッファから可視化（オーディオ再生なし）
+const audioData = new Float32Array(44100); // 1秒分のデータ
+const bufferSource = new BufferSource(audioData, 44100, { loop: true });
+await oscilloscope.startFromBuffer(bufferSource);
 ```
+
+**BufferSource機能**: wavlpfなどの音声処理ライブラリとの統合に最適な、静的バッファからの可視化機能を提供します。
+
 
 ## 機能
 
@@ -99,8 +126,8 @@ await oscilloscope.start();
 cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートしています：
 
 1. **Zero-Crossing（ゼロクロス法）**: シンプルで高速。単純な波形に適しています。
-2. **Autocorrelation（自己相関法）**: デフォルト。複雑な波形に対してバランスの良い精度。
-3. **FFT（高速フーリエ変換）**: 周波数スペクトラム解析。高周波に強い。
+2. **Autocorrelation（自己相関法）**: 複雑な波形に対してバランスの良い精度。
+3. **FFT（高速フーリエ変換）**: デフォルト。周波数スペクトラム解析。高周波に強い。
 4. **STFT（短時間フーリエ変換）**: 可変窓長により、低周波の検出精度が向上。
 5. **CQT（定Q変換）**: 低周波域で高い周波数分解能を持つ。音楽分析に適しています。
 
@@ -138,9 +165,10 @@ cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートし
 
 すべてのデータ処理（波形探索、周波数推定、ゼロクロス検出など）は**Rust/WASMで実装**されています。
 
-- 高速な処理性能
-- 型安全で信頼性の高い実装
-- TypeScriptは設定管理とレンダリングのみを担当
+- **高速な処理性能**: Rustの最適化により効率的な実行
+- **型安全で信頼性の高い実装**: Rustの厳格な型システムによる安全性
+- **単一実装**: アルゴリズムはWASMのみで実装され、TypeScriptとの二重管理を解消
+- **TypeScriptの役割**: 設定管理とレンダリングのみを担当
 
 ### WASM実装のビルド
 
@@ -158,7 +186,9 @@ npm run build
 - Rust toolchain (rustc, cargo)
 - wasm-pack (`cargo install wasm-pack`)
 
-## 機能
+**注意**: 通常の使用では、事前ビルド済みのWASMファイルが `public/wasm/` に含まれているため、Rustツールチェーンは不要です。
+
+## 主な機能
 
 - 🎤 **マイク入力** - マイクからの音声をリアルタイムでキャプチャ
 - 📂 **オーディオファイル** - WAVファイルのループ再生に対応
@@ -167,20 +197,20 @@ npm run build
 - 🎚️ **自動ゲイン** - 波形の振幅を自動調整
 - 🔇 **ノイズゲート** - 閾値以下の信号をカット
 - 🎯 **3つのアライメントモード**
-  - **Zero-Cross**: ゼロクロス点で同期（デフォルト）
-  - **Peak**: ピーク点で同期（高周波向け）
-  - **Phase**: 位相同期（サブハーモニクス向け、Issue #139対応）
+  - **Phase**: 位相同期（デフォルト）- サブハーモニクスを含む波形でも安定した表示
+  - **Zero-Cross**: ゼロクロス点で同期 - 単純な波形に適する軽量モード
+  - **Peak**: ピーク点で同期 - 高周波やノイズの多い環境で安定
 - 📈 **FFTスペクトラム** - 周波数スペクトラムをオーバーレイ表示
 - 🔍 **波形比較パネル** - 前回と今回の波形の類似度を表示
 - ⏸️ **描画の一時停止** - 波形を静止して観察可能
 
 ### アライメントモードについて
 
-**Phase Alignment Mode（位相同期モード）** は、1/4倍音などのサブハーモニクスを含む波形の位相ブレを解決するために追加されました。
+**Phase Alignment Mode（位相同期モード）** は、1/4倍音などのサブハーモニクスを含む波形の位相ブレを解決するために追加され、現在はデフォルトモードとなっています。
 
+- **Phase（位相同期）**: デフォルト。DFTベースの位相検出により、サブハーモニクスを含む複雑な波形でも安定した表示が可能
 - **Zero-Cross（ゼロクロス）**: 最も軽量。単純な波形に適しています
 - **Peak（ピーク）**: 高周波やノイズの多い環境で安定
-- **Phase（位相同期）**: DFTベースの位相検出により、サブハーモニクスを含む複雑な波形でも安定した表示が可能
 
 詳細は [docs/PHASE_ALIGNMENT.md](./docs/PHASE_ALIGNMENT.md) を参照してください。
 
@@ -369,6 +399,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 147.md
   📖 149.md
   📖 151.md
+  📖 153.md
+  📖 155.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -405,6 +437,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📘 wasm_processor_bg.wasm.d.ts
 📁 src/
   📘 AudioManager.ts
+  📘 BufferSource.ts
   📘 ComparisonPanelRenderer.ts
   📘 FrequencyEstimator.ts
   📘 GainController.ts
@@ -416,6 +449,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📘 WaveformSearcher.ts
   📘 ZeroCrossDetector.ts
   📁 __tests__/
+    📘 BufferSource.test.ts
     📘 algorithms.test.ts
     📘 alignment-mode.test.ts
     📘 comparison-panel-renderer.test.ts
@@ -423,6 +457,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📘 library-exports.test.ts
     📘 oscilloscope.test.ts
     📘 piano-keyboard-renderer.test.ts
+    📘 startFromBuffer.test.ts
     📘 utils.test.ts
     📘 waveform-data-processor.test.ts
     📘 waveform-renderer.test.ts
@@ -444,7 +479,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📄 zero_cross_detector.rs
 
 ## ファイル詳細分析
-**example-library-usage.html** (292行, 8351バイト)
+**example-library-usage.html** (342行, 10234バイト)
   - 関数: なし
   - インポート: なし
 
@@ -464,9 +499,13 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**src/AudioManager.ts** (263行, 7787バイト)
-  - 関数: if, catch, for, start, startFromFile, stop
-  - インポート: ./utils
+**src/AudioManager.ts** (340行, 10690バイト)
+  - 関数: if, catch, for, start, startFromFile, startFromBuffer, stop
+  - インポート: ./utils, ./BufferSource
+
+**src/BufferSource.ts** (198行, 5177バイト)
+  - 関数: constructor, if
+  - インポート: なし
 
 **src/ComparisonPanelRenderer.ts** (416行, 12826バイト)
   - 関数: constructor, if, for
@@ -480,8 +519,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (298行, 9510バイト)
-  - 関数: constructor, catch, if, start, startFromFile, stop
+**src/Oscilloscope.ts** (318行, 10198バイト)
+  - 関数: constructor, catch, if, start, startFromFile, startFromBuffer, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
 **src/PianoKeyboardRenderer.ts** (212行, 6623バイト)
@@ -508,6 +547,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
+**src/__tests__/BufferSource.test.ts** (337行, 11874バイト)
+  - 関数: for
+  - インポート: vitest, ../BufferSource
+
 **src/__tests__/algorithms.test.ts** (173行, 5364バイト)
   - 関数: なし
   - インポート: vitest, ../FrequencyEstimator, ../GainController
@@ -524,7 +567,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createMediaStreamSource, createAnalyser, for, close, getTracks
   - インポート: vitest, ../utils
 
-**src/__tests__/library-exports.test.ts** (150行, 5170バイト)
+**src/__tests__/library-exports.test.ts** (162行, 5563バイト)
   - 関数: なし
   - インポート: vitest
 
@@ -535,6 +578,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 **src/__tests__/piano-keyboard-renderer.test.ts** (163行, 5266バイト)
   - 関数: なし
   - インポート: vitest, ../PianoKeyboardRenderer
+
+**src/__tests__/startFromBuffer.test.ts** (165行, 5764バイト)
+  - 関数: for
+  - インポート: vitest, ../AudioManager, ../Oscilloscope
 
 **src/__tests__/utils.test.ts** (367行, 12152バイト)
   - 関数: createAudioBuffer, constructor, for, if
@@ -552,7 +599,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../WaveformSearcher
 
-**src/index.ts** (26行, 1055バイト)
+**src/index.ts** (29行, 1153バイト)
   - 関数: なし
   - インポート: なし
 
@@ -597,8 +644,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - function ()
   - __destroy_into_raw ()
 - if (src/AudioManager.ts)
+  - reset ()
   - start ()
     - startFromFile ()
+      - startFromBuffer ()
       - stop ()
       - createMediaStreamSource ()
       - createAnalyser ()
@@ -619,7 +668,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - amplitudeToDb ()
 - catch (src/AudioManager.ts)
 - for (src/AudioManager.ts)
-  - reset ()
 - cleanup (src/WaveformDataProcessor.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 
@@ -667,4 +715,4 @@ package-lock.json
 
 
 ---
-Generated at: 2026-01-14 07:09:11 JST
+Generated at: 2026-01-15 07:09:09 JST

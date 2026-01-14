@@ -1,4 +1,4 @@
-Last updated: 2026-01-14
+Last updated: 2026-01-15
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -238,6 +238,8 @@ Last updated: 2026-01-14
 - issue-notes/147.md
 - issue-notes/149.md
 - issue-notes/151.md
+- issue-notes/153.md
+- issue-notes/155.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -271,6 +273,7 @@ Last updated: 2026-01-14
 - public/wasm/wasm_processor_bg.wasm
 - public/wasm/wasm_processor_bg.wasm.d.ts
 - src/AudioManager.ts
+- src/BufferSource.ts
 - src/ComparisonPanelRenderer.ts
 - src/FrequencyEstimator.ts
 - src/GainController.ts
@@ -281,6 +284,7 @@ Last updated: 2026-01-14
 - src/WaveformRenderer.ts
 - src/WaveformSearcher.ts
 - src/ZeroCrossDetector.ts
+- src/__tests__/BufferSource.test.ts
 - src/__tests__/algorithms.test.ts
 - src/__tests__/alignment-mode.test.ts
 - src/__tests__/comparison-panel-renderer.test.ts
@@ -288,6 +292,7 @@ Last updated: 2026-01-14
 - src/__tests__/library-exports.test.ts
 - src/__tests__/oscilloscope.test.ts
 - src/__tests__/piano-keyboard-renderer.test.ts
+- src/__tests__/startFromBuffer.test.ts
 - src/__tests__/utils.test.ts
 - src/__tests__/waveform-data-processor.test.ts
 - src/__tests__/waveform-renderer.test.ts
@@ -307,152 +312,38 @@ Last updated: 2026-01-14
 - wasm-processor/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
-## [Issue #129](../issue-notes/129.md): ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする
-[issue-notes/129.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/129.md)
-
-...
-ラベル: 
---- issue-notes/129.md の内容 ---
-
-```markdown
-# issue ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする #129
-[issues #129](https://github.com/cat2151/cat-oscilloscope/issues/129)
-
-
-
-```
-
-## [Issue #70](../issue-notes/70.md): wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する
-[issue-notes/70.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/70.md)
-
-...
-ラベル: 
---- issue-notes/70.md の内容 ---
-
-```markdown
-# issue wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する #70
-[issues #70](https://github.com/cat2151/cat-oscilloscope/issues/70)
-
-
-
-```
+オープン中のIssueはありません
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/29.md
-```md
-{% raw %}
-# issue project-overviewで、Nuked-OPMを使ったプロジェクトが、ハルシネーションでTone.jsと表示されてしまっている #29
-[issues #29](https://github.com/cat2151/github-actions/issues/29)
 
-# 分析
-- 技術スタック欄について、
-    - agentが実装した、
-        - 今までの実装そのものに問題がある
-- 問題
-    - ハードコーディングされた「Tone.js」
-    - などの文字列を使って、
-    - 「検出」をしている
-    - メンテ必須になるし、新たな音楽ライブラリに対応できない（今回の問題はこれ）
-- 考え方
-    - 根本的に「技術スタック説明に、ハードコーディングされたlistベースの検出を入れようとした」のが間違い
-    - デメリットが大きすぎて、逆効果になっている
-
-# 対策
-- 技術スタック欄について、「検出」機能を削除する
-    - LLMには、「README、ソースのtree、ソースの呼び出し階層tree」がわたる
-        - LLMは、それを元に、LLMの知識による技術スタック説明を生成する
-
-# close条件
-- 当該プロジェクトの、project-overviewの生成結果において、ハルシネーションの「Tone.js」が出力されないこと
-- ついでに
-    - READMEの文字数制限を撤廃した。
-        - より高精度な生成を可能にするため。Geminiなので入力データ量に余裕があるので。
-        - 結果、READMEが全量出力され、体感で生成品質が向上したこと
-    - promptをcommit pushするようにした。
-        - より高精度な生成のため。本件のような場合の調査を効率化するため。
-        - 結果、promptが出力されること
-
-# test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/9.md
-```md
-{% raw %}
-# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
-[issues #9](https://github.com/cat2151/github-actions/issues/9)
-
-# agentに修正させたり、人力で修正したりした
-- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
-- 詳しくはcommit logを参照のこと
-- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
-
-# test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### issue-notes/129.md
-```md
-{% raw %}
-# issue ライブラリ化の前に一度、全体を通してメイン用途における致命的なバグがないかの動作確認をする #129
-[issues #129](https://github.com/cat2151/cat-oscilloscope/issues/129)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/70.md
-```md
-{% raw %}
-# issue wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する #70
-[issues #70](https://github.com/cat2151/cat-oscilloscope/issues/70)
-
-
-
-{% endraw %}
-```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-5dca79c Merge pull request #152 from cat2151/copilot/fix-frequency-and-similarity-labels
-af95797 Changes before error encountered
-8e8aca8 Add issue note for #151 [auto]
-4abd372 Initial plan
-f8164b7 Merge pull request #150 from cat2151/copilot/adjust-layout-for-1000px-height
-eaf3e76 テストのframeBufferCanvas/bufferCanvasの幅を800pxに修正
-d9bb7e6 縦1000pxに収まるようレイアウト調整完了
-cf53c7a Add issue note for #149 [auto]
-abefa91 Initial plan
-8766a9d Merge pull request #148 from cat2151/copilot/adjust-frequency-estimation-algorithm
+d4ae062 Auto-translate README.ja.md to README.md [auto]
+b54b1d4 Merge pull request #157 from cat2151/copilot/consider-library-usage-methods
+11567bc Address PR review feedback: validation, cleanup, tests, documentation
+4bb5929 Address code review feedback: fix buffer overflow, add validation, improve error handling
+9121d51 Add BufferSource demo to example-library-usage.html and update tests
+cf8fa58 Implement BufferSource for static buffer visualization
+68ce952 Initial plan
+0b974a5 Auto-translate README.ja.md to README.md [auto]
+1d3d35e Merge pull request #156 from cat2151/copilot/update-readme-ja-with-latest-status
+6e84c2b README.ja.mdを最新実装状況に更新 - 完了済み実装の明記、WASM統合の詳細、デフォルト設定の更新
 
 ### 変更されたファイル:
-index.html
-issue-notes/147.md
-issue-notes/149.md
-issue-notes/151.md
-public/wasm/wasm_processor_bg.wasm
-src/ComparisonPanelRenderer.ts
+LIBRARY_USAGE.md
+README.ja.md
+README.md
+example-library-usage.html
+issue-notes/155.md
+src/AudioManager.ts
+src/BufferSource.ts
 src/Oscilloscope.ts
-src/PianoKeyboardRenderer.ts
-src/WaveformRenderer.ts
-src/ZeroCrossDetector.ts
-src/__tests__/alignment-mode.test.ts
-src/__tests__/comparison-panel-renderer.test.ts
-src/__tests__/dom-integration.test.ts
+src/__tests__/BufferSource.test.ts
 src/__tests__/library-exports.test.ts
-src/__tests__/oscilloscope.test.ts
-src/__tests__/piano-keyboard-renderer.test.ts
-src/__tests__/waveform-renderer.test.ts
-wasm-processor/src/frequency_estimator.rs
-wasm-processor/src/zero_cross_detector.rs
+src/__tests__/startFromBuffer.test.ts
+src/index.ts
 
 
 ---
-Generated at: 2026-01-14 07:09:11 JST
+Generated at: 2026-01-15 07:09:09 JST
