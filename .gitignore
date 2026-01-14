@@ -80,7 +80,7 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-# dist - コミット対象とする（ライブラリとして利用可能にするため）
+# dist - Now tracked for commit (to enable library usage)
 
 # Gatsby files
 .cache/
