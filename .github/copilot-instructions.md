@@ -66,6 +66,25 @@ npm test         # テスト実行 (Vitest)
 - README.ja.mdがmainブランチにpushされると、GitHub Actionsが自動的にREADME.mdを英訳して生成する
 - ワークフロー: `.github/workflows/call-translate-readme.yml`
 
+## dist ディレクトリのコミット方針
+
+### 背景
+wavlpfリポジトリ（[issues #66](https://github.com/cat2151/wavlpf/issues/66)）で、distディレクトリがコミットされていなかったため、ライブラリとして利用できないという致命的な問題が発生しました。
+
+### 運用方針
+- **distディレクトリは必ずコミット対象とする**
+- npm登録やprepareスクリプトに依存せず、リポジトリから直接利用可能にする
+- agentがPRを作成する際は、以下を実施すること：
+  1. `npm run build:lib` を実行してdistを生成
+  2. distディレクトリをコミットに含める
+  3. distの内容をPRレビュー対象とする
+- CIワークフローでもdistの整合性を検証する
+
+### 実装時の注意
+- .gitignoreでdistを除外しないこと
+- PRのレビュー時は、ソースコード変更とdist出力の整合性を確認すること
+- distが更新されていない場合は、再ビルドして必ずコミットすること
+
 # プルリクエストとレビュー
 - プルリクエストは日本語で記述してください
 - レビューは日本語で記述してください
