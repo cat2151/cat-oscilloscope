@@ -1,6 +1,6 @@
 {
   "name": "cat-oscilloscope",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Browser-based oscilloscope-like waveform visualizer",
   "type": "module",
   "main": "./dist/cat-oscilloscope.cjs",
