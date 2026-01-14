@@ -60,6 +60,28 @@ async function loadAudioFile(file: File) {
   }
 }
 
+// 静的バッファから可視化（オーディオ再生なし）
+async function visualizeBuffer(audioData: Float32Array, sampleRate: number) {
+  try {
+    const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
+    await oscilloscope.startFromBuffer(bufferSource);
+    console.log('Buffer visualization started');
+  } catch (error) {
+    console.error('Failed to start from buffer:', error);
+  }
+}
+
+// AudioBufferから可視化
+async function visualizeAudioBuffer(audioBuffer: AudioBuffer) {
+  try {
+    const bufferSource = BufferSource.fromAudioBuffer(audioBuffer, { loop: true });
+    await oscilloscope.startFromBuffer(bufferSource);
+    console.log('AudioBuffer visualization started');
+  } catch (error) {
+    console.error('Failed to start from AudioBuffer:', error);
+  }
+}
+
 // 停止
 async function stop() {
   await oscilloscope.stop();
@@ -129,6 +151,63 @@ const isFFTEnabled = oscilloscope.getFFTDisplayEnabled();
 ```
 
 ## 高度な使い方
+
+### BufferSourceを使用した静的バッファの可視化
+
+`BufferSource`を使用すると、オーディオ再生なしで任意のオーディオデータを可視化できます。これは、wavlpfのような音声処理プロジェクトや、リアルタイム処理結果の可視化に便利です。
+
+```typescript
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
+
+// Canvas要素を取得
+const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
+const oscilloscope = new Oscilloscope(canvas);
+
+// Float32Arrayから直接可視化
+const audioData = new Float32Array(44100); // 1秒分のデータ
+for (let i = 0; i < audioData.length; i++) {
+  audioData[i] = Math.sin(2 * Math.PI * 440 * i / 44100); // 440Hz サイン波
+}
+
+const bufferSource = new BufferSource(audioData, 44100, {
+  loop: true,  // ループ再生
+  chunkSize: 4096  // FFTサイズ
+});
+
+await oscilloscope.startFromBuffer(bufferSource);
+
+// AudioBufferからの可視化
+const audioBuffer = await decodeAudioData(arrayBuffer);
+const bufferSource2 = BufferSource.fromAudioBuffer(audioBuffer, {
+  loop: false,  // ループなし
+  channel: 0    // 左チャンネル
+});
+
+await oscilloscope.startFromBuffer(bufferSource2);
+```
+
+**BufferSourceの特徴:**
+- オーディオ再生なしでデータを可視化
+- 任意のFloat32Arrayを入力として受け付け
+- ループ再生のオン/オフ切り替え可能
+- シークやリセット機能をサポート
+- wavlpfなどの音声処理ライブラリとの統合に最適
+
+**注意**: BufferSourceモードではFFTオーバーレイ表示は利用できません。周波数推定はWASMプロセッサを通じて引き続き機能します。
+
+**wavlpfプロジェクトでの使用例:**
+```typescript
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
+import { applyLowPassFilter } from 'wavlpf';
+
+// フィルタ処理後の音声データを可視化
+const filteredData = applyLowPassFilter(originalData, sampleRate, cutoffFreq);
+const bufferSource = new BufferSource(filteredData, sampleRate, { loop: true });
+
+const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
+const oscilloscope = new Oscilloscope(canvas);
+await oscilloscope.startFromBuffer(bufferSource);
+```
 
 ### 個別のモジュールを使用
 

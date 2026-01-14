@@ -14,6 +14,7 @@ import {
   ComparisonPanelRenderer,
   PianoKeyboardRenderer,
   WaveformDataProcessor,
+  BufferSource,
   dbToAmplitude,
   trimSilence
 } from '../index';
@@ -67,6 +68,17 @@ describe('Library exports', () => {
   it('should export WaveformDataProcessor class (new for Rust WASM)', () => {
     expect(WaveformDataProcessor).toBeDefined();
     expect(typeof WaveformDataProcessor).toBe('function');
+  });
+
+  it('should export BufferSource class', () => {
+    expect(BufferSource).toBeDefined();
+    expect(typeof BufferSource).toBe('function');
+    
+    // Test basic functionality
+    const buffer = new Float32Array([0.1, 0.2, 0.3]);
+    const source = new BufferSource(buffer, 44100);
+    expect(source.getSampleRate()).toBe(44100);
+    expect(source.getLength()).toBe(3);
   });
 
   it('should export dbToAmplitude utility function', () => {
