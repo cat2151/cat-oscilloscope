@@ -108,7 +108,7 @@ export class Oscilloscope {
       // Initialize WASM processor if not already initialized
       await this.dataProcessor.initialize();
       
-      this.audioManager.startFromBuffer(bufferSource);
+      await this.audioManager.startFromBuffer(bufferSource);
       this.isRunning = true;
       this.render();
     } catch (error) {

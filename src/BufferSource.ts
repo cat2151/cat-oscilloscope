@@ -48,6 +48,14 @@ export class BufferSource {
     }
   ): BufferSource {
     const channelIndex = options?.channel ?? 0;
+    
+    // Validate channel index
+    if (channelIndex < 0 || channelIndex >= audioBuffer.numberOfChannels) {
+      throw new Error(
+        `Invalid channel index ${channelIndex}. AudioBuffer has ${audioBuffer.numberOfChannels} channel(s).`
+      );
+    }
+    
     const channelData = audioBuffer.getChannelData(channelIndex);
     
     return new BufferSource(channelData, audioBuffer.sampleRate, {
@@ -75,10 +83,12 @@ export class BufferSource {
     // If chunk is smaller than chunkSize and we're looping, wrap around
     if (chunk.length < this.chunkSize && this.isLooping) {
       const remaining = this.chunkSize - chunk.length;
+      // Ensure we don't try to read more than buffer length when wrapping
+      const wrapAmount = Math.min(remaining, this.buffer.length);
       const wrappedChunk = new Float32Array(this.chunkSize);
       wrappedChunk.set(chunk, 0);
-      wrappedChunk.set(this.buffer.slice(0, remaining), chunk.length);
-      this.position = remaining;
+      wrappedChunk.set(this.buffer.slice(0, wrapAmount), chunk.length);
+      this.position = wrapAmount;
       return wrappedChunk;
     }
     

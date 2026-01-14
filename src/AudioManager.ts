@@ -112,11 +112,11 @@ export class AudioManager {
    * Useful for visualizing pre-recorded audio data or processing results
    * @param bufferSource - BufferSource instance containing audio data
    */
-  startFromBuffer(bufferSource: BufferSource): void {
+  async startFromBuffer(bufferSource: BufferSource): Promise<void> {
     try {
       // Close existing AudioContext if present to avoid resource leak
       if (this.audioContext && this.audioContext.state !== 'closed') {
-        this.audioContext.close();
+        await this.audioContext.close();
       }
 
       // Create a minimal AudioContext for sample rate info
@@ -277,11 +277,12 @@ export class AudioManager {
    * In buffer mode, FFT is computed from time-domain data
    */
   getFrequencyData(): Uint8Array | null {
-    // Buffer mode: compute FFT from time-domain data
+    // Buffer mode: FFT is not currently supported
+    // Note: FFT could be implemented in the future by computing it from time-domain data
+    // using the same WASM-based FFT that's used for frequency estimation.
+    // This would require integrating with the WaveformDataProcessor's FFT capabilities.
+    // For now, buffer mode focuses on time-domain visualization.
     if (this.bufferSource && this.dataArray && this.frequencyData) {
-      // Simple FFT computation would go here
-      // For now, we return null to indicate FFT is not available in buffer mode
-      // This can be enhanced later with a proper FFT implementation
       return null;
     }
     

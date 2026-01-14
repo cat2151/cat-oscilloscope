@@ -59,6 +59,23 @@ describe('BufferSource', () => {
       expect(chunk).not.toBeNull();
       expect(chunk![0]).toBe(0.5);
     });
+
+    it('should throw error for invalid channel index', () => {
+      const mockAudioBuffer = {
+        sampleRate: 44100,
+        length: 4,
+        numberOfChannels: 2,
+        getChannelData: (channel: number) => new Float32Array([0.1, 0.2, 0.3, 0.4])
+      } as AudioBuffer;
+
+      expect(() => {
+        BufferSource.fromAudioBuffer(mockAudioBuffer, { channel: 5 });
+      }).toThrow('Invalid channel index 5. AudioBuffer has 2 channel(s).');
+      
+      expect(() => {
+        BufferSource.fromAudioBuffer(mockAudioBuffer, { channel: -1 });
+      }).toThrow('Invalid channel index -1. AudioBuffer has 2 channel(s).');
+    });
   });
 
   describe('getNextChunk', () => {
