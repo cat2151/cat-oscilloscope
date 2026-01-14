@@ -21,7 +21,7 @@
    - **Release title**: `v0.0.1`
    - **Description**: 
      ```
-     **Full Changelog**: https://github.com/cat2151/cat-oscilloscope/commits/v0.0.1
+     First release
      ```
    - **Set as a pre-release**: チェックを入れる（初期リリースのため）
 5. "Publish release" ボタンをクリック
@@ -32,7 +32,7 @@
 # リポジトリのルートディレクトリで実行
 gh release create v0.0.1 \
   --title "v0.0.1" \
-  --notes "**Full Changelog**: https://github.com/cat2151/cat-oscilloscope/commits/v0.0.1" \
+  --notes "First release" \
   --prerelease
 ```
 
@@ -61,20 +61,7 @@ https://github.com/cat2151/cat-oscilloscope/releases
 - https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v0.0.1/dist/cat-oscilloscope.cjs
 - https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v0.0.1/dist/index.d.ts
 
-#### unpkg
-
-```html
-<script type="module">
-  import { Oscilloscope } from 'https://unpkg.com/cat-oscilloscope@0.0.1/dist/cat-oscilloscope.mjs';
-</script>
-```
-
-確認URL:
-- https://unpkg.com/cat-oscilloscope@0.0.1/dist/cat-oscilloscope.mjs
-- https://unpkg.com/cat-oscilloscope@0.0.1/dist/cat-oscilloscope.cjs
-- https://unpkg.com/cat-oscilloscope@0.0.1/dist/index.d.ts
-
-**注意**: unpkgはnpmに公開されたパッケージを対象とするため、npmに公開しない場合はjsDelivrを使用してください。
+**注意**: このプロジェクトはnpmに公開しない方針のため、jsDelivrを使用してください。
 
 ## 使用例
 
