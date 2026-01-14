@@ -24,11 +24,22 @@ export class BufferSource {
       loop?: boolean;
     }
   ) {
+    // Validate sample rate
+    if (sampleRate <= 0 || !isFinite(sampleRate)) {
+      throw new Error('Sample rate must be a positive finite number');
+    }
+    
     this.buffer = buffer;
     this.sampleRate = sampleRate;
-    if (options?.chunkSize) {
+    
+    if (options?.chunkSize !== undefined) {
+      // Validate chunk size
+      if (options.chunkSize <= 0 || !isFinite(options.chunkSize) || !Number.isInteger(options.chunkSize)) {
+        throw new Error('Chunk size must be a positive integer');
+      }
       this.chunkSize = options.chunkSize;
     }
+    
     if (options?.loop !== undefined) {
       this.isLooping = options.loop;
     }
@@ -69,6 +80,11 @@ export class BufferSource {
    * @returns Float32Array chunk or null if end is reached and not looping
    */
   getNextChunk(): Float32Array | null {
+    // Handle empty buffer case - return null even in loop mode to prevent infinite loop
+    if (this.buffer.length === 0) {
+      return null;
+    }
+    
     if (this.position >= this.buffer.length) {
       if (this.isLooping) {
         this.position = 0;
@@ -144,6 +160,10 @@ export class BufferSource {
    * Set chunk size
    */
   setChunkSize(size: number): void {
+    // Validate chunk size
+    if (size <= 0 || !isFinite(size) || !Number.isInteger(size)) {
+      throw new Error('Chunk size must be a positive integer');
+    }
     this.chunkSize = size;
   }
 

@@ -24,6 +24,55 @@ describe('BufferSource', () => {
       expect(source.getChunkSize()).toBe(2048);
       expect(source.isLoop()).toBe(true);
     });
+
+    it('should throw error for invalid sample rate (negative)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, -44100);
+      }).toThrow('Sample rate must be a positive finite number');
+    });
+
+    it('should throw error for invalid sample rate (zero)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, 0);
+      }).toThrow('Sample rate must be a positive finite number');
+    });
+
+    it('should throw error for invalid sample rate (NaN)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, NaN);
+      }).toThrow('Sample rate must be a positive finite number');
+    });
+
+    it('should throw error for invalid sample rate (Infinity)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, Infinity);
+      }).toThrow('Sample rate must be a positive finite number');
+    });
+
+    it('should throw error for invalid chunk size (negative)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, 44100, { chunkSize: -1024 });
+      }).toThrow('Chunk size must be a positive integer');
+    });
+
+    it('should throw error for invalid chunk size (zero)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, 44100, { chunkSize: 0 });
+      }).toThrow('Chunk size must be a positive integer');
+    });
+
+    it('should throw error for invalid chunk size (non-integer)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      expect(() => {
+        new BufferSource(buffer, 44100, { chunkSize: 1024.5 });
+      }).toThrow('Chunk size must be a positive integer');
+    });
   });
 
   describe('fromAudioBuffer', () => {
@@ -196,6 +245,33 @@ describe('BufferSource', () => {
       expect(chunk!.length).toBe(3);
     });
 
+    it('should throw error when setting invalid chunk size (negative)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      const source = new BufferSource(buffer, 44100);
+      
+      expect(() => {
+        source.setChunkSize(-1024);
+      }).toThrow('Chunk size must be a positive integer');
+    });
+
+    it('should throw error when setting invalid chunk size (zero)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      const source = new BufferSource(buffer, 44100);
+      
+      expect(() => {
+        source.setChunkSize(0);
+      }).toThrow('Chunk size must be a positive integer');
+    });
+
+    it('should throw error when setting invalid chunk size (non-integer)', () => {
+      const buffer = new Float32Array([0.1, 0.2, 0.3, 0.4]);
+      const source = new BufferSource(buffer, 44100);
+      
+      expect(() => {
+        source.setChunkSize(1024.5);
+      }).toThrow('Chunk size must be a positive integer');
+    });
+
     it('should allow changing loop mode', () => {
       const buffer = new Float32Array([0.1, 0.2]);
       const source = new BufferSource(buffer, 44100, { chunkSize: 4, loop: false });
@@ -219,6 +295,16 @@ describe('BufferSource', () => {
       const source = new BufferSource(buffer, 44100);
       
       expect(source.getLength()).toBe(0);
+      const chunk = source.getNextChunk();
+      expect(chunk).toBeNull();
+    });
+
+    it('should handle empty buffer with loop mode (prevents infinite loop)', () => {
+      const buffer = new Float32Array(0);
+      const source = new BufferSource(buffer, 44100, { loop: true });
+      
+      expect(source.getLength()).toBe(0);
+      // Should return null even in loop mode to prevent infinite loop
       const chunk = source.getNextChunk();
       expect(chunk).toBeNull();
     });

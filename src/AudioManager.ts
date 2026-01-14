@@ -119,9 +119,8 @@ export class AudioManager {
         await this.audioContext.close();
       }
 
-      // Create a minimal AudioContext for sample rate info
-      // We don't actually use Web Audio API for playback in buffer mode
-      this.audioContext = new AudioContext();
+      // Buffer mode does not use AudioContext - it provides data directly
+      this.audioContext = null;
       
       // Store the buffer source
       this.bufferSource = bufferSource;
@@ -163,6 +162,7 @@ export class AudioManager {
       this.mediaStream = null;
     }
     if (this.bufferSource) {
+      this.bufferSource.reset();
       this.bufferSource = null;
     }
     if (this.audioContext) {

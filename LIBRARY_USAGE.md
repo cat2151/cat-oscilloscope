@@ -193,6 +193,8 @@ await oscilloscope.startFromBuffer(bufferSource2);
 - シークやリセット機能をサポート
 - wavlpfなどの音声処理ライブラリとの統合に最適
 
+**注意**: BufferSourceモードではFFTオーバーレイ表示は利用できません。周波数推定はWASMプロセッサを通じて引き続き機能します。
+
 **wavlpfプロジェクトでの使用例:**
 ```typescript
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
