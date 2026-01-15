@@ -4,6 +4,20 @@ cat-oscilloscopeをnpmライブラリとして他のプロジェクトから利�
 
 ## インストール
 
+### CDN経由での利用（推奨）
+
+ビルドツール不要で、HTMLファイルから直接利用できます：
+
+```html
+<script type="module">
+  import { Oscilloscope } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v0.0.1/dist/cat-oscilloscope.mjs';
+  
+  const canvas = document.getElementById('oscilloscope');
+  const oscilloscope = new Oscilloscope(canvas);
+  await oscilloscope.start();
+</script>
+```
+
 ### npmから直接インストール（npmパッケージとして公開後）
 
 ```bash
@@ -254,6 +268,40 @@ async function processAudioFile(file: File): Promise<AudioBuffer> {
 ```
 
 ## HTML例
+
+### CDN経由での使用例
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>cat-oscilloscope CDN Example</title>
+</head>
+<body>
+  <canvas id="oscilloscope" width="800" height="400"></canvas>
+  <button id="startBtn">Start</button>
+  <button id="stopBtn">Stop</button>
+  
+  <script type="module">
+    import { Oscilloscope } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v0.0.1/dist/cat-oscilloscope.mjs';
+    
+    const canvas = document.getElementById('oscilloscope');
+    const oscilloscope = new Oscilloscope(canvas);
+    
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      await oscilloscope.start();
+    });
+    
+    document.getElementById('stopBtn').addEventListener('click', async () => {
+      await oscilloscope.stop();
+    });
+  </script>
+</body>
+</html>
+```
+
+### npm経由での使用例
 
 ```html
 <!DOCTYPE html>
