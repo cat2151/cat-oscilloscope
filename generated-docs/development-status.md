@@ -1,51 +1,51 @@
-Last updated: 2026-01-15
+Last updated: 2026-01-16
 
 # Development Status
 
 ## 現在のIssues
-- 現在オープンされているIssueはありません。
-- 直近のコミットにより、`BufferSource`の実装と関連ドキュメントの更新が完了し、プロジェクトは安定した状態です。
-- 次のフェーズでは、既存機能の品質向上、パフォーマンス最適化、およびドキュメントの充実化が焦点となります。
+- [Issue #162](../issue-notes/162.md): wavlpfプロジェクトでcat-oscilloscopeを利用する際の状況を監視し、必要な機能や改善点をウォッチしています。
+- [Issue #62](../issue-notes/62.md): オシロスコープの位相表示において、起点をゼロクロスではなく信号のピークに設定できるモードの追加を検討しています。
+- [Issue #160](../issue-notes/160.md): リリースプロセスに関連するタスクを進行中で、ドキュメントの更新やCI/CDの改善が含まれます。
 
 ## 次の一手候補
-1.  BufferSourceのパフォーマンス評価とOscilloscopeでの活用デモ追加 [Issue #158](../issue-notes/158.md)
-    -   最初の小さな一歩: `example-library-usage.html`に、`BufferSource`を使って静的バッファを`Oscilloscope`に渡し、波形を表示するデモを追加する。
-    -   Agent実行プロンプト:
-        ```
-        対象ファイル: `src/BufferSource.ts`, `src/Oscilloscope.ts`, `example-library-usage.html`, `src/__tests__/oscilloscope.test.ts`
+1. wavlpfからの利用に向けた課題調査と監視 ([Issue #162](../issue-notes/162.md))
+   - 最初の小さな一歩: `wavlpf` リポジトリの最新状況を確認し、`cat-oscilloscope` を組み込む上で障壁となる可能性のある技術的な点を洗い出す。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `issue-notes/162.md` および `src/index.ts` (公開API定義)
 
-        実行内容: `BufferSource`を使用して静的なオーディオバッファデータを生成し、それを`Oscilloscope`に供給して波形を表示するデモコードを`example-library-usage.html`に追加してください。また、`Oscilloscope`が`BufferSource`からのデータを受け取れるように必要に応じて修正し、関連するテストを強化してください。
+     実行内容: `wavlpf` プロジェクトの公開リポジトリ（もし存在すれば）または関連するドキュメントを確認し、`cat-oscilloscope` を `wavlpf` で利用する際に特に重要となる機能や修正点をリストアップしてください。現在の `cat-oscilloscope` のAPIと `wavlpf` の要件との間の具体的なギャップに焦点を当てて分析してください。
 
-        確認事項: `BufferSource`からのデータが`Oscilloscope`で正しくレンダリングされること、および既存のリアルタイムオーディオストリームからの描画機能に影響がないことを確認してください。パフォーマンス上のボトルネックがないかも簡易的に確認してください。
+     確認事項: `wavlpf` の公開状況、現在の `cat-oscilloscope` の公開API、および `issue-notes/162.md` の内容を確認し、特定された課題が既存のドキュメントやコードと整合しているかチェックしてください。
 
-        期待する出力: `example-library-usage.html`に新しいデモセクションが追加され、`BufferSource`と`Oscilloscope`の連携が視覚的に確認できる状態になること。また、必要に応じて修正された`src/Oscilloscope.ts`と、その変更を検証する`src/__tests__/oscilloscope.test.ts`の更新。
-        ```
+     期待する出力: `wavlpf` 利用時の具体的な技術的課題と、それに対応するために `cat-oscilloscope` 側で必要となる機能追加やAPI変更の提案をMarkdown形式で出力してください。
+     ```
 
-2.  LIBRARY_USAGE.mdのWASMモジュール利用に関する詳細ガイド拡充 [Issue #159](../issue-notes/159.md)
-    -   最初の小さな一歩: `LIBRARY_USAGE.md`に、`wasm_processor.js`の読み込み、初期化、および`frequency_estimator.rs`や`zero_cross_detector.rs`で実装された関数をJavaScriptから呼び出す具体的なコードスニペットを追加する。
-    -   Agent実行プロンプト:
-        ```
-        対象ファイル: `LIBRARY_USAGE.md`, `public/wasm/wasm_processor.js`, `public/wasm/wasm_processor.d.ts`, `wasm-processor/src/lib.rs`
+2. ピークベースの位相揃え機能の実現可能性調査 ([Issue #62](../issue-notes/62.md))
+   - 最初の小さな一歩: `src/ZeroCrossDetector.ts` や `src/FrequencyEstimator.ts`、および `wasm-processor/src/` 内の関連ファイルをレビューし、ピーク検出アルゴリズムを導入するための変更点の概要を把握する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `src/ZeroCrossDetector.ts`, `src/FrequencyEstimator.ts`, `wasm-processor/src/zero_cross_detector.rs`, `wasm-processor/src/frequency_estimator.rs`
 
-        実行内容: `LIBRARY_USAGE.md`に、WASMモジュール(`wasm_processor.js`)のロード、初期化、およびJavaScriptからWASM関数（例: `frequency_estimator`, `zero_cross_detector`）を呼び出す具体的な手順とコード例を追記してください。`wasm_processor.d.ts`の内容も参照し、型情報に基づいた説明を含めてください。
+     実行内容: 既存のゼロクロス検出および周波数推定ロジックを分析し、位相を信号のピークで揃えるための新しいアルゴリズム（または既存アルゴリズムの改修）の技術的な実現可能性を評価してください。特に、ピーク検出の精度、計算コスト、および既存の波形描画ロジック (`src/WaveformRenderer.ts`) への影響を考慮してください。
 
-        確認事項: WASMモジュールのロードと関数の呼び出し手順が正確であること。コードスニペットが実行可能であり、理解しやすい形式であること。既存のドキュメントセクションとの整合性を保つこと。
+     確認事項: 現在の位相揃えロジック（もし存在すれば）と、一般的なピーク検出アルゴリズムについて調査し、技術的な実現性とパフォーマンスのトレードオフを検討してください。`issue-notes/62.md` の要求事項も参照してください。
 
-        期待する出力: `LIBRARY_USAGE.md`にWASMモジュールに関する新しいセクションが追加され、利用者が容易にWASM機能を統合できるようになること。
-        ```
+     期待する出力: ピークベースの位相揃え機能の実装に向けた技術的な課題、予想される設計変更点、および初期プロトタイプ作成のための技術ロードマップをMarkdown形式で出力してください。
+     ```
 
-3.  src/FrequencyEstimator.tsの単体テストカバレッジ拡充 [Issue #160](../issue-notes/160.md)
-    -   最初の小さな一歩: `src/__tests__/algorithms.test.ts`または新しく`src/__tests__/frequency-estimator.test.ts`を作成し、`src/FrequencyEstimator.ts`の主要なメソッド（例: `estimateFrequency`）に対する基本的なテストケースを追加する。
-    -   Agent実行プロンプト:
-        ```
-        対象ファイル: `src/FrequencyEstimator.ts`, `src/__tests__/algorithms.test.ts` (または新規ファイル `src/__tests__/frequency-estimator.test.ts`)
+3. リリースドキュメントとCI/CDプロセスの見直し ([Issue #160](../issue-notes/160.md))
+   - 最初の小さな一歩: `RELEASE.md` と `LIBRARY_USAGE.md` をレビューし、現在のリリース手順とライブラリの公開方法が明確かつ最新の状態であるかを確認する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `RELEASE.md`, `LIBRARY_USAGE.md`, `.github/workflows/deploy.yml` (またはリリースに関連する他のCI/CDワークフローファイル)
 
-        実行内容: `src/FrequencyEstimator.ts`の`estimateFrequency`メソッドに対して、既知の周波数を持つ合成波形データを用いて、正しい周波数を返すことを検証する単体テストケースを作成してください。異なる周波数、振幅、ノイズレベルのシナリオを含めてください。
+     実行内容: リリース手順を定義するドキュメント (`RELEASE.md`) と、ライブラリの利用方法を説明するドキュメント (`LIBRARY_USAGE.md`) を分析し、それらが現在のCI/CDプロセス (`.github/workflows/deploy.yml` など) と一貫しているか、また、外部ユーザーにとって分かりやすいかという観点から改善点を提案してください。新しいリリースが自動的にデプロイされ、ドキュメントが更新されるような自動化の可能性についても検討してください。
 
-        確認事項: テストコードが既存のテストフレームワークと整合性がとれていること。テストが意図したロジックを正確に検証していること。テスト対象のメソッドが純粋関数であるか、依存関係がある場合はモック化が適切であること。
+     確認事項: リリースに関連するすべてのドキュメントとワークフローファイルの内容を確認し、記載されている手順が実際に機能するか、あるいは自動化や簡素化の余地があるかを検討してください。`issue-notes/160.md` の背景情報があればそれを考慮してください。
 
-        期待する出力: `src/__tests__/algorithms.test.ts`が更新されるか、`src/__tests__/frequency-estimator.test.ts`が新規作成され、`src/FrequencyEstimator.ts`の主要機能に対する基本的なテストがPassすること。
-        ```
+     期待する出力: リリースプロセスをよりスムーズにするための具体的な改善提案と、それらを実行するためのタスクリストをMarkdown形式で出力してください。ドキュメントの更新案や、CI/CDワークフローの変更案も含むものとします。
+     ```
 
 ---
-Generated at: 2026-01-15 07:09:34 JST
+Generated at: 2026-01-16 07:09:28 JST

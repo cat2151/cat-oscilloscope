@@ -1,4 +1,4 @@
-Last updated: 2026-01-15
+Last updated: 2026-01-16
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -367,8 +367,48 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📖 README.ja.md
 📖 README.md
 📖 REFACTORING_SUMMARY.md
+📖 RELEASE.md
 📖 TESTING.md
 📄 _config.yml
+📁 dist/
+  📘 AudioManager.d.ts
+  📄 AudioManager.d.ts.map
+  📘 BufferSource.d.ts
+  📄 BufferSource.d.ts.map
+  📘 ComparisonPanelRenderer.d.ts
+  📄 ComparisonPanelRenderer.d.ts.map
+  📘 FrequencyEstimator.d.ts
+  📄 FrequencyEstimator.d.ts.map
+  📘 GainController.d.ts
+  📄 GainController.d.ts.map
+  📘 Oscilloscope.d.ts
+  📄 Oscilloscope.d.ts.map
+  📘 PianoKeyboardRenderer.d.ts
+  📄 PianoKeyboardRenderer.d.ts.map
+  📘 WaveformDataProcessor.d.ts
+  📄 WaveformDataProcessor.d.ts.map
+  📘 WaveformRenderData.d.ts
+  📄 WaveformRenderData.d.ts.map
+  📘 WaveformRenderer.d.ts
+  📄 WaveformRenderer.d.ts.map
+  📘 WaveformSearcher.d.ts
+  📄 WaveformSearcher.d.ts.map
+  📘 ZeroCrossDetector.d.ts
+  📄 ZeroCrossDetector.d.ts.map
+  📄 cat-oscilloscope.cjs
+  📄 cat-oscilloscope.cjs.map
+  📄 cat-oscilloscope.mjs
+  📄 cat-oscilloscope.mjs.map
+  📘 index.d.ts
+  📄 index.d.ts.map
+  📘 utils.d.ts
+  📄 utils.d.ts.map
+  📁 wasm/
+    📊 package.json
+    📘 wasm_processor.d.ts
+    📜 wasm_processor.js
+    📄 wasm_processor_bg.wasm
+    📘 wasm_processor_bg.wasm.d.ts
 📁 docs/
   📖 PHASE_ALIGNMENT.md
 🌐 example-library-usage.html
@@ -401,6 +441,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 151.md
   📖 153.md
   📖 155.md
+  📖 158.md
+  📖 160.md
+  📖 162.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -479,6 +522,74 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📄 zero_cross_detector.rs
 
 ## ファイル詳細分析
+**dist/AudioManager.d.ts** (85行, 2457バイト)
+  - 関数: なし
+  - インポート: ./BufferSource
+
+**dist/BufferSource.d.ts** (79行, 2128バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/ComparisonPanelRenderer.d.ts** (78行, 3082バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/FrequencyEstimator.d.ts** (33行, 1232バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/GainController.d.ts** (26行, 861バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/Oscilloscope.d.ts** (74行, 3395バイト)
+  - 関数: なし
+  - インポート: ./BufferSource
+
+**dist/PianoKeyboardRenderer.d.ts** (54行, 1493バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/WaveformDataProcessor.d.ts** (77行, 3029バイト)
+  - 関数: なし
+  - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
+
+**dist/WaveformRenderData.d.ts** (44行, 1880バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/WaveformRenderer.d.ts** (64行, 2382バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/WaveformSearcher.d.ts** (38行, 1095バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/ZeroCrossDetector.d.ts** (39行, 1343バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/index.d.ts** (19行, 939バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/utils.d.ts** (32行, 1206バイト)
+  - 関数: dbToAmplitude, amplitudeToDb, frequencyToNote, trimSilence
+  - インポート: なし
+
+**dist/wasm/wasm_processor.d.ts** (106行, 5079バイト)
+  - 関数: initSync, __wbg_init
+  - インポート: なし
+
+**dist/wasm/wasm_processor.js** (488行, 15371バイト)
+  - 関数: getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_load, __wbg_get_imports, __wbg_finalize_init, initSync, __wbg_init, if, for, function, __destroy_into_raw, free, processFrame, setAutoGain, setNoiseGate, setUsePeakMode, setAlignmentMode, setNoiseGateThreshold, setBufferSizeMultiplier, setFrequencyEstimationMethod, constructor, reset, __wrap, similarity, sampleRate, maxFrequency, waveform_data, frequencyData, displayEndIndex, previousWaveform, displayStartIndex, estimatedFrequency, firstAlignmentPoint, frequencyPlotHistory, secondAlignmentPoint, usedSimilaritySearch, similarityPlotHistory, isSignalAboveNoiseGate, gain, fftSize, catch
+  - インポート: なし
+
+**dist/wasm/wasm_processor_bg.wasm.d.ts** (38行, 2692バイト)
+  - 関数: なし
+  - インポート: なし
+
 **example-library-usage.html** (342行, 10234バイト)
   - 関数: なし
   - インポート: なし
@@ -616,8 +727,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - インポート: vite, path, vite-plugin-dts
 
 ## 関数呼び出し階層
-- getArrayF32FromWasm0 (public/wasm/wasm_processor.js)
-  - initSync (public/wasm/wasm_processor.d.ts)
+- getArrayF32FromWasm0 (dist/wasm/wasm_processor.js)
+  - initSync (dist/wasm/wasm_processor.d.ts)
     - free ()
     - processFrame ()
     - setAutoGain ()
@@ -644,6 +755,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - function ()
   - __destroy_into_raw ()
 - if (src/AudioManager.ts)
+  - trimSilence ()
+    - dbToAmplitude (dist/utils.d.ts)
+      - amplitudeToDb ()
+      - frequencyToNote ()
   - reset ()
   - start ()
     - startFromFile ()
@@ -653,19 +768,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - createAnalyser ()
       - close ()
       - getTracks ()
-      - trimSilence ()
   - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
     - getFFTOverlayDimensions ()
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
-      - dbToAmplitude ()
   - sliderValueToThreshold (src/main.ts)
     - formatThresholdDisplay ()
       - startFrequencyDisplay ()
       - stopFrequencyDisplay ()
-      - frequencyToNote ()
-  - amplitudeToDb ()
 - catch (src/AudioManager.ts)
 - for (src/AudioManager.ts)
 - cleanup (src/WaveformDataProcessor.ts)
@@ -680,30 +791,29 @@ LIBRARY_USAGE.md
 README.ja.md
 README.md
 REFACTORING_SUMMARY.md
+RELEASE.md
 TESTING.md
+dist/AudioManager.d.ts
+dist/BufferSource.d.ts
+dist/ComparisonPanelRenderer.d.ts
+dist/FrequencyEstimator.d.ts
+dist/GainController.d.ts
+dist/Oscilloscope.d.ts
+dist/PianoKeyboardRenderer.d.ts
+dist/WaveformDataProcessor.d.ts
+dist/WaveformRenderData.d.ts
+dist/WaveformRenderer.d.ts
+dist/WaveformSearcher.d.ts
+dist/ZeroCrossDetector.d.ts
+dist/index.d.ts
+dist/utils.d.ts
+dist/wasm/package.json
+dist/wasm/wasm_processor.d.ts
+dist/wasm/wasm_processor.js
+dist/wasm/wasm_processor_bg.wasm.d.ts
 docs/PHASE_ALIGNMENT.md
 example-library-usage.html
 index.html
-issue-notes/101.md
-issue-notes/102.md
-issue-notes/105.md
-issue-notes/107.md
-issue-notes/110.md
-issue-notes/115.md
-issue-notes/117.md
-issue-notes/119.md
-issue-notes/120.md
-issue-notes/123.md
-issue-notes/125.md
-issue-notes/127.md
-issue-notes/129.md
-issue-notes/130.md
-issue-notes/132.md
-issue-notes/133.md
-issue-notes/137.md
-issue-notes/138.md
-issue-notes/139.md
-package-lock.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -715,4 +825,4 @@ package-lock.json
 
 
 ---
-Generated at: 2026-01-15 07:09:09 JST
+Generated at: 2026-01-16 07:09:07 JST

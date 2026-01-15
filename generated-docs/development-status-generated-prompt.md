@@ -1,4 +1,4 @@
-Last updated: 2026-01-15
+Last updated: 2026-01-16
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -208,8 +208,46 @@ Last updated: 2026-01-15
 - README.ja.md
 - README.md
 - REFACTORING_SUMMARY.md
+- RELEASE.md
 - TESTING.md
 - _config.yml
+- dist/AudioManager.d.ts
+- dist/AudioManager.d.ts.map
+- dist/BufferSource.d.ts
+- dist/BufferSource.d.ts.map
+- dist/ComparisonPanelRenderer.d.ts
+- dist/ComparisonPanelRenderer.d.ts.map
+- dist/FrequencyEstimator.d.ts
+- dist/FrequencyEstimator.d.ts.map
+- dist/GainController.d.ts
+- dist/GainController.d.ts.map
+- dist/Oscilloscope.d.ts
+- dist/Oscilloscope.d.ts.map
+- dist/PianoKeyboardRenderer.d.ts
+- dist/PianoKeyboardRenderer.d.ts.map
+- dist/WaveformDataProcessor.d.ts
+- dist/WaveformDataProcessor.d.ts.map
+- dist/WaveformRenderData.d.ts
+- dist/WaveformRenderData.d.ts.map
+- dist/WaveformRenderer.d.ts
+- dist/WaveformRenderer.d.ts.map
+- dist/WaveformSearcher.d.ts
+- dist/WaveformSearcher.d.ts.map
+- dist/ZeroCrossDetector.d.ts
+- dist/ZeroCrossDetector.d.ts.map
+- dist/cat-oscilloscope.cjs
+- dist/cat-oscilloscope.cjs.map
+- dist/cat-oscilloscope.mjs
+- dist/cat-oscilloscope.mjs.map
+- dist/index.d.ts
+- dist/index.d.ts.map
+- dist/utils.d.ts
+- dist/utils.d.ts.map
+- dist/wasm/package.json
+- dist/wasm/wasm_processor.d.ts
+- dist/wasm/wasm_processor.js
+- dist/wasm/wasm_processor_bg.wasm
+- dist/wasm/wasm_processor_bg.wasm.d.ts
 - docs/PHASE_ALIGNMENT.md
 - example-library-usage.html
 - generated-docs/project-overview-generated-prompt.md
@@ -240,6 +278,9 @@ Last updated: 2026-01-15
 - issue-notes/151.md
 - issue-notes/153.md
 - issue-notes/155.md
+- issue-notes/158.md
+- issue-notes/160.md
+- issue-notes/162.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -312,38 +353,285 @@ Last updated: 2026-01-15
 - wasm-processor/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
-オープン中のIssueはありません
+## [Issue #162](../issue-notes/162.md): wavlpfから利用できるようになるまで待つ。あわせて、利用にあたり何が不足かの観点からウォッチしておく
+[issue-notes/162.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/162.md)
+
+...
+ラベル: 
+--- issue-notes/162.md の内容 ---
+
+```markdown
+# issue wavlpfから利用できるようになるまで待つ。あわせて、利用にあたり何が不足かの観点からウォッチしておく #162
+[issues #162](https://github.com/cat2151/cat-oscilloscope/issues/162)
+
+
+
+```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/2.md
+```md
+{% raw %}
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
 
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
+### issue-notes/162.md
+```md
+{% raw %}
+# issue wavlpfから利用できるようになるまで待つ。あわせて、利用にあたり何が不足かの観点からウォッチしておく #162
+[issues #162](https://github.com/cat2151/cat-oscilloscope/issues/162)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/62.md
+```md
+{% raw %}
+# issue 位相を揃えて表示するときの起点を、高周波に弱いゼロクロスではなく、ピークにする、というモードをつけてチェックボックスでon/off可能にする #62
+[issues #62](https://github.com/cat2151/cat-oscilloscope/issues/62)
+
+
+
+{% endraw %}
+```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-d4ae062 Auto-translate README.ja.md to README.md [auto]
-b54b1d4 Merge pull request #157 from cat2151/copilot/consider-library-usage-methods
-11567bc Address PR review feedback: validation, cleanup, tests, documentation
-4bb5929 Address code review feedback: fix buffer overflow, add validation, improve error handling
-9121d51 Add BufferSource demo to example-library-usage.html and update tests
-cf8fa58 Implement BufferSource for static buffer visualization
-68ce952 Initial plan
-0b974a5 Auto-translate README.ja.md to README.md [auto]
-1d3d35e Merge pull request #156 from cat2151/copilot/update-readme-ja-with-latest-status
-6e84c2b README.ja.mdを最新実装状況に更新 - 完了済み実装の明記、WASM統合の詳細、デフォルト設定の更新
+01d986e Add issue note for #162 [auto]
+7a23eab Merge pull request #161 from cat2151/copilot/release-v001-fixed
+ff92f2e Address PR review comments: fix release notes URL and remove unpkg section
+57bdef9 Update LIBRARY_USAGE.md with CDN usage information
+aef79cb Add release creation documentation
+05da146 Change version to 0.0.1 for initial release
+221e8ce Initial plan
+33e706a Add issue note for #160 [auto]
+4588440 Merge pull request #159 from cat2151/copilot/add-dist-commit-to-ci
+7433376 コードレビュー対応: .gitignoreのコメントを英語に変更
 
 ### 変更されたファイル:
+.github/copilot-instructions.md
+.gitignore
 LIBRARY_USAGE.md
-README.ja.md
 README.md
-example-library-usage.html
-issue-notes/155.md
-src/AudioManager.ts
-src/BufferSource.ts
-src/Oscilloscope.ts
-src/__tests__/BufferSource.test.ts
-src/__tests__/library-exports.test.ts
-src/__tests__/startFromBuffer.test.ts
-src/index.ts
+RELEASE.md
+dist/AudioManager.d.ts
+dist/AudioManager.d.ts.map
+dist/BufferSource.d.ts
+dist/BufferSource.d.ts.map
+dist/ComparisonPanelRenderer.d.ts
+dist/ComparisonPanelRenderer.d.ts.map
+dist/FrequencyEstimator.d.ts
+dist/FrequencyEstimator.d.ts.map
+dist/GainController.d.ts
+dist/GainController.d.ts.map
+dist/Oscilloscope.d.ts
+dist/Oscilloscope.d.ts.map
+dist/PianoKeyboardRenderer.d.ts
+dist/PianoKeyboardRenderer.d.ts.map
+dist/WaveformDataProcessor.d.ts
+dist/WaveformDataProcessor.d.ts.map
+dist/WaveformRenderData.d.ts
+dist/WaveformRenderData.d.ts.map
+dist/WaveformRenderer.d.ts
+dist/WaveformRenderer.d.ts.map
+dist/WaveformSearcher.d.ts
+dist/WaveformSearcher.d.ts.map
+dist/ZeroCrossDetector.d.ts
+dist/ZeroCrossDetector.d.ts.map
+dist/cat-oscilloscope.cjs
+dist/cat-oscilloscope.cjs.map
+dist/cat-oscilloscope.mjs
+dist/cat-oscilloscope.mjs.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/utils.d.ts
+dist/utils.d.ts.map
+dist/wasm/package.json
+dist/wasm/wasm_processor.d.ts
+dist/wasm/wasm_processor.js
+dist/wasm/wasm_processor_bg.wasm
+dist/wasm/wasm_processor_bg.wasm.d.ts
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
+issue-notes/158.md
+issue-notes/160.md
+issue-notes/162.md
+package-lock.json
+package.json
 
 
 ---
-Generated at: 2026-01-15 07:09:09 JST
+Generated at: 2026-01-16 07:09:07 JST
