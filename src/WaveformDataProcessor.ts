@@ -13,7 +13,6 @@ interface WasmProcessorInstance {
   setFrequencyEstimationMethod(method: string): void;
   setBufferSizeMultiplier(multiplier: number): void;
   setUsePeakMode(enabled: boolean): void;
-  setAlignmentMode(mode: string): void;
   reset(): void;
   processFrame(
     waveformData: Float32Array,
@@ -257,7 +256,6 @@ export class WaveformDataProcessor {
     this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
     this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
     this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
-    this.wasmProcessor.setAlignmentMode(this.zeroCrossDetector.getAlignmentMode());
   }
   
   /**
@@ -341,8 +339,6 @@ export class WaveformDataProcessor {
       frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
       sampleRate: wasmResult.sampleRate,
       fftSize: wasmResult.fftSize,
-      firstAlignmentPoint: wasmResult.firstAlignmentPoint,
-      secondAlignmentPoint: wasmResult.secondAlignmentPoint,
       frequencyData: wasmResult.frequencyData ? new Uint8Array(wasmResult.frequencyData) : undefined,
       isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
       maxFrequency: wasmResult.maxFrequency,

@@ -207,7 +207,7 @@ impl PhaseDetector {
         let waveform_length = (cycle_length * Self::CYCLES_TO_DISPLAY as f32).floor() as usize;
         let end_index = (first_alignment + waveform_length).min(data.len());
         
-        // Find second alignment point (one cycle later)
+        // Return alignment points for compatibility (not used for display)
         let second_alignment = if first_alignment + (cycle_length as usize) < data.len() {
             Some(first_alignment + (cycle_length as usize))
         } else {

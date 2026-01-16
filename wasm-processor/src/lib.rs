@@ -7,7 +7,7 @@ mod waveform_searcher;
 mod gain_controller;
 
 use frequency_estimator::FrequencyEstimator;
-use zero_cross_detector::{ZeroCrossDetector, AlignmentMode};
+use zero_cross_detector::ZeroCrossDetector;
 use phase_detector::PhaseDetector;
 use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;
@@ -29,10 +29,6 @@ pub struct WaveformRenderData {
     frequency_plot_history: Vec<f32>,
     sample_rate: f32,
     fft_size: usize,
-    
-    // Zero-cross / alignment information
-    first_alignment_point: Option<usize>,
-    second_alignment_point: Option<usize>,
     
     // FFT spectrum data (optional)
     frequency_data: Option<Vec<u8>>,
@@ -88,16 +84,6 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = fftSize)]
     pub fn fft_size(&self) -> usize {
         self.fft_size
-    }
-    
-    #[wasm_bindgen(getter, js_name = firstAlignmentPoint)]
-    pub fn first_alignment_point(&self) -> Option<usize> {
-        self.first_alignment_point
-    }
-    
-    #[wasm_bindgen(getter, js_name = secondAlignmentPoint)]
-    pub fn second_alignment_point(&self) -> Option<usize> {
-        self.second_alignment_point
     }
     
     #[wasm_bindgen(getter, js_name = frequencyData)]
@@ -210,8 +196,6 @@ impl WasmDataProcessor {
         // Try to find similar waveform
         let mut display_start_index = 0;
         let mut display_end_index = data.len();
-        let mut first_alignment_point = None;
-        let mut second_alignment_point = None;
         let mut used_similarity_search = false;
         
         if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
@@ -224,29 +208,18 @@ impl WasmDataProcessor {
             }
         }
         
-        // Fallback to alignment detection (zero-cross, peak, or phase) if similarity search not used
+        // Fallback to phase-based alignment if similarity search not used
         if !used_similarity_search {
-            // Check alignment mode
-            let alignment_mode = self.zero_cross_detector.get_alignment_mode();
-            
-            if alignment_mode == AlignmentMode::Phase {
-                // Use phase-based alignment
-                if let Some((start, end, first_align, second_align)) = self.phase_detector.calculate_display_range(
-                    &data,
-                    estimated_frequency,
-                    sample_rate,
-                ) {
-                    display_start_index = start;
-                    display_end_index = end;
-                    first_alignment_point = Some(first_align);
-                    second_alignment_point = second_align;
-                } else {
-                    // Fallback to full buffer
-                    display_start_index = 0;
-                    display_end_index = data.len();
-                }
+            // Use phase-based alignment
+            if let Some((start, end, _, _)) = self.phase_detector.calculate_display_range(
+                &data,
+                estimated_frequency,
+                sample_rate,
+            ) {
+                display_start_index = start;
+                display_end_index = end;
             } else {
-                // Use zero-cross or peak alignment
+                // Fallback to zero-cross alignment
                 if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
                     &data,
                     estimated_frequency,
@@ -254,8 +227,6 @@ impl WasmDataProcessor {
                 ) {
                     display_start_index = display_range.start_index;
                     display_end_index = display_range.end_index;
-                    first_alignment_point = Some(display_range.first_zero_cross);
-                    second_alignment_point = display_range.second_zero_cross;
                 } else {
                     // No alignment point found, use entire buffer
                     display_start_index = 0;
@@ -289,8 +260,6 @@ impl WasmDataProcessor {
             frequency_plot_history: self.frequency_estimator.get_frequency_plot_history(),
             sample_rate,
             fft_size,
-            first_alignment_point,
-            second_alignment_point,
             frequency_data: freq_data,
             is_signal_above_noise_gate,
             max_frequency: self.frequency_estimator.get_max_frequency(),
@@ -330,16 +299,6 @@ impl WasmDataProcessor {
     #[wasm_bindgen(js_name = setUsePeakMode)]
     pub fn set_use_peak_mode(&mut self, enabled: bool) {
         self.zero_cross_detector.set_use_peak_mode(enabled);
-    }
-    
-    #[wasm_bindgen(js_name = setAlignmentMode)]
-    pub fn set_alignment_mode(&mut self, mode: &str) {
-        let alignment_mode = match mode {
-            "peak" => AlignmentMode::Peak,
-            "phase" => AlignmentMode::Phase,
-            _ => AlignmentMode::ZeroCross, // default
-        };
-        self.zero_cross_detector.set_alignment_mode(alignment_mode);
     }
     
     #[wasm_bindgen(js_name = reset)]

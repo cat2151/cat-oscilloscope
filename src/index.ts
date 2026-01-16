@@ -5,7 +5,6 @@
 
 // Main Oscilloscope class - primary export
 export { Oscilloscope } from './Oscilloscope';
-export type { AlignmentMode } from './ZeroCrossDetector';
 
 // Core modules - for advanced usage
 export { AudioManager } from './AudioManager';

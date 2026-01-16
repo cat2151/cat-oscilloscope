@@ -174,24 +174,6 @@ export class Oscilloscope {
       renderData.gain
     );
 
-    // Draw alignment markers if available and not using similarity search
-    if (!renderData.usedSimilaritySearch) {
-      if (renderData.firstAlignmentPoint !== undefined) {
-        this.renderer.drawZeroCrossLine(
-          renderData.firstAlignmentPoint,
-          renderData.displayStartIndex,
-          renderData.displayEndIndex
-        );
-      }
-      if (renderData.secondAlignmentPoint !== undefined) {
-        this.renderer.drawZeroCrossLine(
-          renderData.secondAlignmentPoint,
-          renderData.displayStartIndex,
-          renderData.displayEndIndex
-        );
-      }
-    }
-
     // Draw FFT spectrum overlay if enabled and signal is above noise gate
     if (renderData.frequencyData && this.renderer.getFFTDisplayEnabled() && renderData.isSignalAboveNoiseGate) {
       this.renderer.drawFFTOverlay(
@@ -297,14 +279,6 @@ export class Oscilloscope {
 
   getUsePeakMode(): boolean {
     return this.zeroCrossDetector.getUsePeakMode();
-  }
-  
-  setAlignmentMode(mode: 'zero-cross' | 'peak' | 'phase'): void {
-    this.zeroCrossDetector.setAlignmentMode(mode);
-  }
-  
-  getAlignmentMode(): 'zero-cross' | 'peak' | 'phase' {
-    return this.zeroCrossDetector.getAlignmentMode();
   }
   
   setPauseDrawing(paused: boolean): void {

@@ -32,13 +32,6 @@ export interface WaveformRenderData {
   /** FFT size used for analysis */
   fftSize: number;
   
-  // Zero-cross / alignment information
-  /** First zero-cross or peak alignment point (may be undefined if not found) */
-  firstAlignmentPoint?: number;
-  
-  /** Second zero-cross or peak alignment point (may be undefined if not found) */
-  secondAlignmentPoint?: number;
-  
   // FFT spectrum data (optional, only if FFT display is enabled)
   /** FFT frequency data for spectrum display */
   frequencyData?: Uint8Array;
