@@ -215,9 +215,15 @@ impl WasmDataProcessor {
                 display_start_index = display_range.start_index;
                 display_end_index = display_range.end_index;
             } else {
-                // No alignment point found, use entire buffer
+                // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
                 display_start_index = 0;
-                display_end_index = data.len();
+                if cycle_length > 0.0 {
+                    let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+                    display_end_index = waveform_length.min(data.len());
+                } else {
+                    // No frequency estimation available, use entire buffer as last resort
+                    display_end_index = data.len();
+                }
             }
         }
         
