@@ -66,6 +66,15 @@ impl WaveformSearcher {
         }
     }
     
+    /// Update similarity history with a new value
+    fn update_similarity_history(&mut self, similarity: f32) {
+        self.last_similarity = similarity;
+        self.similarity_history.push_back(similarity);
+        if self.similarity_history.len() > SIMILARITY_HISTORY_SIZE {
+            self.similarity_history.pop_front();
+        }
+    }
+    
     /// Search for the most similar waveform in current frame by sliding search
     pub fn search_similar_waveform(
         &mut self,
@@ -75,6 +84,7 @@ impl WaveformSearcher {
         let prev_waveform = self.previous_waveform.as_ref()?;
         
         if cycle_length <= 0.0 {
+            self.update_similarity_history(0.0);
             return None;
         }
         
@@ -82,10 +92,12 @@ impl WaveformSearcher {
         let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
         
         if current_frame.len() < waveform_length {
+            self.update_similarity_history(0.0);
             return None;
         }
         
         if prev_waveform.len() != waveform_length {
+            self.update_similarity_history(0.0);
             return None;
         }
         
@@ -111,14 +123,8 @@ impl WaveformSearcher {
             }
         }
         
-        // Update last similarity
-        self.last_similarity = best_similarity;
-        
-        // Add to similarity history (using VecDeque for O(1) operations)
-        self.similarity_history.push_back(best_similarity);
-        if self.similarity_history.len() > SIMILARITY_HISTORY_SIZE {
-            self.similarity_history.pop_front();
-        }
+        // Update similarity history with the best match found
+        self.update_similarity_history(best_similarity);
         
         // Return result only if we found a good match
         if best_similarity > -1.0 {
@@ -156,6 +162,12 @@ impl WaveformSearcher {
     /// Get similarity history for plotting
     pub fn get_similarity_history(&self) -> Vec<f32> {
         self.similarity_history.iter().copied().collect()
+    }
+    
+    /// Record that similarity search was not performed for this frame
+    /// Updates history with 0.0 to indicate no similarity data is available
+    pub fn record_no_search(&mut self) {
+        self.update_similarity_history(0.0);
     }
     
     /// Reset searcher state

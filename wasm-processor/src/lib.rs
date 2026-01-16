@@ -202,6 +202,14 @@ impl WasmDataProcessor {
                 display_end_index = (display_start_index + waveform_length).min(data.len());
                 used_similarity_search = true;
             }
+            // Note: Similarity history is always updated inside search_similar_waveform(),
+            // even when it returns None (validation failures or low similarity)
+        } else {
+            // Cannot perform similarity search (no previous waveform or invalid cycle length)
+            // Record this in history to keep the graph updating
+            if self.waveform_searcher.has_previous_waveform() {
+                self.waveform_searcher.record_no_search();
+            }
         }
         
         // Fallback to zero-cross alignment if similarity search not used
