@@ -158,6 +158,16 @@ impl WaveformSearcher {
         self.similarity_history.iter().copied().collect()
     }
     
+    /// Record that similarity search was not performed for this frame
+    /// Updates history with 0.0 to indicate no similarity data is available
+    pub fn record_no_search(&mut self) {
+        self.last_similarity = 0.0;
+        self.similarity_history.push_back(0.0);
+        if self.similarity_history.len() > SIMILARITY_HISTORY_SIZE {
+            self.similarity_history.pop_front();
+        }
+    }
+    
     /// Reset searcher state
     pub fn reset(&mut self) {
         self.previous_waveform = None;

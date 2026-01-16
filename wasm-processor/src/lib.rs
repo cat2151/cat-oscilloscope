@@ -201,6 +201,15 @@ impl WasmDataProcessor {
                 display_start_index = search_result.start_index;
                 display_end_index = (display_start_index + waveform_length).min(data.len());
                 used_similarity_search = true;
+            } else {
+                // Similarity search was attempted but failed (e.g., similarity too low)
+                // History was already updated in search_similar_waveform()
+            }
+        } else {
+            // Cannot perform similarity search (no previous waveform or invalid cycle length)
+            // Record this in history to keep the graph updating
+            if self.waveform_searcher.has_previous_waveform() {
+                self.waveform_searcher.record_no_search();
             }
         }
         

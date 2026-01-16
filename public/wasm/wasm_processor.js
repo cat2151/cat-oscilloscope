@@ -1,4 +1,263 @@
-let wasm;
+/* @ts-self-types="./wasm_processor.d.ts" */
+
+/**
+ * WasmDataProcessor - WASM implementation of WaveformDataProcessor
+ */
+export class WasmDataProcessor {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        WasmDataProcessorFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_wasmdataprocessor_free(ptr, 0);
+    }
+    constructor() {
+        const ret = wasm.wasmdataprocessor_new();
+        this.__wbg_ptr = ret >>> 0;
+        WasmDataProcessorFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * Process a frame and return WaveformRenderData
+     * @param {Float32Array} waveform_data
+     * @param {Uint8Array | null | undefined} frequency_data
+     * @param {number} sample_rate
+     * @param {number} fft_size
+     * @param {boolean} fft_display_enabled
+     * @returns {WaveformRenderData | undefined}
+     */
+    processFrame(waveform_data, frequency_data, sample_rate, fft_size, fft_display_enabled) {
+        const ptr0 = passArrayF32ToWasm0(waveform_data, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(frequency_data) ? 0 : passArray8ToWasm0(frequency_data, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmdataprocessor_processFrame(this.__wbg_ptr, ptr0, len0, ptr1, len1, sample_rate, fft_size, fft_display_enabled);
+        return ret === 0 ? undefined : WaveformRenderData.__wrap(ret);
+    }
+    reset() {
+        wasm.wasmdataprocessor_reset(this.__wbg_ptr);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setAutoGain(enabled) {
+        wasm.wasmdataprocessor_setAutoGain(this.__wbg_ptr, enabled);
+    }
+    /**
+     * @param {number} multiplier
+     */
+    setBufferSizeMultiplier(multiplier) {
+        wasm.wasmdataprocessor_setBufferSizeMultiplier(this.__wbg_ptr, multiplier);
+    }
+    /**
+     * @param {string} method
+     */
+    setFrequencyEstimationMethod(method) {
+        const ptr0 = passStringToWasm0(method, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.wasmdataprocessor_setFrequencyEstimationMethod(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setNoiseGate(enabled) {
+        wasm.wasmdataprocessor_setNoiseGate(this.__wbg_ptr, enabled);
+    }
+    /**
+     * @param {number} threshold
+     */
+    setNoiseGateThreshold(threshold) {
+        wasm.wasmdataprocessor_setNoiseGateThreshold(this.__wbg_ptr, threshold);
+    }
+    /**
+     * @param {boolean} enabled
+     */
+    setUsePeakMode(enabled) {
+        wasm.wasmdataprocessor_setUsePeakMode(this.__wbg_ptr, enabled);
+    }
+}
+if (Symbol.dispose) WasmDataProcessor.prototype[Symbol.dispose] = WasmDataProcessor.prototype.free;
+
+/**
+ * WaveformRenderData - Complete data structure for waveform rendering
+ * This mirrors the TypeScript interface WaveformRenderData
+ */
+export class WaveformRenderData {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(WaveformRenderData.prototype);
+        obj.__wbg_ptr = ptr;
+        WaveformRenderDataFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        WaveformRenderDataFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_waveformrenderdata_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get displayEndIndex() {
+        const ret = wasm.waveformrenderdata_displayEndIndex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get displayStartIndex() {
+        const ret = wasm.waveformrenderdata_displayStartIndex(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get estimatedFrequency() {
+        const ret = wasm.waveformrenderdata_estimatedFrequency(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get fftSize() {
+        const ret = wasm.waveformrenderdata_fftSize(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * @returns {Uint8Array | undefined}
+     */
+    get frequencyData() {
+        const ret = wasm.waveformrenderdata_frequencyData(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get frequencyPlotHistory() {
+        const ret = wasm.waveformrenderdata_frequencyPlotHistory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get gain() {
+        const ret = wasm.waveformrenderdata_gain(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {boolean}
+     */
+    get isSignalAboveNoiseGate() {
+        const ret = wasm.waveformrenderdata_isSignalAboveNoiseGate(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @returns {number}
+     */
+    get maxFrequency() {
+        const ret = wasm.waveformrenderdata_maxFrequency(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    get previousWaveform() {
+        const ret = wasm.waveformrenderdata_previousWaveform(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        }
+        return v1;
+    }
+    /**
+     * @returns {number}
+     */
+    get sampleRate() {
+        const ret = wasm.waveformrenderdata_sampleRate(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get similarity() {
+        const ret = wasm.waveformrenderdata_similarity(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get similarityPlotHistory() {
+        const ret = wasm.waveformrenderdata_similarityPlotHistory(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {boolean}
+     */
+    get usedSimilaritySearch() {
+        const ret = wasm.waveformrenderdata_usedSimilaritySearch(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
+     * @returns {Float32Array}
+     */
+    get waveform_data() {
+        const ret = wasm.waveformrenderdata_waveform_data(this.__wbg_ptr);
+        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+}
+if (Symbol.dispose) WaveformRenderData.prototype[Symbol.dispose] = WaveformRenderData.prototype.free;
+
+function __wbg_get_imports() {
+    const import0 = {
+        __proto__: null,
+        __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_error_1529ada434ef54b4: function(arg0, arg1) {
+            console.error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
+        },
+    };
+    return {
+        __proto__: null,
+        "./wasm_processor_bg.js": import0,
+    };
+}
+
+const WasmDataProcessorFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_wasmdataprocessor_free(ptr >>> 0, 1));
+const WaveformRenderDataFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_waveformrenderdata_free(ptr >>> 0, 1));
 
 function getArrayF32FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
@@ -110,269 +369,20 @@ if (!('encodeInto' in cachedTextEncoder)) {
             read: arg.length,
             written: buf.length
         };
-    }
+    };
 }
 
 let WASM_VECTOR_LEN = 0;
 
-const WasmDataProcessorFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_wasmdataprocessor_free(ptr >>> 0, 1));
-
-const WaveformRenderDataFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_waveformrenderdata_free(ptr >>> 0, 1));
-
-/**
- * WasmDataProcessor - WASM implementation of WaveformDataProcessor
- */
-export class WasmDataProcessor {
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        WasmDataProcessorFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_wasmdataprocessor_free(ptr, 0);
-    }
-    /**
-     * Process a frame and return WaveformRenderData
-     * @param {Float32Array} waveform_data
-     * @param {Uint8Array | null | undefined} frequency_data
-     * @param {number} sample_rate
-     * @param {number} fft_size
-     * @param {boolean} fft_display_enabled
-     * @returns {WaveformRenderData | undefined}
-     */
-    processFrame(waveform_data, frequency_data, sample_rate, fft_size, fft_display_enabled) {
-        const ptr0 = passArrayF32ToWasm0(waveform_data, wasm.__wbindgen_malloc);
-        const len0 = WASM_VECTOR_LEN;
-        var ptr1 = isLikeNone(frequency_data) ? 0 : passArray8ToWasm0(frequency_data, wasm.__wbindgen_malloc);
-        var len1 = WASM_VECTOR_LEN;
-        const ret = wasm.wasmdataprocessor_processFrame(this.__wbg_ptr, ptr0, len0, ptr1, len1, sample_rate, fft_size, fft_display_enabled);
-        return ret === 0 ? undefined : WaveformRenderData.__wrap(ret);
-    }
-    /**
-     * @param {boolean} enabled
-     */
-    setAutoGain(enabled) {
-        wasm.wasmdataprocessor_setAutoGain(this.__wbg_ptr, enabled);
-    }
-    /**
-     * @param {boolean} enabled
-     */
-    setNoiseGate(enabled) {
-        wasm.wasmdataprocessor_setNoiseGate(this.__wbg_ptr, enabled);
-    }
-    /**
-     * @param {boolean} enabled
-     */
-    setUsePeakMode(enabled) {
-        wasm.wasmdataprocessor_setUsePeakMode(this.__wbg_ptr, enabled);
-    }
-    /**
-     * @param {string} mode
-     */
-    setAlignmentMode(mode) {
-        const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.wasmdataprocessor_setAlignmentMode(this.__wbg_ptr, ptr0, len0);
-    }
-    /**
-     * @param {number} threshold
-     */
-    setNoiseGateThreshold(threshold) {
-        wasm.wasmdataprocessor_setNoiseGateThreshold(this.__wbg_ptr, threshold);
-    }
-    /**
-     * @param {number} multiplier
-     */
-    setBufferSizeMultiplier(multiplier) {
-        wasm.wasmdataprocessor_setBufferSizeMultiplier(this.__wbg_ptr, multiplier);
-    }
-    /**
-     * @param {string} method
-     */
-    setFrequencyEstimationMethod(method) {
-        const ptr0 = passStringToWasm0(method, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.wasmdataprocessor_setFrequencyEstimationMethod(this.__wbg_ptr, ptr0, len0);
-    }
-    constructor() {
-        const ret = wasm.wasmdataprocessor_new();
-        this.__wbg_ptr = ret >>> 0;
-        WasmDataProcessorFinalization.register(this, this.__wbg_ptr, this);
-        return this;
-    }
-    reset() {
-        wasm.wasmdataprocessor_reset(this.__wbg_ptr);
-    }
+let wasmModule, wasm;
+function __wbg_finalize_init(instance, module) {
+    wasm = instance.exports;
+    wasmModule = module;
+    cachedFloat32ArrayMemory0 = null;
+    cachedUint8ArrayMemory0 = null;
+    wasm.__wbindgen_start();
+    return wasm;
 }
-if (Symbol.dispose) WasmDataProcessor.prototype[Symbol.dispose] = WasmDataProcessor.prototype.free;
-
-/**
- * WaveformRenderData - Complete data structure for waveform rendering
- * This mirrors the TypeScript interface WaveformRenderData
- */
-export class WaveformRenderData {
-    static __wrap(ptr) {
-        ptr = ptr >>> 0;
-        const obj = Object.create(WaveformRenderData.prototype);
-        obj.__wbg_ptr = ptr;
-        WaveformRenderDataFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        WaveformRenderDataFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_waveformrenderdata_free(ptr, 0);
-    }
-    /**
-     * @returns {number}
-     */
-    get similarity() {
-        const ret = wasm.waveformrenderdata_similarity(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @returns {number}
-     */
-    get sampleRate() {
-        const ret = wasm.waveformrenderdata_sampleRate(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @returns {number}
-     */
-    get maxFrequency() {
-        const ret = wasm.waveformrenderdata_maxFrequency(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @returns {Float32Array}
-     */
-    get waveform_data() {
-        const ret = wasm.waveformrenderdata_waveform_data(this.__wbg_ptr);
-        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v1;
-    }
-    /**
-     * @returns {Uint8Array | undefined}
-     */
-    get frequencyData() {
-        const ret = wasm.waveformrenderdata_frequencyData(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-        }
-        return v1;
-    }
-    /**
-     * @returns {number}
-     */
-    get displayEndIndex() {
-        const ret = wasm.waveformrenderdata_displayEndIndex(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-     * @returns {Float32Array | undefined}
-     */
-    get previousWaveform() {
-        const ret = wasm.waveformrenderdata_previousWaveform(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        }
-        return v1;
-    }
-    /**
-     * @returns {number}
-     */
-    get displayStartIndex() {
-        const ret = wasm.waveformrenderdata_displayStartIndex(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-    /**
-     * @returns {number}
-     */
-    get estimatedFrequency() {
-        const ret = wasm.waveformrenderdata_estimatedFrequency(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get firstAlignmentPoint() {
-        const ret = wasm.waveformrenderdata_firstAlignmentPoint(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @returns {Float32Array}
-     */
-    get frequencyPlotHistory() {
-        const ret = wasm.waveformrenderdata_frequencyPlotHistory(this.__wbg_ptr);
-        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v1;
-    }
-    /**
-     * @returns {number | undefined}
-     */
-    get secondAlignmentPoint() {
-        const ret = wasm.waveformrenderdata_secondAlignmentPoint(this.__wbg_ptr);
-        return ret === 0x100000001 ? undefined : ret;
-    }
-    /**
-     * @returns {boolean}
-     */
-    get usedSimilaritySearch() {
-        const ret = wasm.waveformrenderdata_usedSimilaritySearch(this.__wbg_ptr);
-        return ret !== 0;
-    }
-    /**
-     * @returns {Float32Array}
-     */
-    get similarityPlotHistory() {
-        const ret = wasm.waveformrenderdata_similarityPlotHistory(this.__wbg_ptr);
-        var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-        wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        return v1;
-    }
-    /**
-     * @returns {boolean}
-     */
-    get isSignalAboveNoiseGate() {
-        const ret = wasm.waveformrenderdata_isSignalAboveNoiseGate(this.__wbg_ptr);
-        return ret !== 0;
-    }
-    /**
-     * @returns {number}
-     */
-    get gain() {
-        const ret = wasm.waveformrenderdata_gain(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @returns {number}
-     */
-    get fftSize() {
-        const ret = wasm.waveformrenderdata_fftSize(this.__wbg_ptr);
-        return ret >>> 0;
-    }
-}
-if (Symbol.dispose) WaveformRenderData.prototype[Symbol.dispose] = WaveformRenderData.prototype.free;
-
-const EXPECTED_RESPONSE_TYPES = new Set(['basic', 'cors', 'default']);
 
 async function __wbg_load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
@@ -380,14 +390,12 @@ async function __wbg_load(module, imports) {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
             } catch (e) {
-                const validResponse = module.ok && EXPECTED_RESPONSE_TYPES.has(module.type);
+                const validResponse = module.ok && expectedResponseType(module.type);
 
                 if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                     console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
 
-                } else {
-                    throw e;
-                }
+                } else { throw e; }
             }
         }
 
@@ -402,46 +410,20 @@ async function __wbg_load(module, imports) {
             return instance;
         }
     }
-}
 
-function __wbg_get_imports() {
-    const imports = {};
-    imports.wbg = {};
-    imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
-        throw new Error(getStringFromWasm0(arg0, arg1));
-    };
-    imports.wbg.__wbg_error_1529ada434ef54b4 = function(arg0, arg1) {
-        console.error(getStringFromWasm0(arg0, arg1));
-    };
-    imports.wbg.__wbindgen_init_externref_table = function() {
-        const table = wasm.__wbindgen_externrefs;
-        const offset = table.grow(4);
-        table.set(0, undefined);
-        table.set(offset + 0, undefined);
-        table.set(offset + 1, null);
-        table.set(offset + 2, true);
-        table.set(offset + 3, false);
-    };
-
-    return imports;
-}
-
-function __wbg_finalize_init(instance, module) {
-    wasm = instance.exports;
-    __wbg_init.__wbindgen_wasm_module = module;
-    cachedFloat32ArrayMemory0 = null;
-    cachedUint8ArrayMemory0 = null;
-
-
-    wasm.__wbindgen_start();
-    return wasm;
+    function expectedResponseType(type) {
+        switch (type) {
+            case 'basic': case 'cors': case 'default': return true;
+        }
+        return false;
+    }
 }
 
 function initSync(module) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module !== 'undefined') {
+    if (module !== undefined) {
         if (Object.getPrototypeOf(module) === Object.prototype) {
             ({module} = module)
         } else {
@@ -461,7 +443,7 @@ async function __wbg_init(module_or_path) {
     if (wasm !== undefined) return wasm;
 
 
-    if (typeof module_or_path !== 'undefined') {
+    if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
             ({module_or_path} = module_or_path)
         } else {
@@ -469,7 +451,7 @@ async function __wbg_init(module_or_path) {
         }
     }
 
-    if (typeof module_or_path === 'undefined') {
+    if (module_or_path === undefined) {
         module_or_path = new URL('wasm_processor_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
@@ -483,5 +465,4 @@ async function __wbg_init(module_or_path) {
     return __wbg_finalize_init(instance, module);
 }
 
-export { initSync };
-export default __wbg_init;
+export { initSync, __wbg_init as default };
