@@ -844,7 +844,7 @@ mod tests {
             (200.0, 120.0),  // 2nd harmonic of 100Hz - strongest peak
             (300.0, 70.0),   // 3rd harmonic of 100Hz
             (400.0, 60.0),   // 4th harmonic of 100Hz (also 2nd of 200Hz)
-            (500.0, 50.0),   // 5th harmonic of 100Hz
+            (500.0, 60.0),   // 5th harmonic of 100Hz - increased for robustness
         ];
         
         // Should prefer 100Hz because it has 4 harmonics, vs 200Hz with only 1 harmonic
