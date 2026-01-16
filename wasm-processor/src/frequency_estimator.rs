@@ -257,7 +257,9 @@ impl FrequencyEstimator {
             return None;
         }
         
-        // Try each peak as a potential fundamental
+        // Try each peak as a potential fundamental and track the best candidate
+        let mut best_candidate: Option<(f32, usize)> = None; // (frequency, harmonic_count)
+        
         for &(candidate_fundamental, magnitude) in peaks.iter() {
             // Skip if magnitude is too weak
             if magnitude < reference_magnitude * Self::HARMONIC_RELATIVE_THRESHOLD {
@@ -284,13 +286,28 @@ impl FrequencyEstimator {
                 }
             }
             
-            // If we found enough harmonics, this is likely the fundamental
+            // If this candidate has enough harmonics, consider it
             if harmonic_count >= Self::MIN_HARMONICS_REQUIRED {
-                return Some(candidate_fundamental);
+                // Update best candidate if:
+                // 1. We don't have a candidate yet, OR
+                // 2. This candidate has more harmonics, OR
+                // 3. Same number of harmonics but lower frequency (more likely to be fundamental)
+                match best_candidate {
+                    None => {
+                        best_candidate = Some((candidate_fundamental, harmonic_count));
+                    }
+                    Some((_, best_count)) => {
+                        if harmonic_count > best_count || 
+                           (harmonic_count == best_count && candidate_fundamental < best_candidate.unwrap().0) {
+                            best_candidate = Some((candidate_fundamental, harmonic_count));
+                        }
+                    }
+                }
             }
         }
         
-        None
+        // Return the best candidate found
+        best_candidate.map(|(freq, _)| freq)
     }
     
     /// Estimate frequency using STFT (Short-Time Fourier Transform) method
@@ -771,5 +788,90 @@ mod tests {
         
         // History should be limited to FREQUENCY_HISTORY_SIZE
         assert_eq!(estimator.frequency_history.len(), FrequencyEstimator::FREQUENCY_HISTORY_SIZE);
+    }
+
+    #[test]
+    fn test_fundamental_detection_when_2nd_harmonic_is_5_percent_stronger() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Simulate human voice where 2nd harmonic (200Hz) is 5% stronger than fundamental (100Hz)
+        // This is a common pattern in human voice
+        let peaks = vec![
+            (100.0, 100.0),  // Fundamental
+            (200.0, 105.0),  // 2nd harmonic - 5% stronger
+            (300.0, 80.0),   // 3rd harmonic
+            (400.0, 60.0),   // 4th harmonic
+        ];
+        
+        // Should detect 100Hz as fundamental, not 200Hz
+        let result = estimator.find_fundamental_frequency(&peaks, 105.0);
+        assert!(result.is_some(), "Should detect fundamental frequency");
+        assert!((result.unwrap() - 100.0).abs() < 1.0, 
+                "Expected 100Hz fundamental, got {}", result.unwrap());
+    }
+
+    #[test]
+    fn test_fundamental_detection_when_2nd_harmonic_is_25_percent_stronger() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Simulate human voice where 2nd harmonic (200Hz) is 25% stronger than fundamental (100Hz)
+        // This is an extreme but possible case
+        let peaks = vec![
+            (100.0, 100.0),  // Fundamental
+            (200.0, 125.0),  // 2nd harmonic - 25% stronger
+            (300.0, 90.0),   // 3rd harmonic
+            (400.0, 70.0),   // 4th harmonic
+        ];
+        
+        // Should detect 100Hz as fundamental, not 200Hz
+        // Because 100Hz has more matching harmonics (200, 300, 400)
+        // while 200Hz only has 400Hz as a matching harmonic (2x of 200)
+        let result = estimator.find_fundamental_frequency(&peaks, 125.0);
+        assert!(result.is_some(), "Should detect fundamental frequency");
+        assert!((result.unwrap() - 100.0).abs() < 1.0, 
+                "Expected 100Hz fundamental, got {}", result.unwrap());
+    }
+
+    #[test]
+    fn test_fundamental_detection_prefers_more_harmonics() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Test that algorithm prefers candidate with more harmonics
+        // 100Hz has harmonics at 200, 300, 400, 500 (4 harmonics)
+        // 200Hz only has harmonic at 400 (1 harmonic)
+        let peaks = vec![
+            (100.0, 80.0),   // Fundamental - weaker
+            (200.0, 120.0),  // 2nd harmonic of 100Hz - strongest peak
+            (300.0, 70.0),   // 3rd harmonic of 100Hz
+            (400.0, 60.0),   // 4th harmonic of 100Hz (also 2nd of 200Hz)
+            (500.0, 50.0),   // 5th harmonic of 100Hz
+        ];
+        
+        // Should prefer 100Hz because it has 4 harmonics, vs 200Hz with only 1 harmonic
+        let result = estimator.find_fundamental_frequency(&peaks, 120.0);
+        assert!(result.is_some(), "Should detect fundamental frequency");
+        assert!((result.unwrap() - 100.0).abs() < 1.0, 
+                "Expected 100Hz with 4 harmonics over 200Hz with 1 harmonic, got {}", result.unwrap());
+    }
+
+    #[test]
+    fn test_fundamental_detection_prefers_lower_frequency_when_equal_harmonics() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Edge case: both candidates have same number of harmonics
+        // Should prefer the lower frequency (more likely to be fundamental)
+        let peaks = vec![
+            (100.0, 80.0),   // Has harmonics at 200, 300
+            (150.0, 100.0),  // Has harmonics at 300, 450
+            (200.0, 70.0),   // Harmonic of 100Hz
+            (300.0, 75.0),   // Harmonic of both 100Hz and 150Hz
+            (450.0, 60.0),   // Harmonic of 150Hz
+        ];
+        
+        // Both 100Hz and 150Hz have 2 harmonics, should prefer 100Hz (lower)
+        let result = estimator.find_fundamental_frequency(&peaks, 100.0);
+        assert!(result.is_some(), "Should detect fundamental frequency");
+        assert!((result.unwrap() - 100.0).abs() < 1.0, 
+                "Expected 100Hz (lower frequency with equal harmonics), got {}", result.unwrap());
     }
 }
