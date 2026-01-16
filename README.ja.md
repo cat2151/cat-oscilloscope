@@ -225,7 +225,8 @@ npm run test:ui
 
 ## 技術スタック
 
-- **TypeScript** - 型安全なJavaScript
+- **Rust/WebAssembly** - 高速で型安全なデータ処理アルゴリズム
+- **TypeScript** - 型安全なJavaScript（設定管理とレンダリング）
 - **Vite** - 高速なビルドツールと開発サーバー
 - **Web Audio API** - 音声のキャプチャと分析
 - **HTML Canvas** - 2D波形レンダリング
