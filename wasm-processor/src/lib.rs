@@ -2,13 +2,11 @@ use wasm_bindgen::prelude::*;
 
 mod frequency_estimator;
 mod zero_cross_detector;
-mod phase_detector;
 mod waveform_searcher;
 mod gain_controller;
 
 use frequency_estimator::FrequencyEstimator;
 use zero_cross_detector::ZeroCrossDetector;
-use phase_detector::PhaseDetector;
 use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;
 
@@ -128,7 +126,6 @@ pub struct WasmDataProcessor {
     gain_controller: GainController,
     frequency_estimator: FrequencyEstimator,
     zero_cross_detector: ZeroCrossDetector,
-    phase_detector: PhaseDetector,
     waveform_searcher: WaveformSearcher,
 }
 
@@ -140,7 +137,6 @@ impl WasmDataProcessor {
             gain_controller: GainController::new(),
             frequency_estimator: FrequencyEstimator::new(),
             zero_cross_detector: ZeroCrossDetector::new(),
-            phase_detector: PhaseDetector::new(),
             waveform_searcher: WaveformSearcher::new(),
         }
     }
@@ -208,30 +204,20 @@ impl WasmDataProcessor {
             }
         }
         
-        // Fallback to phase-based alignment if similarity search not used
+        // Fallback to zero-cross alignment if similarity search not used
         if !used_similarity_search {
-            // Use phase-based alignment
-            if let Some((start, end, _, _)) = self.phase_detector.calculate_display_range(
+            // Use zero-cross alignment
+            if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
                 &data,
                 estimated_frequency,
                 sample_rate,
             ) {
-                display_start_index = start;
-                display_end_index = end;
+                display_start_index = display_range.start_index;
+                display_end_index = display_range.end_index;
             } else {
-                // Fallback to zero-cross alignment
-                if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
-                    &data,
-                    estimated_frequency,
-                    sample_rate,
-                ) {
-                    display_start_index = display_range.start_index;
-                    display_end_index = display_range.end_index;
-                } else {
-                    // No alignment point found, use entire buffer
-                    display_start_index = 0;
-                    display_end_index = data.len();
-                }
+                // No alignment point found, use entire buffer
+                display_start_index = 0;
+                display_end_index = data.len();
             }
         }
         
@@ -305,7 +291,6 @@ impl WasmDataProcessor {
     pub fn reset(&mut self) {
         self.frequency_estimator.clear_history();
         self.zero_cross_detector.reset();
-        self.phase_detector.reset();
         self.waveform_searcher.reset();
     }
 }
