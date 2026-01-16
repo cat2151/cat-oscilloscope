@@ -1,4 +1,4 @@
-Last updated: 2026-01-16
+Last updated: 2026-01-17
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -84,7 +84,6 @@ Last updated: 2026-01-16
 
 - **Rust/WASM統合**: すべてのデータ処理アルゴリズムがRust/WASMで実装され、高速で型安全な処理を実現
 - **ライブラリ対応**: npmライブラリとして他のプロジェクトから利用可能（ESM/CJS両対応、完全な型定義サポート）
-- **Phase Alignment Mode**: サブハーモニクス（1/4倍音など）を含む波形の位相ブレを解決する新しいアライメントモード
 - **5つの周波数推定方式**: Zero-Crossing、Autocorrelation、FFT、STFT、CQTをサポート
 - **バッファサイズマルチプライヤー**: 低周波検出精度を向上させる拡張バッファ機能（1x/4x/16x）
 - **波形比較パネル**: 前回と今回の波形の類似度をリアルタイム表示
@@ -94,7 +93,6 @@ Last updated: 2026-01-16
 
 - ✅ 大きなバグは解決済み
 - ✅ WAVファイルからのオーディオ再生時は高い実用性
-- ✅ マイク入力時は、Phase Alignmentモードにより位相の安定性が大幅に向上
 - ⚠️ マイク入力は環境音の影響を受けるため、静かな環境での使用を推奨
 
 ## 📚 ライブラリとしての使用
@@ -196,23 +194,9 @@ npm run build
 - 🎹 **ピアノ鍵盤表示** - 検出した周波数を鍵盤上に表示
 - 🎚️ **自動ゲイン** - 波形の振幅を自動調整
 - 🔇 **ノイズゲート** - 閾値以下の信号をカット
-- 🎯 **3つのアライメントモード**
-  - **Phase**: 位相同期（デフォルト）- サブハーモニクスを含む波形でも安定した表示
-  - **Zero-Cross**: ゼロクロス点で同期 - 単純な波形に適する軽量モード
-  - **Peak**: ピーク点で同期 - 高周波やノイズの多い環境で安定
 - 📈 **FFTスペクトラム** - 周波数スペクトラムをオーバーレイ表示
 - 🔍 **波形比較パネル** - 前回と今回の波形の類似度を表示
 - ⏸️ **描画の一時停止** - 波形を静止して観察可能
-
-### アライメントモードについて
-
-**Phase Alignment Mode（位相同期モード）** は、1/4倍音などのサブハーモニクスを含む波形の位相ブレを解決するために追加され、現在はデフォルトモードとなっています。
-
-- **Phase（位相同期）**: デフォルト。DFTベースの位相検出により、サブハーモニクスを含む複雑な波形でも安定した表示が可能
-- **Zero-Cross（ゼロクロス）**: 最も軽量。単純な波形に適しています
-- **Peak（ピーク）**: 高周波やノイズの多い環境で安定
-
-詳細は [docs/PHASE_ALIGNMENT.md](./docs/PHASE_ALIGNMENT.md) を参照してください。
 
 ## はじめに
 
@@ -360,6 +344,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 ## ファイル階層ツリー
 📄 .gitignore
 📖 CONSOLIDATION_SUMMARY.md
+📖 FREQUENCY_STABILITY_FIX.md
 📖 IMPLEMENTATION_NOTES_117.md
 📖 IMPLEMENTATION_SUMMARY.md
 📖 LIBRARY_USAGE.md
@@ -395,12 +380,16 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📄 WaveformSearcher.d.ts.map
   📘 ZeroCrossDetector.d.ts
   📄 ZeroCrossDetector.d.ts.map
+  📁 assets/
+    📜 index-C-C2iXJO.js
+    📄 index-C-C2iXJO.js.map
   📄 cat-oscilloscope.cjs
   📄 cat-oscilloscope.cjs.map
   📄 cat-oscilloscope.mjs
   📄 cat-oscilloscope.mjs.map
   📘 index.d.ts
   📄 index.d.ts.map
+  🌐 index.html
   📘 utils.d.ts
   📄 utils.d.ts.map
   📁 wasm/
@@ -409,8 +398,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📜 wasm_processor.js
     📄 wasm_processor_bg.wasm
     📘 wasm_processor_bg.wasm.d.ts
-📁 docs/
-  📖 PHASE_ALIGNMENT.md
 🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
@@ -444,6 +431,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 158.md
   📖 160.md
   📖 162.md
+  📖 163.md
+  📖 165.md
+  📖 167.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -494,7 +484,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📁 __tests__/
     📘 BufferSource.test.ts
     📘 algorithms.test.ts
-    📘 alignment-mode.test.ts
     📘 comparison-panel-renderer.test.ts
     📘 dom-integration.test.ts
     📘 library-exports.test.ts
@@ -517,7 +506,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📄 frequency_estimator.rs
     📄 gain_controller.rs
     📄 lib.rs
-    📄 phase_detector.rs
     📄 waveform_searcher.rs
     📄 zero_cross_detector.rs
 
@@ -542,7 +530,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/Oscilloscope.d.ts** (74行, 3395バイト)
+**dist/Oscilloscope.d.ts** (72行, 3271バイト)
   - 関数: なし
   - インポート: ./BufferSource
 
@@ -550,15 +538,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/WaveformDataProcessor.d.ts** (77行, 3029バイト)
+**dist/WaveformDataProcessor.d.ts** (75行, 2903バイト)
   - 関数: なし
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
-**dist/WaveformRenderData.d.ts** (44行, 1880バイト)
+**dist/WaveformRenderData.d.ts** (40行, 1642バイト)
   - 関数: なし
   - インポート: なし
 
-**dist/WaveformRenderer.d.ts** (64行, 2382バイト)
+**dist/WaveformRenderer.d.ts** (60行, 2223バイト)
   - 関数: なし
   - インポート: なし
 
@@ -566,11 +554,19 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/ZeroCrossDetector.d.ts** (39行, 1343バイト)
+**dist/ZeroCrossDetector.d.ts** (25行, 683バイト)
   - 関数: なし
   - インポート: なし
 
-**dist/index.d.ts** (19行, 939バイト)
+**dist/assets/index-C-C2iXJO.js** (8行, 34185バイト)
+  - 関数: e, s, Z, ht, R, ft, nt, at, rt, ot, i, function, for, if, constructor, initializeAnalyser, start, catch, startFromFile, startFromBuffer, stop, getTimeDomainData, updateFrameBufferHistory, getExtendedTimeDomainData, clearFrameBufferHistory, getFrequencyData, getSampleRate, getFFTSize, getFrequencyBinCount, isReady, setAutoGain, getAutoGainEnabled, setNoiseGate, getNoiseGateEnabled, setNoiseGateThreshold, getNoiseGateThreshold, getCurrentGain, clearHistory, setFrequencyEstimationMethod, getFrequencyEstimationMethod, setBufferSizeMultiplier, getBufferSizeMultiplier, getEstimatedFrequency, getMinFrequency, getMaxFrequency, getFrequencyPlotHistory, clearAndDrawGrid, drawGrid, drawGridLabels, drawWaveform, drawFFTOverlay, drawFrequencyPlot, setFFTDisplay, getFFTDisplayEnabled, setUsePeakMode, getUsePeakMode, reset, getLastSimilarity, hasPreviousWaveform, getPreviousWaveform, clearAllCanvases, clearCanvas, findPeakAmplitude, drawCenterLine, drawSimilarityText, drawSimilarityPlot, drawPositionMarkers, updatePanels, clear, initialize, loadWasmModule, determineBasePath, getBasePathFromScripts, syncConfigToWasm, syncResultsFromWasm, processFrame, render, renderFrame, getIsRunning, getSimilarityScore, isSimilaritySearchActive, setPauseDrawing, getPauseDrawing, frequencyToNoteInfo, calculateKeyboardRange, countWhiteKeys, calculateCenteringOffset
+  - インポート: ${r}
+
+**dist/index.d.ts** (18行, 881バイト)
+  - 関数: なし
+  - インポート: なし
+
+**dist/index.html** (308行, 9670バイト)
   - 関数: なし
   - インポート: なし
 
@@ -594,7 +590,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**index.html** (320行, 10291バイト)
+**index.html** (308行, 9628バイト)
   - 関数: なし
   - インポート: なし
 
@@ -630,7 +626,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: ./utils
 
-**src/Oscilloscope.ts** (318行, 10198バイト)
+**src/Oscilloscope.ts** (291行, 9325バイト)
   - 関数: constructor, catch, if, start, startFromFile, startFromBuffer, stop
   - インポート: ./AudioManager, ./GainController, ./FrequencyEstimator
 
@@ -638,15 +634,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: constructor, if, for
   - インポート: ./utils
 
-**src/WaveformDataProcessor.ts** (370行, 13290バイト)
+**src/WaveformDataProcessor.ts** (362行, 12851バイト)
   - 関数: cleanup, handleLoad, constructor, if, catch, for, initialize, loadWasmModule
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
-**src/WaveformRenderData.ts** (65行, 2046バイト)
+**src/WaveformRenderData.ts** (58行, 1770バイト)
   - 関数: なし
   - インポート: なし
 
-**src/WaveformRenderer.ts** (502行, 17038バイト)
+**src/WaveformRenderer.ts** (474行, 16122バイト)
   - 関数: constructor, if, for
   - インポート: ./utils
 
@@ -654,7 +650,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**src/ZeroCrossDetector.ts** (55行, 1585バイト)
+**src/ZeroCrossDetector.ts** (34行, 829バイト)
   - 関数: なし
   - インポート: なし
 
@@ -665,10 +661,6 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 **src/__tests__/algorithms.test.ts** (173行, 5364バイト)
   - 関数: なし
   - インポート: vitest, ../FrequencyEstimator, ../GainController
-
-**src/__tests__/alignment-mode.test.ts** (94行, 3090バイト)
-  - 関数: for
-  - インポート: vitest, ../ZeroCrossDetector
 
 **src/__tests__/comparison-panel-renderer.test.ts** (360行, 12904バイト)
   - 関数: for
@@ -710,13 +702,13 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../WaveformSearcher
 
-**src/index.ts** (29行, 1153バイト)
+**src/index.ts** (28行, 1095バイト)
   - 関数: なし
   - インポート: なし
 
-**src/main.ts** (285行, 11349バイト)
+**src/main.ts** (274行, 10843バイト)
   - 関数: sliderValueToThreshold, formatThresholdDisplay, startFrequencyDisplay, stopFrequencyDisplay, for, if, catch
-  - インポート: ./Oscilloscope, ./ZeroCrossDetector, ./utils
+  - インポート: ./Oscilloscope, ./utils, ./PianoKeyboardRenderer
 
 **src/utils.ts** (167行, 5136バイト)
   - 関数: dbToAmplitude, amplitudeToDb, frequencyToNote, trimSilence, if, for
@@ -727,64 +719,93 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - インポート: vite, path, vite-plugin-dts
 
 ## 関数呼び出し階層
-- getArrayF32FromWasm0 (dist/wasm/wasm_processor.js)
-  - initSync (dist/wasm/wasm_processor.d.ts)
-    - free ()
-    - processFrame ()
-    - setAutoGain ()
-    - setNoiseGate ()
-    - setUsePeakMode ()
-    - setAlignmentMode ()
-    - setNoiseGateThreshold ()
-    - setBufferSizeMultiplier ()
-    - setFrequencyEstimationMethod ()
-    - constructor (undefined)
-  - __wbg_init ()
-  - getArrayU8FromWasm0 ()
-  - getFloat32ArrayMemory0 ()
-  - getStringFromWasm0 ()
-  - getUint8ArrayMemory0 ()
-  - isLikeNone ()
-  - passArray8ToWasm0 ()
-  - passArrayF32ToWasm0 ()
-  - passStringToWasm0 ()
-  - decodeText ()
-  - __wbg_load ()
-  - __wbg_get_imports ()
-  - __wbg_finalize_init ()
-  - function ()
-  - __destroy_into_raw ()
-- if (src/AudioManager.ts)
-  - trimSilence ()
-    - dbToAmplitude (dist/utils.d.ts)
-      - amplitudeToDb ()
-      - frequencyToNote ()
-  - reset ()
-  - start ()
-    - startFromFile ()
+- initSync (dist/wasm/wasm_processor.d.ts)
+  - e (dist/assets/index-C-C2iXJO.js)
+    - s ()
+    - Z ()
+    - ht ()
+    - R ()
+    - ft ()
+    - nt ()
+    - at ()
+    - rt ()
+    - ot ()
+    - i ()
+    - function ()
+    - for ()
+      - initializeAnalyser ()
+      - start ()
+      - startFromFile ()
       - startFromBuffer ()
       - stop ()
+      - getTimeDomainData ()
+      - updateFrameBufferHistory ()
+      - getExtendedTimeDomainData ()
+      - clearFrameBufferHistory ()
+      - getFrequencyData ()
+      - getSampleRate ()
+      - getFFTSize ()
+      - getFrequencyBinCount ()
+      - isReady ()
+      - reset ()
+      - trimSilence ()
       - createMediaStreamSource ()
       - createAnalyser ()
       - close ()
       - getTracks ()
-  - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
-    - getFFTOverlayDimensions ()
+      - updatePanels ()
+      - clear ()
+      - dbToAmplitude (dist/utils.d.ts)
+      - setAutoGain ()
+      - getAutoGainEnabled ()
+      - setNoiseGate ()
+      - getNoiseGateEnabled ()
+      - setNoiseGateThreshold ()
+      - getNoiseGateThreshold ()
+      - getCurrentGain ()
+      - setFrequencyEstimationMethod ()
+      - getFrequencyEstimationMethod ()
+      - getEstimatedFrequency ()
+      - setFFTDisplay ()
+      - getFFTDisplayEnabled ()
+      - getIsRunning ()
+      - getSimilarityScore ()
+      - isSimilaritySearchActive ()
+      - setPauseDrawing ()
+      - getPauseDrawing ()
+      - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
+      - getFFTOverlayDimensions ()
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
-  - sliderValueToThreshold (src/main.ts)
-    - formatThresholdDisplay ()
+      - clearAndDrawGrid ()
+      - drawWaveform ()
+      - drawFFTOverlay ()
+      - drawFrequencyPlot ()
+      - setBufferSizeMultiplier ()
+      - render ()
+      - frequencyToNote ()
+      - sliderValueToThreshold (src/main.ts)
+      - formatThresholdDisplay ()
       - startFrequencyDisplay ()
       - stopFrequencyDisplay ()
+      - amplitudeToDb ()
+    - if ()
+      - clearHistory ()
+      - getBufferSizeMultiplier ()
+      - getMinFrequency ()
+      - getMaxFrequency ()
+      - getFrequencyPlotHistory ()
+    - constructor (undefined)
+- getArrayF32FromWasm0 (dist/wasm/wasm_processor.js)
 - catch (src/AudioManager.ts)
-- for (src/AudioManager.ts)
 - cleanup (src/WaveformDataProcessor.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 
 
 ## プロジェクト構造（ファイル一覧）
 CONSOLIDATION_SUMMARY.md
+FREQUENCY_STABILITY_FIX.md
 IMPLEMENTATION_NOTES_117.md
 IMPLEMENTATION_SUMMARY.md
 LIBRARY_USAGE.md
@@ -805,15 +826,15 @@ dist/WaveformRenderData.d.ts
 dist/WaveformRenderer.d.ts
 dist/WaveformSearcher.d.ts
 dist/ZeroCrossDetector.d.ts
+dist/assets/index-C-C2iXJO.js
 dist/index.d.ts
+dist/index.html
 dist/utils.d.ts
 dist/wasm/package.json
 dist/wasm/wasm_processor.d.ts
 dist/wasm/wasm_processor.js
 dist/wasm/wasm_processor_bg.wasm.d.ts
-docs/PHASE_ALIGNMENT.md
 example-library-usage.html
-index.html
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -825,4 +846,4 @@ index.html
 
 
 ---
-Generated at: 2026-01-16 07:09:07 JST
+Generated at: 2026-01-17 07:08:54 JST

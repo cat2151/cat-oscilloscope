@@ -1,4 +1,4 @@
-Last updated: 2026-01-16
+Last updated: 2026-01-17
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -201,6 +201,7 @@ Last updated: 2026-01-16
 - .github/workflows/deploy.yml
 - .gitignore
 - CONSOLIDATION_SUMMARY.md
+- FREQUENCY_STABILITY_FIX.md
 - IMPLEMENTATION_NOTES_117.md
 - IMPLEMENTATION_SUMMARY.md
 - LIBRARY_USAGE.md
@@ -235,12 +236,15 @@ Last updated: 2026-01-16
 - dist/WaveformSearcher.d.ts.map
 - dist/ZeroCrossDetector.d.ts
 - dist/ZeroCrossDetector.d.ts.map
+- dist/assets/index-C-C2iXJO.js
+- dist/assets/index-C-C2iXJO.js.map
 - dist/cat-oscilloscope.cjs
 - dist/cat-oscilloscope.cjs.map
 - dist/cat-oscilloscope.mjs
 - dist/cat-oscilloscope.mjs.map
 - dist/index.d.ts
 - dist/index.d.ts.map
+- dist/index.html
 - dist/utils.d.ts
 - dist/utils.d.ts.map
 - dist/wasm/package.json
@@ -248,7 +252,6 @@ Last updated: 2026-01-16
 - dist/wasm/wasm_processor.js
 - dist/wasm/wasm_processor_bg.wasm
 - dist/wasm/wasm_processor_bg.wasm.d.ts
-- docs/PHASE_ALIGNMENT.md
 - example-library-usage.html
 - generated-docs/project-overview-generated-prompt.md
 - index.html
@@ -281,6 +284,9 @@ Last updated: 2026-01-16
 - issue-notes/158.md
 - issue-notes/160.md
 - issue-notes/162.md
+- issue-notes/163.md
+- issue-notes/165.md
+- issue-notes/167.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -327,7 +333,6 @@ Last updated: 2026-01-16
 - src/ZeroCrossDetector.ts
 - src/__tests__/BufferSource.test.ts
 - src/__tests__/algorithms.test.ts
-- src/__tests__/alignment-mode.test.ts
 - src/__tests__/comparison-panel-renderer.test.ts
 - src/__tests__/dom-integration.test.ts
 - src/__tests__/library-exports.test.ts
@@ -348,7 +353,6 @@ Last updated: 2026-01-16
 - wasm-processor/src/frequency_estimator.rs
 - wasm-processor/src/gain_controller.rs
 - wasm-processor/src/lib.rs
-- wasm-processor/src/phase_detector.rs
 - wasm-processor/src/waveform_searcher.rs
 - wasm-processor/src/zero_cross_detector.rs
 
@@ -568,70 +572,62 @@ jobs:
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-01d986e Add issue note for #162 [auto]
-7a23eab Merge pull request #161 from cat2151/copilot/release-v001-fixed
-ff92f2e Address PR review comments: fix release notes URL and remove unpkg section
-57bdef9 Update LIBRARY_USAGE.md with CDN usage information
-aef79cb Add release creation documentation
-05da146 Change version to 0.0.1 for initial release
-221e8ce Initial plan
-33e706a Add issue note for #160 [auto]
-4588440 Merge pull request #159 from cat2151/copilot/add-dist-commit-to-ci
-7433376 コードレビュー対応: .gitignoreのコメントを英語に変更
+2b84aa3 Merge pull request #168 from cat2151/copilot/analyze-frequency-estimation-issues
+da54e6c Clarify FREQ_HISTORY_PREFERENCE_RATIO comment with concrete example
+1835799 Address PR review comments: improve test coverage and documentation clarity
+df239ab Replace division with multiplication for better code safety
+7105b9b Add comprehensive unit tests for frequency stability logic
+1edfb16 Fix frequency oscillation between 1x and 2x by improving history-based stability
+1fbe2c4 Initial plan
+2b853bf Add issue note for #167 [auto]
+39f2ce4 Auto-translate README.ja.md to README.md [auto]
+21fd896 Merge pull request #166 from cat2151/copilot/remove-unnecessary-vertical-line
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
-.gitignore
-LIBRARY_USAGE.md
+FREQUENCY_STABILITY_FIX.md
+README.ja.md
 README.md
-RELEASE.md
-dist/AudioManager.d.ts
-dist/AudioManager.d.ts.map
-dist/BufferSource.d.ts
-dist/BufferSource.d.ts.map
-dist/ComparisonPanelRenderer.d.ts
-dist/ComparisonPanelRenderer.d.ts.map
-dist/FrequencyEstimator.d.ts
-dist/FrequencyEstimator.d.ts.map
-dist/GainController.d.ts
-dist/GainController.d.ts.map
 dist/Oscilloscope.d.ts
 dist/Oscilloscope.d.ts.map
-dist/PianoKeyboardRenderer.d.ts
-dist/PianoKeyboardRenderer.d.ts.map
 dist/WaveformDataProcessor.d.ts
 dist/WaveformDataProcessor.d.ts.map
 dist/WaveformRenderData.d.ts
 dist/WaveformRenderData.d.ts.map
 dist/WaveformRenderer.d.ts
 dist/WaveformRenderer.d.ts.map
-dist/WaveformSearcher.d.ts
-dist/WaveformSearcher.d.ts.map
 dist/ZeroCrossDetector.d.ts
 dist/ZeroCrossDetector.d.ts.map
+dist/assets/index-C-C2iXJO.js
+dist/assets/index-C-C2iXJO.js.map
 dist/cat-oscilloscope.cjs
 dist/cat-oscilloscope.cjs.map
 dist/cat-oscilloscope.mjs
 dist/cat-oscilloscope.mjs.map
 dist/index.d.ts
 dist/index.d.ts.map
-dist/utils.d.ts
-dist/utils.d.ts.map
-dist/wasm/package.json
-dist/wasm/wasm_processor.d.ts
-dist/wasm/wasm_processor.js
-dist/wasm/wasm_processor_bg.wasm
-dist/wasm/wasm_processor_bg.wasm.d.ts
+dist/index.html
+docs/PHASE_ALIGNMENT.md
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/158.md
-issue-notes/160.md
-issue-notes/162.md
-package-lock.json
-package.json
+index.html
+issue-notes/163.md
+issue-notes/165.md
+issue-notes/167.md
+src/Oscilloscope.ts
+src/WaveformDataProcessor.ts
+src/WaveformRenderData.ts
+src/WaveformRenderer.ts
+src/ZeroCrossDetector.ts
+src/__tests__/alignment-mode.test.ts
+src/index.ts
+src/main.ts
+wasm-processor/src/frequency_estimator.rs
+wasm-processor/src/lib.rs
+wasm-processor/src/phase_detector.rs
+wasm-processor/src/zero_cross_detector.rs
 
 
 ---
-Generated at: 2026-01-16 07:09:07 JST
+Generated at: 2026-01-17 07:08:54 JST
