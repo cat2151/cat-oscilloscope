@@ -296,9 +296,9 @@ impl FrequencyEstimator {
                     None => {
                         best_candidate = Some((candidate_fundamental, harmonic_count));
                     }
-                    Some((_, best_count)) => {
+                    Some((best_freq, best_count)) => {
                         if harmonic_count > best_count || 
-                           (harmonic_count == best_count && candidate_fundamental < best_candidate.unwrap().0) {
+                           (harmonic_count == best_count && candidate_fundamental < best_freq) {
                             best_candidate = Some((candidate_fundamental, harmonic_count));
                         }
                     }
