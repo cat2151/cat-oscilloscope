@@ -11,20 +11,20 @@ impl FrequencyEstimator {
     const MIN_FREQUENCY_HZ: f32 = 20.0;
     const MAX_FREQUENCY_HZ: f32 = 5000.0;
     const FFT_MAGNITUDE_THRESHOLD: u8 = 10;
-    const FREQUENCY_HISTORY_SIZE: usize = 7;
-    const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.05;
+    const FREQUENCY_HISTORY_SIZE: usize = 10; // Increased from 7 for better stability
+    const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.08; // Increased from 0.05 to group similar frequencies
     const FREQUENCY_PLOT_HISTORY_SIZE: usize = 100;
     
     // Harmonic detection constants
-    const HARMONIC_RELATIVE_THRESHOLD: f32 = 0.3; // Harmonics must be at least 30% of fundamental magnitude
+    const HARMONIC_RELATIVE_THRESHOLD: f32 = 0.4; // Increased from 0.3: Harmonics must be at least 40% of fundamental magnitude
     const MAX_HARMONICS_TO_CHECK: usize = 8; // Check up to 8x harmonic
     const MIN_HARMONICS_REQUIRED: usize = 2; // Require at least 2 harmonics to consider it a harmonic series
     const HARMONIC_FREQUENCY_TOLERANCE: f32 = 0.05; // 5% tolerance for harmonic matching
     
     // Frequency stability constants for history-based smoothing
-    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.2; // 20% difference considered close to history
-    const FREQ_HISTORY_ACCEPTABLE_THRESHOLD: f32 = 0.5; // 50% difference considered acceptable
-    const FREQ_HISTORY_PREFERENCE_FACTOR: f32 = 1.5; // Prefer fundamental if candidate is 1.5x closer to history
+    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.15; // 15% difference considered close to history
+    const FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD: f32 = 0.3; // 30% - strongly prefer if within this range
+    const FREQ_HISTORY_PREFERENCE_RATIO: f32 = 2.0; // Only switch if new candidate is 2x closer than current
     
     pub fn new() -> Self {
         FrequencyEstimator {
@@ -163,24 +163,37 @@ impl FrequencyEstimator {
         
         // Use frequency history for stability if available
         if let Some(candidate) = fundamental_candidate {
-            // If we have history, prefer frequencies close to previous estimates
+            // If we have history, use it to provide stability
             if !self.frequency_history.is_empty() {
                 let last_freq = self.frequency_history.last().unwrap();
                 if *last_freq > 0.0 {
-                    // Check if candidate is close to last frequency
+                    // Calculate relative difference from history
                     let candidate_diff = (candidate - last_freq).abs() / last_freq;
                     let strongest_diff = (strongest_peak_freq - last_freq).abs() / last_freq;
                     
-                    // If both are reasonably close, prefer the fundamental
-                    // If strongest is much closer, prefer strongest (might be correct)
-                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD || 
-                       (candidate_diff < Self::FREQ_HISTORY_ACCEPTABLE_THRESHOLD && 
-                        strongest_diff > candidate_diff * Self::FREQ_HISTORY_PREFERENCE_FACTOR) {
-                        return candidate;
-                    } else {
-                        // History suggests the strongest peak is more reliable
+                    // Strategy: Prefer stability over switching between harmonics
+                    // Case 1: If strongest peak is very close to history, keep it
+                    if strongest_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
                         return strongest_peak_freq;
                     }
+                    
+                    // Case 2: If candidate is very close to history, keep it
+                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
+                        return candidate;
+                    }
+                    
+                    // Case 3: If both are far from history, only switch if candidate is significantly closer
+                    // This prevents rapid oscillation between 1x and 2x harmonics.
+                    // Note: `FREQ_HISTORY_PREFERENCE_RATIO` (e.g. 2.0) means the candidate must be at least
+                    // that factor closer to history than the strongest peak before we switch.
+                    // For example, with ratio 2.0, if strongest_diff is 0.4, candidate_diff must be < 0.2.
+                    if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
+                       candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
+                        return candidate;
+                    }
+                    
+                    // Case 4: Default to strongest peak (maintains current frequency)
+                    return strongest_peak_freq;
                 }
             }
             
@@ -578,5 +591,185 @@ impl FrequencyEstimator {
         self.frequency_history.clear();
         self.frequency_plot_history.clear();
         self.estimated_frequency = 0.0;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_frequency_stability_keeps_history_when_close() {
+        let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
+        
+        // Build history at fundamental frequency (100Hz)
+        for _ in 0..5 {
+            estimator.frequency_history.push(100.0);
+        }
+        
+        // Create FFT data with peaks at 100Hz (fundamental) and 200Hz (2x harmonic)
+        // Both with similar magnitudes to simulate the problematic case
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Set peak at ~100Hz
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 100;
+        
+        // Set peak at ~200Hz with similar magnitude
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 95;
+        
+        // Set some harmonics to satisfy harmonic detection
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 50;
+        
+        // Call estimate_frequency_fft which should use history to maintain 100Hz
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay close to 100Hz due to history, not jump to 200Hz
+        assert!((result - 100.0).abs() < 20.0, "Expected frequency near 100Hz, got {}", result);
+    }
+
+    #[test]
+    fn test_frequency_stability_resists_switching_to_harmonic() {
+        let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
+        
+        // Build history at fundamental frequency (100Hz)
+        for _ in 0..8 {
+            estimator.frequency_history.push(100.0);
+        }
+        
+        // Create FFT data where 2x harmonic (200Hz) is strongest, but fundamental exists
+        // Need to set strong harmonics so harmonic detection recognizes 100Hz as fundamental
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Set peak at ~100Hz (fundamental) - make it strongest so it's the reference
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 120;
+        
+        // Set peak at ~200Hz (2x harmonic)
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 110;
+        
+        // Set strong harmonics at 300Hz and 400Hz (>= 40% of 120 = 48)
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 80;
+        let bin_400hz = (400.0 / bin_frequency).round() as usize;
+        frequency_data[bin_400hz] = 70;
+        
+        // Call estimate_frequency_fft - should prefer 100Hz due to history (Case 2)
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay at 100Hz due to history
+        assert!((result - 100.0).abs() < 20.0, "Expected to stay at 100Hz, got {}", result);
+    }
+
+    #[test]
+    fn test_frequency_stability_maintains_current_frequency() {
+        let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
+        
+        // Build history at 200Hz (we were on the 2x harmonic)
+        for _ in 0..8 {
+            estimator.frequency_history.push(200.0);
+        }
+        
+        // Create FFT data where both 100Hz and 200Hz exist with similar strength
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Set peak at ~100Hz (fundamental)
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 90;
+        
+        // Set peak at ~200Hz (current frequency from history)
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 110;
+        
+        // Set harmonics
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 50;
+        
+        // Call estimate_frequency_fft - should maintain 200Hz (Case 1)
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay at 200Hz since it's close to history
+        assert!((result - 200.0).abs() < 20.0, "Expected to maintain current frequency ~200Hz, got {}", result);
+    }
+
+    #[test]
+    fn test_harmonic_detection_requires_sufficient_harmonics() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Only fundamental, no harmonics - should not detect harmonic series
+        let peaks = vec![(100.0, 100.0)];
+        let result = estimator.find_fundamental_frequency(&peaks, 100.0);
+        assert!(result.is_none());
+        
+        // Fundamental + one weak harmonic - should not detect (need MIN_HARMONICS_REQUIRED)
+        let peaks = vec![
+            (100.0, 100.0),
+            (200.0, 30.0), // Too weak (< 40% threshold)
+        ];
+        let result = estimator.find_fundamental_frequency(&peaks, 100.0);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_harmonic_detection_with_strong_series() {
+        let estimator = FrequencyEstimator::new();
+        
+        // Fundamental + 2 strong harmonics - should detect fundamental
+        let peaks = vec![
+            (100.0, 100.0),
+            (200.0, 80.0), // 80% of fundamental (> 40% threshold)
+            (300.0, 70.0), // 70% of fundamental (> 40% threshold)
+        ];
+        let result = estimator.find_fundamental_frequency(&peaks, 100.0);
+        assert!(result.is_some());
+        assert!((result.unwrap() - 100.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_frequency_smoothing_with_mode_filter() {
+        let mut estimator = FrequencyEstimator::new();
+        
+        // Add a series of frequencies with one outlier
+        let frequencies = vec![100.0, 102.0, 101.0, 200.0, 99.0, 101.0, 100.5];
+        
+        for &freq in &frequencies {
+            let smoothed = estimator.smooth_frequency(freq);
+            // Last smoothed value should be close to mode (around 100Hz), not the outlier (200Hz)
+            if freq == 100.5 {
+                // After processing all frequencies, the mode should be around 100Hz
+                assert!((smoothed - 100.0).abs() < 5.0, "Smoothed frequency {} should be close to 100Hz", smoothed);
+            }
+        }
+    }
+
+    #[test]
+    fn test_history_size_limit() {
+        let mut estimator = FrequencyEstimator::new();
+        
+        // Add more than FREQUENCY_HISTORY_SIZE entries
+        for i in 0..15 {
+            estimator.smooth_frequency(100.0 + i as f32);
+        }
+        
+        // History should be limited to FREQUENCY_HISTORY_SIZE
+        assert_eq!(estimator.frequency_history.len(), FrequencyEstimator::FREQUENCY_HISTORY_SIZE);
     }
 }
