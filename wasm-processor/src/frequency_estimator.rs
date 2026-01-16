@@ -185,7 +185,7 @@ impl FrequencyEstimator {
                     // Case 3: If both are far from history, only switch if candidate is significantly closer
                     // This prevents rapid oscillation between 1x and 2x
                     if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
-                       candidate_diff < strongest_diff / Self::FREQ_HISTORY_PREFERENCE_RATIO {
+                       candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
                         return candidate;
                     }
                     
