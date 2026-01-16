@@ -2,7 +2,6 @@ import { WaveformRenderData } from './WaveformRenderData';
 import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
-import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 
 // Type definition for WASM processor instance
@@ -40,7 +39,6 @@ export class WaveformDataProcessor {
   private audioManager: AudioManager;
   private gainController: GainController;
   private frequencyEstimator: FrequencyEstimator;
-  private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
 
   private wasmProcessor: WasmProcessorInstance | null = null;
@@ -51,13 +49,11 @@ export class WaveformDataProcessor {
     audioManager: AudioManager,
     gainController: GainController,
     frequencyEstimator: FrequencyEstimator,
-    zeroCrossDetector: ZeroCrossDetector,
     waveformSearcher: WaveformSearcher
   ) {
     this.audioManager = audioManager;
     this.gainController = gainController;
     this.frequencyEstimator = frequencyEstimator;
-    this.zeroCrossDetector = zeroCrossDetector;
     this.waveformSearcher = waveformSearcher;
   }
   

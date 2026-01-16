@@ -45,10 +45,6 @@ export declare class WaveformRenderer {
      */
     drawWaveform(data: Float32Array, startIndex: number, endIndex: number, gain: number): void;
     /**
-     * Draw a vertical line at the zero-cross point
-     */
-    drawZeroCrossLine(zeroCrossIndex: number, startIndex: number, endIndex: number): void;
-    /**
      * Draw FFT spectrum overlay in bottom-left corner of canvas
      */
     drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number): void;

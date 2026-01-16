@@ -66,8 +66,6 @@ export declare class Oscilloscope {
     isSimilaritySearchActive(): boolean;
     setUsePeakMode(enabled: boolean): void;
     getUsePeakMode(): boolean;
-    setAlignmentMode(mode: 'zero-cross' | 'peak' | 'phase'): void;
-    getAlignmentMode(): 'zero-cross' | 'peak' | 'phase';
     setPauseDrawing(paused: boolean): void;
     getPauseDrawing(): boolean;
 }

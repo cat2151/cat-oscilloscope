@@ -65,7 +65,6 @@ export class Oscilloscope {
       this.audioManager,
       this.gainController,
       this.frequencyEstimator,
-      this.zeroCrossDetector,
       this.waveformSearcher
     );
   }
