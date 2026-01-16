@@ -2,7 +2,6 @@ import { WaveformRenderData } from './WaveformRenderData';
 import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
-import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 
 // Type definition for WASM processor instance
@@ -13,7 +12,6 @@ interface WasmProcessorInstance {
   setFrequencyEstimationMethod(method: string): void;
   setBufferSizeMultiplier(multiplier: number): void;
   setUsePeakMode(enabled: boolean): void;
-  setAlignmentMode(mode: string): void;
   reset(): void;
   processFrame(
     waveformData: Float32Array,
@@ -41,7 +39,6 @@ export class WaveformDataProcessor {
   private audioManager: AudioManager;
   private gainController: GainController;
   private frequencyEstimator: FrequencyEstimator;
-  private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
 
   private wasmProcessor: WasmProcessorInstance | null = null;
@@ -52,13 +49,11 @@ export class WaveformDataProcessor {
     audioManager: AudioManager,
     gainController: GainController,
     frequencyEstimator: FrequencyEstimator,
-    zeroCrossDetector: ZeroCrossDetector,
     waveformSearcher: WaveformSearcher
   ) {
     this.audioManager = audioManager;
     this.gainController = gainController;
     this.frequencyEstimator = frequencyEstimator;
-    this.zeroCrossDetector = zeroCrossDetector;
     this.waveformSearcher = waveformSearcher;
   }
   
@@ -257,7 +252,6 @@ export class WaveformDataProcessor {
     this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
     this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
     this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
-    this.wasmProcessor.setAlignmentMode(this.zeroCrossDetector.getAlignmentMode());
   }
   
   /**
@@ -341,8 +335,6 @@ export class WaveformDataProcessor {
       frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
       sampleRate: wasmResult.sampleRate,
       fftSize: wasmResult.fftSize,
-      firstAlignmentPoint: wasmResult.firstAlignmentPoint,
-      secondAlignmentPoint: wasmResult.secondAlignmentPoint,
       frequencyData: wasmResult.frequencyData ? new Uint8Array(wasmResult.frequencyData) : undefined,
       isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
       maxFrequency: wasmResult.maxFrequency,

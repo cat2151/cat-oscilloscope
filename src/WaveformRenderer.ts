@@ -196,34 +196,6 @@ export class WaveformRenderer {
   }
 
   /**
-   * Draw a vertical line at the zero-cross point
-   */
-  drawZeroCrossLine(zeroCrossIndex: number, startIndex: number, endIndex: number): void {
-    const dataLength = endIndex - startIndex;
-    if (dataLength <= 0) return;
-
-    // Check if zero-cross point is within the displayed range
-    if (zeroCrossIndex < startIndex || zeroCrossIndex >= endIndex) {
-      return;
-    }
-
-    // Calculate the x position of the zero-cross point in canvas coordinates
-    const relativeIndex = zeroCrossIndex - startIndex;
-    const sliceWidth = this.canvas.width / dataLength;
-    const x = relativeIndex * sliceWidth;
-
-    // Draw a vertical line in red to mark the zero-cross point
-    this.ctx.save();
-    this.ctx.strokeStyle = '#ff0000';
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x, 0);
-    this.ctx.lineTo(x, this.canvas.height);
-    this.ctx.stroke();
-    this.ctx.restore();
-  }
-
-  /**
    * Draw FFT spectrum overlay in bottom-left corner of canvas
    */
   drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number): void {

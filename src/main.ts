@@ -1,5 +1,4 @@
 import { Oscilloscope } from './Oscilloscope';
-import type { AlignmentMode } from './ZeroCrossDetector';
 import { dbToAmplitude, frequencyToNote } from './utils';
 import { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
@@ -16,7 +15,6 @@ const fileInput = document.getElementById('fileInput') as HTMLInputElement;
 const autoGainCheckbox = document.getElementById('autoGainCheckbox') as HTMLInputElement;
 const noiseGateCheckbox = document.getElementById('noiseGateCheckbox') as HTMLInputElement;
 const fftDisplayCheckbox = document.getElementById('fftDisplayCheckbox') as HTMLInputElement;
-const alignmentModeSelect = document.getElementById('alignmentModeSelect') as HTMLSelectElement;
 const pauseDrawingCheckbox = document.getElementById('pauseDrawingCheckbox') as HTMLInputElement;
 const noiseGateThreshold = document.getElementById('noiseGateThreshold') as HTMLInputElement;
 const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElement;
@@ -42,7 +40,6 @@ const requiredElements = [
   { element: autoGainCheckbox, name: 'autoGainCheckbox' },
   { element: noiseGateCheckbox, name: 'noiseGateCheckbox' },
   { element: fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
-  { element: alignmentModeSelect, name: 'alignmentModeSelect' },
   { element: pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
   { element: noiseGateThreshold, name: 'noiseGateThreshold' },
   { element: thresholdValue, name: 'thresholdValue' },
@@ -96,9 +93,6 @@ thresholdValue.textContent = formatThresholdDisplay(initialThreshold.db, initial
 // Synchronize FFT display control
 oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 
-// Synchronize alignment mode control
-oscilloscope.setAlignmentMode(alignmentModeSelect.value as AlignmentMode);
-
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
@@ -115,11 +109,6 @@ noiseGateCheckbox.addEventListener('change', () => {
 // FFT display checkbox handler
 fftDisplayCheckbox.addEventListener('change', () => {
   oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
-});
-
-// Alignment mode selector handler
-alignmentModeSelect.addEventListener('change', () => {
-  oscilloscope.setAlignmentMode(alignmentModeSelect.value as AlignmentMode);
 });
 
 // Pause drawing checkbox handler

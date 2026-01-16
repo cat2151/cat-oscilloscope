@@ -2,7 +2,6 @@ import { WaveformRenderData } from './WaveformRenderData';
 import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
-import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 /**
  * WaveformDataProcessor - Processes waveform data using Rust WASM implementation
@@ -19,12 +18,11 @@ export declare class WaveformDataProcessor {
     private audioManager;
     private gainController;
     private frequencyEstimator;
-    private zeroCrossDetector;
     private waveformSearcher;
     private wasmProcessor;
     private isInitialized;
     private cachedBasePath;
-    constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, zeroCrossDetector: ZeroCrossDetector, waveformSearcher: WaveformSearcher);
+    constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher);
     /**
      * Initialize the WASM module
      * Must be called before processFrame

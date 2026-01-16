@@ -6,19 +6,11 @@ pub struct DisplayRange {
     pub second_zero_cross: Option<usize>,
 }
 
-/// Alignment mode for waveform synchronization
-#[derive(Clone, Copy, PartialEq)]
-pub enum AlignmentMode {
-    ZeroCross,
-    Peak,
-    Phase,
-}
-
 /// ZeroCrossDetector handles zero-crossing detection and display range calculation
 pub struct ZeroCrossDetector {
     previous_zero_cross_index: Option<usize>,
     previous_peak_index: Option<usize>,
-    alignment_mode: AlignmentMode,
+    use_peak_mode: bool,
 }
 
 impl ZeroCrossDetector {
@@ -30,27 +22,13 @@ impl ZeroCrossDetector {
         ZeroCrossDetector {
             previous_zero_cross_index: None,
             previous_peak_index: None,
-            alignment_mode: AlignmentMode::Phase,
+            use_peak_mode: false,
         }
     }
     
-    /// Set whether to use peak mode instead of zero-crossing mode (legacy compatibility)
+    /// Set whether to use peak mode instead of zero-crossing mode
     pub fn set_use_peak_mode(&mut self, enabled: bool) {
-        self.alignment_mode = if enabled {
-            AlignmentMode::Peak
-        } else {
-            AlignmentMode::ZeroCross
-        };
-    }
-    
-    /// Set alignment mode
-    pub fn set_alignment_mode(&mut self, mode: AlignmentMode) {
-        self.alignment_mode = mode;
-    }
-    
-    /// Get current alignment mode
-    pub fn get_alignment_mode(&self) -> AlignmentMode {
-        self.alignment_mode
+        self.use_peak_mode = enabled;
     }
     
     /// Reset detector state
@@ -183,7 +161,7 @@ impl ZeroCrossDetector {
             0.0
         };
         
-        if self.alignment_mode == AlignmentMode::Peak {
+        if self.use_peak_mode {
             // Peak mode
             let first_peak = self.find_stable_peak(data, estimated_cycle_length)?;
             let second_peak = if estimated_cycle_length > 0.0 {

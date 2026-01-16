@@ -1,48 +1,27 @@
 /**
- * ZeroCrossDetector - Configuration holder for zero-cross/peak/phase detection
+ * ZeroCrossDetector - Configuration holder for zero-cross/peak detection
  * 
- * This class only holds configuration state. All actual zero-crossing, peak,
- * and phase detection algorithms are implemented in Rust WASM (wasm-processor module).
+ * This class only holds configuration state. All actual zero-crossing and peak
+ * detection algorithms are implemented in Rust WASM (wasm-processor module).
  * 
  * Responsible for:
- * - Storing alignment mode (zero-cross, peak, or phase)
+ * - Storing peak mode configuration (legacy compatibility)
  */
-export type AlignmentMode = 'zero-cross' | 'peak' | 'phase';
-
 export class ZeroCrossDetector {
-  private alignmentMode: AlignmentMode = 'phase';
+  private usePeakMode: boolean = false;
 
   /**
-   * Set alignment mode for waveform synchronization
-   * - 'zero-cross': Align on negative-to-positive zero crossings
-   * - 'peak': Align on peak (maximum absolute amplitude) points
-   * - 'phase': Align based on fundamental frequency phase (best for waveforms with subharmonics)
-   */
-  setAlignmentMode(mode: AlignmentMode): void {
-    this.alignmentMode = mode;
-  }
-
-  /**
-   * Get current alignment mode
-   */
-  getAlignmentMode(): AlignmentMode {
-    return this.alignmentMode;
-  }
-
-  /**
-   * Set whether to use peak mode instead of zero-crossing mode (legacy compatibility)
-   * @deprecated Use setAlignmentMode instead
+   * Set whether to use peak mode instead of zero-crossing mode
    */
   setUsePeakMode(enabled: boolean): void {
-    this.alignmentMode = enabled ? 'peak' : 'zero-cross';
+    this.usePeakMode = enabled;
   }
 
   /**
-   * Get whether peak mode is enabled (legacy compatibility)
-   * @deprecated Use getAlignmentMode instead
+   * Get whether peak mode is enabled
    */
   getUsePeakMode(): boolean {
-    return this.alignmentMode === 'peak';
+    return this.usePeakMode;
   }
 
   /**

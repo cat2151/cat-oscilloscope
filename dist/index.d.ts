@@ -3,7 +3,6 @@
  * Library entry point for importing as a module
  */
 export { Oscilloscope } from './Oscilloscope';
-export type { AlignmentMode } from './ZeroCrossDetector';
 export { AudioManager } from './AudioManager';
 export { GainController } from './GainController';
 export { FrequencyEstimator } from './FrequencyEstimator';
