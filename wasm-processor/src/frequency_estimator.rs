@@ -183,7 +183,9 @@ impl FrequencyEstimator {
                     }
                     
                     // Case 3: If both are far from history, only switch if candidate is significantly closer
-                    // This prevents rapid oscillation between 1x and 2x
+                    // This prevents rapid oscillation between 1x and 2x harmonics.
+                    // Note: `FREQ_HISTORY_PREFERENCE_RATIO` (e.g. 2.0) means the candidate must be more than
+                    // that factor closer to history than the strongest peak before we switch.
                     if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
                        candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
                         return candidate;
@@ -595,84 +597,116 @@ impl FrequencyEstimator {
 mod tests {
     use super::*;
 
-    /// Helper function to simulate FFT peaks with fundamental and harmonic
-    fn create_test_peaks(fundamental_freq: f32, fundamental_mag: f32, harmonic_mag: f32) -> Vec<(f32, f32)> {
-        vec![
-            (fundamental_freq, fundamental_mag),
-            (fundamental_freq * 2.0, harmonic_mag),
-            (fundamental_freq * 3.0, harmonic_mag * 0.5),
-        ]
-    }
-
     #[test]
     fn test_frequency_stability_keeps_history_when_close() {
         let mut estimator = FrequencyEstimator::new();
         estimator.set_frequency_estimation_method("fft");
         
-        // Simulate history: frequency has been stable at 100Hz
+        // Build history at fundamental frequency (100Hz)
         for _ in 0..5 {
             estimator.frequency_history.push(100.0);
         }
         
-        // Create peaks where fundamental (100Hz) and harmonic (200Hz) are similar in magnitude
-        // This simulates the problematic case where both could be valid
-        let peaks = create_test_peaks(100.0, 100.0, 95.0);
-        let strongest_peak_mag = 100.0;
+        // Create FFT data with peaks at 100Hz (fundamental) and 200Hz (2x harmonic)
+        // Both with similar magnitudes to simulate the problematic case
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
         
-        // Find fundamental - should detect 100Hz as fundamental
-        let candidate = estimator.find_fundamental_frequency(&peaks, strongest_peak_mag);
+        let mut frequency_data = vec![0u8; fft_size / 2];
         
-        // Verify that harmonic series is detected
-        assert!(candidate.is_some());
-        let candidate_freq = candidate.unwrap();
-        assert!((candidate_freq - 100.0).abs() < 1.0);
+        // Set peak at ~100Hz
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 100;
+        
+        // Set peak at ~200Hz with similar magnitude
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 95;
+        
+        // Set some harmonics to satisfy harmonic detection
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 50;
+        
+        // Call estimate_frequency_fft which should use history to maintain 100Hz
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay close to 100Hz due to history, not jump to 200Hz
+        assert!((result - 100.0).abs() < 20.0, "Expected frequency near 100Hz, got {}", result);
     }
 
     #[test]
     fn test_frequency_stability_resists_switching_to_harmonic() {
         let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
         
         // Build history at fundamental frequency (100Hz)
         for _ in 0..8 {
             estimator.frequency_history.push(100.0);
         }
         
-        let last_freq = 100.0f32;
-        let candidate = 100.0f32; // Detected fundamental
-        let strongest_peak = 200.0f32; // 2x harmonic is strongest
+        // Create FFT data where 2x harmonic (200Hz) is strongest, but fundamental exists
+        // Need to set strong harmonics so harmonic detection recognizes 100Hz as fundamental
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
         
-        // Calculate differences
-        let candidate_diff = (candidate - last_freq).abs() / last_freq; // 0.0
-        let strongest_diff = (strongest_peak - last_freq).abs() / last_freq; // 1.0
+        let mut frequency_data = vec![0u8; fft_size / 2];
         
-        // Case 2 should trigger: candidate is very close to history
-        // Expected: return candidate (100Hz), not strongest (200Hz)
-        assert!(candidate_diff < FrequencyEstimator::FREQ_HISTORY_CLOSE_THRESHOLD);
+        // Set peak at ~100Hz (fundamental) - make it strongest so it's the reference
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 120;
         
-        // This represents the correct behavior: staying at 100Hz despite 200Hz being strongest
+        // Set peak at ~200Hz (2x harmonic)
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 110;
+        
+        // Set strong harmonics at 300Hz and 400Hz (>= 40% of 120 = 48)
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 80;
+        let bin_400hz = (400.0 / bin_frequency).round() as usize;
+        frequency_data[bin_400hz] = 70;
+        
+        // Call estimate_frequency_fft - should prefer 100Hz due to history (Case 2)
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay at 100Hz due to history
+        assert!((result - 100.0).abs() < 20.0, "Expected to stay at 100Hz, got {}", result);
     }
 
     #[test]
-    fn test_frequency_stability_switches_when_justified() {
+    fn test_frequency_stability_maintains_current_frequency() {
         let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
         
         // Build history at 200Hz (we were on the 2x harmonic)
         for _ in 0..8 {
             estimator.frequency_history.push(200.0);
         }
         
-        let last_freq = 200.0f32;
-        let candidate = 100.0f32; // Detected fundamental
-        let strongest_peak = 200.0f32; // Current frequency
+        // Create FFT data where both 100Hz and 200Hz exist with similar strength
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
         
-        let candidate_diff = (candidate - last_freq).abs() / last_freq; // 0.5 (50%)
-        let strongest_diff = (strongest_peak - last_freq).abs() / last_freq; // 0.0
+        let mut frequency_data = vec![0u8; fft_size / 2];
         
-        // Case 1 should trigger: strongest peak is very close to history
-        // Expected: stay at strongest_peak (200Hz)
-        assert!(strongest_diff < FrequencyEstimator::FREQ_HISTORY_CLOSE_THRESHOLD);
+        // Set peak at ~100Hz (fundamental)
+        let bin_100hz = (100.0 / bin_frequency).round() as usize;
+        frequency_data[bin_100hz] = 90;
         
-        // This represents maintaining stability when the current frequency matches history
+        // Set peak at ~200Hz (current frequency from history)
+        let bin_200hz = (200.0 / bin_frequency).round() as usize;
+        frequency_data[bin_200hz] = 110;
+        
+        // Set harmonics
+        let bin_300hz = (300.0 / bin_frequency).round() as usize;
+        frequency_data[bin_300hz] = 50;
+        
+        // Call estimate_frequency_fft - should maintain 200Hz (Case 1)
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should stay at 200Hz since it's close to history
+        assert!((result - 200.0).abs() < 20.0, "Expected to maintain current frequency ~200Hz, got {}", result);
     }
 
     #[test]

@@ -56,7 +56,7 @@ if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
 
 // Case 3: 両方が履歴から遠い → 候補が2倍以上近い場合のみ切り替え
 if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
-   candidate_diff < strongest_diff / Self::FREQ_HISTORY_PREFERENCE_RATIO {
+   candidate_diff * 2.0 < strongest_diff {
     return candidate;
 }
 
