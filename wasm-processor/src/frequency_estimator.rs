@@ -11,20 +11,20 @@ impl FrequencyEstimator {
     const MIN_FREQUENCY_HZ: f32 = 20.0;
     const MAX_FREQUENCY_HZ: f32 = 5000.0;
     const FFT_MAGNITUDE_THRESHOLD: u8 = 10;
-    const FREQUENCY_HISTORY_SIZE: usize = 7;
-    const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.05;
+    const FREQUENCY_HISTORY_SIZE: usize = 10; // Increased from 7 for better stability
+    const FREQUENCY_GROUPING_TOLERANCE: f32 = 0.08; // Increased from 0.05 to group similar frequencies
     const FREQUENCY_PLOT_HISTORY_SIZE: usize = 100;
     
     // Harmonic detection constants
-    const HARMONIC_RELATIVE_THRESHOLD: f32 = 0.3; // Harmonics must be at least 30% of fundamental magnitude
+    const HARMONIC_RELATIVE_THRESHOLD: f32 = 0.4; // Increased from 0.3: Harmonics must be at least 40% of fundamental magnitude
     const MAX_HARMONICS_TO_CHECK: usize = 8; // Check up to 8x harmonic
     const MIN_HARMONICS_REQUIRED: usize = 2; // Require at least 2 harmonics to consider it a harmonic series
     const HARMONIC_FREQUENCY_TOLERANCE: f32 = 0.05; // 5% tolerance for harmonic matching
     
     // Frequency stability constants for history-based smoothing
-    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.2; // 20% difference considered close to history
-    const FREQ_HISTORY_ACCEPTABLE_THRESHOLD: f32 = 0.5; // 50% difference considered acceptable
-    const FREQ_HISTORY_PREFERENCE_FACTOR: f32 = 1.5; // Prefer fundamental if candidate is 1.5x closer to history
+    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.15; // 15% difference considered close to history
+    const FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD: f32 = 0.3; // 30% - strongly prefer if within this range
+    const FREQ_HISTORY_PREFERENCE_RATIO: f32 = 2.0; // Only switch if new candidate is 2x closer than current
     
     pub fn new() -> Self {
         FrequencyEstimator {
@@ -163,24 +163,34 @@ impl FrequencyEstimator {
         
         // Use frequency history for stability if available
         if let Some(candidate) = fundamental_candidate {
-            // If we have history, prefer frequencies close to previous estimates
+            // If we have history, use it to provide stability
             if !self.frequency_history.is_empty() {
                 let last_freq = self.frequency_history.last().unwrap();
                 if *last_freq > 0.0 {
-                    // Check if candidate is close to last frequency
+                    // Calculate relative difference from history
                     let candidate_diff = (candidate - last_freq).abs() / last_freq;
                     let strongest_diff = (strongest_peak_freq - last_freq).abs() / last_freq;
                     
-                    // If both are reasonably close, prefer the fundamental
-                    // If strongest is much closer, prefer strongest (might be correct)
-                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD || 
-                       (candidate_diff < Self::FREQ_HISTORY_ACCEPTABLE_THRESHOLD && 
-                        strongest_diff > candidate_diff * Self::FREQ_HISTORY_PREFERENCE_FACTOR) {
-                        return candidate;
-                    } else {
-                        // History suggests the strongest peak is more reliable
+                    // Strategy: Prefer stability over switching between harmonics
+                    // Case 1: If strongest peak is very close to history, keep it
+                    if strongest_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
                         return strongest_peak_freq;
                     }
+                    
+                    // Case 2: If candidate is very close to history, keep it
+                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
+                        return candidate;
+                    }
+                    
+                    // Case 3: If both are far from history, only switch if candidate is significantly closer
+                    // This prevents rapid oscillation between 1x and 2x
+                    if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
+                       candidate_diff < strongest_diff / Self::FREQ_HISTORY_PREFERENCE_RATIO {
+                        return candidate;
+                    }
+                    
+                    // Case 4: Default to strongest peak (maintains current frequency)
+                    return strongest_peak_freq;
                 }
             }
             
