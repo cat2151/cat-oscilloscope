@@ -184,8 +184,9 @@ impl FrequencyEstimator {
                     
                     // Case 3: If both are far from history, only switch if candidate is significantly closer
                     // This prevents rapid oscillation between 1x and 2x harmonics.
-                    // Note: `FREQ_HISTORY_PREFERENCE_RATIO` (e.g. 2.0) means the candidate must be more than
+                    // Note: `FREQ_HISTORY_PREFERENCE_RATIO` (e.g. 2.0) means the candidate must be at least
                     // that factor closer to history than the strongest peak before we switch.
+                    // For example, with ratio 2.0, if strongest_diff is 0.4, candidate_diff must be < 0.2.
                     if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
                        candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
                         return candidate;
