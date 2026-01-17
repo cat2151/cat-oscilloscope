@@ -403,9 +403,12 @@ impl WasmDataProcessor {
         data: &[f32],
         display_start_index: usize,
         cycle_length: f32,
-        _estimated_frequency: f32,
-        _sample_rate: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        // Explicitly mark parameters as used to keep the signature stable
+        let _ = (estimated_frequency, sample_rate);
+        
         // If we don't have a valid cycle length, can't calculate phase
         if cycle_length <= 0.0 || !cycle_length.is_finite() {
             return (None, None, None, None);
@@ -466,6 +469,7 @@ impl WasmDataProcessor {
     }
     
     /// Find the peak (maximum positive amplitude) in the specified range
+    /// Returns None if no positive peak is found in the range
     fn find_peak_in_range(
         &self,
         data: &[f32],
@@ -489,7 +493,12 @@ impl WasmDataProcessor {
             }
         }
         
-        Some(peak_index)
+        // Ensure the peak is positive
+        if peak_value > 0.0 {
+            Some(peak_index)
+        } else {
+            None
+        }
     }
     
     /// Find zero crossing by looking backward from peak
