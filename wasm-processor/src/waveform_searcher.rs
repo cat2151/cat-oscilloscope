@@ -112,7 +112,7 @@ impl WaveformSearcher {
         
         // Allow some tolerance for non-deterministic buffer size changes
         // If the difference is more than 10%, log a warning but continue
-        let length_diff = (prev_waveform.len() as i32 - waveform_length as i32).abs();
+        let length_diff = prev_waveform.len().abs_diff(waveform_length);
         let length_diff_percent = (length_diff as f32 / waveform_length as f32) * 100.0;
         if length_diff_percent > 10.0 {
             web_sys::console::log_1(
