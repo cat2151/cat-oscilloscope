@@ -5,6 +5,12 @@ pub struct FrequencyEstimator {
     frequency_history: Vec<f32>,
     frequency_plot_history: Vec<f32>,
     buffer_size_multiplier: u32,
+    
+    // Harmonic analysis data for debugging (populated during FFT estimation)
+    half_freq_peak_strength_percent: Option<f32>,
+    candidate1_harmonics: Option<Vec<f32>>,
+    candidate2_harmonics: Option<Vec<f32>>,
+    selection_reason: Option<String>,
 }
 
 impl FrequencyEstimator {
@@ -33,6 +39,10 @@ impl FrequencyEstimator {
             frequency_history: Vec::new(),
             frequency_plot_history: Vec::new(),
             buffer_size_multiplier: 16,
+            half_freq_peak_strength_percent: None,
+            candidate1_harmonics: None,
+            candidate2_harmonics: None,
+            selection_reason: None,
         }
     }
     
@@ -130,12 +140,18 @@ impl FrequencyEstimator {
     
     /// Estimate frequency using FFT method with harmonic detection
     fn estimate_frequency_fft(
-        &self,
+        &mut self,
         frequency_data: &[u8],
         sample_rate: f32,
         fft_size: usize,
         is_signal_above_noise_gate: bool,
     ) -> f32 {
+        // Clear previous harmonic analysis data
+        self.half_freq_peak_strength_percent = None;
+        self.candidate1_harmonics = None;
+        self.candidate2_harmonics = None;
+        self.selection_reason = None;
+        
         if !is_signal_above_noise_gate {
             return 0.0;
         }
@@ -161,8 +177,8 @@ impl FrequencyEstimator {
         // Try to find if this is part of a harmonic series
         let fundamental_candidate = self.find_fundamental_frequency(&peaks, strongest_peak_magnitude);
         
-        // Use frequency history for stability if available
-        if let Some(candidate) = fundamental_candidate {
+        // Determine the final selected frequency and compute harmonic analysis
+        let selected_freq = if let Some(candidate) = fundamental_candidate {
             // If we have history, use it to provide stability
             if !self.frequency_history.is_empty() {
                 let last_freq = self.frequency_history.last().unwrap();
@@ -174,35 +190,91 @@ impl FrequencyEstimator {
                     // Strategy: Prefer stability over switching between harmonics
                     // Case 1: If strongest peak is very close to history, keep it
                     if strongest_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
-                        return strongest_peak_freq;
+                        self.selection_reason = Some(format!(
+                            "Strongest peak ({:.1}Hz) is close to history ({:.1}Hz): diff={:.1}%",
+                            strongest_peak_freq, last_freq, strongest_diff * 100.0
+                        ));
+                        strongest_peak_freq
                     }
-                    
                     // Case 2: If candidate is very close to history, keep it
-                    if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
-                        return candidate;
+                    else if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
+                        self.selection_reason = Some(format!(
+                            "Candidate ({:.1}Hz) is close to history ({:.1}Hz): diff={:.1}%",
+                            candidate, last_freq, candidate_diff * 100.0
+                        ));
+                        candidate
                     }
-                    
                     // Case 3: If both are far from history, only switch if candidate is significantly closer
-                    // This prevents rapid oscillation between 1x and 2x harmonics.
-                    // Note: `FREQ_HISTORY_PREFERENCE_RATIO` (e.g. 2.0) means the candidate must be at least
-                    // that factor closer to history than the strongest peak before we switch.
-                    // For example, with ratio 2.0, if strongest_diff is 0.4, candidate_diff must be < 0.2.
-                    if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
+                    else if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
                        candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
-                        return candidate;
+                        self.selection_reason = Some(format!(
+                            "Candidate ({:.1}Hz) is significantly closer to history ({:.1}Hz): candidate_diff={:.1}%, strongest_diff={:.1}%",
+                            candidate, last_freq, candidate_diff * 100.0, strongest_diff * 100.0
+                        ));
+                        candidate
                     }
-                    
                     // Case 4: Default to strongest peak (maintains current frequency)
-                    return strongest_peak_freq;
+                    else {
+                        self.selection_reason = Some(format!(
+                            "Maintaining strongest peak ({:.1}Hz) for stability (history={:.1}Hz)",
+                            strongest_peak_freq, last_freq
+                        ));
+                        strongest_peak_freq
+                    }
+                } else {
+                    self.selection_reason = Some("No valid history, using fundamental candidate".to_string());
+                    candidate
                 }
+            } else {
+                self.selection_reason = Some("No history, using fundamental candidate".to_string());
+                candidate
             }
-            
-            // No history or not conclusive (no usable last_freq), return the fundamental candidate
-            return candidate;
+        } else {
+            self.selection_reason = Some("No harmonic series detected, using strongest peak".to_string());
+            strongest_peak_freq
+        };
+        
+        // Compute harmonic analysis for debugging
+        // Candidate 1: selected frequency
+        self.candidate1_harmonics = Some(self.calculate_harmonic_strengths(
+            selected_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        ));
+        
+        // Candidate 2: half of selected frequency
+        let half_freq = selected_freq / 2.0;
+        self.candidate2_harmonics = Some(self.calculate_harmonic_strengths(
+            half_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        ));
+        
+        // Calculate the strength of the peak at half frequency as a percentage of selected frequency
+        let half_freq_magnitude = self.get_magnitude_at_frequency(
+            half_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        let selected_freq_magnitude = self.get_magnitude_at_frequency(
+            selected_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        if selected_freq_magnitude > 0.0 {
+            self.half_freq_peak_strength_percent = Some(
+                (half_freq_magnitude / selected_freq_magnitude) * 100.0
+            );
+        } else {
+            self.half_freq_peak_strength_percent = Some(0.0);
         }
         
-        // No harmonic series detected, return strongest peak
-        strongest_peak_freq
+        selected_freq
     }
     
     /// Find peaks in the frequency spectrum
@@ -542,6 +614,50 @@ impl FrequencyEstimator {
         best_freq
     }
     
+    /// Calculate harmonic strengths for a given fundamental frequency
+    /// Returns vector of strengths (magnitude) for harmonics 1x, 2x, 3x, 4x, 5x
+    fn calculate_harmonic_strengths(
+        &self,
+        fundamental_freq: f32,
+        frequency_data: &[u8],
+        sample_rate: f32,
+        fft_size: usize,
+    ) -> Vec<f32> {
+        let bin_frequency = sample_rate / fft_size as f32;
+        let mut harmonics = Vec::new();
+        
+        for harmonic_num in 1..=5 {
+            let target_freq = fundamental_freq * harmonic_num as f32;
+            let target_bin = (target_freq / bin_frequency).round() as usize;
+            
+            if target_bin < frequency_data.len() {
+                harmonics.push(frequency_data[target_bin] as f32);
+            } else {
+                harmonics.push(0.0);
+            }
+        }
+        
+        harmonics
+    }
+    
+    /// Get the magnitude at a specific frequency
+    fn get_magnitude_at_frequency(
+        &self,
+        freq: f32,
+        frequency_data: &[u8],
+        sample_rate: f32,
+        fft_size: usize,
+    ) -> f32 {
+        let bin_frequency = sample_rate / fft_size as f32;
+        let target_bin = (freq / bin_frequency).round() as usize;
+        
+        if target_bin < frequency_data.len() {
+            frequency_data[target_bin] as f32
+        } else {
+            0.0
+        }
+    }
+    
     // Getters and setters
     pub fn get_frequency_estimation_method(&self) -> &str {
         &self.frequency_estimation_method
@@ -604,10 +720,31 @@ impl FrequencyEstimator {
         self.buffer_size_multiplier
     }
     
+    pub fn get_half_freq_peak_strength_percent(&self) -> Option<f32> {
+        self.half_freq_peak_strength_percent
+    }
+    
+    pub fn get_candidate1_harmonics(&self) -> Option<Vec<f32>> {
+        self.candidate1_harmonics.clone()
+    }
+    
+    pub fn get_candidate2_harmonics(&self) -> Option<Vec<f32>> {
+        self.candidate2_harmonics.clone()
+    }
+    
+    pub fn get_selection_reason(&self) -> Option<String> {
+        self.selection_reason.clone()
+    }
+    
     pub fn clear_history(&mut self) {
         self.frequency_history.clear();
         self.frequency_plot_history.clear();
         self.estimated_frequency = 0.0;
+        // Clear harmonic analysis data as well
+        self.half_freq_peak_strength_percent = None;
+        self.candidate1_harmonics = None;
+        self.candidate2_harmonics = None;
+        self.selection_reason = None;
     }
 }
 

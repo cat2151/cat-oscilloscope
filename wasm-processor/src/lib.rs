@@ -45,6 +45,12 @@ pub struct WaveformRenderData {
     phase_two_pi_index: Option<usize>,
     phase_minus_quarter_pi_index: Option<usize>,
     phase_two_pi_plus_quarter_pi_index: Option<usize>,
+    
+    // Harmonic analysis for debugging (only populated when FFT method is used)
+    half_freq_peak_strength_percent: Option<f32>,  // Strength of peak at 1/2 estimated frequency (%)
+    candidate1_harmonics: Option<Vec<f32>>,        // Harmonics strength for candidate1 (estimated freq)
+    candidate2_harmonics: Option<Vec<f32>>,        // Harmonics strength for candidate2 (1/2 freq)
+    selection_reason: Option<String>,              // Why candidate1 was chosen over candidate2
 }
 
 #[wasm_bindgen]
@@ -143,6 +149,26 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = phaseTwoPiPlusQuarterPiIndex)]
     pub fn phase_two_pi_plus_quarter_pi_index(&self) -> Option<usize> {
         self.phase_two_pi_plus_quarter_pi_index
+    }
+    
+    #[wasm_bindgen(getter, js_name = halfFreqPeakStrengthPercent)]
+    pub fn half_freq_peak_strength_percent(&self) -> Option<f32> {
+        self.half_freq_peak_strength_percent
+    }
+    
+    #[wasm_bindgen(getter, js_name = candidate1Harmonics)]
+    pub fn candidate1_harmonics(&self) -> Option<Vec<f32>> {
+        self.candidate1_harmonics.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = candidate2Harmonics)]
+    pub fn candidate2_harmonics(&self) -> Option<Vec<f32>> {
+        self.candidate2_harmonics.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = selectionReason)]
+    pub fn selection_reason(&self) -> Option<String> {
+        self.selection_reason.clone()
     }
 }
 
@@ -307,6 +333,10 @@ impl WasmDataProcessor {
             phase_two_pi_index,
             phase_minus_quarter_pi_index,
             phase_two_pi_plus_quarter_pi_index,
+            half_freq_peak_strength_percent: self.frequency_estimator.get_half_freq_peak_strength_percent(),
+            candidate1_harmonics: self.frequency_estimator.get_candidate1_harmonics(),
+            candidate2_harmonics: self.frequency_estimator.get_candidate2_harmonics(),
+            selection_reason: self.frequency_estimator.get_selection_reason(),
         })
     }
     

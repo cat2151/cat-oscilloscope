@@ -104,6 +104,30 @@ export class WaveformRenderData {
         wasm.__wbg_waveformrenderdata_free(ptr, 0);
     }
     /**
+     * @returns {Float32Array | undefined}
+     */
+    get candidate1Harmonics() {
+        const ret = wasm.waveformrenderdata_candidate1Harmonics(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        }
+        return v1;
+    }
+    /**
+     * @returns {Float32Array | undefined}
+     */
+    get candidate2Harmonics() {
+        const ret = wasm.waveformrenderdata_candidate2Harmonics(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        }
+        return v1;
+    }
+    /**
      * @returns {number}
      */
     get displayEndIndex() {
@@ -158,6 +182,13 @@ export class WaveformRenderData {
     get gain() {
         const ret = wasm.waveformrenderdata_gain(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get halfFreqPeakStrengthPercent() {
+        const ret = wasm.waveformrenderdata_halfFreqPeakStrengthPercent(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @returns {boolean}
@@ -219,6 +250,18 @@ export class WaveformRenderData {
     get sampleRate() {
         const ret = wasm.waveformrenderdata_sampleRate(this.__wbg_ptr);
         return ret;
+    }
+    /**
+     * @returns {string | undefined}
+     */
+    get selectionReason() {
+        const ret = wasm.waveformrenderdata_selectionReason(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v1;
     }
     /**
      * @returns {number}

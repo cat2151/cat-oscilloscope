@@ -346,6 +346,10 @@ export class WaveformDataProcessor {
       phaseTwoPiIndex: wasmResult.phaseTwoPiIndex,
       phaseMinusQuarterPiIndex: wasmResult.phaseMinusQuarterPiIndex,
       phaseTwoPiPlusQuarterPiIndex: wasmResult.phaseTwoPiPlusQuarterPiIndex,
+      halfFreqPeakStrengthPercent: wasmResult.halfFreqPeakStrengthPercent,
+      candidate1Harmonics: wasmResult.candidate1Harmonics ? Array.from(wasmResult.candidate1Harmonics) : undefined,
+      candidate2Harmonics: wasmResult.candidate2Harmonics ? Array.from(wasmResult.candidate2Harmonics) : undefined,
+      selectionReason: wasmResult.selectionReason,
     };
     
     // Sync results back to TypeScript objects so getters work correctly
