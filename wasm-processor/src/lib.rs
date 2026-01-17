@@ -368,7 +368,14 @@ impl WasmDataProcessor {
             
             // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
             let eighth_cycle = (cycle_length / 8.0) as usize;
-            let phase_minus_quarter_pi_idx = phase_0_idx.saturating_sub(eighth_cycle);
+            
+            // Check if phase_0_idx is large enough to subtract eighth_cycle
+            // If not, return None instead of using saturating_sub which would give index 0
+            let phase_minus_quarter_pi = if phase_0_idx >= eighth_cycle {
+                Some(phase_0_idx - eighth_cycle)
+            } else {
+                None
+            };
             
             // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
             let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
@@ -389,7 +396,7 @@ impl WasmDataProcessor {
             (
                 Some(phase_0_idx),
                 phase_2pi,
-                Some(phase_minus_quarter_pi_idx),
+                phase_minus_quarter_pi,
                 phase_2pi_plus_quarter_pi,
             )
         } else {
