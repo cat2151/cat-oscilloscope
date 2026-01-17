@@ -22,4 +22,3 @@ export declare class ZeroCrossDetector {
      */
     reset(): void;
 }
-//# sourceMappingURL=ZeroCrossDetector.d.ts.map
