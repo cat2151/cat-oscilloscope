@@ -11,6 +11,7 @@ export declare class WaveformRenderer {
     private canvas;
     private ctx;
     private fftDisplayEnabled;
+    private debugOverlaysEnabled;
     private readonly FFT_OVERLAY_HEIGHT_RATIO;
     private readonly FFT_MIN_BAR_WIDTH;
     private readonly FREQ_PLOT_WIDTH;
@@ -71,4 +72,16 @@ export declare class WaveformRenderer {
     drawPhaseMarkers(phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number, displayStartIndex?: number, displayEndIndex?: number): void;
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
+    /**
+     * Enable or disable debug overlays (harmonic analysis, frequency plot)
+     * When disabled, yellow-bordered debug information panels are hidden
+     * Recommended: Set to false when using as a library for cleaner display
+     * @param enabled - true to show debug overlays, false to hide them
+     */
+    setDebugOverlaysEnabled(enabled: boolean): void;
+    /**
+     * Get the current state of debug overlays
+     * @returns true if debug overlays are enabled, false otherwise
+     */
+    getDebugOverlaysEnabled(): boolean;
 }
