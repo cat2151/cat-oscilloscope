@@ -276,6 +276,8 @@ export class WaveformRenderer {
     halfFreqPeakStrengthPercent?: number,
     candidate1Harmonics?: number[],
     candidate2Harmonics?: number[],
+    candidate1WeightedScore?: number,
+    candidate2WeightedScore?: number,
     selectionReason?: string,
     estimatedFrequency?: number
   ): void {
@@ -291,7 +293,7 @@ export class WaveformRenderer {
     // Position in top-left corner, below the main canvas area
     const overlayX = 10;
     const overlayY = 10;
-    const overlayWidth = 380;
+    const overlayWidth = 500;  // Increased width to accommodate weighted scores
     const lineHeight = 16;
     let currentY = overlayY;
     
@@ -338,8 +340,9 @@ export class WaveformRenderer {
       this.ctx.fillStyle = '#ff00ff';
       this.ctx.font = '11px monospace';
       const harmonicsStr = candidate1Harmonics.map((v, i) => `${i+1}x:${v.toFixed(0)}`).join(' ');
+      const weightedStr = candidate1WeightedScore !== undefined ? ` (重み付け: ${candidate1WeightedScore.toFixed(1)})` : '';
       this.ctx.fillText(
-        `候補1 (${estimatedFrequency.toFixed(1)}Hz) 倍音: ${harmonicsStr}`,
+        `候補1 (${estimatedFrequency.toFixed(1)}Hz) 倍音: ${harmonicsStr}${weightedStr}`,
         overlayX + 5,
         currentY
       );
@@ -352,8 +355,9 @@ export class WaveformRenderer {
       this.ctx.font = '11px monospace';
       const halfFreq = estimatedFrequency / 2.0;
       const harmonicsStr = candidate2Harmonics.map((v, i) => `${i+1}x:${v.toFixed(0)}`).join(' ');
+      const weightedStr = candidate2WeightedScore !== undefined ? ` (重み付け: ${candidate2WeightedScore.toFixed(1)})` : '';
       this.ctx.fillText(
-        `候補2 (${halfFreq.toFixed(1)}Hz) 倍音: ${harmonicsStr}`,
+        `候補2 (${halfFreq.toFixed(1)}Hz) 倍音: ${harmonicsStr}${weightedStr}`,
         overlayX + 5,
         currentY
       );

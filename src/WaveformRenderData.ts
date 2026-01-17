@@ -78,6 +78,12 @@ export interface WaveformRenderData {
   /** Harmonics strength for candidate2 (1/2 of estimated frequency) - magnitudes for 1x, 2x, 3x, 4x, 5x */
   candidate2Harmonics?: number[];
   
+  /** Weighted harmonic score for candidate1 (higher weight on lower harmonics) */
+  candidate1WeightedScore?: number;
+  
+  /** Weighted harmonic score for candidate2 (higher weight on lower harmonics) */
+  candidate2WeightedScore?: number;
+  
   /** Reason why candidate1 was selected over candidate2 */
   selectionReason?: string;
 }

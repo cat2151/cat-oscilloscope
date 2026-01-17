@@ -10,6 +10,8 @@ pub struct FrequencyEstimator {
     half_freq_peak_strength_percent: Option<f32>,
     candidate1_harmonics: Option<Vec<f32>>,
     candidate2_harmonics: Option<Vec<f32>>,
+    candidate1_weighted_score: Option<f32>,
+    candidate2_weighted_score: Option<f32>,
     selection_reason: Option<String>,
 }
 
@@ -37,6 +39,8 @@ impl FrequencyEstimator {
             half_freq_peak_strength_percent: None,
             candidate1_harmonics: None,
             candidate2_harmonics: None,
+            candidate1_weighted_score: None,
+            candidate2_weighted_score: None,
             selection_reason: None,
         }
     }
@@ -145,6 +149,8 @@ impl FrequencyEstimator {
         self.half_freq_peak_strength_percent = None;
         self.candidate1_harmonics = None;
         self.candidate2_harmonics = None;
+        self.candidate1_weighted_score = None;
+        self.candidate2_weighted_score = None;
         self.selection_reason = None;
         
         if !is_signal_above_noise_gate {
@@ -172,54 +178,55 @@ impl FrequencyEstimator {
         // Try to find if this is part of a harmonic series
         let fundamental_candidate = self.find_fundamental_frequency(&peaks, strongest_peak_magnitude);
         
-        // Always compare harmonic richness between strongest peak and its half frequency
+        // Always compare weighted harmonic richness between strongest peak and its half frequency
         // to avoid getting stuck on harmonics
-        let strongest_richness = self.calculate_harmonic_richness(
+        // Using weighted scoring prioritizes candidates with strong low-order harmonics (1x, 2x, 3x)
+        let strongest_richness = self.calculate_weighted_harmonic_richness(
             strongest_peak_freq,
             frequency_data,
             sample_rate,
             fft_size,
         );
         let half_freq = strongest_peak_freq / 2.0;
-        let half_richness = self.calculate_harmonic_richness(
+        let half_richness = self.calculate_weighted_harmonic_richness(
             half_freq,
             frequency_data,
             sample_rate,
             fft_size,
         );
         
-        // Determine the final selected frequency based on harmonic richness
+        // Determine the final selected frequency based on weighted harmonic richness
         let selected_freq = if half_richness > strongest_richness {
             // Half frequency has richer harmonics, likely it's the true fundamental
             self.selection_reason = Some(format!(
-                "Half frequency ({:.1}Hz) has richer harmonics ({} vs {}) than strongest peak ({:.1}Hz)",
+                "Half frequency ({:.1}Hz) has richer harmonics (weighted: {:.1} vs {:.1}) than strongest peak ({:.1}Hz)",
                 half_freq, half_richness, strongest_richness, strongest_peak_freq
             ));
             half_freq
         } else if let Some(candidate) = fundamental_candidate {
             // We have a fundamental candidate from harmonic series detection
-            let candidate_richness = self.calculate_harmonic_richness(
+            let candidate_richness = self.calculate_weighted_harmonic_richness(
                 candidate,
                 frequency_data,
                 sample_rate,
                 fft_size,
             );
             
-            // Choose based on harmonic richness
+            // Choose based on weighted harmonic richness
             if candidate_richness > strongest_richness {
                 self.selection_reason = Some(format!(
-                    "Candidate ({:.1}Hz) has richer harmonics ({} vs {}) than strongest peak ({:.1}Hz)",
+                    "Candidate ({:.1}Hz) has richer harmonics (weighted: {:.1} vs {:.1}) than strongest peak ({:.1}Hz)",
                     candidate, candidate_richness, strongest_richness, strongest_peak_freq
                 ));
                 candidate
             } else if strongest_richness > candidate_richness {
                 self.selection_reason = Some(format!(
-                    "Strongest peak ({:.1}Hz) has richer harmonics ({} vs {}) than candidate ({:.1}Hz)",
+                    "Strongest peak ({:.1}Hz) has richer harmonics (weighted: {:.1} vs {:.1}) than candidate ({:.1}Hz)",
                     strongest_peak_freq, strongest_richness, candidate_richness, candidate
                 ));
                 strongest_peak_freq
             } else {
-                // If harmonic richness is equal, use history for stability
+                // If weighted harmonic richness is equal, use history for stability
                 if !self.frequency_history.is_empty() {
                     let last_freq = self.frequency_history.last().unwrap();
                     if *last_freq > 0.0 {
@@ -229,27 +236,27 @@ impl FrequencyEstimator {
                         // Choose the one closer to history
                         if candidate_diff < strongest_diff {
                             self.selection_reason = Some(format!(
-                                "Equal harmonics ({}), candidate ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
+                                "Equal weighted harmonics ({:.1}), candidate ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
                                 candidate_richness, candidate, last_freq, candidate_diff * 100.0, strongest_diff * 100.0
                             ));
                             candidate
                         } else {
                             self.selection_reason = Some(format!(
-                                "Equal harmonics ({}), strongest peak ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
+                                "Equal weighted harmonics ({:.1}), strongest peak ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
                                 strongest_richness, strongest_peak_freq, last_freq, strongest_diff * 100.0, candidate_diff * 100.0
                             ));
                             strongest_peak_freq
                         }
                     } else {
                         self.selection_reason = Some(format!(
-                            "Equal harmonics ({}), no valid history, using fundamental candidate ({:.1}Hz)",
+                            "Equal weighted harmonics ({:.1}), no valid history, using fundamental candidate ({:.1}Hz)",
                             candidate_richness, candidate
                         ));
                         candidate
                     }
                 } else {
                     self.selection_reason = Some(format!(
-                        "Equal harmonics ({}), no history, using fundamental candidate ({:.1}Hz)",
+                        "Equal weighted harmonics ({:.1}), no history, using fundamental candidate ({:.1}Hz)",
                         candidate_richness, candidate
                     ));
                     candidate
@@ -258,7 +265,7 @@ impl FrequencyEstimator {
         } else {
             // No fundamental candidate found, use strongest peak
             self.selection_reason = Some(format!(
-                "No harmonic series detected, using strongest peak ({:.1}Hz, {} harmonics vs half freq {:.1}Hz with {} harmonics)",
+                "No harmonic series detected, using strongest peak ({:.1}Hz, weighted: {:.1} vs half freq {:.1}Hz with weighted: {:.1})",
                 strongest_peak_freq, strongest_richness, half_freq, half_richness
             ));
             strongest_peak_freq
@@ -273,9 +280,25 @@ impl FrequencyEstimator {
             fft_size,
         ));
         
+        // Candidate 1 weighted score
+        self.candidate1_weighted_score = Some(self.calculate_weighted_harmonic_richness(
+            selected_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        ));
+        
         // Candidate 2: half of selected frequency
         let half_freq = selected_freq / 2.0;
         self.candidate2_harmonics = Some(self.calculate_harmonic_strengths(
+            half_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        ));
+        
+        // Candidate 2 weighted score
+        self.candidate2_weighted_score = Some(self.calculate_weighted_harmonic_richness(
             half_freq,
             frequency_data,
             sample_rate,
@@ -696,6 +719,48 @@ impl FrequencyEstimator {
         harmonics.iter().filter(|&&h| h > HARMONIC_STRENGTH_THRESHOLD).count()
     }
     
+    /// Calculate weighted harmonic richness score for a given frequency
+    /// Returns a weighted score that prioritizes lower harmonics (1x, 2x, 3x)
+    /// 
+    /// Weights:
+    /// - 1x (fundamental): 3.0
+    /// - 2x (second harmonic): 3.0
+    /// - 3x (third harmonic): 2.0
+    /// - 4x (fourth harmonic): 1.0
+    /// - 5x (fifth harmonic): 1.0
+    /// 
+    /// This weighting scheme ensures that candidates with strong low-order harmonics
+    /// are preferred, as these are more indicative of a true fundamental frequency.
+    fn calculate_weighted_harmonic_richness(
+        &self,
+        fundamental_freq: f32,
+        frequency_data: &[u8],
+        sample_rate: f32,
+        fft_size: usize,
+    ) -> f32 {
+        // Threshold of 5.0 (out of 255 max FFT magnitude) represents approximately 2% of max
+        const HARMONIC_STRENGTH_THRESHOLD: f32 = 5.0;
+        
+        // Weights for each harmonic (1x through 5x)
+        // Higher weights for lower harmonics (more important for fundamental detection)
+        const HARMONIC_WEIGHTS: [f32; 5] = [3.0, 3.0, 2.0, 1.0, 1.0];
+        
+        let harmonics = self.calculate_harmonic_strengths(
+            fundamental_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Calculate weighted score: sum of weights for harmonics above threshold
+        harmonics.iter()
+            .enumerate()
+            .filter(|(_, &strength)| strength > HARMONIC_STRENGTH_THRESHOLD)
+            .map(|(idx, _)| HARMONIC_WEIGHTS[idx])
+            .sum()
+    }
+
+    
     /// Get the magnitude at a specific frequency
     fn get_magnitude_at_frequency(
         &self,
@@ -788,6 +853,14 @@ impl FrequencyEstimator {
         self.candidate2_harmonics.clone()
     }
     
+    pub fn get_candidate1_weighted_score(&self) -> Option<f32> {
+        self.candidate1_weighted_score
+    }
+    
+    pub fn get_candidate2_weighted_score(&self) -> Option<f32> {
+        self.candidate2_weighted_score
+    }
+    
     pub fn get_selection_reason(&self) -> Option<String> {
         self.selection_reason.clone()
     }
@@ -800,6 +873,8 @@ impl FrequencyEstimator {
         self.half_freq_peak_strength_percent = None;
         self.candidate1_harmonics = None;
         self.candidate2_harmonics = None;
+        self.candidate1_weighted_score = None;
+        self.candidate2_weighted_score = None;
         self.selection_reason = None;
     }
 }
