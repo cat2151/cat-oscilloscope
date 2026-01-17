@@ -1229,4 +1229,96 @@ mod tests {
         assert!(reason_text.contains("harmonics") || reason_text.contains("harmonic"), 
                 "Selection reason should mention harmonics: {}", reason_text);
     }
+
+    #[test]
+    fn test_normalized_harmonics_basic() {
+        let estimator = FrequencyEstimator::new();
+        
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Candidate 1: 300Hz with harmonics [180, 90, 45, 0, 0]
+        let freq1 = 300.0;
+        frequency_data[(freq1 / bin_frequency).round() as usize] = 180; // 1x: 300Hz
+        frequency_data[(freq1 * 2.0 / bin_frequency).round() as usize] = 90; // 2x: 600Hz
+        frequency_data[(freq1 * 3.0 / bin_frequency).round() as usize] = 45; // 3x: 900Hz
+        
+        // Candidate 2: 220Hz with harmonics [100, 200, 150, 50, 25]
+        let freq2 = 220.0;
+        frequency_data[(freq2 / bin_frequency).round() as usize] = 100; // 1x: 220Hz
+        frequency_data[(freq2 * 2.0 / bin_frequency).round() as usize] = 200; // 2x: 440Hz (max)
+        frequency_data[(freq2 * 3.0 / bin_frequency).round() as usize] = 150; // 3x: 660Hz
+        frequency_data[(freq2 * 4.0 / bin_frequency).round() as usize] = 50; // 4x: 880Hz
+        frequency_data[(freq2 * 5.0 / bin_frequency).round() as usize] = 25; // 5x: 1100Hz
+        
+        let (norm1, norm2) = estimator.calculate_normalized_harmonics(
+            freq1, freq2, &frequency_data, sample_rate, fft_size
+        );
+        
+        // Max value is 200, so values should be normalized to that
+        assert_eq!(norm1.len(), 5, "Should have 5 harmonics");
+        assert_eq!(norm2.len(), 5, "Should have 5 harmonics");
+        
+        // Candidate 1: [180, 90, 45, 0, 0] / 200 = [0.9, 0.45, 0.225, 0.0, 0.0]
+        assert!((norm1[0] - 0.9).abs() < 0.01, "1x should be 0.9, got {}", norm1[0]);
+        assert!((norm1[1] - 0.45).abs() < 0.01, "2x should be 0.45, got {}", norm1[1]);
+        assert!((norm1[2] - 0.225).abs() < 0.01, "3x should be 0.225, got {}", norm1[2]);
+        
+        // Candidate 2: [100, 200, 150, 50, 25] / 200 = [0.5, 1.0, 0.75, 0.25, 0.125]
+        assert!((norm2[0] - 0.5).abs() < 0.01, "1x should be 0.5, got {}", norm2[0]);
+        assert!((norm2[1] - 1.0).abs() < 0.01, "2x should be 1.0, got {}", norm2[1]);
+        assert!((norm2[2] - 0.75).abs() < 0.01, "3x should be 0.75, got {}", norm2[2]);
+        assert!((norm2[3] - 0.25).abs() < 0.01, "4x should be 0.25, got {}", norm2[3]);
+    }
+
+    #[test]
+    fn test_normalized_harmonics_all_zeros() {
+        let estimator = FrequencyEstimator::new();
+        
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        
+        let frequency_data = vec![0u8; fft_size / 2];
+        
+        let (norm1, norm2) = estimator.calculate_normalized_harmonics(
+            200.0, 100.0, &frequency_data, sample_rate, fft_size
+        );
+        
+        // All values should be 0.0
+        for i in 0..5 {
+            assert_eq!(norm1[i], 0.0, "Candidate1 harmonic {} should be 0.0", i + 1);
+            assert_eq!(norm2[i], 0.0, "Candidate2 harmonic {} should be 0.0", i + 1);
+        }
+    }
+
+    #[test]
+    fn test_normalized_harmonics_preserves_ratios() {
+        let estimator = FrequencyEstimator::new();
+        
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Set up harmonics with 2:1 ratio
+        let freq = 200.0;
+        frequency_data[(freq / bin_frequency).round() as usize] = 200; // 1x
+        frequency_data[(freq * 2.0 / bin_frequency).round() as usize] = 100; // 2x
+        frequency_data[(freq * 3.0 / bin_frequency).round() as usize] = 50; // 3x
+        
+        let (norm, _) = estimator.calculate_normalized_harmonics(
+            freq, 100.0, &frequency_data, sample_rate, fft_size
+        );
+        
+        // Check that ratios are preserved
+        let ratio_1_to_2 = norm[0] / norm[1];
+        let ratio_2_to_3 = norm[1] / norm[2];
+        
+        assert!((ratio_1_to_2 - 2.0).abs() < 0.01, "Ratio 1x:2x should be 2.0, got {}", ratio_1_to_2);
+        assert!((ratio_2_to_3 - 2.0).abs() < 0.01, "Ratio 2x:3x should be 2.0, got {}", ratio_2_to_3);
+    }
 }

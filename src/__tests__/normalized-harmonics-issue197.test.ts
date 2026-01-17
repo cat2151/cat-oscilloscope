@@ -90,7 +90,6 @@ describe('Normalized Harmonic Peak Strengths - Issue #197', () => {
   it('should maintain relative ratios between harmonics', () => {
     // If raw values have 2:1 ratio, normalized should maintain that
     const candidate1Raw = [200, 100, 50, 0, 0];  // 200 is max
-    const candidate2Raw = [0, 0, 0, 0, 0];
     
     const maxValue = 200;
     const candidate1Normalized = candidate1Raw.map(v => v / maxValue);
