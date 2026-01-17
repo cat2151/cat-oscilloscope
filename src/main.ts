@@ -81,6 +81,9 @@ const pianoKeyboardRenderer = new PianoKeyboardRenderer(pianoKeyboardCanvas);
 // 初期状態で空の鍵盤を描画
 pianoKeyboardRenderer.render(0);
 
+// Startボタンに初期focusを設定（spaceキーで即座に起動可能にする）
+startButton.focus();
+
 // Synchronize checkbox state with oscilloscope's autoGainEnabled
 oscilloscope.setAutoGain(autoGainCheckbox.checked);
 
