@@ -179,7 +179,7 @@ impl WaveformSearcher {
     /// Record that similarity search was not performed for this frame
     /// Updates history with 0.0 to indicate no similarity data is available
     pub fn record_no_search(&mut self) {
-        web_sys::console::log_1(&"Similarity=0: Search not performed (invalid cycle_length or no previous waveform)".into());
+        web_sys::console::log_1(&"Similarity=0: Search not performed".into());
         self.update_similarity_history(0.0);
     }
     

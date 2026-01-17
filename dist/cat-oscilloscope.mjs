@@ -4,7 +4,7 @@ var r = (y, t, e) => H(y, typeof t != "symbol" ? t + "" : t, e);
 function W(y) {
   return Math.pow(10, y / 20);
 }
-function D(y) {
+function L(y) {
   return y <= 0 ? -1 / 0 : 20 * Math.log10(y);
 }
 function b(y) {
@@ -16,8 +16,8 @@ function b(y) {
     cents: a
   };
 }
-const G = -48;
-function L(y) {
+const D = -48;
+function G(y) {
   const t = y.numberOfChannels, e = y.sampleRate, i = y.length, n = [];
   let a = 0;
   for (let d = 0; d < t; d++) {
@@ -30,7 +30,7 @@ function L(y) {
   }
   if (a === 0)
     return y;
-  const o = a * Math.pow(10, G / 20);
+  const o = a * Math.pow(10, D / 20);
   let s = i;
   for (let d = 0; d < i; d++) {
     let g = !0;
@@ -117,7 +117,7 @@ class k {
       const e = await t.arrayBuffer();
       this.audioContext && this.audioContext.state !== "closed" && await this.audioContext.close(), this.audioContext = new AudioContext();
       let i = await this.audioContext.decodeAudioData(e);
-      i = L(i), this.initializeAnalyser(), this.audioBufferSource = this.audioContext.createBufferSource(), this.audioBufferSource.buffer = i, this.audioBufferSource.loop = !0, this.audioBufferSource.connect(this.analyser), this.analyser.connect(this.audioContext.destination), this.audioBufferSource.start(0);
+      i = G(i), this.initializeAnalyser(), this.audioBufferSource = this.audioContext.createBufferSource(), this.audioBufferSource.buffer = i, this.audioBufferSource.loop = !0, this.audioBufferSource.connect(this.analyser), this.analyser.connect(this.audioContext.destination), this.audioBufferSource.start(0);
     } catch (e) {
       throw console.error("Error loading audio file:", e), e;
     }
@@ -235,7 +235,7 @@ class k {
     return this.bufferSource ? this.dataArray !== null : this.audioContext !== null && this.analyser !== null;
   }
 }
-class q {
+class N {
   constructor() {
     r(this, "autoGainEnabled", !0);
     r(this, "currentGain", 1);
@@ -265,7 +265,7 @@ class q {
     return this.currentGain;
   }
 }
-class N {
+class q {
   constructor() {
     r(this, "frequencyEstimationMethod", "fft");
     r(this, "estimatedFrequency", 0);
@@ -310,7 +310,7 @@ class N {
     return this.frequencyPlotHistory;
   }
 }
-class B {
+class O {
   // 周波数範囲のパディング比率 (10%)
   constructor(t) {
     r(this, "canvas");
@@ -387,7 +387,7 @@ class B {
       if (h === 0)
         c = "0dB*";
       else {
-        const x = D(Math.abs(h)), w = h > 0 ? "+" : "-", T = Math.abs(x);
+        const x = L(Math.abs(h)), w = h > 0 ? "+" : "-", T = Math.abs(x);
         T >= 100 ? c = `${w}${T.toFixed(0)}dB` : c = `${w}${T.toFixed(1)}dB`;
       }
       this.ctx.fillText(c, 3, d + 10);
@@ -522,7 +522,7 @@ class B {
     return this.fftDisplayEnabled;
   }
 }
-class O {
+class B {
   constructor() {
     r(this, "usePeakMode", !1);
   }
@@ -932,7 +932,7 @@ const p = class p {
 r(p, "ASSET_PATTERNS", ["/assets/", "/js/", "/dist/"]);
 let M = p;
 class $ {
-  // 60fps target
+  // Log FPS every 60 frames (approx. 1 second at 60fps)
   /**
    * Create a new Oscilloscope instance
    * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
@@ -958,7 +958,9 @@ class $ {
     r(this, "frameProcessingTimes", []);
     r(this, "MAX_FRAME_TIMES", 100);
     r(this, "TARGET_FRAME_TIME", 16.67);
-    this.audioManager = new k(), this.gainController = new q(), this.frequencyEstimator = new N(), this.renderer = new B(t), this.zeroCrossDetector = new O(), this.waveformSearcher = new z(), this.comparisonRenderer = new K(
+    // 60fps target
+    r(this, "FRAMES_PER_LOG_INTERVAL", 60);
+    this.audioManager = new k(), this.gainController = new N(), this.frequencyEstimator = new q(), this.renderer = new O(t), this.zeroCrossDetector = new B(), this.waveformSearcher = new z(), this.comparisonRenderer = new K(
       e,
       i,
       n,
@@ -1010,7 +1012,7 @@ class $ {
     const i = performance.now() - t;
     if (this.frameProcessingTimes.push(i), this.frameProcessingTimes.length > this.MAX_FRAME_TIMES && this.frameProcessingTimes.shift(), i > this.TARGET_FRAME_TIME && console.warn(`Frame processing time: ${i.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`), this.lastFrameTime > 0) {
       const a = 1e3 / (t - this.lastFrameTime);
-      if (this.frameProcessingTimes.length >= 60 && this.frameProcessingTimes.length % 60 === 0) {
+      if (this.frameProcessingTimes.length >= this.FRAMES_PER_LOG_INTERVAL && this.frameProcessingTimes.length % this.FRAMES_PER_LOG_INTERVAL === 0) {
         const o = this.frameProcessingTimes.reduce((s, l) => s + l, 0) / this.frameProcessingTimes.length;
         console.log(`FPS: ${a.toFixed(1)}, Avg frame time: ${o.toFixed(2)}ms`);
       }
@@ -1361,16 +1363,16 @@ export {
   k as AudioManager,
   I as BufferSource,
   K as ComparisonPanelRenderer,
-  N as FrequencyEstimator,
-  q as GainController,
+  q as FrequencyEstimator,
+  N as GainController,
   $ as Oscilloscope,
   Q as PianoKeyboardRenderer,
   M as WaveformDataProcessor,
-  B as WaveformRenderer,
+  O as WaveformRenderer,
   z as WaveformSearcher,
-  O as ZeroCrossDetector,
-  D as amplitudeToDb,
+  B as ZeroCrossDetector,
+  L as amplitudeToDb,
   W as dbToAmplitude,
-  L as trimSilence
+  G as trimSilence
 };
 //# sourceMappingURL=cat-oscilloscope.mjs.map
