@@ -324,6 +324,120 @@ oscilloscope.setFFTDisplay(true);
 const isFFTEnabled = oscilloscope.getFFTDisplayEnabled();
 ```
 
+### デバッグオーバーレイ表示の制御
+
+cat-oscilloscopeは、詳細情報を表示するオーバーレイ（黄色の枠線で囲まれた情報パネル）を提供しています：
+
+- **FFTスペクトラム**: 周波数スペクトラム表示（青枠）
+- **倍音分析（Harmonic Analysis）**: FFT推定時の倍音情報（黄色枠）
+- **周波数推移プロット**: 推定周波数の履歴グラフ（黄色枠）
+
+これらのオーバーレイは必要に応じて有効/無効を切り替えられます。
+
+```typescript
+// デバッグオーバーレイを非表示にする
+oscilloscope.setDebugOverlaysEnabled(false);
+
+// デバッグオーバーレイを表示する（デフォルト）
+oscilloscope.setDebugOverlaysEnabled(true);
+
+// 現在の状態を取得
+const isDebugEnabled = oscilloscope.getDebugOverlaysEnabled();
+```
+
+### オーバーレイのレイアウトカスタマイズ
+
+**v0.0.2以降**: デバッグオーバーレイの位置とサイズを外部から制御できるようになりました。これにより、外部アプリケーションで独自のレイアウトを実現できます。
+
+```typescript
+import { Oscilloscope, OverlaysLayoutConfig } from 'cat-oscilloscope';
+
+const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
+
+// カスタムレイアウト設定
+const customLayout: OverlaysLayoutConfig = {
+  // FFTスペクトラム（デフォルト: 左下）
+  fftOverlay: {
+    position: { x: 10, y: '65%' },     // ピクセルまたはパーセント指定
+    size: { width: '35%', height: '35%' }
+  },
+  // 倍音分析（デフォルト: 左上）
+  harmonicAnalysis: {
+    position: { x: 10, y: 10 },
+    size: { width: 500, height: 'auto' }  // 'auto'で内容に応じた高さ
+  },
+  // 周波数推移プロット（デフォルト: 右上）
+  frequencyPlot: {
+    position: { x: 'right-10', y: 10 },  // 'right-X'で右端からの距離
+    size: { width: 280, height: 120 }
+  }
+};
+
+// コンストラクタでレイアウトを指定
+const oscilloscope = new Oscilloscope(
+  canvas,
+  previousWaveformCanvas,
+  currentWaveformCanvas,
+  similarityPlotCanvas,
+  frameBufferCanvas,
+  customLayout  // オプション: カスタムレイアウト
+);
+
+// または実行時に変更
+oscilloscope.setOverlaysLayout({
+  frequencyPlot: {
+    position: { x: 10, y: 10 },  // 左上に移動
+    size: { width: 300, height: 150 }
+  }
+});
+
+await oscilloscope.start();
+```
+
+**レイアウト設定のポイント：**
+- `position.x`, `position.y`: 数値（ピクセル）または文字列（パーセント `'10%'`）
+- `position.x`: `'right-10'` 形式で右端からの距離を指定可能
+- `size.width`, `size.height`: 数値（ピクセル）、パーセント文字列、または `'auto'`
+- 部分的な設定のみでもOK（未指定の項目はデフォルト値を使用）
+
+## レイアウト設計ガイドライン
+
+### 推奨キャンバスサイズ
+
+cat-oscilloscopeは、以下のキャンバスサイズで最適化されています：
+
+- **メインキャンバス**: `800x400px` または `800x350px`
+  - 波形とグリッド表示に最適なアスペクト比
+  - デバッグオーバーレイを無効にすれば、より小さなサイズでも使用可能
+
+### 表示要素の制御
+
+ライブラリとして使用する際、以下の要素を制御できます：
+
+| 要素 | 制御API | デフォルト | ライブラリ使用時 |
+|------|---------|----------|------------------|
+| オートゲイン | `setAutoGain(boolean)` | `true` | 用途に応じて |
+| ノイズゲート | `setNoiseGate(boolean)` | `false` | 用途に応じて |
+| FFTスペクトラム | `setFFTDisplay(boolean)` | `true` | 用途に応じて |
+| デバッグオーバーレイ | `setDebugOverlaysEnabled(boolean)` | `true` | 用途に応じて |
+| オーバーレイレイアウト | `setOverlaysLayout(OverlaysLayoutConfig)` | デフォルトレイアウト | カスタマイズ可能 |
+
+**オーバーレイのレイアウトカスタマイズ（v0.0.2以降）:**
+- FFTスペクトラム、倍音分析、周波数推移プロットの位置とサイズを個別に設定可能
+- ピクセル値、パーセント値、または`'auto'`で指定
+- 外部アプリケーションでの独自レイアウト実現に対応
+
+### レイアウト統合時の注意点
+
+1. **デバッグオーバーレイの制御**: `setDebugOverlaysEnabled()`で表示を切り替えるか、`setOverlaysLayout()`でカスタムレイアウトを設定
+2. **キャンバスサイズの考慮**: 推奨サイズ（800x400px）から大きく外れる場合、パーセント指定を活用
+3. **CSS でのスタイリング**: キャンバス要素には`border`や`box-shadow`などのCSSを自由に適用できます
+4. **動的レイアウト**: `setOverlaysLayout()`で実行時にレイアウトを変更可能
+
+```html
+<canvas id="oscilloscope" width="800" height="400" style="border: 2px solid #00ff00;"></canvas>
+```
+
 ## 高度な使い方
 
 ### BufferSourceを使用した静的バッファの可視化

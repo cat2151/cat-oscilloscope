@@ -409,4 +409,85 @@ describe('WaveformRenderer', () => {
       expect(mockContext.fill).toHaveBeenCalled();
     });
   });
+
+  describe('Debug Overlays Control', () => {
+    beforeEach(() => {
+      renderer = new WaveformRenderer(canvas);
+    });
+
+    it('should enable debug overlays by default', () => {
+      expect(renderer.getDebugOverlaysEnabled()).toBe(true);
+    });
+
+    it('should allow disabling debug overlays', () => {
+      renderer.setDebugOverlaysEnabled(false);
+      expect(renderer.getDebugOverlaysEnabled()).toBe(false);
+    });
+
+    it('should allow enabling debug overlays', () => {
+      renderer.setDebugOverlaysEnabled(false);
+      renderer.setDebugOverlaysEnabled(true);
+      expect(renderer.getDebugOverlaysEnabled()).toBe(true);
+    });
+
+    it('should not draw harmonic analysis when debug overlays are disabled', () => {
+      renderer.setFFTDisplay(true);
+      renderer.setDebugOverlaysEnabled(false);
+      
+      renderer.drawHarmonicAnalysis(
+        50.0,
+        [1.0, 0.5, 0.3],
+        [0.8, 0.6, 0.4],
+        10.5,
+        8.3,
+        'Test reason',
+        440
+      );
+      
+      // Should not draw anything when debug overlays are disabled
+      expect(mockContext.fillRect).not.toHaveBeenCalled();
+      expect(mockContext.strokeRect).not.toHaveBeenCalled();
+    });
+
+    it('should draw harmonic analysis when debug overlays are enabled', () => {
+      renderer.setFFTDisplay(true);
+      renderer.setDebugOverlaysEnabled(true);
+      
+      renderer.drawHarmonicAnalysis(
+        50.0,
+        [1.0, 0.5, 0.3],
+        [0.8, 0.6, 0.4],
+        10.5,
+        8.3,
+        'Test reason',
+        440
+      );
+      
+      // Should draw when debug overlays are enabled
+      expect(mockContext.fillRect).toHaveBeenCalled();
+      expect(mockContext.strokeRect).toHaveBeenCalled();
+    });
+
+    it('should not draw frequency plot when debug overlays are disabled', () => {
+      renderer.setDebugOverlaysEnabled(false);
+      
+      const frequencyHistory = [440, 441, 442, 440, 439];
+      renderer.drawFrequencyPlot(frequencyHistory, 20, 5000);
+      
+      // Should not draw anything when debug overlays are disabled
+      expect(mockContext.fillRect).not.toHaveBeenCalled();
+      expect(mockContext.strokeRect).not.toHaveBeenCalled();
+    });
+
+    it('should draw frequency plot when debug overlays are enabled', () => {
+      renderer.setDebugOverlaysEnabled(true);
+      
+      const frequencyHistory = [440, 441, 442, 440, 439];
+      renderer.drawFrequencyPlot(frequencyHistory, 20, 5000);
+      
+      // Should draw when debug overlays are enabled
+      expect(mockContext.fillRect).toHaveBeenCalled();
+      expect(mockContext.strokeRect).toHaveBeenCalled();
+    });
+  });
 });

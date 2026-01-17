@@ -82,6 +82,12 @@
 
   <canvas id="oscilloscope" width="800" height="400"></canvas>
   
+  <!-- Hidden canvases for comparison panel - not displayed in this simple example -->
+  <canvas id="previousWaveformCanvas" width="250" height="120" style="display: none;"></canvas>
+  <canvas id="currentWaveformCanvas" width="250" height="120" style="display: none;"></canvas>
+  <canvas id="similarityPlotCanvas" width="250" height="120" style="display: none;"></canvas>
+  <canvas id="frameBufferCanvas" width="800" height="120" style="display: none;"></canvas>
+  
   <div class="controls">
     <button id="startBtn">Start Microphone</button>
     <button id="stopBtn" disabled>Stop</button>
@@ -101,6 +107,10 @@
       <input type="checkbox" id="fftDisplay">
       FFT Display
     </label>
+    <label>
+      <input type="checkbox" id="debugOverlays" checked>
+      Debug Overlays (黄色枠の情報)
+    </label>
     <br>
     <label>
       周波数推定方法:
@@ -116,6 +126,7 @@
     <p>状態: <span class="status" id="status">Stopped</span></p>
     <p>周波数: <span class="status" id="frequency">--- Hz</span></p>
     <p>ゲイン: <span class="status" id="gain">---x</span></p>
+    <p><strong>ヒント:</strong> ライブラリとして使用する場合は、「Debug Overlays」のチェックを外すことを推奨します。</p>
   </div>
 
   <div class="info">
@@ -155,7 +166,19 @@ await oscilloscope.stop();</code></pre>
     import { Oscilloscope, BufferSource } from './src/index.ts';
 
     const canvas = document.getElementById('oscilloscope');
-    const oscilloscope = new Oscilloscope(canvas);
+    // Hidden canvases for comparison panel - required by constructor but not displayed
+    const previousWaveformCanvas = document.getElementById('previousWaveformCanvas');
+    const currentWaveformCanvas = document.getElementById('currentWaveformCanvas');
+    const similarityPlotCanvas = document.getElementById('similarityPlotCanvas');
+    const frameBufferCanvas = document.getElementById('frameBufferCanvas');
+    
+    const oscilloscope = new Oscilloscope(
+      canvas,
+      previousWaveformCanvas,
+      currentWaveformCanvas,
+      similarityPlotCanvas,
+      frameBufferCanvas
+    );
     
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -165,6 +188,7 @@ await oscilloscope.stop();</code></pre>
     const autoGainCheckbox = document.getElementById('autoGain');
     const noiseGateCheckbox = document.getElementById('noiseGate');
     const fftDisplayCheckbox = document.getElementById('fftDisplay');
+    const debugOverlaysCheckbox = document.getElementById('debugOverlays');
     const freqMethodSelect = document.getElementById('freqMethod');
     const statusElement = document.getElementById('status');
     const frequencyElement = document.getElementById('frequency');
@@ -174,6 +198,7 @@ await oscilloscope.stop();</code></pre>
     oscilloscope.setAutoGain(autoGainCheckbox.checked);
     oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
     oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
     oscilloscope.setFrequencyEstimationMethod(freqMethodSelect.value);
 
     // 周波数とゲイン表示の更新
@@ -331,6 +356,10 @@ await oscilloscope.stop();</code></pre>
 
     fftDisplayCheckbox.addEventListener('change', () => {
       oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    });
+
+    debugOverlaysCheckbox.addEventListener('change', () => {
+      oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
     });
 
     freqMethodSelect.addEventListener('change', () => {

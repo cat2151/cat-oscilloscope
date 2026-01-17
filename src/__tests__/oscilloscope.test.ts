@@ -556,4 +556,24 @@ describe('Oscilloscope Class', () => {
       await oscilloscope.stop();
     });
   });
+
+  describe('Debug Overlays Control', () => {
+    it('should enable debug overlays by default', () => {
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
+      expect(oscilloscope.getDebugOverlaysEnabled()).toBe(true);
+    });
+
+    it('should allow disabling debug overlays', () => {
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
+      oscilloscope.setDebugOverlaysEnabled(false);
+      expect(oscilloscope.getDebugOverlaysEnabled()).toBe(false);
+    });
+
+    it('should allow enabling debug overlays', () => {
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
+      oscilloscope.setDebugOverlaysEnabled(false);
+      oscilloscope.setDebugOverlaysEnabled(true);
+      expect(oscilloscope.getDebugOverlaysEnabled()).toBe(true);
+    });
+  });
 });

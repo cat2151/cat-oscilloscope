@@ -1,4 +1,5 @@
 import { BufferSource } from './BufferSource';
+import { OverlaysLayoutConfig } from './OverlayLayout';
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
  * Delegates responsibilities to specialized modules:
@@ -35,8 +36,9 @@ export declare class Oscilloscope {
      * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
      * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
      * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
+     * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
      */
-    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement);
+    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
     start(): Promise<void>;
     startFromFile(file: File): Promise<void>;
     /**
@@ -66,6 +68,34 @@ export declare class Oscilloscope {
     getEstimatedFrequency(): number;
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
+    /**
+     * Enable or disable debug overlays (harmonic analysis, frequency plot)
+     * Debug overlays show detailed debugging information with yellow borders (#ffaa00)
+     * including harmonic analysis and frequency history plot
+     *
+     * When using cat-oscilloscope as a library, it's recommended to disable these
+     * overlays for a cleaner, more professional appearance
+     *
+     * @param enabled - true to show debug overlays (default for standalone app),
+     *                  false to hide them (recommended for library usage)
+     */
+    setDebugOverlaysEnabled(enabled: boolean): void;
+    /**
+     * Get the current state of debug overlays
+     * @returns true if debug overlays are enabled, false otherwise
+     */
+    getDebugOverlaysEnabled(): boolean;
+    /**
+     * Set the layout configuration for overlays
+     * Allows external applications to control the position and size of debug overlays
+     * @param layout - Layout configuration for overlays (FFT, harmonic analysis, frequency plot)
+     */
+    setOverlaysLayout(layout: OverlaysLayoutConfig): void;
+    /**
+     * Get the current overlays layout configuration
+     * @returns Current overlays layout configuration
+     */
+    getOverlaysLayout(): OverlaysLayoutConfig;
     getCurrentGain(): number;
     getSimilarityScore(): number;
     isSimilaritySearchActive(): boolean;

@@ -55,6 +55,8 @@ await oscilloscope.startFromBuffer(bufferSource);
 
 **BufferSource機能**: wavlpfなどの音声処理ライブラリとの統合に最適な、静的バッファからの可視化機能を提供します。
 
+**表示制御**: オーバーレイ（FFTスペクトラム、倍音分析、周波数推移プロット）の表示/非表示は`setDebugOverlaysEnabled()`で制御できます。また、`setOverlaysLayout()`でレイアウトをカスタマイズできます。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「デバッグオーバーレイ表示の制御」と「オーバーレイのレイアウトカスタマイズ」をご覧ください。
+
 
 ## 機能
 
