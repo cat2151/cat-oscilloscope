@@ -41,6 +41,9 @@ export interface OverlaysLayoutConfig {
 /**
  * Helper function to resolve position/size value
  * Converts percentage strings to actual pixel values based on canvas dimensions
+ * @param value - Value to resolve (number or string)
+ * @param canvasSize - Canvas dimension (width or height) in pixels
+ * @returns Resolved pixel value
  */
 export declare function resolveValue(value: number | string, canvasSize: number): number;
 /**

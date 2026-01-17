@@ -46,13 +46,43 @@ export interface OverlaysLayoutConfig {
 /**
  * Helper function to resolve position/size value
  * Converts percentage strings to actual pixel values based on canvas dimensions
+ * @param value - Value to resolve (number or string)
+ * @param canvasSize - Canvas dimension (width or height) in pixels
+ * @returns Resolved pixel value
  */
 export function resolveValue(value: number | string, canvasSize: number): number {
   if (typeof value === 'string' && value.endsWith('%')) {
-    const percentage = parseFloat(value) / 100;
-    return Math.floor(canvasSize * percentage);
+    const percentage = parseFloat(value);
+    // Validate percentage value
+    if (isNaN(percentage)) {
+      console.warn(`Invalid percentage value: ${value}, using 0`);
+      return 0;
+    }
+    if (percentage < 0) {
+      console.warn(`Negative percentage value: ${value}, clamping to 0`);
+      return 0;
+    }
+    return Math.floor(canvasSize * (percentage / 100));
   }
-  return typeof value === 'number' ? value : parseInt(value, 10);
+  
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) {
+      console.warn(`Invalid numeric string: ${value}, using 0`);
+      return 0;
+    }
+    return Math.max(0, parsed); // Clamp negative values to 0
+  }
+  
+  if (typeof value === 'number') {
+    if (isNaN(value)) {
+      console.warn(`Invalid number value: ${value}, using 0`);
+      return 0;
+    }
+    return Math.max(0, Math.floor(value)); // Clamp negative values to 0
+  }
+  
+  return 0;
 }
 
 /**

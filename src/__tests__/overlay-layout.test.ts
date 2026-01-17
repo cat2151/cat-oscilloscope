@@ -24,6 +24,26 @@ describe('OverlayLayout', () => {
       expect(resolveValue('100%', 800)).toBe(800);
       expect(resolveValue(0, 800)).toBe(0);
     });
+
+    it('should handle negative values by clamping to 0', () => {
+      expect(resolveValue(-10, 800)).toBe(0);
+      expect(resolveValue('-10', 800)).toBe(0);
+      expect(resolveValue('-10%', 800)).toBe(0);
+    });
+
+    it('should handle invalid numeric strings', () => {
+      expect(resolveValue('invalid', 800)).toBe(0);
+      expect(resolveValue('abc%', 800)).toBe(0);
+    });
+
+    it('should handle NaN values', () => {
+      expect(resolveValue(NaN, 800)).toBe(0);
+    });
+
+    it('should floor decimal values', () => {
+      expect(resolveValue(100.7, 800)).toBe(100);
+      expect(resolveValue('33.3%', 900)).toBe(299); // 900 * 0.333 = 299.7 -> 299
+    });
   });
 
   describe('DEFAULT_OVERLAYS_LAYOUT', () => {

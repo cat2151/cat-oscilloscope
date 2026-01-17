@@ -758,11 +758,7 @@ export class WaveformRenderer {
 
     // Resolve Y position
     if (layout.position.y !== undefined) {
-      if (typeof layout.position.y === 'string' && layout.position.y.endsWith('%')) {
-        y = resolveValue(layout.position.y, this.canvas.height);
-      } else {
-        y = typeof layout.position.y === 'number' ? layout.position.y : parseInt(layout.position.y, 10);
-      }
+      y = resolveValue(layout.position.y, this.canvas.height);
     }
 
     // Resolve width
