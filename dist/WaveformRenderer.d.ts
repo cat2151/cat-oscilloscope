@@ -1,3 +1,4 @@
+import { OverlaysLayoutConfig } from './OverlayLayout';
 /**
  * WaveformRenderer handles all canvas drawing operations
  * Responsible for:
@@ -12,14 +13,12 @@ export declare class WaveformRenderer {
     private ctx;
     private fftDisplayEnabled;
     private debugOverlaysEnabled;
+    private overlaysLayout;
     private readonly FFT_OVERLAY_HEIGHT_RATIO;
     private readonly FFT_MIN_BAR_WIDTH;
-    private readonly FREQ_PLOT_WIDTH;
-    private readonly FREQ_PLOT_HEIGHT;
-    private readonly FREQ_PLOT_PADDING;
     private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ;
     private readonly FREQ_PLOT_RANGE_PADDING_RATIO;
-    constructor(canvas: HTMLCanvasElement);
+    constructor(canvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
     /**
      * Clear canvas and draw grid with measurement labels
      * @param sampleRate - Audio sample rate in Hz (optional)
@@ -46,18 +45,20 @@ export declare class WaveformRenderer {
      */
     drawWaveform(data: Float32Array, startIndex: number, endIndex: number, gain: number): void;
     /**
-     * Draw FFT spectrum overlay in bottom-left corner of canvas
+     * Draw FFT spectrum overlay (position and size configurable via overlaysLayout)
      */
     drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number): void;
     /**
      * Draw harmonic analysis information overlay
      * Displays debugging information about frequency estimation when FFT method is used
+     * Position and size configurable via overlaysLayout
      */
     drawHarmonicAnalysis(halfFreqPeakStrengthPercent?: number, candidate1Harmonics?: number[], candidate2Harmonics?: number[], candidate1WeightedScore?: number, candidate2WeightedScore?: number, selectionReason?: string, estimatedFrequency?: number): void;
     /**
-     * 右上に周波数プロットを描画
-     * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
-     * 1フレームごとに1つのデータポイントが追加される
+     * Draw frequency plot overlay
+     * Position and size configurable via overlaysLayout
+     * Displays frequency history to detect frequency spikes
+     * One data point is added per frame
      */
     drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void;
     /**
@@ -84,4 +85,19 @@ export declare class WaveformRenderer {
      * @returns true if debug overlays are enabled, false otherwise
      */
     getDebugOverlaysEnabled(): boolean;
+    /**
+     * Set the layout configuration for overlays
+     * Allows external applications to control the position and size of debug overlays
+     * @param layout - Layout configuration for overlays
+     */
+    setOverlaysLayout(layout: OverlaysLayoutConfig): void;
+    /**
+     * Get the current overlays layout configuration
+     * @returns Current overlays layout configuration
+     */
+    getOverlaysLayout(): OverlaysLayoutConfig;
+    /**
+     * Helper method to calculate overlay dimensions based on layout config
+     */
+    private calculateOverlayDimensions;
 }

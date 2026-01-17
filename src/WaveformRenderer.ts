@@ -1,4 +1,5 @@
 import { amplitudeToDb, frequencyToNote } from './utils';
+import { OverlaysLayoutConfig, DEFAULT_OVERLAYS_LAYOUT, resolveValue, OverlayLayout } from './OverlayLayout';
 
 /**
  * WaveformRenderer handles all canvas drawing operations
@@ -14,21 +15,20 @@ export class WaveformRenderer {
   private ctx: CanvasRenderingContext2D;
   private fftDisplayEnabled = true;
   private debugOverlaysEnabled = true; // Control debug overlays (harmonic analysis, frequency plot)
+  private overlaysLayout: OverlaysLayoutConfig; // Layout configuration for overlays
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
-  private readonly FREQ_PLOT_WIDTH = 280; // 周波数プロット領域の幅
-  private readonly FREQ_PLOT_HEIGHT = 120; // 周波数プロット領域の高さ
-  private readonly FREQ_PLOT_PADDING = 10; // エッジからのパディング
   private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ = 50; // 周波数範囲の最小パディング (Hz)
   private readonly FREQ_PLOT_RANGE_PADDING_RATIO = 0.1; // 周波数範囲のパディング比率 (10%)
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig) {
     this.canvas = canvas;
     const context = canvas.getContext('2d');
     if (!context) {
       throw new Error('Could not get 2D context');
     }
     this.ctx = context;
+    this.overlaysLayout = overlaysLayout || DEFAULT_OVERLAYS_LAYOUT;
   }
 
   /**
@@ -197,7 +197,7 @@ export class WaveformRenderer {
   }
 
   /**
-   * Draw FFT spectrum overlay in bottom-left corner of canvas
+   * Draw FFT spectrum overlay (position and size configurable via overlaysLayout)
    */
   drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number): void {
     if (!this.fftDisplayEnabled) {
@@ -206,11 +206,19 @@ export class WaveformRenderer {
 
     const binFrequency = sampleRate / fftSize;
 
-    // Overlay dimensions (bottom-left corner, approximately 1/3 of canvas)
-    const overlayWidth = Math.floor(this.canvas.width * 0.35);
-    const overlayHeight = Math.floor(this.canvas.height * 0.35);
-    const overlayX = 10; // 10px from left edge
-    const overlayY = this.canvas.height - overlayHeight - 10; // 10px from bottom edge
+    // Calculate overlay dimensions using layout config
+    const defaultOverlayWidth = Math.floor(this.canvas.width * 0.35);
+    const defaultOverlayHeight = Math.floor(this.canvas.height * 0.35);
+    const defaultOverlayX = 10;
+    const defaultOverlayY = this.canvas.height - defaultOverlayHeight - 10;
+
+    const { x: overlayX, y: overlayY, width: overlayWidth, height: overlayHeight } = this.calculateOverlayDimensions(
+      this.overlaysLayout.fftOverlay,
+      defaultOverlayX,
+      defaultOverlayY,
+      defaultOverlayWidth,
+      defaultOverlayHeight
+    );
 
     // Draw semi-transparent background
     this.ctx.save();
@@ -272,6 +280,7 @@ export class WaveformRenderer {
   /**
    * Draw harmonic analysis information overlay
    * Displays debugging information about frequency estimation when FFT method is used
+   * Position and size configurable via overlaysLayout
    */
   drawHarmonicAnalysis(
     halfFreqPeakStrengthPercent?: number,
@@ -296,23 +305,28 @@ export class WaveformRenderer {
       return;
     }
     
-    // Position in top-left corner, below the main canvas area
-    const overlayX = 10;
-    const overlayY = 10;
-    const overlayWidth = 500;  // Increased width to accommodate weighted scores
+    // Calculate overlay dimensions using layout config
     const lineHeight = 16;
-    let currentY = overlayY;
-    
-    this.ctx.save();
-    
-    // Semi-transparent background
     const numLines = 1 + // Title
                      (halfFreqPeakStrengthPercent !== undefined ? 1 : 0) +
                      (candidate1Harmonics ? 1 : 0) +
                      (candidate2Harmonics ? 1 : 0) +
                      (selectionReason ? 2 : 0); // Selection reason might wrap
-    const overlayHeight = numLines * lineHeight + 10;
+    const defaultOverlayHeight = numLines * lineHeight + 10;
+
+    const { x: overlayX, y: overlayY, width: overlayWidth, height: overlayHeight } = this.calculateOverlayDimensions(
+      this.overlaysLayout.harmonicAnalysis,
+      10,
+      10,
+      500,
+      defaultOverlayHeight
+    );
+
+    let currentY = overlayY;
     
+    this.ctx.save();
+    
+    // Semi-transparent background
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     this.ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
     
@@ -401,9 +415,10 @@ export class WaveformRenderer {
   }
 
   /**
-   * 右上に周波数プロットを描画
-   * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
-   * 1フレームごとに1つのデータポイントが追加される
+   * Draw frequency plot overlay
+   * Position and size configurable via overlaysLayout
+   * Displays frequency history to detect frequency spikes
+   * One data point is added per frame
    */
   drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
     // Skip if debug overlays are disabled
@@ -415,18 +430,24 @@ export class WaveformRenderer {
       return;
     }
 
-    const overlayX = this.canvas.width - this.FREQ_PLOT_WIDTH - this.FREQ_PLOT_PADDING;
-    const overlayY = this.FREQ_PLOT_PADDING;
+    // Calculate overlay dimensions using layout config
+    const { x: overlayX, y: overlayY, width: overlayWidth, height: overlayHeight } = this.calculateOverlayDimensions(
+      this.overlaysLayout.frequencyPlot,
+      this.canvas.width - 280 - 10,
+      10,
+      280,
+      120
+    );
 
-    // 半透明背景を描画
+    // Draw semi-transparent background
     this.ctx.save();
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
+    this.ctx.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
 
-    // 枠線を描画
+    // Draw border
     this.ctx.strokeStyle = '#ffaa00';
     this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(overlayX, overlayY, this.FREQ_PLOT_WIDTH, this.FREQ_PLOT_HEIGHT);
+    this.ctx.strokeRect(overlayX, overlayY, overlayWidth, overlayHeight);
 
     // タイトルを描画（フレーム数を含む）
     this.ctx.fillStyle = '#ffaa00';
@@ -436,8 +457,8 @@ export class WaveformRenderer {
     // プロット領域を計算（タイトルと軸ラベルのためのスペースを確保）
     const plotX = overlayX + 35;
     const plotY = overlayY + 25;
-    const plotWidth = this.FREQ_PLOT_WIDTH - 45;
-    const plotHeight = this.FREQ_PLOT_HEIGHT - 45; // X軸ラベル用にスペースを増やす
+    const plotWidth = overlayWidth - 45;
+    const plotHeight = overlayHeight - 45; // X軸ラベル用にスペースを増やす
 
     // データ内の周波数範囲を検出（ゼロ値を除外）
     const validFrequencies = frequencyHistory.filter(f => f > 0);
@@ -690,5 +711,70 @@ export class WaveformRenderer {
    */
   getDebugOverlaysEnabled(): boolean {
     return this.debugOverlaysEnabled;
+  }
+
+  /**
+   * Set the layout configuration for overlays
+   * Allows external applications to control the position and size of debug overlays
+   * @param layout - Layout configuration for overlays
+   */
+  setOverlaysLayout(layout: OverlaysLayoutConfig): void {
+    this.overlaysLayout = { ...this.overlaysLayout, ...layout };
+  }
+
+  /**
+   * Get the current overlays layout configuration
+   * @returns Current overlays layout configuration
+   */
+  getOverlaysLayout(): OverlaysLayoutConfig {
+    return this.overlaysLayout;
+  }
+
+  /**
+   * Helper method to calculate overlay dimensions based on layout config
+   */
+  private calculateOverlayDimensions(layout: OverlayLayout | undefined, defaultX: number, defaultY: number, defaultWidth: number, defaultHeight: number): { x: number; y: number; width: number; height: number } {
+    if (!layout) {
+      return { x: defaultX, y: defaultY, width: defaultWidth, height: defaultHeight };
+    }
+
+    let x = defaultX;
+    let y = defaultY;
+    let width = defaultWidth;
+    let height = defaultHeight;
+
+    // Resolve X position
+    if (layout.position.x !== undefined) {
+      if (typeof layout.position.x === 'string' && layout.position.x.startsWith('right-')) {
+        const offset = parseInt(layout.position.x.substring(6), 10);
+        const resolvedWidth = typeof layout.size.width === 'string' && layout.size.width.endsWith('%')
+          ? resolveValue(layout.size.width, this.canvas.width)
+          : (typeof layout.size.width === 'number' ? layout.size.width : defaultWidth);
+        x = this.canvas.width - resolvedWidth - offset;
+      } else {
+        x = resolveValue(layout.position.x, this.canvas.width);
+      }
+    }
+
+    // Resolve Y position
+    if (layout.position.y !== undefined) {
+      if (typeof layout.position.y === 'string' && layout.position.y.endsWith('%')) {
+        y = resolveValue(layout.position.y, this.canvas.height);
+      } else {
+        y = typeof layout.position.y === 'number' ? layout.position.y : parseInt(layout.position.y, 10);
+      }
+    }
+
+    // Resolve width
+    if (layout.size.width !== undefined && layout.size.width !== 'auto') {
+      width = resolveValue(layout.size.width, this.canvas.width);
+    }
+
+    // Resolve height
+    if (layout.size.height !== undefined && layout.size.height !== 'auto') {
+      height = resolveValue(layout.size.height, this.canvas.height);
+    }
+
+    return { x, y, width, height };
   }
 }

@@ -1,4 +1,5 @@
 import { BufferSource } from './BufferSource';
+import { OverlaysLayoutConfig } from './OverlayLayout';
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
  * Delegates responsibilities to specialized modules:
@@ -35,8 +36,9 @@ export declare class Oscilloscope {
      * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
      * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
      * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
+     * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
      */
-    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement);
+    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
     start(): Promise<void>;
     startFromFile(file: File): Promise<void>;
     /**
@@ -83,6 +85,17 @@ export declare class Oscilloscope {
      * @returns true if debug overlays are enabled, false otherwise
      */
     getDebugOverlaysEnabled(): boolean;
+    /**
+     * Set the layout configuration for overlays
+     * Allows external applications to control the position and size of debug overlays
+     * @param layout - Layout configuration for overlays (FFT, harmonic analysis, frequency plot)
+     */
+    setOverlaysLayout(layout: OverlaysLayoutConfig): void;
+    /**
+     * Get the current overlays layout configuration
+     * @returns Current overlays layout configuration
+     */
+    getOverlaysLayout(): OverlaysLayoutConfig;
     getCurrentGain(): number;
     getSimilarityScore(): number;
     isSimilaritySearchActive(): boolean;
