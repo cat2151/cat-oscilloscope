@@ -166,18 +166,17 @@ export class Oscilloscope {
 
     // Warn if frame processing exceeds target (60fps)
     if (processingTime > this.TARGET_FRAME_TIME) {
-      console.warn(`フレーム処理時間: ${processingTime.toFixed(2)}ms (目標: ${this.TARGET_FRAME_TIME}ms以下)`);
+      console.warn(`Frame processing time: ${processingTime.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`);
     }
 
-    // Calculate and log FPS periodically
+    // Calculate and log FPS periodically (every 60 frames, approximately every second at 60fps)
     if (this.lastFrameTime > 0) {
       const frameInterval = startTime - this.lastFrameTime;
       const currentFps = 1000 / frameInterval;
       
-      // Log FPS every 60 frames (approximately every second at 60fps)
-      if (this.frameProcessingTimes.length === this.MAX_FRAME_TIMES) {
+      if (this.frameProcessingTimes.length >= 60 && this.frameProcessingTimes.length % 60 === 0) {
         const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
-        console.log(`FPS: ${currentFps.toFixed(1)}, 平均処理時間: ${avgProcessingTime.toFixed(2)}ms`);
+        console.log(`FPS: ${currentFps.toFixed(1)}, Avg frame time: ${avgProcessingTime.toFixed(2)}ms`);
       }
     }
     this.lastFrameTime = startTime;

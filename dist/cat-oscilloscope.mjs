@@ -468,8 +468,8 @@ class B {
     for (let u = 0; u <= 4; u++) {
       const E = x - (x - c) * (u / 4), S = s + m / 4 * u, v = b(E);
       if (v) {
-        const I = v.cents >= 0 ? "+" : "";
-        this.ctx.fillText(`${I}${v.cents}¢`, o + l - 5, S);
+        const P = v.cents >= 0 ? "+" : "";
+        this.ctx.fillText(`${P}${v.cents}¢`, o + l - 5, S);
       }
     }
     this.ctx.strokeStyle = "#00ff00", this.ctx.lineWidth = 2, this.ctx.beginPath();
@@ -1008,11 +1008,11 @@ class $ {
       n && this.renderFrame(n);
     }
     const i = performance.now() - t;
-    if (this.frameProcessingTimes.push(i), this.frameProcessingTimes.length > this.MAX_FRAME_TIMES && this.frameProcessingTimes.shift(), i > this.TARGET_FRAME_TIME && console.warn(`フレーム処理時間: ${i.toFixed(2)}ms (目標: ${this.TARGET_FRAME_TIME}ms以下)`), this.lastFrameTime > 0) {
+    if (this.frameProcessingTimes.push(i), this.frameProcessingTimes.length > this.MAX_FRAME_TIMES && this.frameProcessingTimes.shift(), i > this.TARGET_FRAME_TIME && console.warn(`Frame processing time: ${i.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`), this.lastFrameTime > 0) {
       const a = 1e3 / (t - this.lastFrameTime);
-      if (this.frameProcessingTimes.length === this.MAX_FRAME_TIMES) {
+      if (this.frameProcessingTimes.length >= 60 && this.frameProcessingTimes.length % 60 === 0) {
         const o = this.frameProcessingTimes.reduce((s, l) => s + l, 0) / this.frameProcessingTimes.length;
-        console.log(`FPS: ${a.toFixed(1)}, 平均処理時間: ${o.toFixed(2)}ms`);
+        console.log(`FPS: ${a.toFixed(1)}, Avg frame time: ${o.toFixed(2)}ms`);
       }
     }
     this.lastFrameTime = t, this.animationId = requestAnimationFrame(() => this.render());
@@ -1230,7 +1230,7 @@ class Q {
     this.ctx.fillStyle = "#1a1a1a", this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
-class P {
+class I {
   /**
    * Create a BufferSource from Float32Array
    * @param buffer - Audio data as Float32Array (values typically in range -1.0 to 1.0)
@@ -1265,7 +1265,7 @@ class P {
         `Invalid channel index ${i}. AudioBuffer has ${t.numberOfChannels} channel(s).`
       );
     const n = t.getChannelData(i);
-    return new P(n, t.sampleRate, {
+    return new I(n, t.sampleRate, {
       chunkSize: e == null ? void 0 : e.chunkSize,
       loop: e == null ? void 0 : e.loop
     });
@@ -1359,7 +1359,7 @@ class P {
 }
 export {
   k as AudioManager,
-  P as BufferSource,
+  I as BufferSource,
   K as ComparisonPanelRenderer,
   N as FrequencyEstimator,
   q as GainController,

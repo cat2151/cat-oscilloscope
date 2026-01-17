@@ -111,7 +111,7 @@ impl GainController {
     /// Apply noise gate to the signal data (modifies in place)
     pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
         if !self.is_signal_above_noise_gate(data) {
-            web_sys::console::log_1(&"ノイズゲート: 信号が閾値以下のため0で埋める".into());
+            web_sys::console::log_1(&"Noise gate: Signal below threshold, filling with 0.0".into());
             data.fill(0.0);
         }
     }

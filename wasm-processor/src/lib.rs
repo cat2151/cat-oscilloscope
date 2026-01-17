@@ -152,7 +152,7 @@ impl WasmDataProcessor {
         fft_display_enabled: bool,
     ) -> Option<WaveformRenderData> {
         if waveform_data.is_empty() {
-            web_sys::console::log_1(&"データなし: 波形データが空です".into());
+            web_sys::console::log_1(&"No data: Waveform data is empty".into());
             return None;
         }
         
