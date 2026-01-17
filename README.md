@@ -24,19 +24,19 @@ You can try the application at the URL above. Microphone access permission is re
 -   **5 Frequency Estimation Methods**: Supports Zero-Crossing, Autocorrelation, FFT, STFT, and CQT.
 -   **Buffer Size Multiplier**: Extended buffer feature (1x/4x/16x) to improve low-frequency detection accuracy.
 -   **Waveform Comparison Panel**: Displays the similarity between the previous and current waveforms in real-time.
--   **Piano Keyboard Display**: Visually displays the detected frequencies.
+-   **Piano Keyboard Display**: Visually displays detected frequencies.
 
 ### Current Stability
 
--   ✅ Major bugs resolved
--   ✅ Highly practical when playing audio from WAV files
+-   ✅ Major bugs resolved.
+-   ✅ Highly practical when playing audio from WAV files.
 -   ⚠️ Microphone input is susceptible to ambient noise, so use in a quiet environment is recommended.
 
 ## 📚 Usage as a Library
 
 cat-oscilloscope can be used as an npm library in your own projects. For detailed instructions, please refer to [LIBRARY_USAGE.md](./LIBRARY_USAGE.md).
 
-⚠️ **Important**: If installing from npm or GitHub, manual WASM file setup is required. For details, please refer to the "WASM File Setup" section in [LIBRARY_USAGE.md](./LIBRARY_USAGE.md).
+⚠️ **Important**: If installing from npm or GitHub, manual WASM file setup is required. See the "WASM File Setup" section in [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) for details.
 
 ```typescript
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
@@ -47,13 +47,15 @@ const oscilloscope = new Oscilloscope(canvas);
 // Visualize from microphone input
 await oscilloscope.start();
 
-// Visualize from a static buffer (no audio playback)
+// Visualize from static buffer (no audio playback)
 const audioData = new Float32Array(44100); // 1 second of data
 const bufferSource = new BufferSource(audioData, 44100, { loop: true });
 await oscilloscope.startFromBuffer(bufferSource);
 ```
 
-**BufferSource Feature**: Provides a visualization feature from static buffers, ideal for integration with audio processing libraries like wavlpf.
+**BufferSource Feature**: Provides a visualization function from static buffers, ideal for integration with audio processing libraries like wavlpf.
+
+**Display Control**: The visibility of overlays (FFT spectrum, harmonic analysis, frequency trend plot) can be controlled with `setDebugOverlaysEnabled()`. The layout can also be customized with `setOverlaysLayout()`. For details, refer to the "Controlling Debug Overlay Display" and "Customizing Overlay Layout" sections in [LIBRARY_USAGE.md](./LIBRARY_USAGE.md).
 
 ## Features
 
@@ -63,55 +65,55 @@ cat-oscilloscope supports 5 frequency estimation algorithms:
 
 1.  **Zero-Crossing**: Simple and fast. Suitable for simple waveforms.
 2.  **Autocorrelation**: Good balance of accuracy for complex waveforms.
-3.  **FFT (Fast Fourier Transform)**: Default. Frequency spectrum analysis. Strong for high frequencies.
-4.  **STFT (Short-Time Fourier Transform)**: Improved low-frequency detection accuracy with variable window length.
-5.  **CQT (Constant Q Transform)**: High frequency resolution in the low-frequency range. Suitable for music analysis.
+3.  **FFT (Fast Fourier Transform)**: Default. For frequency spectrum analysis. Strong for high frequencies.
+4.  **STFT (Short-Time Fourier Transform)**: Improves low-frequency detection accuracy with variable window lengths.
+5.  **CQT (Constant-Q Transform)**: Provides high frequency resolution in the low-frequency range. Suitable for music analysis.
 
 ### Buffer Size Multiplier
 
-To improve low-frequency detection accuracy, extended buffers utilizing past frame buffers are supported:
+To improve low-frequency detection accuracy, an extended buffer utilizing past frame buffers is supported:
 
--   **1x (Standard)**: Standard buffer size (approx. 1/60 second)
+-   **1x (Standard)**: Standard buffer size (approx. 1/60 seconds)
 -   **4x (Better Low Freq)**: 4x extended buffer for improved low-frequency detection accuracy
 -   **16x (Best Low Freq)**: 16x extended buffer for best low-frequency detection accuracy
 
 **Example Usage**: For detecting low frequencies (20-50Hz), selecting STFT or CQT and setting the Buffer Size to 16x is optimal.
 
 **Important Notes:**
--   When the buffer size is changed, the new buffer size will not take effect until the history is accumulated (up to 16 frames).
+-   When changing the buffer size, the new buffer size will not take effect until the history accumulates (up to 16 frames).
 -   With a large buffer size (16x), initial frequency detection takes approximately 0.3 seconds.
 
 ### Detectable Frequency Range
 
 The minimum detectable frequency varies depending on the buffer size:
 
--   **1x (4096 samples @ 48kHz)**: Approx. 80Hz and above (standard use)
--   **4x (16384 samples)**: Approx. 30Hz and above (improved low frequency)
--   **16x (65536 samples)**: Approx. 20Hz and above (best low frequency detection)
+-   **1x (4096 samples @ 48kHz)**: Approx. 80Hz or higher (standard usage)
+-   **4x (16384 samples)**: Approx. 30Hz or higher (improved low-frequency)
+-   **16x (65536 samples)**: Approx. 20Hz or higher (best low-frequency detection)
 
 ## Notes
 
 -   Frequency Estimation
     -   There are cases where FFT is accurate, and cases where other methods are more accurate.
     -   STFT and CQT are particularly good at detecting low frequencies (20-100Hz).
-    -   Increasing the buffer size multiplier improves low-frequency accuracy, but slightly delays response time.
-    -   **Performance**: With a 16x buffer size, STFT/CQT calculations may take longer (due to implementation for educational purposes).
+    -   Increasing the buffer size multiplier improves low-frequency accuracy but slightly increases latency.
+    -   **Performance**: With 16x buffer size, STFT/CQT calculations might take longer (due to implementation for educational purposes).
 
 ## About Data Processing Implementation
 
-All data processing (waveform search, frequency estimation, zero-crossing detection, etc.) is **implemented in Rust/WASM**.
+All data processing (waveform searching, frequency estimation, zero-crossing detection, etc.) is **implemented in Rust/WASM**.
 
--   **High Processing Performance**: Efficient execution through Rust's optimizations.
+-   **High Processing Performance**: Efficient execution due to Rust's optimizations.
 -   **Type-Safe and Reliable Implementation**: Safety ensured by Rust's strict type system.
--   **Single Implementation**: Algorithms are implemented only in WASM, eliminating duplicate management with TypeScript.
--   **TypeScript's Role**: Handles only configuration management and rendering.
+-   **Single Implementation**: Algorithms are implemented solely in WASM, eliminating dual management with TypeScript.
+-   **TypeScript's Role**: Responsible only for configuration management and rendering.
 
 ### Building the WASM Implementation
 
 The WASM implementation is located in the `wasm-processor` directory.
 
 ```bash
-# Build the WASM implementation (requires wasm-pack)
+# Build WASM implementation (requires wasm-pack)
 npm run build:wasm
 
 # Build the entire application (including WASM)
@@ -122,17 +124,17 @@ npm run build
 -   Rust toolchain (rustc, cargo)
 -   wasm-pack (`cargo install wasm-pack`)
 
-**Note**: For regular use, pre-built WASM files are included in `public/wasm/`, so the Rust toolchain is not required.
+**Note**: For normal usage, pre-built WASM files are included in `public/wasm/`, so the Rust toolchain is not required.
 
-## Main Features
+## Key Features
 
 -   🎤 **Microphone Input** - Captures audio from the microphone in real-time.
 -   📂 **Audio File** - Supports looped playback of WAV files.
 -   📊 **Frequency Estimation** - 5 methods: Zero-Crossing, Autocorrelation, FFT, STFT, CQT.
--   🎹 **Piano Keyboard Display** - Displays detected frequencies on a piano keyboard.
+-   🎹 **Piano Keyboard Display** - Displays detected frequencies on a keyboard.
 -   🎚️ **Auto Gain** - Automatically adjusts waveform amplitude.
--   🔇 **Noise Gate** - Cuts signals below a threshold.
--   📈 **FFT Spectrum** - Overlays the frequency spectrum.
+-   🔇 **Noise Gate** - Cuts off signals below a threshold.
+-   📈 **FFT Spectrum** - Overlays frequency spectrum display.
 -   🔍 **Waveform Comparison Panel** - Displays the similarity between the previous and current waveforms.
 -   ⏸️ **Pause Drawing** - Allows freezing the waveform for observation.
 
@@ -167,7 +169,7 @@ Build for production:
 npm run build
 ```
 
-Built files are output to the `dist` directory.
+The built files will be output to the `dist` directory.
 
 ### Preview Production Build
 
@@ -199,7 +201,7 @@ npm run test:ui
 
 ### Zero-Crossing Detection Algorithm
 
-This oscilloscope implements the following zero-crossing detection algorithm:
+This oscilloscope implements a zero-crossing detection algorithm as follows:
 
 1.  Scans the audio buffer to detect points where the waveform crosses from negative (or zero) to positive.
 2.  Identifies the first zero-crossing point.
@@ -212,19 +214,19 @@ This achieves a stable, non-scrolling display.
 
 -   **FFT Size**: 4096 samples for high resolution.
 -   **Smoothing**: Disabled (0) for accurate waveform representation.
--   **Display Padding**: 20 samples before and after the zero-crossing points.
+-   **Display Padding**: 20 samples before and after zero-crossing points.
 -   **Auto Gain**:
     -   Automatically adjusts to target 80% of canvas height.
     -   Smooth transitions via peak tracking (decay rate: 0.95).
     -   Gain range: 0.5x to 99x.
     -   Interpolation factor: 0.1 (gradual adjustment).
-    -   Toggleable via UI checkbox (default: enabled).
+    -   Can be enabled/disabled via UI checkbox (Default: Enabled).
 -   **Canvas Resolution**: 800x400 pixels.
 -   **Refresh Rate**: Synchronized with browser's requestAnimationFrame (approx. 60 FPS).
 
 ## Tech Stack
 
--   **Rust/WebAssembly** - Fast, type-safe data processing algorithms.
+-   **Rust/WebAssembly** - Fast and type-safe data processing algorithms.
 -   **TypeScript** - Type-safe JavaScript (configuration management and rendering).
 -   **Vite** - Fast build tool and development server.
 -   **Web Audio API** - Audio capture and analysis.
@@ -239,23 +241,23 @@ This application requires:
 
 ## Constraints with Microphone Input
 
-When using input from a microphone, the following constraints apply:
+When using input from a microphone, there are the following constraints:
 
 ### Impact of Ambient Noise
 
 Since the microphone picks up all surrounding sounds, ambient noise can affect the waveform as follows:
 
--   **Mouse Click Sounds**: Mechanical sounds from mouse clicks will appear in the waveform. Specifically, the waveform may appear distorted the moment the pause button is clicked with the mouse.
--   **Keyboard Typing Sounds**: Keyboard typing sounds also affect the waveform. However, the impact is less if a quiet keyboard is used.
+-   **Mouse Click Sounds**: The mechanical sound of clicking a mouse will appear in the waveform. Especially when clicking the pause button with a mouse, the waveform may appear distorted.
+-   **Keyboard Typing Sounds**: Keyboard typing sounds also affect the waveform. However, if using a quiet keyboard, the impact will be less.
 -   **Other Ambient Sounds**: Speaking voices, indoor air conditioning sounds, and external noise will also appear in the waveform.
 
 ### Practical Tips
 
--   **How to Pause**: Instead of a mouse click, using the spacebar on a quiet keyboard can minimize the impact on the waveform when pausing.
--   **Sound Source Selection**: Microphone input is susceptible to ambient noise, so if you want to observe a clean waveform, it is recommended to use audio files such as WAV files.
--   **Measurement Environment**: Using it in as quiet an environment as possible will allow for more accurate waveform observation.
+-   **How to Pause**: Instead of mouse clicks, using the spacebar on a quiet keyboard can minimize the impact on the waveform when pausing.
+-   **Sound Source Selection**: Since microphone input is susceptible to ambient noise, it is recommended to use audio files such as WAV files if you want to observe waveforms without noise.
+-   **Measurement Environment**: Using the application in as quiet an environment as possible will allow for more accurate waveform observation.
 
-These are not limitations of the application, but rather characteristics of the microphone device itself.
+These are not limitations of the application itself, but rather characteristics of the microphone as a device.
 
 ## License
 
