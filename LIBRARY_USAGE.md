@@ -347,7 +347,32 @@ const isDebugEnabled = oscilloscope.getDebugOverlaysEnabled();
 
 ### オーバーレイのレイアウトカスタマイズ
 
-**v0.0.2以降**: デバッグオーバーレイの位置とサイズを外部から制御できるようになりました。これにより、外部アプリケーションで独自のレイアウトを実現できます。
+#### デフォルトレイアウトについて（重要）
+
+**cat-oscilloscopeは、どのようなキャンバスサイズでも適切に動作するデフォルトレイアウトを内蔵しています。**
+
+デフォルトレイアウトでは：
+- **FFTスペクトラム**: 左下に画面の35%×35%で配置
+- **倍音分析**: 左上に500px幅で配置
+- **周波数推移プロット**: 右上に280×120pxで配置
+
+これらのデフォルト設定は、800×400pxの標準サイズだけでなく、1800×1000pxなどの大きなキャンバスでも正しく機能します。**ほとんどのユースケースでは、カスタムレイアウト設定は不要です。**
+
+```typescript
+// デフォルトレイアウトを使用する場合（推奨）
+const oscilloscope = new Oscilloscope(
+  canvas,
+  previousWaveformCanvas,
+  currentWaveformCanvas,
+  similarityPlotCanvas,
+  frameBufferCanvas
+  // overlaysLayoutパラメータは省略 - デフォルトが使用されます
+);
+```
+
+#### カスタムレイアウトの設定（必要な場合のみ）
+
+特別な要件がある場合のみ、オーバーレイの位置とサイズをカスタマイズできます：
 
 ```typescript
 import { Oscilloscope, OverlaysLayoutConfig } from 'cat-oscilloscope';
