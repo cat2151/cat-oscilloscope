@@ -44,9 +44,6 @@ import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const oscilloscope = new Oscilloscope(canvas);
 
-// 【推奨】ライブラリとして使用する場合は、デバッグオーバーレイを無効化
-oscilloscope.setDebugOverlaysEnabled(false);
-
 // マイク入力から可視化
 await oscilloscope.start();
 
@@ -58,7 +55,7 @@ await oscilloscope.startFromBuffer(bufferSource);
 
 **BufferSource機能**: wavlpfなどの音声処理ライブラリとの統合に最適な、静的バッファからの可視化機能を提供します。
 
-**表示制御**: ライブラリとして使用する場合、`setDebugOverlaysEnabled(false)`でデバッグ用の黄色枠情報パネルを非表示にすることを推奨します。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「デバッグオーバーレイ表示の制御」と「レイアウト設計ガイドライン」をご覧ください。
+**表示制御**: オーバーレイ（FFTスペクトラム、倍音分析、周波数推移プロット）の表示/非表示は`setDebugOverlaysEnabled()`で制御できます。また、`setOverlaysLayout()`でレイアウトをカスタマイズできます。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「デバッグオーバーレイ表示の制御」と「オーバーレイのレイアウトカスタマイズ」をご覧ください。
 
 
 ## 機能

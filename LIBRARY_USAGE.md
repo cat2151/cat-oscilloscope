@@ -326,16 +326,16 @@ const isFFTEnabled = oscilloscope.getFFTDisplayEnabled();
 
 ### デバッグオーバーレイ表示の制御
 
-cat-oscilloscopeは、デバッグ用の詳細情報を表示するオーバーレイ（黄色の枠線で囲まれた情報パネル）を提供しています：
+cat-oscilloscopeは、詳細情報を表示するオーバーレイ（黄色の枠線で囲まれた情報パネル）を提供しています：
 
 - **FFTスペクトラム**: 周波数スペクトラム表示（青枠）
 - **倍音分析（Harmonic Analysis）**: FFT推定時の倍音情報（黄色枠）
 - **周波数推移プロット**: 推定周波数の履歴グラフ（黄色枠）
 
-**ライブラリとして使用する場合、これらのデバッグオーバーレイを無効化することを強く推奨します**。デバッグオーバーレイは開発・デバッグ用途向けに設計されており、プロダクション環境や他のUIとの統合時には不要な情報となります。
+これらのオーバーレイは必要に応じて有効/無効を切り替えられます。
 
 ```typescript
-// デバッグオーバーレイを非表示にする（ライブラリ利用時の推奨設定）
+// デバッグオーバーレイを非表示にする
 oscilloscope.setDebugOverlaysEnabled(false);
 
 // デバッグオーバーレイを表示する（デフォルト）
@@ -343,21 +343,6 @@ oscilloscope.setDebugOverlaysEnabled(true);
 
 // 現在の状態を取得
 const isDebugEnabled = oscilloscope.getDebugOverlaysEnabled();
-```
-
-**推奨される設定例（プロダクション環境）:**
-
-```typescript
-import { Oscilloscope } from 'cat-oscilloscope';
-
-const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
-const oscilloscope = new Oscilloscope(canvas, ...otherCanvases);
-
-// プロダクション環境向けのクリーンな表示設定
-oscilloscope.setDebugOverlaysEnabled(false);  // デバッグ情報を非表示
-oscilloscope.setFFTDisplay(true);             // FFTスペクトラムは表示（必要に応じて）
-
-await oscilloscope.start();
 ```
 
 ### オーバーレイのレイアウトカスタマイズ
@@ -429,12 +414,12 @@ cat-oscilloscopeは、以下のキャンバスサイズで最適化されてい�
 
 ライブラリとして使用する際、以下の要素を制御できます：
 
-| 要素 | 制御API | デフォルト | 推奨（ライブラリ使用時） |
-|------|---------|----------|------------------------|
+| 要素 | 制御API | デフォルト | ライブラリ使用時 |
+|------|---------|----------|------------------|
 | オートゲイン | `setAutoGain(boolean)` | `true` | 用途に応じて |
 | ノイズゲート | `setNoiseGate(boolean)` | `false` | 用途に応じて |
 | FFTスペクトラム | `setFFTDisplay(boolean)` | `true` | 用途に応じて |
-| デバッグオーバーレイ | `setDebugOverlaysEnabled(boolean)` | `true` | **`false`推奨** |
+| デバッグオーバーレイ | `setDebugOverlaysEnabled(boolean)` | `true` | 用途に応じて |
 | オーバーレイレイアウト | `setOverlaysLayout(OverlaysLayoutConfig)` | デフォルトレイアウト | カスタマイズ可能 |
 
 **オーバーレイのレイアウトカスタマイズ（v0.0.2以降）:**
@@ -444,7 +429,7 @@ cat-oscilloscopeは、以下のキャンバスサイズで最適化されてい�
 
 ### レイアウト統合時の注意点
 
-1. **デバッグオーバーレイの制御**: プロダクション環境では`setDebugOverlaysEnabled(false)`を設定するか、カスタムレイアウトで位置を調整
+1. **デバッグオーバーレイの制御**: `setDebugOverlaysEnabled()`で表示を切り替えるか、`setOverlaysLayout()`でカスタムレイアウトを設定
 2. **キャンバスサイズの考慮**: 推奨サイズ（800x400px）から大きく外れる場合、パーセント指定を活用
 3. **CSS でのスタイリング**: キャンバス要素には`border`や`box-shadow`などのCSSを自由に適用できます
 4. **動的レイアウト**: `setOverlaysLayout()`で実行時にレイアウトを変更可能
