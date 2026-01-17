@@ -30,7 +30,9 @@ export class WaveformRenderData {
     free(): void;
     [Symbol.dispose](): void;
     readonly candidate1Harmonics: Float32Array | undefined;
+    readonly candidate1WeightedScore: number | undefined;
     readonly candidate2Harmonics: Float32Array | undefined;
+    readonly candidate2WeightedScore: number | undefined;
     readonly displayEndIndex: number;
     readonly displayStartIndex: number;
     readonly estimatedFrequency: number;
@@ -70,7 +72,9 @@ export interface InitOutput {
     readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
     readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
     readonly waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
+    readonly waveformrenderdata_candidate1WeightedScore: (a: number) => number;
     readonly waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];
+    readonly waveformrenderdata_candidate2WeightedScore: (a: number) => number;
     readonly waveformrenderdata_displayEndIndex: (a: number) => number;
     readonly waveformrenderdata_displayStartIndex: (a: number) => number;
     readonly waveformrenderdata_estimatedFrequency: (a: number) => number;

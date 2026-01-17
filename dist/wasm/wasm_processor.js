@@ -116,6 +116,13 @@ export class WaveformRenderData {
         return v1;
     }
     /**
+     * @returns {number | undefined}
+     */
+    get candidate1WeightedScore() {
+        const ret = wasm.waveformrenderdata_candidate1WeightedScore(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
      * @returns {Float32Array | undefined}
      */
     get candidate2Harmonics() {
@@ -126,6 +133,13 @@ export class WaveformRenderData {
             wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         }
         return v1;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get candidate2WeightedScore() {
+        const ret = wasm.waveformrenderdata_candidate2WeightedScore(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
     }
     /**
      * @returns {number}

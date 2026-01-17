@@ -52,7 +52,7 @@ export declare class WaveformRenderer {
      * Draw harmonic analysis information overlay
      * Displays debugging information about frequency estimation when FFT method is used
      */
-    drawHarmonicAnalysis(halfFreqPeakStrengthPercent?: number, candidate1Harmonics?: number[], candidate2Harmonics?: number[], selectionReason?: string, estimatedFrequency?: number): void;
+    drawHarmonicAnalysis(halfFreqPeakStrengthPercent?: number, candidate1Harmonics?: number[], candidate2Harmonics?: number[], candidate1WeightedScore?: number, candidate2WeightedScore?: number, selectionReason?: string, estimatedFrequency?: number): void;
     /**
      * 右上に周波数プロットを描画
      * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
