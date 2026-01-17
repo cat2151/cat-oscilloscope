@@ -404,6 +404,11 @@ impl WasmDataProcessor {
         start_index: usize,
         search_range: f32,
     ) -> Option<usize> {
+        // Check if data is empty or too small
+        if data.is_empty() || data.len() < 2 {
+            return None;
+        }
+        
         let end_index = (start_index + search_range as usize).min(data.len() - 1);
         
         if start_index >= end_index {
