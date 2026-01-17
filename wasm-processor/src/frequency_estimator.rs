@@ -27,11 +27,6 @@ impl FrequencyEstimator {
     const MIN_HARMONICS_REQUIRED: usize = 2; // Require at least 2 harmonics to consider it a harmonic series
     const HARMONIC_FREQUENCY_TOLERANCE: f32 = 0.05; // 5% tolerance for harmonic matching
     
-    // Frequency stability constants for history-based smoothing
-    const FREQ_HISTORY_CLOSE_THRESHOLD: f32 = 0.15; // 15% difference considered close to history
-    const FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD: f32 = 0.3; // 30% - strongly prefer if within this range
-    const FREQ_HISTORY_PREFERENCE_RATIO: f32 = 2.0; // Only switch if new candidate is 2x closer than current
-    
     pub fn new() -> Self {
         FrequencyEstimator {
             frequency_estimation_method: "autocorrelation".to_string(),
@@ -177,60 +172,95 @@ impl FrequencyEstimator {
         // Try to find if this is part of a harmonic series
         let fundamental_candidate = self.find_fundamental_frequency(&peaks, strongest_peak_magnitude);
         
-        // Determine the final selected frequency and compute harmonic analysis
-        let selected_freq = if let Some(candidate) = fundamental_candidate {
-            // If we have history, use it to provide stability
-            if !self.frequency_history.is_empty() {
-                let last_freq = self.frequency_history.last().unwrap();
-                if *last_freq > 0.0 {
-                    // Calculate relative difference from history
-                    let candidate_diff = (candidate - last_freq).abs() / last_freq;
-                    let strongest_diff = (strongest_peak_freq - last_freq).abs() / last_freq;
-                    
-                    // Strategy: Prefer stability over switching between harmonics
-                    // Case 1: If strongest peak is very close to history, keep it
-                    if strongest_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
+        // Always compare harmonic richness between strongest peak and its half frequency
+        // to avoid getting stuck on harmonics
+        let strongest_richness = self.calculate_harmonic_richness(
+            strongest_peak_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        let half_freq = strongest_peak_freq / 2.0;
+        let half_richness = self.calculate_harmonic_richness(
+            half_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Determine the final selected frequency based on harmonic richness
+        let selected_freq = if half_richness > strongest_richness {
+            // Half frequency has richer harmonics, likely it's the true fundamental
+            self.selection_reason = Some(format!(
+                "Half frequency ({:.1}Hz) has richer harmonics ({} vs {}) than strongest peak ({:.1}Hz)",
+                half_freq, half_richness, strongest_richness, strongest_peak_freq
+            ));
+            half_freq
+        } else if let Some(candidate) = fundamental_candidate {
+            // We have a fundamental candidate from harmonic series detection
+            let candidate_richness = self.calculate_harmonic_richness(
+                candidate,
+                frequency_data,
+                sample_rate,
+                fft_size,
+            );
+            
+            // Choose based on harmonic richness
+            if candidate_richness > strongest_richness {
+                self.selection_reason = Some(format!(
+                    "Candidate ({:.1}Hz) has richer harmonics ({} vs {}) than strongest peak ({:.1}Hz)",
+                    candidate, candidate_richness, strongest_richness, strongest_peak_freq
+                ));
+                candidate
+            } else if strongest_richness > candidate_richness {
+                self.selection_reason = Some(format!(
+                    "Strongest peak ({:.1}Hz) has richer harmonics ({} vs {}) than candidate ({:.1}Hz)",
+                    strongest_peak_freq, strongest_richness, candidate_richness, candidate
+                ));
+                strongest_peak_freq
+            } else {
+                // If harmonic richness is equal, use history for stability
+                if !self.frequency_history.is_empty() {
+                    let last_freq = self.frequency_history.last().unwrap();
+                    if *last_freq > 0.0 {
+                        let candidate_diff = (candidate - last_freq).abs() / last_freq;
+                        let strongest_diff = (strongest_peak_freq - last_freq).abs() / last_freq;
+                        
+                        // Choose the one closer to history
+                        if candidate_diff < strongest_diff {
+                            self.selection_reason = Some(format!(
+                                "Equal harmonics ({}), candidate ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
+                                candidate_richness, candidate, last_freq, candidate_diff * 100.0, strongest_diff * 100.0
+                            ));
+                            candidate
+                        } else {
+                            self.selection_reason = Some(format!(
+                                "Equal harmonics ({}), strongest peak ({:.1}Hz) closer to history ({:.1}Hz): {:.1}% vs {:.1}%",
+                                strongest_richness, strongest_peak_freq, last_freq, strongest_diff * 100.0, candidate_diff * 100.0
+                            ));
+                            strongest_peak_freq
+                        }
+                    } else {
                         self.selection_reason = Some(format!(
-                            "Strongest peak ({:.1}Hz) is close to history ({:.1}Hz): diff={:.1}%",
-                            strongest_peak_freq, last_freq, strongest_diff * 100.0
-                        ));
-                        strongest_peak_freq
-                    }
-                    // Case 2: If candidate is very close to history, keep it
-                    else if candidate_diff < Self::FREQ_HISTORY_CLOSE_THRESHOLD {
-                        self.selection_reason = Some(format!(
-                            "Candidate ({:.1}Hz) is close to history ({:.1}Hz): diff={:.1}%",
-                            candidate, last_freq, candidate_diff * 100.0
+                            "Equal harmonics ({}), no valid history, using fundamental candidate ({:.1}Hz)",
+                            candidate_richness, candidate
                         ));
                         candidate
-                    }
-                    // Case 3: If both are far from history, only switch if candidate is significantly closer
-                    else if strongest_diff > Self::FREQ_HISTORY_STRONGLY_PREFER_THRESHOLD &&
-                       candidate_diff * Self::FREQ_HISTORY_PREFERENCE_RATIO < strongest_diff {
-                        self.selection_reason = Some(format!(
-                            "Candidate ({:.1}Hz) is significantly closer to history ({:.1}Hz): candidate_diff={:.1}%, strongest_diff={:.1}%",
-                            candidate, last_freq, candidate_diff * 100.0, strongest_diff * 100.0
-                        ));
-                        candidate
-                    }
-                    // Case 4: Default to strongest peak (maintains current frequency)
-                    else {
-                        self.selection_reason = Some(format!(
-                            "Maintaining strongest peak ({:.1}Hz) for stability (history={:.1}Hz)",
-                            strongest_peak_freq, last_freq
-                        ));
-                        strongest_peak_freq
                     }
                 } else {
-                    self.selection_reason = Some("No valid history, using fundamental candidate".to_string());
+                    self.selection_reason = Some(format!(
+                        "Equal harmonics ({}), no history, using fundamental candidate ({:.1}Hz)",
+                        candidate_richness, candidate
+                    ));
                     candidate
                 }
-            } else {
-                self.selection_reason = Some("No history, using fundamental candidate".to_string());
-                candidate
             }
         } else {
-            self.selection_reason = Some("No harmonic series detected, using strongest peak".to_string());
+            // No fundamental candidate found, use strongest peak
+            self.selection_reason = Some(format!(
+                "No harmonic series detected, using strongest peak ({:.1}Hz, {} harmonics vs half freq {:.1}Hz with {} harmonics)",
+                strongest_peak_freq, strongest_richness, half_freq, half_richness
+            ));
             strongest_peak_freq
         };
         
@@ -640,6 +670,32 @@ impl FrequencyEstimator {
         harmonics
     }
     
+    /// Calculate harmonic richness score for a given frequency
+    /// Returns the number of strong harmonics (magnitude > threshold)
+    /// 
+    /// This function counts how many harmonics have significant energy,
+    /// which helps identify the true fundamental frequency.
+    /// A frequency with more strong harmonics is more likely to be the fundamental.
+    fn calculate_harmonic_richness(
+        &self,
+        fundamental_freq: f32,
+        frequency_data: &[u8],
+        sample_rate: f32,
+        fft_size: usize,
+    ) -> usize {
+        // Threshold of 5.0 (out of 255 max FFT magnitude) represents approximately 2% of max
+        // This is lenient enough to catch weak but real harmonics while filtering out noise
+        const HARMONIC_STRENGTH_THRESHOLD: f32 = 5.0;
+        let harmonics = self.calculate_harmonic_strengths(
+            fundamental_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        harmonics.iter().filter(|&&h| h > HARMONIC_STRENGTH_THRESHOLD).count()
+    }
+    
     /// Get the magnitude at a specific frequency
     fn get_magnitude_at_frequency(
         &self,
@@ -1010,5 +1066,53 @@ mod tests {
         assert!(result.is_some(), "Should detect fundamental frequency");
         assert!((result.unwrap() - 100.0).abs() < 1.0, 
                 "Expected 100Hz (lower frequency with equal harmonics), got {}", result.unwrap());
+    }
+
+    #[test]
+    fn test_harmonic_richness_selection_issue_189() {
+        let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
+        
+        // Simulate the scenario from issue #189:
+        // Candidate 1 (593.6Hz / 2x harmonic): Poor harmonics (1x:209, 2x:8, 3x:0, 4x:13, 5x:0)
+        // Candidate 2 (296.8Hz / fundamental): Rich harmonics (1x:152, 2x:209, 3x:70, 4x:8, 5x:7)
+        // User wants candidate 2, but app was selecting candidate 1 due to history
+        
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Set up peaks for candidate 2 (296.8Hz) with rich harmonics
+        let freq_296 = 296.8;
+        let bin_296 = (freq_296 / bin_frequency).round() as usize;
+        frequency_data[bin_296] = 152; // 1x
+        frequency_data[(freq_296 * 2.0 / bin_frequency).round() as usize] = 209; // 2x (strongest)
+        frequency_data[(freq_296 * 3.0 / bin_frequency).round() as usize] = 70; // 3x
+        frequency_data[(freq_296 * 4.0 / bin_frequency).round() as usize] = 8; // 4x (weak but present)
+        frequency_data[(freq_296 * 5.0 / bin_frequency).round() as usize] = 7; // 5x (weak but present)
+        
+        // Build history at the wrong frequency (594Hz, close to 2x harmonic)
+        // This simulates being stuck on the harmonic
+        for _ in 0..8 {
+            estimator.frequency_history.push(594.0);
+        }
+        
+        // Call estimate_frequency_fft
+        let result = estimator.estimate_frequency_fft(&frequency_data, sample_rate, fft_size, true);
+        
+        // Should select 296.8Hz (the one with richer harmonics) despite history being at 594Hz
+        // The new logic prioritizes harmonic richness over history
+        assert!((result - freq_296).abs() < 50.0, 
+                "Expected frequency near {:.1}Hz (rich harmonics), got {:.1}Hz. Should prefer harmonic richness over history.", 
+                freq_296, result);
+        
+        // Verify the selection reason mentions harmonic richness
+        let reason = estimator.get_selection_reason();
+        assert!(reason.is_some(), "Selection reason should be provided");
+        let reason_text = reason.unwrap();
+        assert!(reason_text.contains("harmonics") || reason_text.contains("harmonic"), 
+                "Selection reason should mention harmonics: {}", reason_text);
     }
 }

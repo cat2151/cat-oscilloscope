@@ -72,4 +72,3 @@ export declare class WaveformRenderer {
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
 }
-//# sourceMappingURL=WaveformRenderer.d.ts.map

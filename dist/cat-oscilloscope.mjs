@@ -439,7 +439,7 @@ class O {
    * Displays debugging information about frequency estimation when FFT method is used
    */
   drawHarmonicAnalysis(t, e, i, n, a) {
-    if (!this.fftDisplayEnabled || !t && !e && !i && !n)
+    if (!this.fftDisplayEnabled || t === void 0 && !e && !i && !n)
       return;
     const o = 10, s = 10, l = 380, u = 16;
     let c = s;

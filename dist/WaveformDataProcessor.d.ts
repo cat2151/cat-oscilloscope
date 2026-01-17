@@ -72,4 +72,3 @@ export declare class WaveformDataProcessor {
      */
     reset(): void;
 }
-//# sourceMappingURL=WaveformDataProcessor.d.ts.map

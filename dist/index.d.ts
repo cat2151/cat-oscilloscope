@@ -15,4 +15,3 @@ export { BufferSource } from './BufferSource';
 export { WaveformDataProcessor } from './WaveformDataProcessor';
 export type { WaveformRenderData } from './WaveformRenderData';
 export { dbToAmplitude, amplitudeToDb, trimSilence } from './utils';
-//# sourceMappingURL=index.d.ts.map
