@@ -406,7 +406,7 @@ impl WasmDataProcessor {
         estimated_frequency: f32,
         sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
-        // Explicitly mark parameters as used to keep the signature stable
+        // Explicitly mark parameters as used to maintain API compatibility while avoiding compiler warnings
         let _ = (estimated_frequency, sample_rate);
         
         // If we don't have a valid cycle length, can't calculate phase
@@ -469,7 +469,7 @@ impl WasmDataProcessor {
     }
     
     /// Find the peak (maximum positive amplitude) in the specified range
-    /// Returns None if no positive peak is found in the range
+    /// Returns None if no peak with positive amplitude (> 0.0) is found in the range
     fn find_peak_in_range(
         &self,
         data: &[f32],
