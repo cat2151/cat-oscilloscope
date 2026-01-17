@@ -10,12 +10,12 @@ import { describe, it, expect } from 'vitest';
  * Scenario from issue #195:
  * - Candidate 1 (789.9Hz): harmonics 1x:228, 2x:0, 3x:0, 4x:30, 5x:95
  *   - Missing critical low-order harmonics (2x, 3x)
- *   - Unweighted count: 3 harmonics
+ *   - Unweighted count: 3 harmonics (1x, 4x, 5x above threshold)
  *   - Weighted score: 3.0 (1x) + 1.0 (4x) + 1.0 (5x) = 5.0
  * 
  * - Candidate 2 (394.9Hz): harmonics 1x:141, 2x:228, 3x:73, 4x:0, 5x:0
  *   - Strong low-order harmonics present (1x, 2x, 3x)
- *   - Unweighted count: 3 harmonics
+ *   - Unweighted count: 3 harmonics (1x, 2x, 3x above threshold)
  *   - Weighted score: 3.0 (1x) + 3.0 (2x) + 2.0 (3x) = 8.0
  * 
  * Expected: Candidate 2 should be chosen due to higher weighted score (8.0 > 5.0)
