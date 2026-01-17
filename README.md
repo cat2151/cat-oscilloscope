@@ -195,8 +195,6 @@ Launch test UI:
 npm run test:ui
 ```
 
-Refer to [TESTING.md](TESTING.md) for more details.
-
 ## How It Works
 
 ### Zero-Crossing Detection Algorithm

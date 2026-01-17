@@ -196,8 +196,6 @@ npm run test:coverage
 npm run test:ui
 ```
 
-詳細は [TESTING.md](TESTING.md) を参照してください。
-
 ## 仕組み
 
 ### ゼロクロス検出アルゴリズム
