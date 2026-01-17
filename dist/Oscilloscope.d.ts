@@ -104,3 +104,4 @@ export declare class Oscilloscope {
     setPauseDrawing(paused: boolean): void;
     getPauseDrawing(): boolean;
 }
+//# sourceMappingURL=Oscilloscope.d.ts.map

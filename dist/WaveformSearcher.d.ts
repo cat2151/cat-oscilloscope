@@ -35,3 +35,4 @@ export declare class WaveformSearcher {
      */
     getPreviousWaveform(): Float32Array | null;
 }
+//# sourceMappingURL=WaveformSearcher.d.ts.map
