@@ -34,25 +34,31 @@ impl WaveformSearcher {
     }
     
     /// Calculate similarity (correlation coefficient) between two waveforms
+    /// Handles waveforms of different lengths by comparing the overlapping portion
     fn calculate_similarity(&self, waveform1: &[f32], waveform2: &[f32]) -> f32 {
-        if waveform1.len() != waveform2.len() || waveform1.is_empty() {
+        if waveform1.is_empty() || waveform2.is_empty() {
             return 0.0;
         }
         
-        let n = waveform1.len() as f32;
+        // Use the shorter length for comparison (handle non-deterministic buffer size changes)
+        let compare_len = waveform1.len().min(waveform2.len());
+        let w1 = &waveform1[..compare_len];
+        let w2 = &waveform2[..compare_len];
+        
+        let n = compare_len as f32;
         
         // Calculate means
-        let mean1: f32 = waveform1.iter().sum::<f32>() / n;
-        let mean2: f32 = waveform2.iter().sum::<f32>() / n;
+        let mean1: f32 = w1.iter().sum::<f32>() / n;
+        let mean2: f32 = w2.iter().sum::<f32>() / n;
         
         // Calculate correlation coefficient
         let mut numerator = 0.0f32;
         let mut sum_sq1 = 0.0f32;
         let mut sum_sq2 = 0.0f32;
         
-        for i in 0..waveform1.len() {
-            let diff1 = waveform1[i] - mean1;
-            let diff2 = waveform2[i] - mean2;
+        for i in 0..compare_len {
+            let diff1 = w1[i] - mean1;
+            let diff2 = w2[i] - mean2;
             numerator += diff1 * diff2;
             sum_sq1 += diff1 * diff1;
             sum_sq2 += diff2 * diff2;
@@ -104,21 +110,27 @@ impl WaveformSearcher {
             return None;
         }
         
-        if prev_waveform.len() != waveform_length {
+        // Allow some tolerance for non-deterministic buffer size changes
+        // If the difference is more than 10%, log a warning but continue
+        let length_diff = prev_waveform.len().abs_diff(waveform_length);
+        let length_diff_percent = (length_diff as f32 / waveform_length as f32) * 100.0;
+        if length_diff_percent > 10.0 {
             web_sys::console::log_1(
-                &format!("Similarity=0: Waveform length mismatch (prev={}, current={})", 
-                         prev_waveform.len(), waveform_length).into()
+                &format!("Similarity warning: Large waveform length difference (prev={}, current={}, diff={}%)", 
+                         prev_waveform.len(), waveform_length, length_diff_percent.round()).into()
             );
-            self.update_similarity_history(0.0);
-            return None;
         }
         
         let mut best_similarity = -2.0f32; // Lower than minimum possible value (-1)
         let mut best_start_index = 0;
         
+        // Determine the comparison length - use the minimum of prev_waveform length and waveform_length
+        // This allows comparison even when buffer sizes differ slightly
+        let comparison_length = prev_waveform.len().min(waveform_length);
+        
         // Search range: from 0 to (4 * cycle_length - 1) samples (total 4 cycles worth of positions)
         let search_range = (cycle_length * CYCLES_TO_SEARCH as f32).floor() as usize;
-        let max_start_index = current_frame.len().saturating_sub(waveform_length);
+        let max_start_index = current_frame.len().saturating_sub(comparison_length);
         let search_end_index = if search_range < 2 {
             max_start_index
         } else {
@@ -126,7 +138,11 @@ impl WaveformSearcher {
         };
         
         for start_index in 0..=search_end_index {
-            let candidate = &current_frame[start_index..start_index + waveform_length];
+            let end_index = start_index + comparison_length;
+            if end_index > current_frame.len() {
+                break;
+            }
+            let candidate = &current_frame[start_index..end_index];
             let similarity = self.calculate_similarity(prev_waveform, candidate);
             
             if similarity > best_similarity {
@@ -188,5 +204,88 @@ impl WaveformSearcher {
         self.previous_waveform = None;
         self.last_similarity = 0.0;
         self.similarity_history.clear();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_similarity_identical_waveforms() {
+        let searcher = WaveformSearcher::new();
+        let waveform = vec![0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5];
+        let similarity = searcher.calculate_similarity(&waveform, &waveform);
+        // Identical waveforms should have similarity of 1.0
+        assert!((similarity - 1.0).abs() < 0.001, "Expected ~1.0, got {}", similarity);
+    }
+
+    #[test]
+    fn test_calculate_similarity_different_lengths() {
+        let searcher = WaveformSearcher::new();
+        let waveform1 = vec![0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5];
+        let waveform2 = vec![0.0, 0.5, 1.0, 0.5, 0.0]; // Shorter by 3 samples
+        
+        // Should compare only the overlapping portion (5 samples)
+        let similarity = searcher.calculate_similarity(&waveform1, &waveform2);
+        
+        // Since the overlapping portion is identical, similarity should be high
+        assert!(similarity > 0.99, "Expected high similarity for overlapping portion, got {}", similarity);
+    }
+
+    #[test]
+    fn test_calculate_similarity_one_sample_difference() {
+        let searcher = WaveformSearcher::new();
+        let waveform1 = vec![0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0, -0.5];
+        let waveform2 = vec![0.0, 0.5, 1.0, 0.5, 0.0, -0.5, -1.0]; // 1 sample shorter
+        
+        // Should compare only the overlapping portion (7 samples)
+        let similarity = searcher.calculate_similarity(&waveform1, &waveform2);
+        
+        // Since the overlapping portion is identical, similarity should be very high
+        assert!(similarity > 0.99, "Expected high similarity despite 1 sample difference, got {}", similarity);
+    }
+
+    #[test]
+    fn test_calculate_similarity_empty_waveforms() {
+        let searcher = WaveformSearcher::new();
+        let empty: Vec<f32> = vec![];
+        let waveform = vec![0.0, 0.5, 1.0];
+        
+        assert_eq!(searcher.calculate_similarity(&empty, &waveform), 0.0);
+        assert_eq!(searcher.calculate_similarity(&waveform, &empty), 0.0);
+        assert_eq!(searcher.calculate_similarity(&empty, &empty), 0.0);
+    }
+
+    #[test]
+    fn test_calculate_similarity_opposite_waveforms() {
+        let searcher = WaveformSearcher::new();
+        let waveform1 = vec![1.0, 2.0, 3.0, 4.0];
+        let waveform2 = vec![-1.0, -2.0, -3.0, -4.0];
+        
+        let similarity = searcher.calculate_similarity(&waveform1, &waveform2);
+        // Opposite waveforms should have negative correlation close to -1.0
+        assert!(similarity < -0.99, "Expected ~-1.0 for opposite waveforms, got {}", similarity);
+    }
+
+    #[test]
+    fn test_search_with_length_mismatch() {
+        let mut searcher = WaveformSearcher::new();
+        
+        // Store a waveform of length 100
+        let prev_data = vec![0.0; 100];
+        searcher.store_waveform(&prev_data, 0, 100);
+        
+        // Create current frame where the calculated waveform_length would be 101
+        // Using cycle_length = 25.25 would give waveform_length = floor(25.25 * 4) = 101
+        let current_frame = vec![0.0; 200];
+        let cycle_length = 25.25;
+        
+        // This should not return None due to length mismatch
+        // It should use comparison_length = min(100, 101) = 100
+        let result = searcher.search_similar_waveform(&current_frame, cycle_length);
+        
+        // Should find a match (even if similarity is 0 for flat waveforms)
+        assert!(result.is_some(), "Expected search to succeed despite 1 sample length difference");
     }
 }
