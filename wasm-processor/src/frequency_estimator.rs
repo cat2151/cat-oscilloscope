@@ -773,6 +773,8 @@ impl FrequencyEstimator {
     /// 
     /// The score is calculated by multiplying each harmonic's peak magnitude by its weight,
     /// without any threshold filtering. This ensures that actual peak strengths are considered.
+    /// Previously, threshold filtering could exclude important fundamental frequencies with
+    /// moderate peak values, causing the algorithm to incorrectly select harmonics instead.
     fn calculate_weighted_harmonic_richness(
         &self,
         fundamental_freq: f32,
