@@ -315,6 +315,29 @@ export class Oscilloscope {
     return this.renderer.getFFTDisplayEnabled();
   }
 
+  /**
+   * Enable or disable debug overlays (harmonic analysis, frequency plot)
+   * Debug overlays show detailed debugging information with yellow borders (#ffaa00)
+   * including harmonic analysis and frequency history plot
+   * 
+   * When using cat-oscilloscope as a library, it's recommended to disable these
+   * overlays for a cleaner, more professional appearance
+   * 
+   * @param enabled - true to show debug overlays (default for standalone app),
+   *                  false to hide them (recommended for library usage)
+   */
+  setDebugOverlaysEnabled(enabled: boolean): void {
+    this.renderer.setDebugOverlaysEnabled(enabled);
+  }
+
+  /**
+   * Get the current state of debug overlays
+   * @returns true if debug overlays are enabled, false otherwise
+   */
+  getDebugOverlaysEnabled(): boolean {
+    return this.renderer.getDebugOverlaysEnabled();
+  }
+
   getCurrentGain(): number {
     return this.gainController.getCurrentGain();
   }

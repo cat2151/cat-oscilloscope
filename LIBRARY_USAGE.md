@@ -324,6 +324,72 @@ oscilloscope.setFFTDisplay(true);
 const isFFTEnabled = oscilloscope.getFFTDisplayEnabled();
 ```
 
+### デバッグオーバーレイ表示の制御
+
+cat-oscilloscopeは、デバッグ用の詳細情報を表示するオーバーレイ（黄色の枠線で囲まれた情報パネル）を提供しています：
+
+- **倍音分析（Harmonic Analysis）**: FFT推定時の倍音情報
+- **周波数推移プロット**: 推定周波数の履歴グラフ
+
+**ライブラリとして使用する場合、これらのデバッグオーバーレイを無効化することを強く推奨します**。デバッグオーバーレイは開発・デバッグ用途向けに設計されており、プロダクション環境や他のUIとの統合時には不要な情報となります。
+
+```typescript
+// デバッグオーバーレイを非表示にする（ライブラリ利用時の推奨設定）
+oscilloscope.setDebugOverlaysEnabled(false);
+
+// デバッグオーバーレイを表示する（デフォルト）
+oscilloscope.setDebugOverlaysEnabled(true);
+
+// 現在の状態を取得
+const isDebugEnabled = oscilloscope.getDebugOverlaysEnabled();
+```
+
+**推奨される設定例（プロダクション環境）:**
+
+```typescript
+import { Oscilloscope } from 'cat-oscilloscope';
+
+const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
+const oscilloscope = new Oscilloscope(canvas);
+
+// プロダクション環境向けのクリーンな表示設定
+oscilloscope.setDebugOverlaysEnabled(false);  // デバッグ情報を非表示
+oscilloscope.setFFTDisplay(true);             // FFTスペクトラムは表示（必要に応じて）
+
+await oscilloscope.start();
+```
+
+## レイアウト設計ガイドライン
+
+### 推奨キャンバスサイズ
+
+cat-oscilloscopeは、以下のキャンバスサイズで最適化されています：
+
+- **メインキャンバス**: `800x400px` または `800x350px`
+  - 波形とグリッド表示に最適なアスペクト比
+  - デバッグオーバーレイを無効にすれば、より小さなサイズでも使用可能
+
+### 表示要素の制御
+
+ライブラリとして使用する際、以下の要素を制御できます：
+
+| 要素 | 制御API | デフォルト | 推奨（ライブラリ使用時） |
+|------|---------|----------|------------------------|
+| オートゲイン | `setAutoGain(boolean)` | `true` | 用途に応じて |
+| ノイズゲート | `setNoiseGate(boolean)` | `false` | 用途に応じて |
+| FFTスペクトラム | `setFFTDisplay(boolean)` | `true` | 用途に応じて |
+| デバッグオーバーレイ | `setDebugOverlaysEnabled(boolean)` | `true` | **`false`推奨** |
+
+### レイアウト統合時の注意点
+
+1. **デバッグオーバーレイは必ず無効化**: プロダクション環境では`setDebugOverlaysEnabled(false)`を設定
+2. **キャンバスサイズの考慮**: 推奨サイズ（800x400px）から大きく外れる場合、表示が崩れる可能性があります
+3. **CSS でのスタイリング**: キャンバス要素には`border`や`box-shadow`などのCSSを自由に適用できます
+
+```html
+<canvas id="oscilloscope" width="800" height="400" style="border: 2px solid #00ff00;"></canvas>
+```
+
 ## 高度な使い方
 
 ### BufferSourceを使用した静的バッファの可視化

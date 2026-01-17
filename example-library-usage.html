@@ -101,6 +101,10 @@
       <input type="checkbox" id="fftDisplay">
       FFT Display
     </label>
+    <label>
+      <input type="checkbox" id="debugOverlays" checked>
+      Debug Overlays (黄色枠の情報)
+    </label>
     <br>
     <label>
       周波数推定方法:
@@ -116,6 +120,7 @@
     <p>状態: <span class="status" id="status">Stopped</span></p>
     <p>周波数: <span class="status" id="frequency">--- Hz</span></p>
     <p>ゲイン: <span class="status" id="gain">---x</span></p>
+    <p><strong>ヒント:</strong> ライブラリとして使用する場合は、「Debug Overlays」のチェックを外すことを推奨します。</p>
   </div>
 
   <div class="info">
@@ -165,6 +170,7 @@ await oscilloscope.stop();</code></pre>
     const autoGainCheckbox = document.getElementById('autoGain');
     const noiseGateCheckbox = document.getElementById('noiseGate');
     const fftDisplayCheckbox = document.getElementById('fftDisplay');
+    const debugOverlaysCheckbox = document.getElementById('debugOverlays');
     const freqMethodSelect = document.getElementById('freqMethod');
     const statusElement = document.getElementById('status');
     const frequencyElement = document.getElementById('frequency');
@@ -173,6 +179,8 @@ await oscilloscope.stop();</code></pre>
     // 初期設定
     oscilloscope.setAutoGain(autoGainCheckbox.checked);
     oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
+    oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
     oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
     oscilloscope.setFrequencyEstimationMethod(freqMethodSelect.value);
 
@@ -331,6 +339,10 @@ await oscilloscope.stop();</code></pre>
 
     fftDisplayCheckbox.addEventListener('change', () => {
       oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
+    });
+
+    debugOverlaysCheckbox.addEventListener('change', () => {
+      oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
     });
 
     freqMethodSelect.addEventListener('change', () => {

@@ -13,6 +13,7 @@ export class WaveformRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private fftDisplayEnabled = true;
+  private debugOverlaysEnabled = true; // Control debug overlays (harmonic analysis, frequency plot)
   private readonly FFT_OVERLAY_HEIGHT_RATIO = 0.9; // Spectrum bar height ratio within overlay (90%)
   private readonly FFT_MIN_BAR_WIDTH = 1; // Minimum bar width in pixels
   private readonly FREQ_PLOT_WIDTH = 280; // 周波数プロット領域の幅
@@ -281,6 +282,11 @@ export class WaveformRenderer {
     selectionReason?: string,
     estimatedFrequency?: number
   ): void {
+    // Skip if debug overlays are disabled
+    if (!this.debugOverlaysEnabled) {
+      return;
+    }
+    
     if (!this.fftDisplayEnabled) {
       return;
     }
@@ -400,6 +406,11 @@ export class WaveformRenderer {
    * 1フレームごとに1つのデータポイントが追加される
    */
   drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void {
+    // Skip if debug overlays are disabled
+    if (!this.debugOverlaysEnabled) {
+      return;
+    }
+    
     if (!frequencyHistory || frequencyHistory.length === 0) {
       return;
     }
@@ -661,5 +672,23 @@ export class WaveformRenderer {
 
   getFFTDisplayEnabled(): boolean {
     return this.fftDisplayEnabled;
+  }
+
+  /**
+   * Enable or disable debug overlays (harmonic analysis, frequency plot)
+   * When disabled, yellow-bordered debug information panels are hidden
+   * Recommended: Set to false when using as a library for cleaner display
+   * @param enabled - true to show debug overlays, false to hide them
+   */
+  setDebugOverlaysEnabled(enabled: boolean): void {
+    this.debugOverlaysEnabled = enabled;
+  }
+
+  /**
+   * Get the current state of debug overlays
+   * @returns true if debug overlays are enabled, false otherwise
+   */
+  getDebugOverlaysEnabled(): boolean {
+    return this.debugOverlaysEnabled;
   }
 }
