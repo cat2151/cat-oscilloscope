@@ -36,6 +36,8 @@
 
 cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
 
+⚠️ **重要**: npmやGitHubからインストールする場合、WASMファイルの手動セットアップが必要です。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「WASMファイルのセットアップ」セクションをご覧ください。
+
 ```typescript
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
