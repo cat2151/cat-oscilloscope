@@ -492,7 +492,7 @@ export class WaveformRenderer {
     const drawVerticalLine = (sampleIndex: number, color: string, lineWidth: number) => {
       // Convert sample index to canvas x coordinate
       const relativeIndex = sampleIndex - displayStartIndex;
-      if (relativeIndex < 0 || relativeIndex > displayLength) {
+      if (relativeIndex < 0 || relativeIndex >= displayLength) {
         return; // Index is outside the displayed region
       }
 

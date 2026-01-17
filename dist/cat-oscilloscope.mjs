@@ -532,7 +532,7 @@ class O {
     this.ctx.save();
     const l = (m, c, u) => {
       const x = m - a;
-      if (x < 0 || x > s)
+      if (x < 0 || x >= s)
         return;
       const h = x / s * this.canvas.width;
       this.ctx.strokeStyle = c, this.ctx.lineWidth = u, this.ctx.beginPath(), this.ctx.moveTo(h, 0), this.ctx.lineTo(h, this.canvas.height), this.ctx.stroke();

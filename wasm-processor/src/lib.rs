@@ -366,12 +366,12 @@ impl WasmDataProcessor {
             // Phase 2π is one cycle after phase 0
             let phase_2pi_idx = phase_0_idx + cycle_length as usize;
             
-            // Phase -π/4 is 1/8 cycle before phase 0
-            let quarter_cycle = (cycle_length / 4.0) as usize;
-            let phase_minus_quarter_pi_idx = phase_0_idx.saturating_sub(quarter_cycle);
+            // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
+            let eighth_cycle = (cycle_length / 8.0) as usize;
+            let phase_minus_quarter_pi_idx = phase_0_idx.saturating_sub(eighth_cycle);
             
-            // Phase 2π+π/4 is 1/8 cycle after phase 2π
-            let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + quarter_cycle;
+            // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
+            let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
             
             // Ensure indices are within the data bounds
             let phase_2pi = if phase_2pi_idx < data.len() {
