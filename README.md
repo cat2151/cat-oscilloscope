@@ -36,6 +36,8 @@ You can try the application at the URL above. Microphone access permission is re
 
 cat-oscilloscope can be used as an npm library in your own projects. For detailed instructions, please refer to [LIBRARY_USAGE.md](./LIBRARY_USAGE.md).
 
+⚠️ **Important**: When installing from npm or GitHub, manual WASM file setup is required. See the "WASM File Setup" section in [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) for details.
+
 ```typescript
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
