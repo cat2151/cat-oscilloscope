@@ -10,7 +10,6 @@ use frequency_estimator::FrequencyEstimator;
 use zero_cross_detector::ZeroCrossDetector;
 use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;
-use bpf::BandPassFilter;
 
 /// WaveformRenderData - Complete data structure for waveform rendering
 /// This mirrors the TypeScript interface WaveformRenderData
@@ -397,8 +396,8 @@ impl WasmDataProcessor {
     /// Calculate phase marker positions for the waveform
     /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
     /// 
-    /// Uses BPF (Band Pass Filter) at estimated frequency to eliminate harmonics
-    /// before detecting zero-crossings for accurate phase estimation.
+    /// Uses peak detection method: finds the peak (maximum positive amplitude) in the search range,
+    /// then looks backward in time to find the zero crossing.
     fn calculate_phase_markers(
         &self,
         data: &[f32],
@@ -407,86 +406,123 @@ impl WasmDataProcessor {
         estimated_frequency: f32,
         sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
-        // If we don't have a valid frequency estimate, can't apply BPF
-        if estimated_frequency <= 0.0 || !estimated_frequency.is_finite() {
+        // Explicitly mark parameters as used to maintain API compatibility while avoiding compiler warnings
+        let _ = (estimated_frequency, sample_rate);
+        
+        // If we don't have a valid cycle length, can't calculate phase
+        if cycle_length <= 0.0 || !cycle_length.is_finite() {
             return (None, None, None, None);
         }
         
-        // Apply BPF to the data to remove harmonics
-        // Q factor = 2.0 provides a reasonable bandwidth around the center frequency
-        let mut bpf = BandPassFilter::new(estimated_frequency, sample_rate, 2.0);
-        let filtered_data = bpf.filter(data);
-        
-        // Skip the first cycle to leave left margin
+        // Search range: from +1 cycle to +2 cycles from display_start_index
         let search_start = display_start_index + cycle_length as usize;
+        let search_end = display_start_index + (cycle_length * 2.0) as usize;
         
-        // Search for phase 0: where the signal crosses from negative to positive
-        // Use filtered data for phase detection
-        let phase_zero = self.find_zero_crossing_in_region(&filtered_data, search_start, cycle_length);
+        // Find peak (maximum positive amplitude) in the search range
+        let peak_index = match self.find_peak_in_range(data, search_start, search_end) {
+            Some(idx) => idx,
+            None => return (None, None, None, None),
+        };
         
-        if let Some(phase_0_idx) = phase_zero {
-            // Phase 2π is one cycle after phase 0
-            let phase_2pi_idx = phase_0_idx + cycle_length as usize;
-            
-            // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
-            let eighth_cycle = (cycle_length / 8.0) as usize;
-            
-            // Check if phase_0_idx is large enough to subtract eighth_cycle
-            // If not, return None instead of using saturating_sub which would give index 0
-            let phase_minus_quarter_pi = if phase_0_idx >= eighth_cycle {
-                Some(phase_0_idx - eighth_cycle)
-            } else {
-                None
-            };
-            
-            // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
-            let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
-            
-            // Ensure indices are within the data bounds
-            let phase_2pi = if phase_2pi_idx < data.len() {
-                Some(phase_2pi_idx)
-            } else {
-                None
-            };
-            
-            let phase_2pi_plus_quarter_pi = if phase_2pi_plus_quarter_pi_idx < data.len() {
-                Some(phase_2pi_plus_quarter_pi_idx)
-            } else {
-                None
-            };
-            
-            (
-                Some(phase_0_idx),
-                phase_2pi,
-                phase_minus_quarter_pi,
-                phase_2pi_plus_quarter_pi,
-            )
+        // Look backward from peak to find zero crossing
+        // Zero crossing is where: before going back >= 0, after going back < 0
+        let phase_zero = match self.find_zero_crossing_backward_from_peak(data, peak_index) {
+            Some(idx) => idx,
+            None => return (None, None, None, None),
+        };
+        
+        // Phase 2π is one cycle after phase 0
+        let phase_2pi_idx = phase_zero + cycle_length as usize;
+        
+        // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
+        let eighth_cycle = (cycle_length / 8.0) as usize;
+        
+        // Check if phase_zero is large enough to subtract eighth_cycle
+        let phase_minus_quarter_pi = if phase_zero >= eighth_cycle {
+            Some(phase_zero - eighth_cycle)
         } else {
-            (None, None, None, None)
-        }
+            None
+        };
+        
+        // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
+        let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
+        
+        // Ensure indices are within the data bounds
+        let phase_2pi = if phase_2pi_idx < data.len() {
+            Some(phase_2pi_idx)
+        } else {
+            None
+        };
+        
+        let phase_2pi_plus_quarter_pi = if phase_2pi_plus_quarter_pi_idx < data.len() {
+            Some(phase_2pi_plus_quarter_pi_idx)
+        } else {
+            None
+        };
+        
+        (
+            Some(phase_zero),
+            phase_2pi,
+            phase_minus_quarter_pi,
+            phase_2pi_plus_quarter_pi,
+        )
     }
     
-    /// Find a zero crossing (negative to positive) in a region
-    fn find_zero_crossing_in_region(
+    /// Find the peak (maximum positive amplitude) in the specified range
+    /// Returns None if no peak with positive amplitude (> 0.0) is found in the range
+    fn find_peak_in_range(
         &self,
         data: &[f32],
         start_index: usize,
-        search_range: f32,
+        end_index: usize,
     ) -> Option<usize> {
-        // Check if data is empty or too small
-        if data.is_empty() || data.len() < 2 {
+        // Validate indices
+        if start_index >= data.len() || end_index <= start_index {
             return None;
         }
         
-        let end_index = (start_index + search_range as usize).min(data.len() - 1);
+        let end = end_index.min(data.len());
         
-        if start_index >= end_index {
+        let mut peak_index = start_index;
+        let mut peak_value = data[start_index];
+        
+        for i in start_index + 1..end {
+            if data[i] > peak_value {
+                peak_value = data[i];
+                peak_index = i;
+            }
+        }
+        
+        // Ensure the peak is positive
+        if peak_value > 0.0 {
+            Some(peak_index)
+        } else {
+            None
+        }
+    }
+    
+    /// Find zero crossing by looking backward from peak
+    /// Zero crossing is defined as: before going back >= 0, after going back < 0
+    /// Returns the "before going back" position
+    fn find_zero_crossing_backward_from_peak(
+        &self,
+        data: &[f32],
+        peak_index: usize,
+    ) -> Option<usize> {
+        // Need at least one sample before peak to look backward
+        if peak_index == 0 {
             return None;
         }
         
-        for i in start_index..end_index {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
-                return Some(i);
+        // Look backward from peak
+        // We start from peak_index - 1 and go backward to index 1
+        // (index 0 cannot be a zero crossing because there's no sample before it)
+        for i in (1..peak_index).rev() {
+            // Check if this is a zero crossing point
+            // data[i] >= 0.0 (before going back)
+            // data[i-1] < 0.0 (after going back one step)
+            if data[i] >= 0.0 && data[i - 1] < 0.0 {
+                return Some(i);  // Return the "before going back" position
             }
         }
         
