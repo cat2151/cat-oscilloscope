@@ -506,14 +506,14 @@ impl WasmDataProcessor {
         }
         
         // Look backward from peak
-        for i in (0..peak_index).rev() {
+        // We start from peak_index - 1 and go backward to index 1
+        // (index 0 cannot be a zero crossing because there's no sample before it)
+        for i in (1..peak_index).rev() {
             // Check if this is a zero crossing point
-            // Before going back (i) >= 0, after going back (i-1 if exists, or check i itself transitioning to negative)
-            if i > 0 {
-                // We're at position i, looking at i-1 (which is "after going back")
-                if data[i] >= 0.0 && data[i - 1] < 0.0 {
-                    return Some(i);  // Return the "before going back" position
-                }
+            // data[i] >= 0.0 (before going back)
+            // data[i-1] < 0.0 (after going back one step)
+            if data[i] >= 0.0 && data[i - 1] < 0.0 {
+                return Some(i);  // Return the "before going back" position
             }
         }
         
