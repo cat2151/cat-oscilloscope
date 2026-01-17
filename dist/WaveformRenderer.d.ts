@@ -49,6 +49,11 @@ export declare class WaveformRenderer {
      */
     drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number): void;
     /**
+     * Draw harmonic analysis information overlay
+     * Displays debugging information about frequency estimation when FFT method is used
+     */
+    drawHarmonicAnalysis(halfFreqPeakStrengthPercent?: number, candidate1Harmonics?: number[], candidate2Harmonics?: number[], selectionReason?: string, estimatedFrequency?: number): void;
+    /**
      * 右上に周波数プロットを描画
      * 周波数スパイクを検出しやすくするために、推定周波数の履歴を表示
      * 1フレームごとに1つのデータポイントが追加される

@@ -29,6 +29,8 @@ export class WaveformRenderData {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
+    readonly candidate1Harmonics: Float32Array | undefined;
+    readonly candidate2Harmonics: Float32Array | undefined;
     readonly displayEndIndex: number;
     readonly displayStartIndex: number;
     readonly estimatedFrequency: number;
@@ -36,6 +38,7 @@ export class WaveformRenderData {
     readonly frequencyData: Uint8Array | undefined;
     readonly frequencyPlotHistory: Float32Array;
     readonly gain: number;
+    readonly halfFreqPeakStrengthPercent: number | undefined;
     readonly isSignalAboveNoiseGate: boolean;
     readonly maxFrequency: number;
     readonly phaseMinusQuarterPiIndex: number | undefined;
@@ -44,6 +47,7 @@ export class WaveformRenderData {
     readonly phaseZeroIndex: number | undefined;
     readonly previousWaveform: Float32Array | undefined;
     readonly sampleRate: number;
+    readonly selectionReason: string | undefined;
     readonly similarity: number;
     readonly similarityPlotHistory: Float32Array;
     readonly usedSimilaritySearch: boolean;
@@ -65,6 +69,8 @@ export interface InitOutput {
     readonly wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
     readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
     readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
+    readonly waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
+    readonly waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];
     readonly waveformrenderdata_displayEndIndex: (a: number) => number;
     readonly waveformrenderdata_displayStartIndex: (a: number) => number;
     readonly waveformrenderdata_estimatedFrequency: (a: number) => number;
@@ -72,6 +78,7 @@ export interface InitOutput {
     readonly waveformrenderdata_frequencyData: (a: number) => [number, number];
     readonly waveformrenderdata_frequencyPlotHistory: (a: number) => [number, number];
     readonly waveformrenderdata_gain: (a: number) => number;
+    readonly waveformrenderdata_halfFreqPeakStrengthPercent: (a: number) => number;
     readonly waveformrenderdata_isSignalAboveNoiseGate: (a: number) => number;
     readonly waveformrenderdata_maxFrequency: (a: number) => number;
     readonly waveformrenderdata_phaseMinusQuarterPiIndex: (a: number) => number;
@@ -80,6 +87,7 @@ export interface InitOutput {
     readonly waveformrenderdata_phaseZeroIndex: (a: number) => number;
     readonly waveformrenderdata_previousWaveform: (a: number) => [number, number];
     readonly waveformrenderdata_sampleRate: (a: number) => number;
+    readonly waveformrenderdata_selectionReason: (a: number) => [number, number];
     readonly waveformrenderdata_similarity: (a: number) => number;
     readonly waveformrenderdata_similarityPlotHistory: (a: number) => [number, number];
     readonly waveformrenderdata_usedSimilaritySearch: (a: number) => number;
