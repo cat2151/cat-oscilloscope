@@ -342,6 +342,10 @@ export class WaveformDataProcessor {
       similarity: wasmResult.similarity,
       similarityPlotHistory: wasmResult.similarityPlotHistory ? Array.from(wasmResult.similarityPlotHistory) : [],
       usedSimilaritySearch: wasmResult.usedSimilaritySearch,
+      phaseZeroIndex: wasmResult.phaseZeroIndex,
+      phaseTwoPiIndex: wasmResult.phaseTwoPiIndex,
+      phaseMinusQuarterPiIndex: wasmResult.phaseMinusQuarterPiIndex,
+      phaseTwoPiPlusQuarterPiIndex: wasmResult.phaseTwoPiPlusQuarterPiIndex,
     };
     
     // Sync results back to TypeScript objects so getters work correctly

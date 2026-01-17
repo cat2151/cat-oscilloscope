@@ -460,6 +460,72 @@ export class WaveformRenderer {
     this.ctx.restore();
   }
 
+  /**
+   * Draw phase markers on the waveform
+   * @param phaseZeroIndex - Sample index for phase 0 (red line)
+   * @param phaseTwoPiIndex - Sample index for phase 2π (red line)
+   * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line)
+   * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line)
+   * @param displayStartIndex - Start index of the displayed region
+   * @param displayEndIndex - End index of the displayed region
+   */
+  drawPhaseMarkers(
+    phaseZeroIndex?: number,
+    phaseTwoPiIndex?: number,
+    phaseMinusQuarterPiIndex?: number,
+    phaseTwoPiPlusQuarterPiIndex?: number,
+    displayStartIndex?: number,
+    displayEndIndex?: number
+  ): void {
+    if (displayStartIndex === undefined || displayEndIndex === undefined) {
+      return;
+    }
+
+    const displayLength = displayEndIndex - displayStartIndex;
+    if (displayLength <= 0) {
+      return;
+    }
+
+    this.ctx.save();
+
+    // Helper function to draw a vertical line at a given sample index
+    const drawVerticalLine = (sampleIndex: number, color: string, lineWidth: number) => {
+      // Convert sample index to canvas x coordinate
+      const relativeIndex = sampleIndex - displayStartIndex;
+      if (relativeIndex < 0 || relativeIndex > displayLength) {
+        return; // Index is outside the displayed region
+      }
+
+      const x = (relativeIndex / displayLength) * this.canvas.width;
+
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = lineWidth;
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.canvas.height);
+      this.ctx.stroke();
+    };
+
+    // Draw orange lines first (so red lines appear on top)
+    if (phaseMinusQuarterPiIndex !== undefined) {
+      drawVerticalLine(phaseMinusQuarterPiIndex, '#ff8800', 2);
+    }
+
+    if (phaseTwoPiPlusQuarterPiIndex !== undefined) {
+      drawVerticalLine(phaseTwoPiPlusQuarterPiIndex, '#ff8800', 2);
+    }
+
+    // Draw red lines
+    if (phaseZeroIndex !== undefined) {
+      drawVerticalLine(phaseZeroIndex, '#ff0000', 2);
+    }
+
+    if (phaseTwoPiIndex !== undefined) {
+      drawVerticalLine(phaseTwoPiIndex, '#ff0000', 2);
+    }
+
+    this.ctx.restore();
+  }
 
 
   // Getters and setters

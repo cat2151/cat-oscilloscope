@@ -174,6 +174,34 @@ export class WaveformRenderData {
         return ret;
     }
     /**
+     * @returns {number | undefined}
+     */
+    get phaseMinusQuarterPiIndex() {
+        const ret = wasm.waveformrenderdata_phaseMinusQuarterPiIndex(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get phaseTwoPiIndex() {
+        const ret = wasm.waveformrenderdata_phaseTwoPiIndex(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get phaseTwoPiPlusQuarterPiIndex() {
+        const ret = wasm.waveformrenderdata_phaseTwoPiPlusQuarterPiIndex(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get phaseZeroIndex() {
+        const ret = wasm.waveformrenderdata_phaseZeroIndex(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
      * @returns {Float32Array | undefined}
      */
     get previousWaveform() {
