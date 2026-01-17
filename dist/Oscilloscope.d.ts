@@ -27,7 +27,7 @@ export declare class Oscilloscope {
     private frameProcessingTimes;
     private readonly MAX_FRAME_TIMES;
     private readonly TARGET_FRAME_TIME;
-    private readonly FRAMES_PER_LOG_INTERVAL;
+    private readonly FPS_LOG_INTERVAL_FRAMES;
     /**
      * Create a new Oscilloscope instance
      * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)

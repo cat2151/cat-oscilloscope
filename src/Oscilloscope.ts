@@ -39,7 +39,7 @@ export class Oscilloscope {
   private frameProcessingTimes: number[] = [];
   private readonly MAX_FRAME_TIMES = 100;
   private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
-  private readonly FRAMES_PER_LOG_INTERVAL = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
+  private readonly FPS_LOG_INTERVAL_FRAMES = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
 
   /**
    * Create a new Oscilloscope instance
@@ -170,13 +170,12 @@ export class Oscilloscope {
       console.warn(`Frame processing time: ${processingTime.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`);
     }
 
-    // Calculate and log FPS periodically (every FRAMES_PER_LOG_INTERVAL frames)
+    // Calculate and log FPS periodically (every FPS_LOG_INTERVAL_FRAMES frames)
     if (this.lastFrameTime > 0) {
       const frameInterval = startTime - this.lastFrameTime;
       const currentFps = 1000 / frameInterval;
       
-      if (this.frameProcessingTimes.length >= this.FRAMES_PER_LOG_INTERVAL && 
-          this.frameProcessingTimes.length % this.FRAMES_PER_LOG_INTERVAL === 0) {
+      if (this.frameProcessingTimes.length === this.FPS_LOG_INTERVAL_FRAMES) {
         const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
         console.log(`FPS: ${currentFps.toFixed(1)}, Avg frame time: ${avgProcessingTime.toFixed(2)}ms`);
       }

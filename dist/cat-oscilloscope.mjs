@@ -4,7 +4,7 @@ var r = (y, t, e) => H(y, typeof t != "symbol" ? t + "" : t, e);
 function W(y) {
   return Math.pow(10, y / 20);
 }
-function L(y) {
+function D(y) {
   return y <= 0 ? -1 / 0 : 20 * Math.log10(y);
 }
 function b(y) {
@@ -16,7 +16,7 @@ function b(y) {
     cents: a
   };
 }
-const D = -48;
+const L = -48;
 function G(y) {
   const t = y.numberOfChannels, e = y.sampleRate, i = y.length, n = [];
   let a = 0;
@@ -30,7 +30,7 @@ function G(y) {
   }
   if (a === 0)
     return y;
-  const o = a * Math.pow(10, D / 20);
+  const o = a * Math.pow(10, L / 20);
   let s = i;
   for (let d = 0; d < i; d++) {
     let g = !0;
@@ -387,7 +387,7 @@ class O {
       if (h === 0)
         c = "0dB*";
       else {
-        const x = L(Math.abs(h)), w = h > 0 ? "+" : "-", T = Math.abs(x);
+        const x = D(Math.abs(h)), w = h > 0 ? "+" : "-", T = Math.abs(x);
         T >= 100 ? c = `${w}${T.toFixed(0)}dB` : c = `${w}${T.toFixed(1)}dB`;
       }
       this.ctx.fillText(c, 3, d + 10);
@@ -468,8 +468,8 @@ class O {
     for (let u = 0; u <= 4; u++) {
       const E = x - (x - c) * (u / 4), S = s + m / 4 * u, v = b(E);
       if (v) {
-        const P = v.cents >= 0 ? "+" : "";
-        this.ctx.fillText(`${P}${v.cents}¢`, o + l - 5, S);
+        const I = v.cents >= 0 ? "+" : "";
+        this.ctx.fillText(`${I}${v.cents}¢`, o + l - 5, S);
       }
     }
     this.ctx.strokeStyle = "#00ff00", this.ctx.lineWidth = 2, this.ctx.beginPath();
@@ -959,7 +959,7 @@ class $ {
     r(this, "MAX_FRAME_TIMES", 100);
     r(this, "TARGET_FRAME_TIME", 16.67);
     // 60fps target
-    r(this, "FRAMES_PER_LOG_INTERVAL", 60);
+    r(this, "FPS_LOG_INTERVAL_FRAMES", 60);
     this.audioManager = new k(), this.gainController = new N(), this.frequencyEstimator = new q(), this.renderer = new O(t), this.zeroCrossDetector = new B(), this.waveformSearcher = new z(), this.comparisonRenderer = new K(
       e,
       i,
@@ -1012,7 +1012,7 @@ class $ {
     const i = performance.now() - t;
     if (this.frameProcessingTimes.push(i), this.frameProcessingTimes.length > this.MAX_FRAME_TIMES && this.frameProcessingTimes.shift(), i > this.TARGET_FRAME_TIME && console.warn(`Frame processing time: ${i.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`), this.lastFrameTime > 0) {
       const a = 1e3 / (t - this.lastFrameTime);
-      if (this.frameProcessingTimes.length >= this.FRAMES_PER_LOG_INTERVAL && this.frameProcessingTimes.length % this.FRAMES_PER_LOG_INTERVAL === 0) {
+      if (this.frameProcessingTimes.length === this.FPS_LOG_INTERVAL_FRAMES) {
         const o = this.frameProcessingTimes.reduce((s, l) => s + l, 0) / this.frameProcessingTimes.length;
         console.log(`FPS: ${a.toFixed(1)}, Avg frame time: ${o.toFixed(2)}ms`);
       }
@@ -1232,7 +1232,7 @@ class Q {
     this.ctx.fillStyle = "#1a1a1a", this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
-class I {
+class P {
   /**
    * Create a BufferSource from Float32Array
    * @param buffer - Audio data as Float32Array (values typically in range -1.0 to 1.0)
@@ -1267,7 +1267,7 @@ class I {
         `Invalid channel index ${i}. AudioBuffer has ${t.numberOfChannels} channel(s).`
       );
     const n = t.getChannelData(i);
-    return new I(n, t.sampleRate, {
+    return new P(n, t.sampleRate, {
       chunkSize: e == null ? void 0 : e.chunkSize,
       loop: e == null ? void 0 : e.loop
     });
@@ -1361,7 +1361,7 @@ class I {
 }
 export {
   k as AudioManager,
-  I as BufferSource,
+  P as BufferSource,
   K as ComparisonPanelRenderer,
   q as FrequencyEstimator,
   N as GainController,
@@ -1371,7 +1371,7 @@ export {
   O as WaveformRenderer,
   z as WaveformSearcher,
   B as ZeroCrossDetector,
-  L as amplitudeToDb,
+  D as amplitudeToDb,
   W as dbToAmplitude,
   G as trimSilence
 };
