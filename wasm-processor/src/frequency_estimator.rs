@@ -272,26 +272,22 @@ impl FrequencyEstimator {
         };
         
         // Compute harmonic analysis for debugging
-        // Candidate 1: selected frequency
-        self.candidate1_harmonics = Some(self.calculate_harmonic_strengths(
+        // Candidate 1: selected frequency, Candidate 2: half of selected frequency
+        let half_freq = selected_freq / 2.0;
+        let (normalized_candidate1, normalized_candidate2) = self.calculate_normalized_harmonics(
             selected_freq,
+            half_freq,
             frequency_data,
             sample_rate,
             fft_size,
-        ));
+        );
+        
+        self.candidate1_harmonics = Some(normalized_candidate1);
+        self.candidate2_harmonics = Some(normalized_candidate2);
         
         // Candidate 1 weighted score
         self.candidate1_weighted_score = Some(self.calculate_weighted_harmonic_richness(
             selected_freq,
-            frequency_data,
-            sample_rate,
-            fft_size,
-        ));
-        
-        // Candidate 2: half of selected frequency
-        let half_freq = selected_freq / 2.0;
-        self.candidate2_harmonics = Some(self.calculate_harmonic_strengths(
-            half_freq,
             frequency_data,
             sample_rate,
             fft_size,
@@ -669,6 +665,7 @@ impl FrequencyEstimator {
     
     /// Calculate harmonic strengths for a given fundamental frequency
     /// Returns vector of strengths (magnitude) for harmonics 1x, 2x, 3x, 4x, 5x
+    /// Raw magnitudes from FFT (0-255)
     fn calculate_harmonic_strengths(
         &self,
         fundamental_freq: f32,
@@ -691,6 +688,48 @@ impl FrequencyEstimator {
         }
         
         harmonics
+    }
+    
+    /// Calculate normalized harmonic strengths for two candidates
+    /// Returns (normalized_candidate1, normalized_candidate2) where values are 0.0-1.0
+    /// 1.0 represents the strongest peak among all harmonics (1x-5x) of both candidates
+    fn calculate_normalized_harmonics(
+        &self,
+        candidate1_freq: f32,
+        candidate2_freq: f32,
+        frequency_data: &[u8],
+        sample_rate: f32,
+        fft_size: usize,
+    ) -> (Vec<f32>, Vec<f32>) {
+        // Get raw harmonic strengths for both candidates
+        let candidate1_raw = self.calculate_harmonic_strengths(
+            candidate1_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        let candidate2_raw = self.calculate_harmonic_strengths(
+            candidate2_freq,
+            frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Find maximum magnitude across all harmonics of both candidates
+        let max_magnitude = candidate1_raw.iter()
+            .chain(candidate2_raw.iter())
+            .fold(0.0f32, |max, &val| max.max(val));
+        
+        // Normalize: if max is 0, return zeros; otherwise divide by max
+        let normalize = |harmonics: &[f32]| -> Vec<f32> {
+            if max_magnitude > 0.0 {
+                harmonics.iter().map(|&v| v / max_magnitude).collect()
+            } else {
+                vec![0.0; harmonics.len()]
+            }
+        };
+        
+        (normalize(&candidate1_raw), normalize(&candidate2_raw))
     }
     
     /// Calculate harmonic richness score for a given frequency
