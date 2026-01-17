@@ -672,6 +672,10 @@ impl FrequencyEstimator {
     
     /// Calculate harmonic richness score for a given frequency
     /// Returns the number of strong harmonics (magnitude > threshold)
+    /// 
+    /// This function counts how many harmonics have significant energy,
+    /// which helps identify the true fundamental frequency.
+    /// A frequency with more strong harmonics is more likely to be the fundamental.
     fn calculate_harmonic_richness(
         &self,
         fundamental_freq: f32,
@@ -679,7 +683,9 @@ impl FrequencyEstimator {
         sample_rate: f32,
         fft_size: usize,
     ) -> usize {
-        const HARMONIC_STRENGTH_THRESHOLD: f32 = 5.0; // Minimum magnitude to count as a harmonic
+        // Threshold of 5.0 (out of 255 max FFT magnitude) represents approximately 2% of max
+        // This is lenient enough to catch weak but real harmonics while filtering out noise
+        const HARMONIC_STRENGTH_THRESHOLD: f32 = 5.0;
         let harmonics = self.calculate_harmonic_strengths(
             fundamental_freq,
             frequency_data,
