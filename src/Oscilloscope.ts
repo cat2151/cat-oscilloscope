@@ -232,6 +232,8 @@ export class Oscilloscope {
         renderData.halfFreqPeakStrengthPercent,
         renderData.candidate1Harmonics,
         renderData.candidate2Harmonics,
+        renderData.candidate1WeightedScore,
+        renderData.candidate2WeightedScore,
         renderData.selectionReason,
         renderData.estimatedFrequency
       );

@@ -50,6 +50,8 @@ pub struct WaveformRenderData {
     half_freq_peak_strength_percent: Option<f32>,  // Strength of peak at 1/2 estimated frequency (%)
     candidate1_harmonics: Option<Vec<f32>>,        // Harmonics strength for candidate1 (estimated freq)
     candidate2_harmonics: Option<Vec<f32>>,        // Harmonics strength for candidate2 (1/2 freq)
+    candidate1_weighted_score: Option<f32>,        // Weighted harmonic score for candidate1
+    candidate2_weighted_score: Option<f32>,        // Weighted harmonic score for candidate2
     selection_reason: Option<String>,              // Why candidate1 was chosen over candidate2
 }
 
@@ -164,6 +166,16 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = candidate2Harmonics)]
     pub fn candidate2_harmonics(&self) -> Option<Vec<f32>> {
         self.candidate2_harmonics.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = candidate1WeightedScore)]
+    pub fn candidate1_weighted_score(&self) -> Option<f32> {
+        self.candidate1_weighted_score
+    }
+    
+    #[wasm_bindgen(getter, js_name = candidate2WeightedScore)]
+    pub fn candidate2_weighted_score(&self) -> Option<f32> {
+        self.candidate2_weighted_score
     }
     
     #[wasm_bindgen(getter, js_name = selectionReason)]
@@ -336,6 +348,8 @@ impl WasmDataProcessor {
             half_freq_peak_strength_percent: self.frequency_estimator.get_half_freq_peak_strength_percent(),
             candidate1_harmonics: self.frequency_estimator.get_candidate1_harmonics(),
             candidate2_harmonics: self.frequency_estimator.get_candidate2_harmonics(),
+            candidate1_weighted_score: self.frequency_estimator.get_candidate1_weighted_score(),
+            candidate2_weighted_score: self.frequency_estimator.get_candidate2_weighted_score(),
             selection_reason: self.frequency_estimator.get_selection_reason(),
         })
     }
