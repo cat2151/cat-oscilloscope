@@ -54,6 +54,16 @@ export declare class WaveformRenderer {
      * 1フレームごとに1つのデータポイントが追加される
      */
     drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number): void;
+    /**
+     * Draw phase markers on the waveform
+     * @param phaseZeroIndex - Sample index for phase 0 (red line)
+     * @param phaseTwoPiIndex - Sample index for phase 2π (red line)
+     * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line)
+     * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line)
+     * @param displayStartIndex - Start index of the displayed region
+     * @param displayEndIndex - End index of the displayed region
+     */
+    drawPhaseMarkers(phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number, displayStartIndex?: number, displayEndIndex?: number): void;
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
 }

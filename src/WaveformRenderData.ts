@@ -54,4 +54,17 @@ export interface WaveformRenderData {
   
   /** Whether similarity search was used for alignment */
   usedSimilaritySearch: boolean;
+  
+  // Phase marker positions (sample indices within the waveform data buffer)
+  /** Phase 0: where fundamental frequency sine crosses from negative to positive (after skipping first cycle) */
+  phaseZeroIndex?: number;
+  
+  /** Phase 2π: one cycle after phase 0 */
+  phaseTwoPiIndex?: number;
+  
+  /** Phase -π/4: 1/8 cycle before phase 0 */
+  phaseMinusQuarterPiIndex?: number;
+  
+  /** Phase 2π+π/4: 1/8 cycle after phase 2π */
+  phaseTwoPiPlusQuarterPiIndex?: number;
 }

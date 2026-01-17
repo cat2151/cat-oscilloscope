@@ -39,6 +39,12 @@ pub struct WaveformRenderData {
     similarity: f32,
     similarity_plot_history: Vec<f32>,
     used_similarity_search: bool,
+    
+    // Phase marker positions (in sample indices within the waveform_data buffer)
+    phase_zero_index: Option<usize>,
+    phase_two_pi_index: Option<usize>,
+    phase_minus_quarter_pi_index: Option<usize>,
+    phase_two_pi_plus_quarter_pi_index: Option<usize>,
 }
 
 #[wasm_bindgen]
@@ -117,6 +123,26 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = usedSimilaritySearch)]
     pub fn used_similarity_search(&self) -> bool {
         self.used_similarity_search
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseZeroIndex)]
+    pub fn phase_zero_index(&self) -> Option<usize> {
+        self.phase_zero_index
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseTwoPiIndex)]
+    pub fn phase_two_pi_index(&self) -> Option<usize> {
+        self.phase_two_pi_index
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseMinusQuarterPiIndex)]
+    pub fn phase_minus_quarter_pi_index(&self) -> Option<usize> {
+        self.phase_minus_quarter_pi_index
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseTwoPiPlusQuarterPiIndex)]
+    pub fn phase_two_pi_plus_quarter_pi_index(&self) -> Option<usize> {
+        self.phase_two_pi_plus_quarter_pi_index
     }
 }
 
@@ -252,6 +278,15 @@ impl WasmDataProcessor {
         let similarity = self.waveform_searcher.get_last_similarity();
         let similarity_plot_history = self.waveform_searcher.get_similarity_history();
         
+        // Calculate phase marker positions
+        // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
+        let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index) = 
+            if cycle_length > 0.0 && display_start_index < display_end_index {
+                self.calculate_phase_markers(&data, display_start_index, cycle_length)
+            } else {
+                (None, None, None, None)
+            };
+        
         Some(WaveformRenderData {
             waveform_data: data,
             display_start_index,
@@ -268,6 +303,10 @@ impl WasmDataProcessor {
             similarity,
             similarity_plot_history,
             used_similarity_search,
+            phase_zero_index,
+            phase_two_pi_index,
+            phase_minus_quarter_pi_index,
+            phase_two_pi_plus_quarter_pi_index,
         })
     }
     
@@ -307,5 +346,88 @@ impl WasmDataProcessor {
         self.frequency_estimator.clear_history();
         self.zero_cross_detector.reset();
         self.waveform_searcher.reset();
+    }
+    
+    /// Calculate phase marker positions for the waveform
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
+    fn calculate_phase_markers(
+        &self,
+        data: &[f32],
+        display_start_index: usize,
+        cycle_length: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        // Skip the first cycle to leave left margin
+        let search_start = display_start_index + cycle_length as usize;
+        
+        // Search for phase 0: where the signal crosses from negative to positive
+        let phase_zero = self.find_zero_crossing_in_region(data, search_start, cycle_length);
+        
+        if let Some(phase_0_idx) = phase_zero {
+            // Phase 2π is one cycle after phase 0
+            let phase_2pi_idx = phase_0_idx + cycle_length as usize;
+            
+            // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
+            let eighth_cycle = (cycle_length / 8.0) as usize;
+            
+            // Check if phase_0_idx is large enough to subtract eighth_cycle
+            // If not, return None instead of using saturating_sub which would give index 0
+            let phase_minus_quarter_pi = if phase_0_idx >= eighth_cycle {
+                Some(phase_0_idx - eighth_cycle)
+            } else {
+                None
+            };
+            
+            // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
+            let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
+            
+            // Ensure indices are within the data bounds
+            let phase_2pi = if phase_2pi_idx < data.len() {
+                Some(phase_2pi_idx)
+            } else {
+                None
+            };
+            
+            let phase_2pi_plus_quarter_pi = if phase_2pi_plus_quarter_pi_idx < data.len() {
+                Some(phase_2pi_plus_quarter_pi_idx)
+            } else {
+                None
+            };
+            
+            (
+                Some(phase_0_idx),
+                phase_2pi,
+                phase_minus_quarter_pi,
+                phase_2pi_plus_quarter_pi,
+            )
+        } else {
+            (None, None, None, None)
+        }
+    }
+    
+    /// Find a zero crossing (negative to positive) in a region
+    fn find_zero_crossing_in_region(
+        &self,
+        data: &[f32],
+        start_index: usize,
+        search_range: f32,
+    ) -> Option<usize> {
+        // Check if data is empty or too small
+        if data.is_empty() || data.len() < 2 {
+            return None;
+        }
+        
+        let end_index = (start_index + search_range as usize).min(data.len() - 1);
+        
+        if start_index >= end_index {
+            return None;
+        }
+        
+        for i in start_index..end_index {
+            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+                return Some(i);
+            }
+        }
+        
+        None
     }
 }

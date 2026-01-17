@@ -38,6 +38,10 @@ export class WaveformRenderData {
     readonly gain: number;
     readonly isSignalAboveNoiseGate: boolean;
     readonly maxFrequency: number;
+    readonly phaseMinusQuarterPiIndex: number | undefined;
+    readonly phaseTwoPiIndex: number | undefined;
+    readonly phaseTwoPiPlusQuarterPiIndex: number | undefined;
+    readonly phaseZeroIndex: number | undefined;
     readonly previousWaveform: Float32Array | undefined;
     readonly sampleRate: number;
     readonly similarity: number;
@@ -70,6 +74,10 @@ export interface InitOutput {
     readonly waveformrenderdata_gain: (a: number) => number;
     readonly waveformrenderdata_isSignalAboveNoiseGate: (a: number) => number;
     readonly waveformrenderdata_maxFrequency: (a: number) => number;
+    readonly waveformrenderdata_phaseMinusQuarterPiIndex: (a: number) => number;
+    readonly waveformrenderdata_phaseTwoPiIndex: (a: number) => number;
+    readonly waveformrenderdata_phaseTwoPiPlusQuarterPiIndex: (a: number) => number;
+    readonly waveformrenderdata_phaseZeroIndex: (a: number) => number;
     readonly waveformrenderdata_previousWaveform: (a: number) => [number, number];
     readonly waveformrenderdata_sampleRate: (a: number) => number;
     readonly waveformrenderdata_similarity: (a: number) => number;

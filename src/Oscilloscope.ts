@@ -207,6 +207,16 @@ export class Oscilloscope {
       renderData.gain
     );
 
+    // Draw phase markers
+    this.renderer.drawPhaseMarkers(
+      renderData.phaseZeroIndex,
+      renderData.phaseTwoPiIndex,
+      renderData.phaseMinusQuarterPiIndex,
+      renderData.phaseTwoPiPlusQuarterPiIndex,
+      renderData.displayStartIndex,
+      renderData.displayEndIndex
+    );
+
     // Draw FFT spectrum overlay if enabled and signal is above noise gate
     if (renderData.frequencyData && this.renderer.getFFTDisplayEnabled() && renderData.isSignalAboveNoiseGate) {
       this.renderer.drawFFTOverlay(
