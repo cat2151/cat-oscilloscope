@@ -23,3 +23,4 @@ export declare class GainController {
     getNoiseGateThreshold(): number;
     getCurrentGain(): number;
 }
+//# sourceMappingURL=GainController.d.ts.map

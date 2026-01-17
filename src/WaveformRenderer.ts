@@ -284,7 +284,7 @@ export class WaveformRenderer {
     }
     
     // Only display if we have data to show
-    if (!halfFreqPeakStrengthPercent && !candidate1Harmonics && !candidate2Harmonics && !selectionReason) {
+    if (halfFreqPeakStrengthPercent === undefined && !candidate1Harmonics && !candidate2Harmonics && !selectionReason) {
       return;
     }
     
