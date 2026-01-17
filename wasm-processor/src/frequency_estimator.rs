@@ -770,6 +770,11 @@ impl FrequencyEstimator {
     /// 
     /// This weighting scheme ensures that candidates with strong low-order harmonics
     /// are preferred, as these are more indicative of a true fundamental frequency.
+    /// 
+    /// The score is calculated by multiplying each harmonic's peak magnitude by its weight,
+    /// without any threshold filtering. This ensures that actual peak strengths are considered.
+    /// Previously, threshold filtering could exclude important fundamental frequencies with
+    /// moderate peak values, causing the algorithm to incorrectly select harmonics instead.
     fn calculate_weighted_harmonic_richness(
         &self,
         fundamental_freq: f32,
@@ -777,9 +782,6 @@ impl FrequencyEstimator {
         sample_rate: f32,
         fft_size: usize,
     ) -> f32 {
-        // Threshold of 5.0 (out of 255 max FFT magnitude) represents approximately 2% of max
-        const HARMONIC_STRENGTH_THRESHOLD: f32 = 5.0;
-        
         // Weights for each harmonic (1x through 5x)
         // Higher weights for lower harmonics (more important for fundamental detection)
         const HARMONIC_WEIGHTS: [f32; 5] = [3.0, 3.0, 2.0, 1.0, 1.0];
@@ -791,11 +793,11 @@ impl FrequencyEstimator {
             fft_size,
         );
         
-        // Calculate weighted score: sum of weights for harmonics above threshold
+        // Calculate weighted score: sum of (weight * peak_magnitude) for all harmonics
+        // No threshold filtering - all peak values are considered
         harmonics.iter()
             .enumerate()
-            .filter(|(_, &strength)| strength > HARMONIC_STRENGTH_THRESHOLD)
-            .map(|(idx, _)| HARMONIC_WEIGHTS[idx])
+            .map(|(idx, &strength)| HARMONIC_WEIGHTS[idx] * strength)
             .sum()
     }
 
@@ -1320,5 +1322,106 @@ mod tests {
         
         assert!((ratio_1_to_2 - 2.0).abs() < 0.01, "Ratio 1x:2x should be 2.0, got {}", ratio_1_to_2);
         assert!((ratio_2_to_3 - 2.0).abs() < 0.01, "Ratio 2x:3x should be 2.0, got {}", ratio_2_to_3);
+    }
+
+    #[test]
+    fn test_weighted_harmonic_richness_without_threshold_issue_201() {
+        let mut estimator = FrequencyEstimator::new();
+        estimator.set_frequency_estimation_method("fft");
+        
+        // Simulate the scenario from issue #201:
+        // The user reported that when there were two candidates:
+        //   Candidate1: 2x harmonic has peak 1.0 (normalized)
+        //   Candidate2: 4x harmonic has peak 1.0 (normalized)
+        // The system selected Candidate1, but the user wanted Candidate2.
+        //
+        // The issue is that there should be a Candidate0 with 1x harmonic at peak 1.0
+        // that was being excluded.
+        //
+        // With the new algorithm (no threshold, direct multiplication of weights and magnitudes):
+        // - A candidate with strong 1x fundamental should score highest
+        // - A candidate with only strong 2x should score lower
+        // - A candidate with only strong 4x should score even lower
+        
+        let sample_rate = 44100.0;
+        let fft_size = 4096;
+        let bin_frequency = sample_rate / fft_size as f32;
+        
+        let mut frequency_data = vec![0u8; fft_size / 2];
+        
+        // Let's say we have a fundamental at 200Hz with harmonics
+        let fundamental = 200.0;
+        
+        // Set up a realistic harmonic series where:
+        // - 1x (200Hz) has magnitude 150
+        // - 2x (400Hz) has magnitude 255 (strongest - normalized to 1.0)
+        // - 3x (600Hz) has magnitude 100
+        // - 4x (800Hz) has magnitude 255 (also strong - normalized to 1.0)
+        // - 5x (1000Hz) has magnitude 50
+        
+        frequency_data[(fundamental / bin_frequency).round() as usize] = 150;       // 1x
+        frequency_data[(fundamental * 2.0 / bin_frequency).round() as usize] = 255; // 2x (peak)
+        frequency_data[(fundamental * 3.0 / bin_frequency).round() as usize] = 100; // 3x
+        frequency_data[(fundamental * 4.0 / bin_frequency).round() as usize] = 255; // 4x (peak)
+        frequency_data[(fundamental * 5.0 / bin_frequency).round() as usize] = 50;  // 5x
+        
+        // Calculate weighted scores for three candidates:
+        // Candidate0 (fundamental 200Hz): Should have highest score
+        let score_200hz = estimator.calculate_weighted_harmonic_richness(
+            200.0,
+            &frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Candidate1 (400Hz, treating 2x as fundamental): Should have lower score
+        let score_400hz = estimator.calculate_weighted_harmonic_richness(
+            400.0,
+            &frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Candidate2 (800Hz, treating 4x as fundamental): Should have even lower score
+        let score_800hz = estimator.calculate_weighted_harmonic_richness(
+            800.0,
+            &frequency_data,
+            sample_rate,
+            fft_size,
+        );
+        
+        // Expected scores:
+        // For 200Hz (fundamental):
+        //   1x=200Hz: 150, 2x=400Hz: 255, 3x=600Hz: 100, 4x=800Hz: 255, 5x=1000Hz: 50
+        //   Score: 3.0*150 + 3.0*255 + 2.0*100 + 1.0*255 + 1.0*50 = 450 + 765 + 200 + 255 + 50 = 1720
+        //
+        // For 400Hz (treating 2x as fundamental):
+        //   1x=400Hz: 255 (this is 2x of real fundamental)
+        //   2x=800Hz: 255 (this is 4x of real fundamental)
+        //   3x=1200Hz: 0 (this is 6x of real fundamental, not set)
+        //   4x=1600Hz: 0, 5x=2000Hz: 0
+        //   Score: 3.0*255 + 3.0*255 + 2.0*0 + 1.0*0 + 1.0*0 = 765 + 765 + 0 + 0 + 0 = 1530
+        //
+        // For 800Hz (treating 4x as fundamental):
+        //   1x=800Hz: 255 (this is 4x of real fundamental)
+        //   2x=1600Hz: 0, 3x=2400Hz: 0, 4x=3200Hz: 0, 5x=4000Hz: 0
+        //   Score: 3.0*255 + 3.0*0 + 2.0*0 + 1.0*0 + 1.0*0 = 765 + 0 + 0 + 0 + 0 = 765
+        
+        assert!(score_200hz > score_400hz, 
+            "Fundamental (200Hz) should score higher than 2x harmonic (400Hz). Got 200Hz:{} vs 400Hz:{}",
+            score_200hz, score_400hz);
+        
+        assert!(score_400hz > score_800hz,
+            "2x harmonic (400Hz) should score higher than 4x harmonic (800Hz). Got 400Hz:{} vs 800Hz:{}",
+            score_400hz, score_800hz);
+        
+        assert!(score_200hz > score_800hz,
+            "Fundamental (200Hz) should score much higher than 4x harmonic (800Hz). Got 200Hz:{} vs 800Hz:{}",
+            score_200hz, score_800hz);
+        
+        // Verify the actual calculation matches expected values
+        assert!((score_200hz - 1720.0).abs() < 1.0, "Expected 200Hz score ~1720, got {}", score_200hz);
+        assert!((score_400hz - 1530.0).abs() < 1.0, "Expected 400Hz score ~1530, got {}", score_400hz);
+        assert!((score_800hz - 765.0).abs() < 1.0, "Expected 800Hz score ~765, got {}", score_800hz);
     }
 }
