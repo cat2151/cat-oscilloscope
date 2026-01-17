@@ -46,7 +46,7 @@ const oscilloscope = new Oscilloscope(canvas);
 await oscilloscope.start();
 
 // Visualize from static buffer (no audio playback)
-const audioData = new new Float32Array(44100); // 1 second of data
+const audioData = new Float32Array(44100); // 1 second of data
 const bufferSource = new BufferSource(audioData, 44100, { loop: true });
 await oscilloscope.startFromBuffer(bufferSource);
 ```
