@@ -4,11 +4,13 @@ mod frequency_estimator;
 mod zero_cross_detector;
 mod waveform_searcher;
 mod gain_controller;
+mod bpf;
 
 use frequency_estimator::FrequencyEstimator;
 use zero_cross_detector::ZeroCrossDetector;
 use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;
+use bpf::BandPassFilter;
 
 /// WaveformRenderData - Complete data structure for waveform rendering
 /// This mirrors the TypeScript interface WaveformRenderData
@@ -320,7 +322,7 @@ impl WasmDataProcessor {
         // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
         let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index) = 
             if cycle_length > 0.0 && display_start_index < display_end_index {
-                self.calculate_phase_markers(&data, display_start_index, cycle_length)
+                self.calculate_phase_markers(&data, display_start_index, cycle_length, estimated_frequency, sample_rate)
             } else {
                 (None, None, None, None)
             };
@@ -394,17 +396,33 @@ impl WasmDataProcessor {
     
     /// Calculate phase marker positions for the waveform
     /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
+    /// 
+    /// Uses BPF (Band Pass Filter) at estimated frequency to eliminate harmonics
+    /// before detecting zero-crossings for accurate phase estimation.
     fn calculate_phase_markers(
         &self,
         data: &[f32],
         display_start_index: usize,
         cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        // If we don't have a valid frequency estimate, can't apply BPF
+        if estimated_frequency <= 0.0 || !estimated_frequency.is_finite() {
+            return (None, None, None, None);
+        }
+        
+        // Apply BPF to the data to remove harmonics
+        // Q factor = 2.0 provides a reasonable bandwidth around the center frequency
+        let mut bpf = BandPassFilter::new(estimated_frequency, sample_rate, 2.0);
+        let filtered_data = bpf.filter(data);
+        
         // Skip the first cycle to leave left margin
         let search_start = display_start_index + cycle_length as usize;
         
         // Search for phase 0: where the signal crosses from negative to positive
-        let phase_zero = self.find_zero_crossing_in_region(data, search_start, cycle_length);
+        // Use filtered data for phase detection
+        let phase_zero = self.find_zero_crossing_in_region(&filtered_data, search_start, cycle_length);
         
         if let Some(phase_0_idx) = phase_zero {
             // Phase 2π is one cycle after phase 0
