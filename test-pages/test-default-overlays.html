@@ -90,13 +90,13 @@
     <ul>
       <li><span class="success">✓ オレンジ色の「周波数推移」枠が右上に280x120pxで表示される</span></li>
       <li><span class="success">✓ 青色のFFTオーバーレイが左下に画面の35%x35%で表示される</span></li>
-      <li><span class="success">✓ 黄色の倍音分析が左上に500px幅で表示される</span></li>
+      <li><span class="success">✓ オレンジ色の倍音分析が左上に500px幅で表示される</span></li>
       <li><span class="success">✓ すべての枠が正しい位置に配置され、切れたり重なったりしないこと</span></li>
     </ul>
   </div>
 
   <script type="module">
-    import { Oscilloscope, BufferSource } from './src/index.ts';
+    import { Oscilloscope, BufferSource } from '../src/index.ts';
 
     const canvas = document.getElementById('oscilloscope');
     const previousWaveformCanvas = document.getElementById('previousWaveformCanvas');
