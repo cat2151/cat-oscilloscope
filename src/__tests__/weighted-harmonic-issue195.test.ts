@@ -27,7 +27,7 @@ describe('Weighted Harmonic Analysis - Issue #195', () => {
     const weights = [3.0, 3.0, 2.0, 1.0, 1.0];
     const threshold = 5.0; // Minimum magnitude to be considered present
     
-    // Candidate 1: 789.9Hz with harmonics [228, 0, 3, 30, 95]
+    // Candidate 1: 789.9Hz with harmonics [228, 0, 0, 30, 95]
     const candidate1Harmonics = [228, 0, 0, 30, 95];
     const candidate1WeightedScore = candidate1Harmonics.reduce((sum, magnitude, idx) => {
       return sum + (magnitude > threshold ? weights[idx] : 0);
