@@ -67,4 +67,17 @@ export interface WaveformRenderData {
   
   /** Phase 2π+π/4: 1/8 cycle after phase 2π */
   phaseTwoPiPlusQuarterPiIndex?: number;
+  
+  // Harmonic analysis for debugging (only populated when FFT method is used)
+  /** Strength of peak at 1/2 of estimated frequency as a percentage of estimated frequency peak */
+  halfFreqPeakStrengthPercent?: number;
+  
+  /** Harmonics strength for candidate1 (estimated frequency) - magnitudes for 1x, 2x, 3x, 4x, 5x */
+  candidate1Harmonics?: number[];
+  
+  /** Harmonics strength for candidate2 (1/2 of estimated frequency) - magnitudes for 1x, 2x, 3x, 4x, 5x */
+  candidate2Harmonics?: number[];
+  
+  /** Reason why candidate1 was selected over candidate2 */
+  selectionReason?: string;
 }

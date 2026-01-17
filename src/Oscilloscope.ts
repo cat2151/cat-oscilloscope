@@ -226,6 +226,15 @@ export class Oscilloscope {
         renderData.fftSize,
         renderData.maxFrequency
       );
+      
+      // Draw harmonic analysis overlay (only when FFT method is used and data is available)
+      this.renderer.drawHarmonicAnalysis(
+        renderData.halfFreqPeakStrengthPercent,
+        renderData.candidate1Harmonics,
+        renderData.candidate2Harmonics,
+        renderData.selectionReason,
+        renderData.estimatedFrequency
+      );
     }
 
     // 右上に周波数プロットを描画
