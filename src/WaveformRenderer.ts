@@ -339,7 +339,7 @@ export class WaveformRenderer {
       currentY += lineHeight;
       this.ctx.fillStyle = '#ff00ff';
       this.ctx.font = '11px monospace';
-      const harmonicsStr = candidate1Harmonics.map((v, i) => `${i+1}x:${v.toFixed(0)}`).join(' ');
+      const harmonicsStr = candidate1Harmonics.map((v, i) => `${i+1}x:${v.toFixed(2)}`).join(' ');
       const weightedStr = candidate1WeightedScore !== undefined ? ` (重み付け: ${candidate1WeightedScore.toFixed(1)})` : '';
       this.ctx.fillText(
         `候補1 (${estimatedFrequency.toFixed(1)}Hz) 倍音: ${harmonicsStr}${weightedStr}`,
@@ -354,7 +354,7 @@ export class WaveformRenderer {
       this.ctx.fillStyle = '#00aaff';
       this.ctx.font = '11px monospace';
       const halfFreq = estimatedFrequency / 2.0;
-      const harmonicsStr = candidate2Harmonics.map((v, i) => `${i+1}x:${v.toFixed(0)}`).join(' ');
+      const harmonicsStr = candidate2Harmonics.map((v, i) => `${i+1}x:${v.toFixed(2)}`).join(' ');
       const weightedStr = candidate2WeightedScore !== undefined ? ` (重み付け: ${candidate2WeightedScore.toFixed(1)})` : '';
       this.ctx.fillText(
         `候補2 (${halfFreq.toFixed(1)}Hz) 倍音: ${harmonicsStr}${weightedStr}`,

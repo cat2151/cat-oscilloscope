@@ -457,7 +457,7 @@ class O {
     }
     if (e && s) {
       c += u, this.ctx.fillStyle = "#ff00ff", this.ctx.font = "11px monospace";
-      const y = e.map((T, v) => `${v + 1}x:${T.toFixed(0)}`).join(" "), w = n !== void 0 ? ` (重み付け: ${n.toFixed(1)})` : "";
+      const y = e.map((T, v) => `${v + 1}x:${T.toFixed(2)}`).join(" "), w = n !== void 0 ? ` (重み付け: ${n.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補1 (${s.toFixed(1)}Hz) 倍音: ${y}${w}`,
         h + 5,
@@ -466,7 +466,7 @@ class O {
     }
     if (i && s) {
       c += u, this.ctx.fillStyle = "#00aaff", this.ctx.font = "11px monospace";
-      const y = s / 2, w = i.map((v, C) => `${C + 1}x:${v.toFixed(0)}`).join(" "), T = a !== void 0 ? ` (重み付け: ${a.toFixed(1)})` : "";
+      const y = s / 2, w = i.map((v, C) => `${C + 1}x:${v.toFixed(2)}`).join(" "), T = a !== void 0 ? ` (重み付け: ${a.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補2 (${y.toFixed(1)}Hz) 倍音: ${w}${T}`,
         h + 5,
