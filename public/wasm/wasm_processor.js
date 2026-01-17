@@ -236,6 +236,14 @@ function __wbg_get_imports() {
         __wbg_error_1529ada434ef54b4: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
+        __wbg_log_6b5ca2e6124b2808: function(arg0) {
+            console.log(arg0);
+        },
+        __wbindgen_cast_0000000000000001: function(arg0, arg1) {
+            // Cast intrinsic for `Ref(String) -> Externref`.
+            const ret = getStringFromWasm0(arg0, arg1);
+            return ret;
+        },
         __wbindgen_init_externref_table: function() {
             const table = wasm.__wbindgen_externrefs;
             const offset = table.grow(4);

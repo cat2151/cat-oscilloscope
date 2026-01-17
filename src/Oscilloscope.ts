@@ -34,6 +34,12 @@ export class Oscilloscope {
   private isRunning = false;
   private isPaused = false;
 
+  // Frame processing diagnostics
+  private lastFrameTime = 0;
+  private frameProcessingTimes: number[] = [];
+  private readonly MAX_FRAME_TIMES = 100;
+  private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
+
   /**
    * Create a new Oscilloscope instance
    * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
@@ -135,6 +141,8 @@ export class Oscilloscope {
       return;
     }
 
+    const startTime = performance.now();
+
     // If paused, skip processing and drawing but continue the animation loop
     if (!this.isPaused) {
       // === DATA GENERATION PHASE ===
@@ -147,6 +155,32 @@ export class Oscilloscope {
         this.renderFrame(renderData);
       }
     }
+
+    // Measure frame processing time
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+    this.frameProcessingTimes.push(processingTime);
+    if (this.frameProcessingTimes.length > this.MAX_FRAME_TIMES) {
+      this.frameProcessingTimes.shift();
+    }
+
+    // Warn if frame processing exceeds target (60fps)
+    if (processingTime > this.TARGET_FRAME_TIME) {
+      console.warn(`フレーム処理時間: ${processingTime.toFixed(2)}ms (目標: ${this.TARGET_FRAME_TIME}ms以下)`);
+    }
+
+    // Calculate and log FPS periodically
+    if (this.lastFrameTime > 0) {
+      const frameInterval = startTime - this.lastFrameTime;
+      const currentFps = 1000 / frameInterval;
+      
+      // Log FPS every 60 frames (approximately every second at 60fps)
+      if (this.frameProcessingTimes.length === this.MAX_FRAME_TIMES) {
+        const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
+        console.log(`FPS: ${currentFps.toFixed(1)}, 平均処理時間: ${avgProcessingTime.toFixed(2)}ms`);
+      }
+    }
+    this.lastFrameTime = startTime;
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());

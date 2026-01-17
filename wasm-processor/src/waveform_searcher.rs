@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use wasm_bindgen::prelude::*;
 
 /// SearchResult contains the best match information
 pub struct SearchResult {
@@ -84,6 +85,9 @@ impl WaveformSearcher {
         let prev_waveform = self.previous_waveform.as_ref()?;
         
         if cycle_length <= 0.0 {
+            web_sys::console::log_1(
+                &format!("類似度0: cycle_length無効 (cycle_length={})", cycle_length).into()
+            );
             self.update_similarity_history(0.0);
             return None;
         }
@@ -92,11 +96,19 @@ impl WaveformSearcher {
         let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
         
         if current_frame.len() < waveform_length {
+            web_sys::console::log_1(
+                &format!("類似度0: バッファサイズ不足 (current={}, required={})", 
+                         current_frame.len(), waveform_length).into()
+            );
             self.update_similarity_history(0.0);
             return None;
         }
         
         if prev_waveform.len() != waveform_length {
+            web_sys::console::log_1(
+                &format!("類似度0: 前回波形との長さ不一致 (prev={}, current={})", 
+                         prev_waveform.len(), waveform_length).into()
+            );
             self.update_similarity_history(0.0);
             return None;
         }
@@ -167,6 +179,7 @@ impl WaveformSearcher {
     /// Record that similarity search was not performed for this frame
     /// Updates history with 0.0 to indicate no similarity data is available
     pub fn record_no_search(&mut self) {
+        web_sys::console::log_1(&"類似度0: 類似度検索未実行 (cycle_length無効または前回波形なし)".into());
         self.update_similarity_history(0.0);
     }
     
