@@ -5,6 +5,7 @@ import { WaveformRenderer } from './WaveformRenderer';
 import { ZeroCrossDetector } from './ZeroCrossDetector';
 import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+import { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 import { WaveformDataProcessor } from './WaveformDataProcessor';
 import { WaveformRenderData } from './WaveformRenderData';
 import { BufferSource } from './BufferSource';
@@ -20,6 +21,7 @@ import { OverlaysLayoutConfig } from './OverlayLayout';
  * - ZeroCrossDetector: Zero-crossing detection configuration
  * - WaveformSearcher: Waveform similarity search state
  * - ComparisonPanelRenderer: Comparison panel rendering
+ * - CycleSimilarityRenderer: Cycle similarity graph rendering
  * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
  */
 export class Oscilloscope {
@@ -30,6 +32,7 @@ export class Oscilloscope {
   private zeroCrossDetector: ZeroCrossDetector;
   private waveformSearcher: WaveformSearcher;
   private comparisonRenderer: ComparisonPanelRenderer;
+  private cycleSimilarityRenderer: CycleSimilarityRenderer | null = null;
   private dataProcessor: WaveformDataProcessor;
   private animationId: number | null = null;
   private isRunning = false;
@@ -49,6 +52,9 @@ export class Oscilloscope {
    * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
    * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
    * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
+   * @param cycleSimilarity8divCanvas - Optional canvas for 8-division cycle similarity graph (recommended: 250x150px)
+   * @param cycleSimilarity4divCanvas - Optional canvas for 4-division cycle similarity graph (recommended: 250x150px)
+   * @param cycleSimilarity2divCanvas - Optional canvas for 2-division cycle similarity graph (recommended: 250x150px)
    * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
    */
   constructor(
@@ -57,6 +63,9 @@ export class Oscilloscope {
     currentWaveformCanvas: HTMLCanvasElement,
     similarityPlotCanvas: HTMLCanvasElement,
     frameBufferCanvas: HTMLCanvasElement,
+    cycleSimilarity8divCanvas?: HTMLCanvasElement,
+    cycleSimilarity4divCanvas?: HTMLCanvasElement,
+    cycleSimilarity2divCanvas?: HTMLCanvasElement,
     overlaysLayout?: OverlaysLayoutConfig
   ) {
     this.audioManager = new AudioManager();
@@ -71,6 +80,16 @@ export class Oscilloscope {
       similarityPlotCanvas,
       frameBufferCanvas
     );
+    
+    // Initialize cycle similarity renderer if canvases are provided
+    if (cycleSimilarity8divCanvas && cycleSimilarity4divCanvas && cycleSimilarity2divCanvas) {
+      this.cycleSimilarityRenderer = new CycleSimilarityRenderer(
+        cycleSimilarity8divCanvas,
+        cycleSimilarity4divCanvas,
+        cycleSimilarity2divCanvas
+      );
+    }
+    
     this.dataProcessor = new WaveformDataProcessor(
       this.audioManager,
       this.gainController,
@@ -138,6 +157,9 @@ export class Oscilloscope {
     this.zeroCrossDetector.reset();
     this.waveformSearcher.reset();
     this.comparisonRenderer.clear();
+    if (this.cycleSimilarityRenderer) {
+      this.cycleSimilarityRenderer.clear();
+    }
     this.dataProcessor.reset();
   }
 
@@ -260,6 +282,15 @@ export class Oscilloscope {
       renderData.similarity,
       renderData.similarityPlotHistory
     );
+    
+    // Update cycle similarity graphs if renderer is available
+    if (this.cycleSimilarityRenderer) {
+      this.cycleSimilarityRenderer.updateGraphs(
+        renderData.cycleSimilarities8div,
+        renderData.cycleSimilarities4div,
+        renderData.cycleSimilarities2div
+      );
+    }
   }
 
   // Getters and setters - delegate to appropriate modules

@@ -192,6 +192,38 @@
       ></canvas>
     </div>
   </div>
+  <div id="cycleSimilarityPanel" style="margin-top: 15px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+    <div class="canvasContainer">
+      <span class="canvasLabel">8分割 (1/2周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity8divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を8分割(1/2周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">4分割 (1周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity4divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を4分割(1周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">2分割 (2周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity2divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を2分割(2周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+  </div>
   <div id="controls">
     <button id="startButton">Start</button>
     <button id="loadFileButton">Load WAV File</button>
