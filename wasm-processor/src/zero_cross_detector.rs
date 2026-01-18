@@ -32,9 +32,10 @@ pub struct ZeroCrossDetector {
     previous_peak_index: Option<usize>,
     use_peak_mode: bool,
     zero_cross_mode: ZeroCrossMode,
-    // History for segment-relative position tracking (for PeakBacktrackWithHistory and other modes)
-    // This stores the position within the 4-cycle segment (0..segment_len), not absolute buffer position
-    // This ensures the 1% constraint works correctly when called on different segments each frame
+    // History for absolute position tracking (for PeakBacktrackWithHistory and other modes)
+    // This stores the absolute position in the full buffer, not segment-relative position
+    // The find_phase_zero_in_segment() method converts between absolute and segment-relative coordinates
+    // This ensures the 1% constraint works correctly across frames even when segments change position
     history_zero_cross_index: Option<usize>,
 }
 

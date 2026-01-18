@@ -508,8 +508,8 @@ impl WasmDataProcessor {
         data: &[f32],
         display_start_index: usize,
         cycle_length: f32,
-        estimated_frequency: f32,
-        sample_rate: f32,
+        _estimated_frequency: f32,
+        _sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
         // If we don't have a valid cycle length, can't calculate phase
         if cycle_length <= 0.0 || !cycle_length.is_finite() {
