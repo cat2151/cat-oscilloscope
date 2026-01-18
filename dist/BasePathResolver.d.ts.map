@@ -1,0 +1,1 @@
+{"version":3,"file":"BasePathResolver.d.ts","sourceRoot":"","sources":["../src/BasePathResolver.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AACH,qBAAa,gBAAgB;IAE3B,OAAO,CAAC,MAAM,CAAC,QAAQ,CAAC,cAAc,CAA2C;IAEjF,OAAO,CAAC,cAAc,CAAuB;IAE7C;;;;;;;;OAQG;IACH,WAAW,IAAI,MAAM;IAkDrB;;;;OAIG;IACH,OAAO,CAAC,sBAAsB;CA+B/B"}
