@@ -8,9 +8,9 @@
 export interface WaveformRenderData {
     /** Complete waveform data buffer */
     waveformData: Float32Array;
-    /** Start index of the region to display */
+    /** Start position of the selected segment within the frame buffer */
     displayStartIndex: number;
-    /** End index of the region to display (exclusive) */
+    /** End position of the selected segment within the frame buffer (exclusive) */
     displayEndIndex: number;
     /** Auto-gain multiplier for waveform amplitude */
     gain: number;
@@ -64,7 +64,7 @@ export interface WaveformRenderData {
     cycleSimilarities2div?: number[];
     /** Phase 0 position relative to segment start (for debugging oscillation) */
     phaseZeroSegmentRelative?: number;
-    /** History value used for phase tracking (for debugging) */
+    /** History value used for phase tracking (segment-relative offset, for debugging) */
     phaseZeroHistory?: number;
     /** 1% tolerance in samples (for debugging) */
     phaseZeroTolerance?: number;
