@@ -172,12 +172,17 @@ export class CycleSimilarityRenderer {
       }
 
       // Draw bar from zero line to value
-      // fillRect expects positive width/height, so we always pass the top-left corner and positive dimensions
+      // Note: In canvas coordinates, Y increases downward (Y=0 is at top)
+      // For positive similarity: valueY < zeroY (bar extends upward from zero line)
+      // For negative similarity: valueY > zeroY (bar extends downward from zero line)
+      // fillRect expects positive width/height, so we pass top-left corner and positive dimensions
       if (valueY < zeroY) {
-        // Positive values: bar goes from valueY (top) to zeroY (bottom)
+        // Positive values: bar extends upward from zero line
+        // Draw from valueY (top of bar) down to zeroY (zero line)
         ctx.fillRect(x, valueY, w, zeroY - valueY);
       } else {
-        // Negative values: bar goes from zeroY (top) to valueY (bottom)
+        // Negative values: bar extends downward from zero line
+        // Draw from zeroY (zero line) down to valueY (bottom of bar)
         ctx.fillRect(x, zeroY, w, valueY - zeroY);
       }
 
