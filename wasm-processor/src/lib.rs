@@ -300,17 +300,18 @@ impl WasmDataProcessor {
         }
         
         // Update similarity tracking (for comparison panel display)
-        // but don't use it for positioning to ensure zero-cross mode is respected
-        if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
-            // Calculate similarity at the position determined by zero-cross detector
-            self.waveform_searcher.search_similar_waveform(&data, cycle_length);
-            // Note: We ignore the search result for positioning, only use it for similarity tracking
+        // Use lightweight tracking method instead of expensive search
+        // since positioning is already determined by zero-cross detector
+        if self.waveform_searcher.has_previous_waveform() {
+            self.waveform_searcher.update_similarity_tracking(
+                &data,
+                display_start_index,
+                display_end_index,
+            );
         } else {
-            // Cannot perform similarity search (no previous waveform or invalid cycle length)
+            // Cannot perform similarity tracking (no previous waveform)
             // Record this in history to keep the graph updating
-            if self.waveform_searcher.has_previous_waveform() {
-                self.waveform_searcher.record_no_search();
-            }
+            self.waveform_searcher.record_no_search();
         }
         
         // Calculate auto gain
