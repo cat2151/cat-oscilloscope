@@ -555,7 +555,7 @@ impl WasmDataProcessor {
         
         // Log debug information
         web_sys::console::log_1(&format!(
-            "Phase Debug: segment_rel={}, history={:?}, tolerance={}, abs={}, segment_buffer_pos={}",
+            "Phase Debug: segment_relative={}, history={:?}, tolerance={}, absolute_position={}, segment_buffer_position={}",
             phase_zero_segment_relative, history_before, tolerance, phase_zero, segment_buffer_position
         ).into());
         
