@@ -117,11 +117,18 @@ impl ZeroCrossDetector {
     /// Find zero-cross point where signal crosses from negative to positive
     fn find_zero_cross(&self, data: &[f32], start_index: usize) -> Option<usize> {
         for i in start_index..data.len() - 1 {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 return Some(i);
             }
         }
         None
+    }
+    
+    /// Check if a given index represents a zero-crossing (negative to positive transition)
+    /// Returns true if data[i] <= 0.0 and data[i+1] > 0.0
+    #[inline]
+    fn is_zero_crossing(&self, data: &[f32], i: usize) -> bool {
+        i < data.len() - 1 && data[i] <= 0.0 && data[i + 1] > 0.0
     }
     
     /// Find the next zero-cross point after the given index
@@ -233,7 +240,7 @@ impl ZeroCrossDetector {
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if the history position itself is still a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if history_idx < data.len() - 1 && self.is_zero_crossing(data, history_idx) {
             // History position is still valid
             return Some(history_idx);
         }
@@ -244,7 +251,7 @@ impl ZeroCrossDetector {
         
         // Try to find zero-cross in the search range
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 // Found a zero-cross within tolerance - update history
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
@@ -287,7 +294,7 @@ impl ZeroCrossDetector {
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if history is still a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if self.is_zero_crossing(data, history_idx) {
             return Some(history_idx);
         }
         
@@ -296,7 +303,7 @@ impl ZeroCrossDetector {
         let search_end = (history_idx + tolerance).min(data.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
             }
@@ -355,7 +362,7 @@ impl ZeroCrossDetector {
         }
         
         // Check if history is a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if self.is_zero_crossing(data, history_idx) {
             return Some(history_idx);
         }
         
@@ -364,7 +371,7 @@ impl ZeroCrossDetector {
         let search_end = (history_idx + tolerance).min(data.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
             }
@@ -400,7 +407,7 @@ impl ZeroCrossDetector {
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if history is a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if self.is_zero_crossing(data, history_idx) {
             return Some(history_idx);
         }
         
@@ -409,7 +416,7 @@ impl ZeroCrossDetector {
         let search_end = (history_idx + tolerance).min(data.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
             }
@@ -475,7 +482,7 @@ impl ZeroCrossDetector {
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if history is a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if self.is_zero_crossing(data, history_idx) {
             return Some(history_idx);
         }
         
@@ -484,7 +491,7 @@ impl ZeroCrossDetector {
         let search_end = (history_idx + tolerance).min(data.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
             }
@@ -567,7 +574,7 @@ impl ZeroCrossDetector {
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if history is a zero-cross
-        if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
+        if self.is_zero_crossing(data, history_idx) {
             return Some(history_idx);
         }
         
@@ -576,7 +583,7 @@ impl ZeroCrossDetector {
         let search_end = (history_idx + tolerance).min(data.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if data[i] <= 0.0 && data[i + 1] > 0.0 {
+            if self.is_zero_crossing(data, i) {
                 self.history_zero_cross_index = Some(i);
                 return Some(i);
             }
@@ -728,9 +735,10 @@ impl ZeroCrossDetector {
     
     /// Find phase zero position within a segment (for Process B: phase marker positioning)
     /// 
-    /// This method is specifically designed to find the phase 0 position within an already-selected
-    /// 4-cycle segment (determined by Process A similarity search). It maintains history in absolute
-    /// positions (full buffer coordinates) to correctly apply the 1% constraint across frames.
+    /// This method is specifically designed to find the phase 0 position (zero-crossing from 
+    /// negative to positive) within an already-selected 4-cycle segment (determined by Process A 
+    /// similarity search). It maintains history in absolute positions (full buffer coordinates) 
+    /// to correctly apply the 1% constraint across frames.
     /// 
     /// # Arguments
     /// * `segment` - The 4-cycle segment data
@@ -794,8 +802,8 @@ impl ZeroCrossDetector {
             return self.search_zero_cross_in_segment(segment, segment_start_abs, 0, estimated_cycle_length, tolerance);
         }
         
-        // Check if history position is still a zero-cross
-        if history_rel < segment.len() - 1 && segment[history_rel] <= 0.0 && segment[history_rel + 1] > 0.0 {
+        // Check if history position is still a zero-cross (negative to positive transition)
+        if history_rel < segment.len() - 1 && self.is_zero_crossing(segment, history_rel) {
             return Some(history_abs);
         }
         
