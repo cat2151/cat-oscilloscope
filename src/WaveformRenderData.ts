@@ -10,10 +10,11 @@ export interface WaveformRenderData {
   /** Complete waveform data buffer */
   waveformData: Float32Array;
   
-  /** Start index of the region to display */
+  // COORDINATE SPACE: frame buffer positions (absolute indices in waveformData)
+  /** Start position of the selected segment within the frame buffer */
   displayStartIndex: number;
   
-  /** End index of the region to display (exclusive) */
+  /** End position of the selected segment within the frame buffer (exclusive) */
   displayEndIndex: number;
   
   /** Auto-gain multiplier for waveform amplitude */
@@ -56,6 +57,7 @@ export interface WaveformRenderData {
   usedSimilaritySearch: boolean;
   
   // Phase marker positions (sample indices within the waveform data buffer)
+  // COORDINATE SPACE: frame buffer positions (absolute indices in waveformData)
   /** Phase 0: where fundamental frequency sine crosses from negative to positive (after skipping first cycle) */
   phaseZeroIndex?: number;
   
@@ -98,10 +100,11 @@ export interface WaveformRenderData {
   cycleSimilarities2div?: number[];
   
   // Debug information for phase marker tracking (issue #220)
+  // COORDINATE SPACE: phaseZeroSegmentRelative is segment-relative (0..segment.len())
   /** Phase 0 position relative to segment start (for debugging oscillation) */
   phaseZeroSegmentRelative?: number;
   
-  /** History value used for phase tracking (for debugging) */
+  /** History value used for phase tracking (segment-relative offset, for debugging) */
   phaseZeroHistory?: number;
   
   /** 1% tolerance in samples (for debugging) */
