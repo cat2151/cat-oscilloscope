@@ -275,49 +275,41 @@ impl WasmDataProcessor {
             0.0
         };
         
-        // Try to find similar waveform
-        let mut display_start_index = 0;
-        let mut display_end_index = data.len();
-        let mut used_similarity_search = false;
+        // Use zero-cross alignment as primary positioning method
+        // This ensures the zero-cross mode dropdown selection is respected
+        let mut display_start_index;
+        let mut display_end_index;
         
-        if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
-            if let Some(search_result) = self.waveform_searcher.search_similar_waveform(&data, cycle_length) {
-                // Display N cycles worth (where N is CYCLES_TO_STORE)
+        if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
+            &data,
+            estimated_frequency,
+            sample_rate,
+        ) {
+            display_start_index = display_range.start_index;
+            display_end_index = display_range.end_index;
+        } else {
+            // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
+            display_start_index = 0;
+            if cycle_length > 0.0 {
                 let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-                display_start_index = search_result.start_index;
-                display_end_index = (display_start_index + waveform_length).min(data.len());
-                used_similarity_search = true;
+                display_end_index = waveform_length.min(data.len());
+            } else {
+                // No frequency estimation available, use entire buffer as last resort
+                display_end_index = data.len();
             }
-            // Note: Similarity history is always updated inside search_similar_waveform(),
-            // even when it returns None (validation failures or low similarity)
+        }
+        
+        // Update similarity tracking (for comparison panel display)
+        // but don't use it for positioning to ensure zero-cross mode is respected
+        if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
+            // Calculate similarity at the position determined by zero-cross detector
+            self.waveform_searcher.search_similar_waveform(&data, cycle_length);
+            // Note: We ignore the search result for positioning, only use it for similarity tracking
         } else {
             // Cannot perform similarity search (no previous waveform or invalid cycle length)
             // Record this in history to keep the graph updating
             if self.waveform_searcher.has_previous_waveform() {
                 self.waveform_searcher.record_no_search();
-            }
-        }
-        
-        // Fallback to zero-cross alignment if similarity search not used
-        if !used_similarity_search {
-            // Use zero-cross alignment
-            if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
-                &data,
-                estimated_frequency,
-                sample_rate,
-            ) {
-                display_start_index = display_range.start_index;
-                display_end_index = display_range.end_index;
-            } else {
-                // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
-                display_start_index = 0;
-                if cycle_length > 0.0 {
-                    let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-                    display_end_index = waveform_length.min(data.len());
-                } else {
-                    // No frequency estimation available, use entire buffer as last resort
-                    display_end_index = data.len();
-                }
             }
         }
         
@@ -372,7 +364,7 @@ impl WasmDataProcessor {
             previous_waveform,
             similarity,
             similarity_plot_history,
-            used_similarity_search,
+            used_similarity_search: false,  // Always false now - zero-cross mode is primary
             phase_zero_index,
             phase_two_pi_index,
             phase_minus_quarter_pi_index,

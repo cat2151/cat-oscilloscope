@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
-use wasm_bindgen::prelude::*;
 
 /// SearchResult contains the best match information
+#[allow(dead_code)]
 pub struct SearchResult {
     pub start_index: usize,
     pub similarity: f32,
