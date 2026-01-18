@@ -69,8 +69,14 @@ export declare class WaveformRenderer {
      * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line)
      * @param displayStartIndex - Start index of the displayed region
      * @param displayEndIndex - End index of the displayed region
+     * @param debugInfo - Optional debug information for phase tracking
      */
-    drawPhaseMarkers(phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number, displayStartIndex?: number, displayEndIndex?: number): void;
+    drawPhaseMarkers(phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number, displayStartIndex?: number, displayEndIndex?: number, debugInfo?: {
+        phaseZeroSegmentRelative?: number;
+        phaseZeroHistory?: number;
+        phaseZeroTolerance?: number;
+        zeroCrossModeName?: string;
+    }): void;
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
     /**

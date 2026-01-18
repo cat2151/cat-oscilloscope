@@ -76,6 +76,24 @@ impl ZeroCrossDetector {
         self.zero_cross_mode
     }
     
+    /// Get current zero-cross detection mode as string (for debugging)
+    pub fn get_zero_cross_mode_name(&self) -> String {
+        match self.zero_cross_mode {
+            ZeroCrossMode::Standard => "Standard".to_string(),
+            ZeroCrossMode::PeakBacktrackWithHistory => "Peak+History (1% stable)".to_string(),
+            ZeroCrossMode::BidirectionalNearest => "Bidirectional Nearest".to_string(),
+            ZeroCrossMode::GradientBased => "Gradient Based".to_string(),
+            ZeroCrossMode::AdaptiveStep => "Adaptive Step".to_string(),
+            ZeroCrossMode::Hysteresis => "Hysteresis".to_string(),
+            ZeroCrossMode::ClosestToZero => "Closest to Zero".to_string(),
+        }
+    }
+    
+    /// Get current history value for debugging
+    pub fn get_history_zero_cross_index(&self) -> Option<usize> {
+        self.history_zero_cross_index
+    }
+    
     /// Reset detector state
     pub fn reset(&mut self) {
         self.previous_zero_cross_index = None;

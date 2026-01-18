@@ -277,8 +277,29 @@ export class WaveformRenderData {
     /**
      * @returns {number | undefined}
      */
+    get phaseZeroHistory() {
+        const ret = wasm.waveformrenderdata_phaseZeroHistory(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
     get phaseZeroIndex() {
         const ret = wasm.waveformrenderdata_phaseZeroIndex(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get phaseZeroSegmentRelative() {
+        const ret = wasm.waveformrenderdata_phaseZeroSegmentRelative(this.__wbg_ptr);
+        return ret === 0x100000001 ? undefined : ret;
+    }
+    /**
+     * @returns {number | undefined}
+     */
+    get phaseZeroTolerance() {
+        const ret = wasm.waveformrenderdata_phaseZeroTolerance(this.__wbg_ptr);
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
@@ -342,6 +363,18 @@ export class WaveformRenderData {
         const ret = wasm.waveformrenderdata_waveform_data(this.__wbg_ptr);
         var v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+        return v1;
+    }
+    /**
+     * @returns {string | undefined}
+     */
+    get zeroCrossModeName() {
+        const ret = wasm.waveformrenderdata_zeroCrossModeName(this.__wbg_ptr);
+        let v1;
+        if (ret[0] !== 0) {
+            v1 = getStringFromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
         return v1;
     }
 }

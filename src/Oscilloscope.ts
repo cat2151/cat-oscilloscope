@@ -240,7 +240,13 @@ export class Oscilloscope {
       renderData.phaseMinusQuarterPiIndex,
       renderData.phaseTwoPiPlusQuarterPiIndex,
       renderData.displayStartIndex,
-      renderData.displayEndIndex
+      renderData.displayEndIndex,
+      {
+        phaseZeroSegmentRelative: renderData.phaseZeroSegmentRelative,
+        phaseZeroHistory: renderData.phaseZeroHistory,
+        phaseZeroTolerance: renderData.phaseZeroTolerance,
+        zeroCrossModeName: renderData.zeroCrossModeName,
+      }
     );
 
     // Draw FFT spectrum overlay if enabled and signal is above noise gate

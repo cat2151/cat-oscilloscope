@@ -96,4 +96,17 @@ export interface WaveformRenderData {
   
   /** 2 divisions (2 cycles each): 1 similarity value comparing consecutive segments */
   cycleSimilarities2div?: number[];
+  
+  // Debug information for phase marker tracking (issue #220)
+  /** Phase 0 position relative to segment start (for debugging oscillation) */
+  phaseZeroSegmentRelative?: number;
+  
+  /** History value used for phase tracking (for debugging) */
+  phaseZeroHistory?: number;
+  
+  /** 1% tolerance in samples (for debugging) */
+  phaseZeroTolerance?: number;
+  
+  /** Current zero-cross detection mode name (for debugging) */
+  zeroCrossModeName?: string;
 }

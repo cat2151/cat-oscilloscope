@@ -50,7 +50,10 @@ export class WaveformRenderData {
     readonly phaseMinusQuarterPiIndex: number | undefined;
     readonly phaseTwoPiIndex: number | undefined;
     readonly phaseTwoPiPlusQuarterPiIndex: number | undefined;
+    readonly phaseZeroHistory: number | undefined;
     readonly phaseZeroIndex: number | undefined;
+    readonly phaseZeroSegmentRelative: number | undefined;
+    readonly phaseZeroTolerance: number | undefined;
     readonly previousWaveform: Float32Array | undefined;
     readonly sampleRate: number;
     readonly selectionReason: string | undefined;
@@ -58,6 +61,7 @@ export class WaveformRenderData {
     readonly similarityPlotHistory: Float32Array;
     readonly usedSimilaritySearch: boolean;
     readonly waveform_data: Float32Array;
+    readonly zeroCrossModeName: string | undefined;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -96,7 +100,10 @@ export interface InitOutput {
     readonly waveformrenderdata_phaseMinusQuarterPiIndex: (a: number) => number;
     readonly waveformrenderdata_phaseTwoPiIndex: (a: number) => number;
     readonly waveformrenderdata_phaseTwoPiPlusQuarterPiIndex: (a: number) => number;
+    readonly waveformrenderdata_phaseZeroHistory: (a: number) => number;
     readonly waveformrenderdata_phaseZeroIndex: (a: number) => number;
+    readonly waveformrenderdata_phaseZeroSegmentRelative: (a: number) => number;
+    readonly waveformrenderdata_phaseZeroTolerance: (a: number) => number;
     readonly waveformrenderdata_previousWaveform: (a: number) => [number, number];
     readonly waveformrenderdata_sampleRate: (a: number) => number;
     readonly waveformrenderdata_selectionReason: (a: number) => [number, number];
@@ -104,6 +111,7 @@ export interface InitOutput {
     readonly waveformrenderdata_similarityPlotHistory: (a: number) => [number, number];
     readonly waveformrenderdata_usedSimilaritySearch: (a: number) => number;
     readonly waveformrenderdata_waveform_data: (a: number) => [number, number];
+    readonly waveformrenderdata_zeroCrossModeName: (a: number) => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
