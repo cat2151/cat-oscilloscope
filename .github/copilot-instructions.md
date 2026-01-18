@@ -6,28 +6,55 @@
 
 ## アーキテクチャ
 
-- **モジュラー設計**: `Oscilloscope`クラスがコーディネーターとして各専門モジュールに処理を委譲
-- **Rust/WASM実装**: すべてのデータ処理アルゴリズムはRust/WASMで実装され、TypeScript側は設定保持とレンダリングのみを担当
-- **Web Audio API パイプライン**: `MediaStream`/`AudioBuffer` → `AudioContext` → `AnalyserNode` → WASM処理 → Canvas描画
+- **モジュラー設計**: `Oscilloscope`クラスがコーディネーター、各専門モジュールに処理を委譲
+- **Rust/WASM**: データ処理（ゼロクロス検出、周波数推定[Zero-Crossing/Autocorrelation/FFT/STFT/CQT]、自動ゲイン、ノイズゲート、波形類似度、バッファ拡張[1x/4x/16x]）
+- **TypeScript**: 設定管理とCanvas描画のみ
+- **パイプライン**: `MediaStream`/`AudioBuffer` → `AudioContext` → `AnalyserNode` → WASM → Canvas
+
+## 主要ファイル（src/）
+
+| カテゴリ | ファイル | 役割 |
+|---------|---------|------|
+| **コア** | `Oscilloscope.ts` | メインコーディネーター |
+| | `main.ts` | エントリーポイント、UIイベント |
+| **オーディオ** | `AudioManager.ts` | Web Audio API、マイク・ファイル入力 |
+| | `BufferSource.ts` | 静的バッファ可視化（再生なし） |
+| **WASM連携** | `WaveformDataProcessor.ts` | WASM処理コーディネーター |
+| | `WasmModuleLoader.ts` | WASMロード管理 |
+| | `BasePathResolver.ts` | WASMパス解決 |
+| **設定保持** | `GainController.ts` | 自動ゲイン・ノイズゲート設定 |
+| | `FrequencyEstimator.ts` | 周波数推定方式設定 |
+| | `ZeroCrossDetector.ts` | ゼロクロス設定 |
+| | `WaveformSearcher.ts` | 波形類似度探索設定 |
+| **描画** | `WaveformRenderer.ts` | Canvas描画、グリッド・波形・FFT |
+| | `ComparisonPanelRenderer.ts` | 波形比較パネル |
+| | `PianoKeyboardRenderer.ts` | ピアノ鍵盤表示 |
+| | `CycleSimilarityRenderer.ts` | 類似度表示 |
+| **UI** | `UIEventHandlers.ts` | UIイベントハンドリング |
+| | `DOMElementManager.ts` | DOM要素管理 |
+| | `DisplayUpdater.ts` | 表示更新 |
+| **型定義** | `WaveformRenderData.ts` | 波形データ型 |
+| | `OverlayLayout.ts` | オーバーレイレイアウト型 |
+| **その他** | `utils.ts` | ユーティリティ（dB変換、無音トリミング） |
+| | `index.ts` | ライブラリエクスポート |
+
+**WASM実装**: `wasm-processor/src/` (Rust) - すべてのデータ処理アルゴリズム  
+**ビルド済み**: `public/wasm/` - 事前ビルド済みWASM
 
 ## 開発コマンド
 
 ```bash
-npm install      # 依存関係インストール
-npm run dev      # 開発サーバー起動 (localhost:3000)
-npm run build    # 本番ビルド（WASMも含む）
-npm run build:wasm  # WASM実装のみビルド（wasm-packが必要）
-npm run build:lib   # ライブラリ用ビルド
-npm run preview  # ビルド結果のプレビュー
-npm test         # テスト実行 (Vitest)
+npm install         # 依存関係インストール
+npm run dev         # 開発サーバー (localhost:3000)
+npm run build       # 本番ビルド（WASMも含む）
+npm run build:lib   # ライブラリビルド
+npm test            # テスト (Vitest)
 ```
-
-**注意**: 通常の使用では、事前ビルド済みのWASMファイルが `public/wasm/` に含まれているため、Rustツールチェーンは不要です。WASM実装を変更する場合のみ、Rust toolchain と wasm-pack が必要になります。
 
 ## コード規約
 
-- TypeScript `strict: true` - 厳密な型チェック有効
-- `noUnusedLocals/noUnusedParameters: true` - 未使用変数・引数はエラー
+- TypeScript `strict: true`, `noUnusedLocals/Parameters: true`
+- FFTサイズ `4096`, スムージング `0`, キャンバス `800x400`px
 
 ## ドキュメント編集の注意
 
