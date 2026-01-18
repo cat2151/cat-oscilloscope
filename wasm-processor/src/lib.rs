@@ -526,25 +526,22 @@ impl WasmDataProcessor {
         
         let segment = &data[display_start_index..segment_end];
         
-        // Capture history before calling calculate_display_range
+        // Capture history before calling find_phase_zero_in_segment
         let history_before = self.zero_cross_detector.get_history_zero_cross_index();
         
         // Calculate 1% tolerance for debugging
         let tolerance = ((cycle_length * 0.01) as usize).max(1);
         
-        // Use zero_cross_detector to find phase 0 within the segment
+        // Use the new find_phase_zero_in_segment method which properly handles coordinate conversion
         // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
-        let display_range = match self.zero_cross_detector.calculate_display_range(
+        let phase_zero_segment_relative = match self.zero_cross_detector.find_phase_zero_in_segment(
             segment,
-            estimated_frequency,
-            sample_rate,
+            display_start_index,  // Pass absolute position of segment start
+            cycle_length,
         ) {
-            Some(range) => range,
+            Some(idx) => idx,
             None => return (None, None, None, None, history_before, history_before, Some(tolerance)),
         };
-        
-        // The display_range.start_index is relative to the segment start
-        let phase_zero_segment_relative = display_range.start_index;
         
         // Convert it to absolute index in the full data buffer
         let phase_zero = display_start_index + phase_zero_segment_relative;

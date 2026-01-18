@@ -665,6 +665,89 @@ impl ZeroCrossDetector {
         None
     }
     
+    /// Find phase zero position within a segment (for Process B - phase marker positioning)
+    /// This method properly handles coordinate conversion between segment-relative and absolute positions.
+    /// 
+    /// # Arguments
+    /// * `segment` - The 4-cycle waveform segment (relative coordinates: 0..segment.len())
+    /// * `segment_start_abs` - Absolute position of segment start in the full buffer
+    /// * `estimated_cycle_length` - Estimated cycle length in samples
+    /// 
+    /// # Returns
+    /// Segment-relative index of phase zero position, or None if not found
+    pub fn find_phase_zero_in_segment(
+        &mut self,
+        segment: &[f32],
+        segment_start_abs: usize,
+        estimated_cycle_length: f32,
+    ) -> Option<usize> {
+        // Calculate tolerance (1% of cycle length)
+        let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
+        
+        // If we have history, convert it from absolute to segment-relative coordinates
+        if let Some(history_abs) = self.history_zero_cross_index {
+            // Convert absolute history position to segment-relative
+            if history_abs >= segment_start_abs {
+                let history_rel = history_abs - segment_start_abs;
+                
+                // Check if history position is within this segment
+                if history_rel < segment.len() {
+                    // Search for zero-cross within tolerance of history position
+                    let search_start = history_rel.saturating_sub(tolerance);
+                    let search_end = (history_rel + tolerance).min(segment.len().saturating_sub(1));
+                    
+                    // Look for zero-cross in tolerance range
+                    for i in search_start..search_end {
+                        if i + 1 < segment.len() && segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                            // Found zero-cross within tolerance
+                            // Convert back to absolute position for storage
+                            let abs_pos = segment_start_abs + i;
+                            self.history_zero_cross_index = Some(abs_pos);
+                            return Some(i);
+                        }
+                    }
+                    
+                    // No zero-cross found in tolerance - behavior depends on mode
+                    match self.zero_cross_mode {
+                        ZeroCrossMode::PeakBacktrackWithHistory => {
+                            // Strict mode: keep using history position if no zero-cross in tolerance
+                            return Some(history_rel);
+                        }
+                        _ => {
+                            // Other modes: search broader range with gradual movement
+                            // This maintains the characteristics of each mode
+                        }
+                    }
+                }
+            }
+        }
+        
+        // No history or history not applicable - initialize with first zero-cross in segment
+        // Skip first cycle to avoid edge effects
+        let skip_samples = (estimated_cycle_length as usize).max(1);
+        let search_start = skip_samples.min(segment.len());
+        
+        for i in search_start..segment.len().saturating_sub(1) {
+            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                // Found zero-cross - store in absolute coordinates
+                let abs_pos = segment_start_abs + i;
+                self.history_zero_cross_index = Some(abs_pos);
+                return Some(i);
+            }
+        }
+        
+        // Fallback: search from beginning if nothing found after first cycle
+        for i in 0..segment.len().saturating_sub(1) {
+            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                let abs_pos = segment_start_abs + i;
+                self.history_zero_cross_index = Some(abs_pos);
+                return Some(i);
+            }
+        }
+        
+        None
+    }
+
     /// Calculate display range based on zero-crossing or peak detection
     pub fn calculate_display_range(
         &mut self,
