@@ -52,35 +52,19 @@ npm test            # テスト (Vitest)
 ```
 
 ## コード規約
-
 - TypeScript `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`
-- FFTサイズ `4096`, スムージング `0`, キャンバス `800x400`px
 
 ## ドキュメント編集の注意
 
 ### README編集について
-- **README.mdへ追記せず、README.ja.mdのみに追記すること**
-- 理由: README.mdはGitHub Actionsで自動生成されるため
-- README.ja.mdがmainブランチにpushされると、GitHub Actionsが自動的にREADME.mdを英訳して生成する
-- ワークフロー: `.github/workflows/call-translate-readme.yml`
+- README.mdへ追記せず、README.ja.mdのみに追記すること
 
 ## dist ディレクトリのコミット方針
 
-### 背景
-wavlpfリポジトリ（[issues #66](https://github.com/cat2151/wavlpf/issues/66)）で、distディレクトリがコミットされていなかったため、ライブラリとして利用できないという致命的な問題が発生しました。
-
 ### 運用方針
-- **distディレクトリは必ずコミット対象とする**
-- npm登録やprepareスクリプトに依存せず、リポジトリから直接利用可能にする
-- agentがPRを作成する際は、以下を実施すること：
-  1. `npm run build:lib` を実行してdistを生成
-  2. distディレクトリをコミットに含める
-  3. distの内容をPRレビュー対象とする
-- CIワークフローでもdistの整合性を検証する
-
-### 実装時の注意
+- distディレクトリはコミット対象とする
 - .gitignoreでdistを除外しないこと
-- PRのレビュー時は、ソースコード変更とdist出力の整合性を確認すること
+- agentがPRを作成する際は、`npm run build:lib` を実行してdistを生成すること
 - distが更新されていない場合は、再ビルドして必ずコミットすること
 
 # プルリクエストとレビュー
