@@ -812,7 +812,7 @@ impl ZeroCrossDetector {
         let search_end = (history_rel + tolerance).min(segment.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+            if self.is_zero_crossing(segment, i) {
                 let abs_pos = segment_start_abs + i;
                 self.history_zero_cross_index = Some(abs_pos);
                 return Some(abs_pos);
@@ -866,7 +866,7 @@ impl ZeroCrossDetector {
         let search_end = (center_rel + tolerance).min(segment.len());
         
         for i in search_start..search_end.saturating_sub(1) {
-            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+            if self.is_zero_crossing(segment, i) {
                 let abs_pos = segment_start_abs + i;
                 self.history_zero_cross_index = Some(abs_pos);
                 return Some(abs_pos);
