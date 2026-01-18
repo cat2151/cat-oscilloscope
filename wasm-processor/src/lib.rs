@@ -451,40 +451,45 @@ impl WasmDataProcessor {
     /// Calculate phase marker positions for the waveform
     /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
     /// 
-    /// Uses peak detection method: finds the peak (maximum positive amplitude) in the search range,
-    /// then looks backward in time to find the zero crossing.
+    /// Uses zero_cross_detector to find phase 0 position within the displayed 4-cycle segment,
+    /// respecting the dropdown selection (Hysteresis, Peak+History with 1% constraint, etc.)
     fn calculate_phase_markers(
-        &self,
+        &mut self,
         data: &[f32],
         display_start_index: usize,
         cycle_length: f32,
         estimated_frequency: f32,
         sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
-        // Explicitly mark parameters as used to maintain API compatibility while avoiding compiler warnings
-        let _ = (estimated_frequency, sample_rate);
-        
         // If we don't have a valid cycle length, can't calculate phase
         if cycle_length <= 0.0 || !cycle_length.is_finite() {
             return (None, None, None, None);
         }
         
-        // Search range: from +1 cycle to +2 cycles from display_start_index
-        let search_start = display_start_index + cycle_length as usize;
-        let search_end = display_start_index + (cycle_length * 2.0) as usize;
+        // Extract the 4-cycle segment for zero-cross detection
+        let segment_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+        let segment_end = (display_start_index + segment_length).min(data.len());
         
-        // Find peak (maximum positive amplitude) in the search range
-        let peak_index = match self.find_peak_in_range(data, search_start, search_end) {
-            Some(idx) => idx,
+        if display_start_index >= segment_end {
+            return (None, None, None, None);
+        }
+        
+        let segment = &data[display_start_index..segment_end];
+        
+        // Use zero_cross_detector to find phase 0 within the segment
+        // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
+        let display_range = match self.zero_cross_detector.calculate_display_range(
+            segment,
+            estimated_frequency,
+            sample_rate,
+        ) {
+            Some(range) => range,
             None => return (None, None, None, None),
         };
         
-        // Look backward from peak to find zero crossing
-        // Zero crossing is where: before going back >= 0, after going back < 0
-        let phase_zero = match self.find_zero_crossing_backward_from_peak(data, peak_index) {
-            Some(idx) => idx,
-            None => return (None, None, None, None),
-        };
+        // The display_range.start_index is relative to the segment start
+        // Convert it to absolute index in the full data buffer
+        let phase_zero = display_start_index + display_range.start_index;
         
         // Phase 2π is one cycle after phase 0
         let phase_2pi_idx = phase_zero + cycle_length as usize;
