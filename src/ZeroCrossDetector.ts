@@ -10,7 +10,7 @@
  */
 export class ZeroCrossDetector {
   private usePeakMode: boolean = false;
-  private zeroCrossMode: 'standard' | 'peak-backtrack-history' = 'peak-backtrack-history';
+  private zeroCrossMode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero' = 'hysteresis';
 
   /**
    * Set whether to use peak mode instead of zero-crossing mode
@@ -28,16 +28,16 @@ export class ZeroCrossDetector {
 
   /**
    * Set zero-cross detection mode
-   * @param mode - 'standard' for 0.5-cycle tolerance, 'peak-backtrack-history' for 1% tolerance with history
+   * @param mode - Zero-cross detection algorithm to use
    */
-  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history'): void {
+  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void {
     this.zeroCrossMode = mode;
   }
 
   /**
    * Get current zero-cross detection mode
    */
-  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' {
+  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero' {
     return this.zeroCrossMode;
   }
 

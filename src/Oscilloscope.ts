@@ -379,11 +379,11 @@ export class Oscilloscope {
     return this.zeroCrossDetector.getUsePeakMode();
   }
   
-  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history'): void {
+  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void {
     this.zeroCrossDetector.setZeroCrossMode(mode);
   }
 
-  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' {
+  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero' {
     return this.zeroCrossDetector.getZeroCrossMode();
   }
   

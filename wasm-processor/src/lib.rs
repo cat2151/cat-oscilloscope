@@ -393,9 +393,14 @@ impl WasmDataProcessor {
         let zero_cross_mode = match mode {
             "standard" => ZeroCrossMode::Standard,
             "peak-backtrack-history" => ZeroCrossMode::PeakBacktrackWithHistory,
+            "bidirectional-nearest" => ZeroCrossMode::BidirectionalNearest,
+            "gradient-based" => ZeroCrossMode::GradientBased,
+            "adaptive-step" => ZeroCrossMode::AdaptiveStep,
+            "hysteresis" => ZeroCrossMode::Hysteresis,
+            "closest-to-zero" => ZeroCrossMode::ClosestToZero,
             _ => {
-                web_sys::console::warn_1(&format!("Unknown zero-cross mode: {}, using default", mode).into());
-                ZeroCrossMode::PeakBacktrackWithHistory
+                web_sys::console::warn_1(&format!("Unknown zero-cross mode: {}, using default (hysteresis)", mode).into());
+                ZeroCrossMode::Hysteresis
             }
         };
         

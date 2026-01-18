@@ -103,8 +103,9 @@ oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
 // Synchronize zero-cross mode from UI
 const initialZeroCrossMode = zeroCrossMode.value;
-if (initialZeroCrossMode === 'standard' || initialZeroCrossMode === 'peak-backtrack-history') {
-  oscilloscope.setZeroCrossMode(initialZeroCrossMode);
+const validModes = ['standard', 'peak-backtrack-history', 'bidirectional-nearest', 'gradient-based', 'adaptive-step', 'hysteresis', 'closest-to-zero'];
+if (validModes.includes(initialZeroCrossMode)) {
+  oscilloscope.setZeroCrossMode(initialZeroCrossMode as any);
 }
 
 // Auto gain checkbox handler
@@ -156,13 +157,14 @@ bufferSizeMultiplier.addEventListener('change', () => {
 // Zero-cross mode selector handler
 zeroCrossMode.addEventListener('change', () => {
   const mode = zeroCrossMode.value;
-  if (mode === 'standard' || mode === 'peak-backtrack-history') {
-    oscilloscope.setZeroCrossMode(mode);
+  const validModes = ['standard', 'peak-backtrack-history', 'bidirectional-nearest', 'gradient-based', 'adaptive-step', 'hysteresis', 'closest-to-zero'];
+  if (validModes.includes(mode)) {
+    oscilloscope.setZeroCrossMode(mode as any);
   } else {
     console.error('Invalid zero-cross mode:', mode);
     // Reset to default
-    zeroCrossMode.value = 'peak-backtrack-history';
-    oscilloscope.setZeroCrossMode('peak-backtrack-history');
+    zeroCrossMode.value = 'hysteresis';
+    oscilloscope.setZeroCrossMode('hysteresis');
   }
 });
 

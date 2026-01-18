@@ -133,7 +133,7 @@
       max-width: 600px;
     }
   </style>
-  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-BlqpWSow.js"></script>
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-DpwV0Td7.js"></script>
 </head>
 <body>
   <canvas
@@ -281,7 +281,12 @@
       <span>Phase 0 Detection:</span>
       <select id="zeroCrossMode" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select phase 0 detection method" title="Choose how phase 0 (red line) position is determined">
         <option value="standard">Standard (0.5 cycle tolerance)</option>
-        <option value="peak-backtrack-history" selected>Peak+History (1% stable)</option>
+        <option value="peak-backtrack-history">Peak+History (1% stable)</option>
+        <option value="bidirectional-nearest">Bidirectional Nearest (gradual move)</option>
+        <option value="gradient-based">Gradient Based (signal direction)</option>
+        <option value="adaptive-step">Adaptive Step (distance-based)</option>
+        <option value="hysteresis" selected>Hysteresis (far=gradual, near=jump)</option>
+        <option value="closest-to-zero">Closest to Zero (min abs value)</option>
       </select>
     </label>
     <div style="display: flex; align-items: center; gap: 10px;">
