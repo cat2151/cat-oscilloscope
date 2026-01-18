@@ -150,11 +150,10 @@ export class CycleSimilarityRenderer {
       // Clamp similarity to display range
       const clampedSimilarity = Math.max(displayMin, Math.min(displayMax, similarity));
 
-      // Map similarity to Y coordinate (0 is at middle)
+      // Calculate bar position and height relative to zero line
       const normalizedSimilarity = (clampedSimilarity - displayMin) / (displayMax - displayMin);
-      const barHeight = normalizedSimilarity * plotHeight;
+      const valueY = plotY + plotHeight - (normalizedSimilarity * plotHeight);
       const zeroY = plotY + plotHeight - (0 - displayMin) / (displayMax - displayMin) * plotHeight;
-      const barY = plotY + plotHeight - barHeight;
 
       const x = plotX + i * barWidth + barPadding;
       const w = barWidth - barPadding * 2;
@@ -172,14 +171,26 @@ export class CycleSimilarityRenderer {
         ctx.fillStyle = '#ff0000'; // Negative correlation - red
       }
 
-      ctx.fillRect(x, barY, w, barHeight - zeroY + plotY + plotHeight);
+      // Draw bar from zero line to value
+      if (clampedSimilarity >= 0) {
+        // Positive values: bar goes from zero line upward
+        ctx.fillRect(x, valueY, w, zeroY - valueY);
+      } else {
+        // Negative values: bar goes from zero line downward
+        ctx.fillRect(x, zeroY, w, valueY - zeroY);
+      }
 
-      // Draw value text above bar
+      // Draw value text above/below bar depending on sign
       ctx.fillStyle = '#ffffff';
       ctx.font = '9px monospace';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(similarity.toFixed(2), x + w / 2, barY - 2);
+      if (clampedSimilarity >= 0) {
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(similarity.toFixed(2), x + w / 2, valueY - 2);
+      } else {
+        ctx.textBaseline = 'top';
+        ctx.fillText(similarity.toFixed(2), x + w / 2, valueY + 2);
+      }
     }
 
     // Draw zero line (at y = 0)
