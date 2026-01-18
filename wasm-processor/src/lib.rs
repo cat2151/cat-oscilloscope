@@ -59,6 +59,12 @@ pub struct WaveformRenderData {
     cycle_similarities_8div: Vec<f32>,             // 8 divisions (1/2 cycle each): 7 similarity values
     cycle_similarities_4div: Vec<f32>,             // 4 divisions (1 cycle each): 3 similarity values
     cycle_similarities_2div: Vec<f32>,             // 2 divisions (2 cycles each): 1 similarity value
+    
+    // Debug information for phase marker tracking (issue #220)
+    phase_zero_segment_relative: Option<usize>,    // Phase 0 position relative to segment start
+    phase_zero_history: Option<usize>,             // History value used for tracking
+    phase_zero_tolerance: Option<usize>,           // 1% tolerance in samples
+    zero_cross_mode_name: Option<String>,          // Current zero-cross detection mode name
 }
 
 #[wasm_bindgen]
@@ -203,6 +209,27 @@ impl WaveformRenderData {
     pub fn cycle_similarities_2div(&self) -> Vec<f32> {
         self.cycle_similarities_2div.clone()
     }
+    
+    // Debug information getters for phase marker tracking
+    #[wasm_bindgen(getter, js_name = phaseZeroSegmentRelative)]
+    pub fn phase_zero_segment_relative(&self) -> Option<usize> {
+        self.phase_zero_segment_relative
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseZeroHistory)]
+    pub fn phase_zero_history(&self) -> Option<usize> {
+        self.phase_zero_history
+    }
+    
+    #[wasm_bindgen(getter, js_name = phaseZeroTolerance)]
+    pub fn phase_zero_tolerance(&self) -> Option<usize> {
+        self.phase_zero_tolerance
+    }
+    
+    #[wasm_bindgen(getter, js_name = zeroCrossModeName)]
+    pub fn zero_cross_mode_name(&self) -> Option<String> {
+        self.zero_cross_mode_name.clone()
+    }
 }
 
 /// WasmDataProcessor - WASM implementation of WaveformDataProcessor
@@ -337,14 +364,18 @@ impl WasmDataProcessor {
         let similarity = self.waveform_searcher.get_last_similarity();
         let similarity_plot_history = self.waveform_searcher.get_similarity_history();
         
-        // Calculate phase marker positions
+        // Calculate phase marker positions and collect debug information
         // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
-        let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index) = 
+        let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index,
+             phase_zero_segment_relative, phase_zero_history, phase_zero_tolerance) = 
             if cycle_length > 0.0 && display_start_index < display_end_index {
-                self.calculate_phase_markers(&data, display_start_index, cycle_length, estimated_frequency, sample_rate)
+                self.calculate_phase_markers_with_debug(&data, display_start_index, cycle_length, estimated_frequency, sample_rate)
             } else {
-                (None, None, None, None)
+                (None, None, None, None, None, None, None)
             };
+        
+        // Get zero-cross mode name for debugging
+        let zero_cross_mode_name = Some(self.zero_cross_detector.get_zero_cross_mode_name());
         
         // Calculate cycle similarities for the current waveform
         let (cycle_similarities_8div, cycle_similarities_4div, cycle_similarities_2div) = 
@@ -386,6 +417,10 @@ impl WasmDataProcessor {
             cycle_similarities_8div,
             cycle_similarities_4div,
             cycle_similarities_2div,
+            phase_zero_segment_relative,
+            phase_zero_history,
+            phase_zero_tolerance,
+            zero_cross_mode_name,
         })
     }
     
@@ -461,9 +496,24 @@ impl WasmDataProcessor {
         estimated_frequency: f32,
         sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        let (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi, _, _, _) = 
+            self.calculate_phase_markers_with_debug(data, display_start_index, cycle_length, estimated_frequency, sample_rate);
+        (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi)
+    }
+    
+    /// Calculate phase marker positions with debug information
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4, segment_relative, history, tolerance)
+    fn calculate_phase_markers_with_debug(
+        &mut self,
+        data: &[f32],
+        display_start_index: usize,
+        cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
         // If we don't have a valid cycle length, can't calculate phase
         if cycle_length <= 0.0 || !cycle_length.is_finite() {
-            return (None, None, None, None);
+            return (None, None, None, None, None, None, None);
         }
         
         // Extract the 4-cycle segment for zero-cross detection
@@ -471,10 +521,16 @@ impl WasmDataProcessor {
         let segment_end = (display_start_index + segment_length).min(data.len());
         
         if display_start_index >= segment_end {
-            return (None, None, None, None);
+            return (None, None, None, None, None, None, None);
         }
         
         let segment = &data[display_start_index..segment_end];
+        
+        // Capture history before calling calculate_display_range
+        let history_before = self.zero_cross_detector.get_history_zero_cross_index();
+        
+        // Calculate 1% tolerance for debugging
+        let tolerance = ((cycle_length * 0.01) as usize).max(1);
         
         // Use zero_cross_detector to find phase 0 within the segment
         // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
@@ -484,12 +540,20 @@ impl WasmDataProcessor {
             sample_rate,
         ) {
             Some(range) => range,
-            None => return (None, None, None, None),
+            None => return (None, None, None, None, history_before, history_before, Some(tolerance)),
         };
         
         // The display_range.start_index is relative to the segment start
+        let phase_zero_segment_relative = display_range.start_index;
+        
         // Convert it to absolute index in the full data buffer
-        let phase_zero = display_start_index + display_range.start_index;
+        let phase_zero = display_start_index + phase_zero_segment_relative;
+        
+        // Log debug information
+        web_sys::console::log_1(&format!(
+            "Phase Debug: segment_rel={}, history={:?}, tolerance={}, abs={}, display_start={}",
+            phase_zero_segment_relative, history_before, tolerance, phase_zero, display_start_index
+        ).into());
         
         // Phase 2π is one cycle after phase 0
         let phase_2pi_idx = phase_zero + cycle_length as usize;
@@ -525,6 +589,9 @@ impl WasmDataProcessor {
             phase_2pi,
             phase_minus_quarter_pi,
             phase_2pi_plus_quarter_pi,
+            Some(phase_zero_segment_relative),
+            history_before,
+            Some(tolerance),
         )
     }
     
