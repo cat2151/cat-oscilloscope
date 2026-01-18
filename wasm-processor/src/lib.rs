@@ -19,8 +19,11 @@ pub struct WaveformRenderData {
     // Waveform data
     waveform_data: Vec<f32>,
     
-    display_start_index: usize,
-    display_end_index: usize,
+    // COORDINATE SPACE: frame buffer positions (absolute indices in waveform_data)
+    // Start position of the selected segment within the frame buffer
+    selected_segment_buffer_position: usize,
+    // End position of the selected segment within the frame buffer (exclusive)
+    selected_segment_buffer_end: usize,
     gain: f32,
     
     // Frequency information
@@ -77,12 +80,12 @@ impl WaveformRenderData {
     
     #[wasm_bindgen(getter, js_name = displayStartIndex)]
     pub fn display_start_index(&self) -> usize {
-        self.display_start_index
+        self.selected_segment_buffer_position
     }
     
     #[wasm_bindgen(getter, js_name = displayEndIndex)]
     pub fn display_end_index(&self) -> usize {
-        self.display_end_index
+        self.selected_segment_buffer_end
     }
     
     #[wasm_bindgen(getter)]
@@ -303,16 +306,17 @@ impl WasmDataProcessor {
         };
         
         // Try to find similar waveform
-        let mut display_start_index = 0;
-        let mut display_end_index = data.len();
+        // COORDINATE SPACE: frame buffer positions
+        let mut selected_segment_buffer_position = 0;
+        let mut selected_segment_buffer_end = data.len();
         let mut used_similarity_search = false;
         
         if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
             if let Some(search_result) = self.waveform_searcher.search_similar_waveform(&data, cycle_length) {
                 // Display N cycles worth (where N is CYCLES_TO_STORE)
                 let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-                display_start_index = search_result.start_index;
-                display_end_index = (display_start_index + waveform_length).min(data.len());
+                selected_segment_buffer_position = search_result.start_index;
+                selected_segment_buffer_end = (selected_segment_buffer_position + waveform_length).min(data.len());
                 used_similarity_search = true;
             }
             // Note: Similarity history is always updated inside search_similar_waveform(),
@@ -333,30 +337,30 @@ impl WasmDataProcessor {
                 estimated_frequency,
                 sample_rate,
             ) {
-                display_start_index = display_range.start_index;
-                display_end_index = display_range.end_index;
+                selected_segment_buffer_position = display_range.start_index;
+                selected_segment_buffer_end = display_range.end_index;
             } else {
                 // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
-                display_start_index = 0;
+                selected_segment_buffer_position = 0;
                 if cycle_length > 0.0 {
                     let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-                    display_end_index = waveform_length.min(data.len());
+                    selected_segment_buffer_end = waveform_length.min(data.len());
                 } else {
                     // No frequency estimation available, use entire buffer as last resort
-                    display_end_index = data.len();
+                    selected_segment_buffer_end = data.len();
                 }
             }
         }
         
         // Calculate auto gain
-        self.gain_controller.calculate_auto_gain(&data, display_start_index, display_end_index);
+        self.gain_controller.calculate_auto_gain(&data, selected_segment_buffer_position, selected_segment_buffer_end);
         let gain = self.gain_controller.get_current_gain();
         
         // Store waveform for next frame (N cycles worth, where N is CYCLES_TO_STORE)
         if cycle_length > 0.0 {
             let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-            let end_index = (display_start_index + waveform_length).min(data.len());
-            self.waveform_searcher.store_waveform(&data, display_start_index, end_index);
+            let end_index = (selected_segment_buffer_position + waveform_length).min(data.len());
+            self.waveform_searcher.store_waveform(&data, selected_segment_buffer_position, end_index);
         }
         
         // Get waveform search data
@@ -368,8 +372,8 @@ impl WasmDataProcessor {
         // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
         let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index,
              phase_zero_segment_relative, phase_zero_history, phase_zero_tolerance) = 
-            if cycle_length > 0.0 && display_start_index < display_end_index {
-                self.calculate_phase_markers_with_debug(&data, display_start_index, cycle_length, estimated_frequency, sample_rate)
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
+                self.calculate_phase_markers_with_debug(&data, selected_segment_buffer_position, cycle_length, estimated_frequency, sample_rate)
             } else {
                 (None, None, None, None, None, None, None)
             };
@@ -379,9 +383,9 @@ impl WasmDataProcessor {
         
         // Calculate cycle similarities for the current waveform
         let (cycle_similarities_8div, cycle_similarities_4div, cycle_similarities_2div) = 
-            if cycle_length > 0.0 && display_start_index < display_end_index {
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
                 self.waveform_searcher.calculate_cycle_similarities(
-                    &data[display_start_index..display_end_index],
+                    &data[selected_segment_buffer_position..selected_segment_buffer_end],
                     cycle_length
                 )
             } else {
@@ -390,8 +394,8 @@ impl WasmDataProcessor {
         
         Some(WaveformRenderData {
             waveform_data: data,
-            display_start_index,
-            display_end_index,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
             gain,
             estimated_frequency,
             frequency_plot_history: self.frequency_estimator.get_frequency_plot_history(),
@@ -491,13 +495,13 @@ impl WasmDataProcessor {
     fn calculate_phase_markers(
         &mut self,
         data: &[f32],
-        display_start_index: usize,
+        segment_buffer_position: usize,
         cycle_length: f32,
         estimated_frequency: f32,
         sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
         let (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi, _, _, _) = 
-            self.calculate_phase_markers_with_debug(data, display_start_index, cycle_length, estimated_frequency, sample_rate);
+            self.calculate_phase_markers_with_debug(data, segment_buffer_position, cycle_length, estimated_frequency, sample_rate);
         (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi)
     }
     
@@ -506,7 +510,7 @@ impl WasmDataProcessor {
     fn calculate_phase_markers_with_debug(
         &mut self,
         data: &[f32],
-        display_start_index: usize,
+        segment_buffer_position: usize,
         cycle_length: f32,
         estimated_frequency: f32,
         sample_rate: f32,
@@ -518,16 +522,16 @@ impl WasmDataProcessor {
         
         // Extract the 4-cycle segment for zero-cross detection
         let segment_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
-        let segment_end = (display_start_index + segment_length).min(data.len());
+        let segment_end = (segment_buffer_position + segment_length).min(data.len());
         
-        if display_start_index >= segment_end {
+        if segment_buffer_position >= segment_end {
             return (None, None, None, None, None, None, None);
         }
         
-        let segment = &data[display_start_index..segment_end];
+        let segment = &data[segment_buffer_position..segment_end];
         
         // Capture history before calling calculate_display_range
-        let history_before = self.zero_cross_detector.get_history_zero_cross_index();
+        let history_before = self.zero_cross_detector.get_segment_phase_offset();
         
         // Calculate 1% tolerance for debugging
         let tolerance = ((cycle_length * 0.01) as usize).max(1);
@@ -543,16 +547,16 @@ impl WasmDataProcessor {
             None => return (None, None, None, None, history_before, history_before, Some(tolerance)),
         };
         
-        // The display_range.start_index is relative to the segment start
+        // COORDINATE SPACE: display_range.start_index is segment-relative (0..segment.len())
         let phase_zero_segment_relative = display_range.start_index;
         
-        // Convert it to absolute index in the full data buffer
-        let phase_zero = display_start_index + phase_zero_segment_relative;
+        // Convert to frame buffer position (absolute index in full data buffer)
+        let phase_zero = segment_buffer_position + phase_zero_segment_relative;
         
         // Log debug information
         web_sys::console::log_1(&format!(
-            "Phase Debug: segment_rel={}, history={:?}, tolerance={}, abs={}, display_start={}",
-            phase_zero_segment_relative, history_before, tolerance, phase_zero, display_start_index
+            "Phase Debug: segment_rel={}, history={:?}, tolerance={}, abs={}, segment_buffer_pos={}",
+            phase_zero_segment_relative, history_before, tolerance, phase_zero, segment_buffer_position
         ).into());
         
         // Phase 2π is one cycle after phase 0
