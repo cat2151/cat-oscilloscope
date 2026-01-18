@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use wasm_bindgen::prelude::*;
 
 /// SearchResult contains the best match information
 pub struct SearchResult {
@@ -162,39 +163,6 @@ impl WaveformSearcher {
         } else {
             None
         }
-    }
-    
-    /// Update similarity tracking only (for comparison panel display)
-    /// This is a lightweight version that compares the current waveform segment
-    /// against the previous waveform without performing a sliding window search.
-    /// Used when positioning is already determined by zero-cross detection.
-    pub fn update_similarity_tracking(
-        &mut self,
-        current_frame: &[f32],
-        start_index: usize,
-        end_index: usize,
-    ) {
-        let prev_waveform = match self.previous_waveform.as_ref() {
-            Some(pw) => pw,
-            None => {
-                // No previous waveform to compare against
-                self.update_similarity_history(0.0);
-                return;
-            }
-        };
-        
-        // Validate indices
-        if start_index >= current_frame.len() || end_index > current_frame.len() || start_index >= end_index {
-            web_sys::console::log_1(&"Similarity=0: Invalid indices for tracking".into());
-            self.update_similarity_history(0.0);
-            return;
-        }
-        
-        let current_segment = &current_frame[start_index..end_index];
-        
-        // Compare the current segment with previous waveform
-        let similarity = self.calculate_similarity(prev_waveform, current_segment);
-        self.update_similarity_history(similarity);
     }
     
     /// Store waveform for next frame's comparison
