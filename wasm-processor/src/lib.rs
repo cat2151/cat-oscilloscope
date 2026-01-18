@@ -386,6 +386,22 @@ impl WasmDataProcessor {
         self.zero_cross_detector.set_use_peak_mode(enabled);
     }
     
+    #[wasm_bindgen(js_name = setZeroCrossMode)]
+    pub fn set_zero_cross_mode(&mut self, mode: &str) {
+        use zero_cross_detector::ZeroCrossMode;
+        
+        let zero_cross_mode = match mode {
+            "standard" => ZeroCrossMode::Standard,
+            "peak-backtrack-history" => ZeroCrossMode::PeakBacktrackWithHistory,
+            _ => {
+                web_sys::console::warn_1(&format!("Unknown zero-cross mode: {}, using default", mode).into());
+                ZeroCrossMode::PeakBacktrackWithHistory
+            }
+        };
+        
+        self.zero_cross_detector.set_zero_cross_mode(zero_cross_mode);
+    }
+    
     #[wasm_bindgen(js_name = reset)]
     pub fn reset(&mut self) {
         self.frequency_estimator.clear_history();

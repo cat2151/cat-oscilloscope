@@ -21,6 +21,7 @@ const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElem
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
 const bufferSizeMultiplier = document.getElementById('bufferSizeMultiplier') as HTMLSelectElement;
+const zeroCrossMode = document.getElementById('zeroCrossMode') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 const noteValue = document.getElementById('noteValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
@@ -46,6 +47,7 @@ const requiredElements = [
   { element: statusElement, name: 'status' },
   { element: frequencyMethod, name: 'frequencyMethod' },
   { element: bufferSizeMultiplier, name: 'bufferSizeMultiplier' },
+  { element: zeroCrossMode, name: 'zeroCrossMode' },
   { element: frequencyValue, name: 'frequencyValue' },
   { element: noteValue, name: 'noteValue' },
   { element: gainValue, name: 'gainValue' },
@@ -99,6 +101,12 @@ oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
+// Synchronize zero-cross mode from UI
+const initialZeroCrossMode = zeroCrossMode.value;
+if (initialZeroCrossMode === 'standard' || initialZeroCrossMode === 'peak-backtrack-history') {
+  oscilloscope.setZeroCrossMode(initialZeroCrossMode);
+}
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -142,6 +150,19 @@ bufferSizeMultiplier.addEventListener('change', () => {
     // Reset to default
     bufferSizeMultiplier.value = '1';
     oscilloscope.setBufferSizeMultiplier(1);
+  }
+});
+
+// Zero-cross mode selector handler
+zeroCrossMode.addEventListener('change', () => {
+  const mode = zeroCrossMode.value;
+  if (mode === 'standard' || mode === 'peak-backtrack-history') {
+    oscilloscope.setZeroCrossMode(mode);
+  } else {
+    console.error('Invalid zero-cross mode:', mode);
+    // Reset to default
+    zeroCrossMode.value = 'peak-backtrack-history';
+    oscilloscope.setZeroCrossMode('peak-backtrack-history');
   }
 });
 

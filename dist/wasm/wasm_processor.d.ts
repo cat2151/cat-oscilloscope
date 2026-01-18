@@ -19,6 +19,7 @@ export class WasmDataProcessor {
     setNoiseGate(enabled: boolean): void;
     setNoiseGateThreshold(threshold: number): void;
     setUsePeakMode(enabled: boolean): void;
+    setZeroCrossMode(mode: string): void;
 }
 
 /**
@@ -71,6 +72,7 @@ export interface InitOutput {
     readonly wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
     readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
     readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setZeroCrossMode: (a: number, b: number, c: number) => void;
     readonly waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
     readonly waveformrenderdata_candidate1WeightedScore: (a: number) => number;
     readonly waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];

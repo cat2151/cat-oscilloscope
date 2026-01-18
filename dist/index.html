@@ -133,7 +133,7 @@
       max-width: 600px;
     }
   </style>
-  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-DpqZQlW6.js"></script>
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-BlqpWSow.js"></script>
 </head>
 <body>
   <canvas
@@ -275,6 +275,13 @@
         <option value="1">1x (Standard)</option>
         <option value="4">4x (Better Low Freq)</option>
         <option value="16" selected>16x (Best Low Freq)</option>
+      </select>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Phase 0 Detection:</span>
+      <select id="zeroCrossMode" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select phase 0 detection method" title="Choose how phase 0 (red line) position is determined">
+        <option value="standard">Standard (0.5 cycle tolerance)</option>
+        <option value="peak-backtrack-history" selected>Peak+History (1% stable)</option>
       </select>
     </label>
     <div style="display: flex; align-items: center; gap: 10px;">

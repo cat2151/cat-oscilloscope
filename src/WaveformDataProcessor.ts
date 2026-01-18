@@ -3,6 +3,7 @@ import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
 import { WaveformSearcher } from './WaveformSearcher';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
 
 // Type definition for WASM processor instance
 interface WasmProcessorInstance {
@@ -12,6 +13,7 @@ interface WasmProcessorInstance {
   setFrequencyEstimationMethod(method: string): void;
   setBufferSizeMultiplier(multiplier: number): void;
   setUsePeakMode(enabled: boolean): void;
+  setZeroCrossMode(mode: string): void;
   reset(): void;
   processFrame(
     waveformData: Float32Array,
@@ -40,6 +42,7 @@ export class WaveformDataProcessor {
   private gainController: GainController;
   private frequencyEstimator: FrequencyEstimator;
   private waveformSearcher: WaveformSearcher;
+  private zeroCrossDetector: ZeroCrossDetector;
 
   private wasmProcessor: WasmProcessorInstance | null = null;
   private isInitialized = false;
@@ -49,12 +52,14 @@ export class WaveformDataProcessor {
     audioManager: AudioManager,
     gainController: GainController,
     frequencyEstimator: FrequencyEstimator,
-    waveformSearcher: WaveformSearcher
+    waveformSearcher: WaveformSearcher,
+    zeroCrossDetector: ZeroCrossDetector
   ) {
     this.audioManager = audioManager;
     this.gainController = gainController;
     this.frequencyEstimator = frequencyEstimator;
     this.waveformSearcher = waveformSearcher;
+    this.zeroCrossDetector = zeroCrossDetector;
   }
   
   /**
@@ -252,6 +257,7 @@ export class WaveformDataProcessor {
     this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
     this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
     this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
+    this.wasmProcessor.setZeroCrossMode(this.zeroCrossDetector.getZeroCrossMode());
   }
   
   /**

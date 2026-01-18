@@ -101,7 +101,8 @@ export declare class Oscilloscope {
     isSimilaritySearchActive(): boolean;
     setUsePeakMode(enabled: boolean): void;
     getUsePeakMode(): boolean;
+    setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history'): void;
+    getZeroCrossMode(): 'standard' | 'peak-backtrack-history';
     setPauseDrawing(paused: boolean): void;
     getPauseDrawing(): boolean;
 }
-//# sourceMappingURL=Oscilloscope.d.ts.map

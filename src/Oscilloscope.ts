@@ -75,7 +75,8 @@ export class Oscilloscope {
       this.audioManager,
       this.gainController,
       this.frequencyEstimator,
-      this.waveformSearcher
+      this.waveformSearcher,
+      this.zeroCrossDetector
     );
   }
 
@@ -376,6 +377,14 @@ export class Oscilloscope {
 
   getUsePeakMode(): boolean {
     return this.zeroCrossDetector.getUsePeakMode();
+  }
+  
+  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history'): void {
+    this.zeroCrossDetector.setZeroCrossMode(mode);
+  }
+
+  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' {
+    return this.zeroCrossDetector.getZeroCrossMode();
   }
   
   setPauseDrawing(paused: boolean): void {

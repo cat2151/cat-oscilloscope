@@ -78,6 +78,14 @@ export class WasmDataProcessor {
     setUsePeakMode(enabled) {
         wasm.wasmdataprocessor_setUsePeakMode(this.__wbg_ptr, enabled);
     }
+    /**
+     * @param {string} mode
+     */
+    setZeroCrossMode(mode) {
+        const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.wasmdataprocessor_setZeroCrossMode(this.__wbg_ptr, ptr0, len0);
+    }
 }
 if (Symbol.dispose) WasmDataProcessor.prototype[Symbol.dispose] = WasmDataProcessor.prototype.free;
 
@@ -323,6 +331,9 @@ function __wbg_get_imports() {
         },
         __wbg_log_6b5ca2e6124b2808: function(arg0) {
             console.log(arg0);
+        },
+        __wbg_warn_f7ae1b2e66ccb930: function(arg0) {
+            console.warn(arg0);
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
             // Cast intrinsic for `Ref(String) -> Externref`.

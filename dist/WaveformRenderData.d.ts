@@ -57,4 +57,3 @@ export interface WaveformRenderData {
     /** Reason why candidate1 was selected over candidate2 */
     selectionReason?: string;
 }
-//# sourceMappingURL=WaveformRenderData.d.ts.map
