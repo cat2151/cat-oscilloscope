@@ -448,11 +448,13 @@ impl WasmDataProcessor {
         self.waveform_searcher.reset();
     }
     
-    /// Calculate phase marker positions for the waveform
+    /// Calculate phase marker positions for the waveform (Process B)
     /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
     /// 
-    /// Uses zero_cross_detector to find phase 0 position within the displayed 4-cycle segment,
-    /// respecting the dropdown selection (Hysteresis, Peak+History with 1% constraint, etc.)
+    /// This is Process B: Find phase 0 position within the already-selected 4-cycle segment.
+    /// Process A (similarity search) has already determined which segment to display.
+    /// This method finds where to draw the red line within that segment, respecting the
+    /// dropdown selection (Hysteresis, Peak+History with 1% constraint, etc.)
     fn calculate_phase_markers(
         &mut self,
         data: &[f32],
@@ -466,7 +468,7 @@ impl WasmDataProcessor {
             return (None, None, None, None);
         }
         
-        // Extract the 4-cycle segment for zero-cross detection
+        // Extract the 4-cycle segment for phase detection
         let segment_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
         let segment_end = (display_start_index + segment_length).min(data.len());
         
@@ -476,20 +478,16 @@ impl WasmDataProcessor {
         
         let segment = &data[display_start_index..segment_end];
         
-        // Use zero_cross_detector to find phase 0 within the segment
-        // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
-        let display_range = match self.zero_cross_detector.calculate_display_range(
+        // Use the new method that properly handles segment-relative positions
+        // while maintaining history in absolute coordinates for 1% constraint
+        let phase_zero = match self.zero_cross_detector.find_phase_zero_in_segment(
             segment,
-            estimated_frequency,
-            sample_rate,
+            display_start_index,
+            cycle_length,
         ) {
-            Some(range) => range,
+            Some(abs_pos) => abs_pos,
             None => return (None, None, None, None),
         };
-        
-        // The display_range.start_index is relative to the segment start
-        // Convert it to absolute index in the full data buffer
-        let phase_zero = display_start_index + display_range.start_index;
         
         // Phase 2π is one cycle after phase 0
         let phase_2pi_idx = phase_zero + cycle_length as usize;
