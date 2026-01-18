@@ -11,7 +11,7 @@
  *   node scripts/screenshot-local.js [TEST_PAGE] [OUTPUT_PATH]
  * 
  * 引数:
- *   TEST_PAGE - テストページのパス（省略時: test-pages/test-default-overlays.html）
+ *   TEST_PAGE - テストページのパス（省略時: test-pages/test-canvas-dimension-warning.html）
  *   OUTPUT_PATH - スクリーンショットの保存先（省略時: screenshots/local-test.png）
  * 
  * 環境変数:
@@ -21,7 +21,7 @@
  * 
  * 例:
  *   node scripts/screenshot-local.js
- *   node scripts/screenshot-local.js test-pages/test-large-canvas.html screenshots/large-canvas.png
+ *   node scripts/screenshot-local.js test-pages/test-canvas-dimension-warning.html screenshots/dimension-warning.png
  *   VERBOSE=1 WAIT_TIME=3000 node scripts/screenshot-local.js
  */
 
@@ -45,7 +45,7 @@ const path = require('path');
 // デフォルト設定
 const DEFAULT_PORT = process.env.PORT || 3000;
 const DEFAULT_BASE_PATH = '/cat-oscilloscope';
-const DEFAULT_TEST_PAGE = 'test-pages/test-default-overlays.html';
+const DEFAULT_TEST_PAGE = 'test-pages/test-canvas-dimension-warning.html';
 const DEFAULT_OUTPUT = 'screenshots/local-test.png';
 const DEFAULT_WAIT_TIME = 2000;
 
