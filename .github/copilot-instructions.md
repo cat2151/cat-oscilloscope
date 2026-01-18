@@ -46,14 +46,14 @@
 ```bash
 npm install         # 依存関係インストール
 npm run dev         # 開発サーバー (localhost:3000)
-npm run build       # 本番ビルド（WASMも含む）
+npm run build       # 本番ビルド（WASM失敗時は事前ビルド版を使用）
 npm run build:lib   # ライブラリビルド
 npm test            # テスト (Vitest)
 ```
 
 ## コード規約
 
-- TypeScript `strict: true`, `noUnusedLocals/Parameters: true`
+- TypeScript `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`
 - FFTサイズ `4096`, スムージング `0`, キャンバス `800x400`px
 
 ## ドキュメント編集の注意
