@@ -54,6 +54,11 @@ pub struct WaveformRenderData {
     candidate1_weighted_score: Option<f32>,        // Weighted harmonic score for candidate1
     candidate2_weighted_score: Option<f32>,        // Weighted harmonic score for candidate2
     selection_reason: Option<String>,              // Why candidate1 was chosen over candidate2
+    
+    // Cycle similarity analysis for frequency estimation tuning
+    cycle_similarities_8div: Vec<f32>,             // 8 divisions (1/2 cycle each): 7 similarity values
+    cycle_similarities_4div: Vec<f32>,             // 4 divisions (1 cycle each): 3 similarity values
+    cycle_similarities_2div: Vec<f32>,             // 2 divisions (2 cycles each): 1 similarity value
 }
 
 #[wasm_bindgen]
@@ -182,6 +187,21 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = selectionReason)]
     pub fn selection_reason(&self) -> Option<String> {
         self.selection_reason.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = cycleSimilarities8div)]
+    pub fn cycle_similarities_8div(&self) -> Vec<f32> {
+        self.cycle_similarities_8div.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = cycleSimilarities4div)]
+    pub fn cycle_similarities_4div(&self) -> Vec<f32> {
+        self.cycle_similarities_4div.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = cycleSimilarities2div)]
+    pub fn cycle_similarities_2div(&self) -> Vec<f32> {
+        self.cycle_similarities_2div.clone()
     }
 }
 
@@ -326,6 +346,17 @@ impl WasmDataProcessor {
                 (None, None, None, None)
             };
         
+        // Calculate cycle similarities for the current waveform
+        let (cycle_similarities_8div, cycle_similarities_4div, cycle_similarities_2div) = 
+            if cycle_length > 0.0 && display_start_index < display_end_index {
+                self.waveform_searcher.calculate_cycle_similarities(
+                    &data[display_start_index..display_end_index],
+                    cycle_length
+                )
+            } else {
+                (Vec::new(), Vec::new(), Vec::new())
+            };
+        
         Some(WaveformRenderData {
             waveform_data: data,
             display_start_index,
@@ -352,6 +383,9 @@ impl WasmDataProcessor {
             candidate1_weighted_score: self.frequency_estimator.get_candidate1_weighted_score(),
             candidate2_weighted_score: self.frequency_estimator.get_candidate2_weighted_score(),
             selection_reason: self.frequency_estimator.get_selection_reason(),
+            cycle_similarities_8div,
+            cycle_similarities_4div,
+            cycle_similarities_2div,
         })
     }
     

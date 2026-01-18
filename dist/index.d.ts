@@ -10,6 +10,7 @@ export { WaveformRenderer } from './WaveformRenderer';
 export { ZeroCrossDetector } from './ZeroCrossDetector';
 export { WaveformSearcher } from './WaveformSearcher';
 export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+export { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 export { BufferSource } from './BufferSource';
 export { WaveformDataProcessor } from './WaveformDataProcessor';

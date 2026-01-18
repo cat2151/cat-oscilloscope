@@ -10,6 +10,7 @@ import { OverlaysLayoutConfig } from './OverlayLayout';
  * - ZeroCrossDetector: Zero-crossing detection configuration
  * - WaveformSearcher: Waveform similarity search state
  * - ComparisonPanelRenderer: Comparison panel rendering
+ * - CycleSimilarityRenderer: Cycle similarity graph rendering
  * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
  */
 export declare class Oscilloscope {
@@ -20,6 +21,7 @@ export declare class Oscilloscope {
     private zeroCrossDetector;
     private waveformSearcher;
     private comparisonRenderer;
+    private cycleSimilarityRenderer;
     private dataProcessor;
     private animationId;
     private isRunning;
@@ -36,9 +38,12 @@ export declare class Oscilloscope {
      * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
      * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
      * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
+     * @param cycleSimilarity8divCanvas - Optional canvas for 8-division cycle similarity graph (recommended: 250x150px)
+     * @param cycleSimilarity4divCanvas - Optional canvas for 4-division cycle similarity graph (recommended: 250x150px)
+     * @param cycleSimilarity2divCanvas - Optional canvas for 2-division cycle similarity graph (recommended: 250x150px)
      * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
      */
-    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
+    constructor(canvas: HTMLCanvasElement, previousWaveformCanvas: HTMLCanvasElement, currentWaveformCanvas: HTMLCanvasElement, similarityPlotCanvas: HTMLCanvasElement, frameBufferCanvas: HTMLCanvasElement, cycleSimilarity8divCanvas?: HTMLCanvasElement, cycleSimilarity4divCanvas?: HTMLCanvasElement, cycleSimilarity2divCanvas?: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
     start(): Promise<void>;
     startFromFile(file: File): Promise<void>;
     /**

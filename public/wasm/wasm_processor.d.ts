@@ -34,6 +34,9 @@ export class WaveformRenderData {
     readonly candidate1WeightedScore: number | undefined;
     readonly candidate2Harmonics: Float32Array | undefined;
     readonly candidate2WeightedScore: number | undefined;
+    readonly cycleSimilarities2div: Float32Array;
+    readonly cycleSimilarities4div: Float32Array;
+    readonly cycleSimilarities8div: Float32Array;
     readonly displayEndIndex: number;
     readonly displayStartIndex: number;
     readonly estimatedFrequency: number;
@@ -77,6 +80,9 @@ export interface InitOutput {
     readonly waveformrenderdata_candidate1WeightedScore: (a: number) => number;
     readonly waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];
     readonly waveformrenderdata_candidate2WeightedScore: (a: number) => number;
+    readonly waveformrenderdata_cycleSimilarities2div: (a: number) => [number, number];
+    readonly waveformrenderdata_cycleSimilarities4div: (a: number) => [number, number];
+    readonly waveformrenderdata_cycleSimilarities8div: (a: number) => [number, number];
     readonly waveformrenderdata_displayEndIndex: (a: number) => number;
     readonly waveformrenderdata_displayStartIndex: (a: number) => number;
     readonly waveformrenderdata_estimatedFrequency: (a: number) => number;

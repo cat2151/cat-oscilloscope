@@ -56,4 +56,10 @@ export interface WaveformRenderData {
     candidate2WeightedScore?: number;
     /** Reason why candidate1 was selected over candidate2 */
     selectionReason?: string;
+    /** 8 divisions (1/2 cycle each): 7 similarity values comparing consecutive segments */
+    cycleSimilarities8div?: number[];
+    /** 4 divisions (1 cycle each): 3 similarity values comparing consecutive segments */
+    cycleSimilarities4div?: number[];
+    /** 2 divisions (2 cycles each): 1 similarity value comparing consecutive segments */
+    cycleSimilarities2div?: number[];
 }

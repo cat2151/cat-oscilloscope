@@ -205,6 +205,77 @@ impl WaveformSearcher {
         self.last_similarity = 0.0;
         self.similarity_history.clear();
     }
+    
+    /// Calculate cycle similarities for different divisions of a 4-cycle waveform
+    /// Returns three arrays representing:
+    /// - 8 divisions (1/2 cycle each): 7 similarity values (comparing consecutive segments)
+    /// - 4 divisions (1 cycle each): 3 similarity values
+    /// - 2 divisions (2 cycles each): 1 similarity value
+    pub fn calculate_cycle_similarities(
+        &self,
+        waveform: &[f32],
+        cycle_length: f32,
+    ) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
+        if cycle_length <= 0.0 || waveform.is_empty() {
+            return (Vec::new(), Vec::new(), Vec::new());
+        }
+        
+        let total_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+        
+        // Check if we have enough data
+        if waveform.len() < total_length {
+            return (Vec::new(), Vec::new(), Vec::new());
+        }
+        
+        // Extract the 4-cycle waveform
+        let four_cycles = &waveform[..total_length];
+        
+        // 8 divisions (1/2 cycle each)
+        let half_cycle = (cycle_length / 2.0).floor() as usize;
+        let mut similarities_8div = Vec::new();
+        for i in 0..7 {
+            let start1 = i * half_cycle;
+            let end1 = (i + 1) * half_cycle;
+            let start2 = (i + 1) * half_cycle;
+            let end2 = (i + 2) * half_cycle;
+            
+            if end2 <= four_cycles.len() {
+                let seg1 = &four_cycles[start1..end1];
+                let seg2 = &four_cycles[start2..end2];
+                let sim = self.calculate_similarity(seg1, seg2);
+                similarities_8div.push(sim);
+            }
+        }
+        
+        // 4 divisions (1 cycle each)
+        let one_cycle = cycle_length.floor() as usize;
+        let mut similarities_4div = Vec::new();
+        for i in 0..3 {
+            let start1 = i * one_cycle;
+            let end1 = (i + 1) * one_cycle;
+            let start2 = (i + 1) * one_cycle;
+            let end2 = (i + 2) * one_cycle;
+            
+            if end2 <= four_cycles.len() {
+                let seg1 = &four_cycles[start1..end1];
+                let seg2 = &four_cycles[start2..end2];
+                let sim = self.calculate_similarity(seg1, seg2);
+                similarities_4div.push(sim);
+            }
+        }
+        
+        // 2 divisions (2 cycles each)
+        let two_cycles = (cycle_length * 2.0).floor() as usize;
+        let mut similarities_2div = Vec::new();
+        if two_cycles * 2 <= four_cycles.len() {
+            let seg1 = &four_cycles[0..two_cycles];
+            let seg2 = &four_cycles[two_cycles..two_cycles * 2];
+            let sim = self.calculate_similarity(seg1, seg2);
+            similarities_2div.push(sim);
+        }
+        
+        (similarities_8div, similarities_4div, similarities_2div)
+    }
 }
 
 #[cfg(test)]

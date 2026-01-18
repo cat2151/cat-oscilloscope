@@ -8,6 +8,9 @@ const previousWaveformCanvas = document.getElementById('previousWaveformCanvas')
 const currentWaveformCanvas = document.getElementById('currentWaveformCanvas') as HTMLCanvasElement;
 const similarityPlotCanvas = document.getElementById('similarityPlotCanvas') as HTMLCanvasElement;
 const frameBufferCanvas = document.getElementById('frameBufferCanvas') as HTMLCanvasElement;
+const cycleSimilarity8divCanvas = document.getElementById('cycleSimilarity8divCanvas') as HTMLCanvasElement;
+const cycleSimilarity4divCanvas = document.getElementById('cycleSimilarity4divCanvas') as HTMLCanvasElement;
+const cycleSimilarity2divCanvas = document.getElementById('cycleSimilarity2divCanvas') as HTMLCanvasElement;
 const pianoKeyboardCanvas = document.getElementById('pianoKeyboardCanvas') as HTMLCanvasElement;
 const startButton = document.getElementById('startButton') as HTMLButtonElement;
 const loadFileButton = document.getElementById('loadFileButton') as HTMLButtonElement;
@@ -34,6 +37,9 @@ const requiredElements = [
   { element: currentWaveformCanvas, name: 'currentWaveformCanvas' },
   { element: similarityPlotCanvas, name: 'similarityPlotCanvas' },
   { element: frameBufferCanvas, name: 'frameBufferCanvas' },
+  { element: cycleSimilarity8divCanvas, name: 'cycleSimilarity8divCanvas' },
+  { element: cycleSimilarity4divCanvas, name: 'cycleSimilarity4divCanvas' },
+  { element: cycleSimilarity2divCanvas, name: 'cycleSimilarity2divCanvas' },
   { element: pianoKeyboardCanvas, name: 'pianoKeyboardCanvas' },
   { element: startButton, name: 'startButton' },
   { element: loadFileButton, name: 'loadFileButton' },
@@ -77,7 +83,16 @@ function formatThresholdDisplay(db: number, amplitude: number): string {
   return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
 }
 
-const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
+const oscilloscope = new Oscilloscope(
+  canvas,
+  previousWaveformCanvas,
+  currentWaveformCanvas,
+  similarityPlotCanvas,
+  frameBufferCanvas,
+  cycleSimilarity8divCanvas,
+  cycleSimilarity4divCanvas,
+  cycleSimilarity2divCanvas
+);
 const pianoKeyboardRenderer = new PianoKeyboardRenderer(pianoKeyboardCanvas);
 
 // 初期状態で空の鍵盤を描画
