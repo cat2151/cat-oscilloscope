@@ -172,11 +172,12 @@ export class CycleSimilarityRenderer {
       }
 
       // Draw bar from zero line to value
-      if (clampedSimilarity >= 0) {
-        // Positive values: bar goes from zero line upward
+      // fillRect expects positive width/height, so we always pass the top-left corner and positive dimensions
+      if (valueY < zeroY) {
+        // Positive values: bar goes from valueY (top) to zeroY (bottom)
         ctx.fillRect(x, valueY, w, zeroY - valueY);
       } else {
-        // Negative values: bar goes from zero line downward
+        // Negative values: bar goes from zeroY (top) to valueY (bottom)
         ctx.fillRect(x, zeroY, w, valueY - zeroY);
       }
 
