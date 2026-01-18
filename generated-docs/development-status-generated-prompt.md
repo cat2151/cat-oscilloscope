@@ -1,4 +1,4 @@
-Last updated: 2026-01-18
+Last updated: 2026-01-19
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -207,10 +207,18 @@ Last updated: 2026-01-18
 - _config.yml
 - dist/AudioManager.d.ts
 - dist/AudioManager.d.ts.map
+- dist/BasePathResolver.d.ts
+- dist/BasePathResolver.d.ts.map
 - dist/BufferSource.d.ts
 - dist/BufferSource.d.ts.map
 - dist/ComparisonPanelRenderer.d.ts
 - dist/ComparisonPanelRenderer.d.ts.map
+- dist/CycleSimilarityRenderer.d.ts
+- dist/CycleSimilarityRenderer.d.ts.map
+- dist/DOMElementManager.d.ts
+- dist/DOMElementManager.d.ts.map
+- dist/DisplayUpdater.d.ts
+- dist/DisplayUpdater.d.ts.map
 - dist/FrequencyEstimator.d.ts
 - dist/FrequencyEstimator.d.ts.map
 - dist/GainController.d.ts
@@ -221,6 +229,10 @@ Last updated: 2026-01-18
 - dist/OverlayLayout.d.ts.map
 - dist/PianoKeyboardRenderer.d.ts
 - dist/PianoKeyboardRenderer.d.ts.map
+- dist/UIEventHandlers.d.ts
+- dist/UIEventHandlers.d.ts.map
+- dist/WasmModuleLoader.d.ts
+- dist/WasmModuleLoader.d.ts.map
 - dist/WaveformDataProcessor.d.ts
 - dist/WaveformDataProcessor.d.ts.map
 - dist/WaveformRenderData.d.ts
@@ -231,8 +243,8 @@ Last updated: 2026-01-18
 - dist/WaveformSearcher.d.ts.map
 - dist/ZeroCrossDetector.d.ts
 - dist/ZeroCrossDetector.d.ts.map
-- dist/assets/index-DpqZQlW6.js
-- dist/assets/index-DpqZQlW6.js.map
+- dist/assets/index-BSIPHox7.js
+- dist/assets/index-BSIPHox7.js.map
 - dist/cat-oscilloscope.cjs
 - dist/cat-oscilloscope.cjs.map
 - dist/cat-oscilloscope.mjs
@@ -306,6 +318,18 @@ Last updated: 2026-01-18
 - issue-notes/201.md
 - issue-notes/203.md
 - issue-notes/205.md
+- issue-notes/207.md
+- issue-notes/209.md
+- issue-notes/210.md
+- issue-notes/212.md
+- issue-notes/214.md
+- issue-notes/216.md
+- issue-notes/217.md
+- issue-notes/220-fix-summary.md
+- issue-notes/220.md
+- issue-notes/222.md
+- issue-notes/224.md
+- issue-notes/226.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -338,14 +362,21 @@ Last updated: 2026-01-18
 - public/wasm/wasm_processor.js
 - public/wasm/wasm_processor_bg.wasm
 - public/wasm/wasm_processor_bg.wasm.d.ts
+- scripts/screenshot-local.js
 - src/AudioManager.ts
+- src/BasePathResolver.ts
 - src/BufferSource.ts
 - src/ComparisonPanelRenderer.ts
+- src/CycleSimilarityRenderer.ts
+- src/DOMElementManager.ts
+- src/DisplayUpdater.ts
 - src/FrequencyEstimator.ts
 - src/GainController.ts
 - src/Oscilloscope.ts
 - src/OverlayLayout.ts
 - src/PianoKeyboardRenderer.ts
+- src/UIEventHandlers.ts
+- src/WasmModuleLoader.ts
 - src/WaveformDataProcessor.ts
 - src/WaveformRenderData.ts
 - src/WaveformRenderer.ts
@@ -354,6 +385,7 @@ Last updated: 2026-01-18
 - src/__tests__/BufferSource.test.ts
 - src/__tests__/algorithms.test.ts
 - src/__tests__/comparison-panel-renderer.test.ts
+- src/__tests__/cycle-similarity.test.ts
 - src/__tests__/dom-integration.test.ts
 - src/__tests__/library-exports.test.ts
 - src/__tests__/normalized-harmonics-issue197.test.ts
@@ -369,6 +401,9 @@ Last updated: 2026-01-18
 - src/index.ts
 - src/main.ts
 - src/utils.ts
+- test-pages/test-canvas-dimension-warning.html
+- test-pages/wavlpf-broken-layout.png
+- test-segment-relative.md
 - tsconfig.json
 - tsconfig.lib.json
 - vite.config.ts
@@ -381,40 +416,183 @@ Last updated: 2026-01-18
 - wasm-processor/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
-オープン中のIssueはありません
+## [Issue #226](../issue-notes/226.md): 音声の波形表示時、メイン波形表示の赤い縦線が、1周期の幅で激しく左右に振動することがある。仕様上1%の幅でしか動かないはず
+[issue-notes/226.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/226.md)
+
+...
+ラベル: 
+--- issue-notes/226.md の内容 ---
+
+```markdown
+# issue 音声の波形表示時、メイン波形表示の赤い縦線が、1周期の幅で激しく左右に振動することがある。仕様上1%の幅でしか動かないはず #226
+[issues #226](https://github.com/cat2151/cat-oscilloscope/issues/226)
+
+
+
+```
+
+## [Issue #209](../issue-notes/209.md): このリポジトリをライブラリとして利用したwavlpfで、周波数推定に失敗している。その件について、API設計やライブラリ利用方法のドキュメントも含めて見直す
+[issue-notes/209.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/209.md)
+
+...
+ラベル: 
+--- issue-notes/209.md の内容 ---
+
+```markdown
+# issue このリポジトリをライブラリとして利用したwavlpfで、周波数推定に失敗している #209
+[issues #209](https://github.com/cat2151/cat-oscilloscope/issues/209)
+
+
+
+```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/26.md
+```md
+{% raw %}
+# issue userによるcommitがなくなって24時間超経過しているのに、毎日ムダにproject summaryとcallgraphの自動生成が行われてしまっている #26
+[issues #26](https://github.com/cat2151/github-actions/issues/26)
 
+# どうする？
+- logを確認する。24時間チェックがバグっている想定。
+- もしlogから判別できない場合は、logを改善する。
+
+# log確認結果
+- botによるcommitなのに、user commitとして誤判別されている
+```
+Checking for user commits in the last 24 hours...
+User commits found: true
+Recent user commits:
+7654bf7 Update callgraph.html [auto]
+abd2f2d Update project summaries (overview & development status)
+```
+
+# ざっくり調査結果
+- #27 が判明した
+
+# どうする？
+- [x] #27 を修正する。これで自動的に #26 も修正される想定。
+    - 当該処理を修正する。
+    - もしデータ不足なら、より詳細なlog生成を実装する。
+- 別件として、このチェックはむしろworkflow ymlの先頭で行うのが適切と考える。なぜなら、以降のムダな処理をカットできるのでエコ。
+    - [x] #28 を起票したので、そちらで実施する。
+
+# close条件は？
+- 前提
+    - [x] 先行タスクである #27 と #28 が完了済みであること
+- 誤爆がなくなること。
+    - つまり、userによるcommitがなくなって24時間超経過後の日次バッチにて、
+        - ムダなdevelopment status生成、等がないこと
+        - jobのlogに「commitがないので処理しません」的なmessageが出ること
+- どうする？
+    - 日次バッチを本番を流して本番testする
+
+# 結果
+- github-actions logより：
+    - 直近24hのcommitはbotによる1件のみであった
+    - よって後続jobはskipとなった
+    - ことを確認した
+- close条件を満たした、と判断する
+```
+Run node .github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
+BOT: Commit 5897f0c6df6bc2489f9ce3579b4f351754ee0551 | Author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> | Message: Update project summaries (overview & development status) [auto]
+has_recent_human_commit=false
+```
+
+# closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/9.md
+```md
+{% raw %}
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
+
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+
+# test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/209.md
+```md
+{% raw %}
+# issue このリポジトリをライブラリとして利用したwavlpfで、周波数推定に失敗している #209
+[issues #209](https://github.com/cat2151/cat-oscilloscope/issues/209)
+
+
+
+{% endraw %}
+```
+
+### issue-notes/226.md
+```md
+{% raw %}
+# issue 音声の波形表示時、メイン波形表示の赤い縦線が、1周期の幅で激しく左右に振動することがある。仕様上1%の幅でしか動かないはず #226
+[issues #226](https://github.com/cat2151/cat-oscilloscope/issues/226)
+
+
+
+{% endraw %}
+```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-c7d8a26 Merge pull request #206 from cat2151/copilot/change-phase-estimation-method
-8b3fb29 Improve documentation clarity in comments
-4c74ead Address PR review comments: validate positive peak and mark unused params
-a473631 Add rebuilt dist files
-daa0eb6 Final implementation complete
-18c1e34 Clarify comments in zero crossing detection logic
-9a7b7fc Update dist with new WASM build
-2f7c245 Replace BPF-based phase estimation with peak-based method
-946c824 Initial plan
-aac4bb5 Add issue note for #205 [auto]
+09c14af Add issue note for #226 [auto]
+17fcbbe Merge pull request #225 from cat2151/copilot/refactor-agent-hallucination-handling
+4edba84 Final commit: Address code review nitpick - clarify debug log message
+ec497d1 Phase 5 complete: Update TypeScript comments for coordinate spaces
+0c08b62 Phase 1-2 complete: Rename history_zero_cross_index to segment_phase_offset and display indices
+7f8426f Add issue note for #224 [auto]
+1ab2f5d Initial plan
+196090e Add issue note for #222 [auto]
+2b8f5cd Merge pull request #221 from cat2151/copilot/investigate-red-line-issue
+c426dd8 Add debug logging and UI display for phase marker tracking (issue #220)
 
 ### 変更されたファイル:
-README.md
-dist/assets/index-BmY1d-8e.js
-dist/assets/index-BmY1d-8e.js.map
-dist/assets/index-DpqZQlW6.js
-dist/assets/index-DpqZQlW6.js.map
+.github/copilot-instructions.md
+dist/Oscilloscope.d.ts.map
+dist/WaveformRenderData.d.ts
+dist/WaveformRenderData.d.ts.map
+dist/WaveformRenderer.d.ts
+dist/WaveformRenderer.d.ts.map
+dist/assets/index-BSIPHox7.js
+dist/assets/index-BSIPHox7.js.map
+dist/assets/index-DSz6m2ed.js
+dist/assets/index-DSz6m2ed.js.map
+dist/cat-oscilloscope.cjs
+dist/cat-oscilloscope.cjs.map
+dist/cat-oscilloscope.mjs
+dist/cat-oscilloscope.mjs.map
 dist/index.html
+dist/wasm/wasm_processor.d.ts
+dist/wasm/wasm_processor.js
 dist/wasm/wasm_processor_bg.wasm
-issue-notes/201.md
-issue-notes/203.md
-issue-notes/205.md
+dist/wasm/wasm_processor_bg.wasm.d.ts
+issue-notes/220-fix-summary.md
+issue-notes/220.md
+issue-notes/222.md
+issue-notes/224.md
+issue-notes/226.md
+public/wasm/wasm_processor.d.ts
+public/wasm/wasm_processor.js
 public/wasm/wasm_processor_bg.wasm
-wasm-processor/src/bpf.rs
-wasm-processor/src/frequency_estimator.rs
+public/wasm/wasm_processor_bg.wasm.d.ts
+src/Oscilloscope.ts
+src/WaveformRenderData.ts
+src/WaveformRenderer.ts
+test-segment-relative.md
 wasm-processor/src/lib.rs
+wasm-processor/src/zero_cross_detector.rs
 
 
 ---
-Generated at: 2026-01-18 07:08:18 JST
+Generated at: 2026-01-19 07:08:12 JST
