@@ -666,6 +666,10 @@ impl ZeroCrossDetector {
     }
     
     /// Find phase zero position within a segment (for Process B - phase marker positioning)
+    /// 
+    /// Process B is responsible for determining where to draw the red phase marker line
+    /// within the already-selected 4-cycle segment (Process A handles segment selection).
+    /// 
     /// This method properly handles coordinate conversion between segment-relative and absolute positions.
     /// 
     /// # Arguments
@@ -686,7 +690,8 @@ impl ZeroCrossDetector {
         
         // If we have history, convert it from absolute to segment-relative coordinates
         if let Some(history_abs) = self.history_zero_cross_index {
-            // Convert absolute history position to segment-relative
+            // Check if history position is valid (not before segment start)
+            // This prevents integer underflow when converting to segment-relative coordinates
             if history_abs >= segment_start_abs {
                 let history_rel = history_abs - segment_start_abs;
                 
@@ -714,12 +719,13 @@ impl ZeroCrossDetector {
                             return Some(history_rel);
                         }
                         _ => {
-                            // Other modes: search broader range with gradual movement
-                            // This maintains the characteristics of each mode
+                            // Other modes: fall through to initialization logic below
+                            // which will search the entire segment for a new zero-cross
                         }
                     }
                 }
             }
+            // History is invalid (before segment or outside segment) - reinitialize below
         }
         
         // No history or history not applicable - initialize with first zero-cross in segment
