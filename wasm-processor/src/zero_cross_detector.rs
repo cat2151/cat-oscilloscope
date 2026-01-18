@@ -216,8 +216,7 @@ impl ZeroCrossDetector {
         
         // We have history - use it to search with tight tolerance (1/100 of cycle)
         let history_idx = self.history_zero_cross_index.unwrap();
-        let tolerance = (estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize;
-        let tolerance = tolerance.max(1); // Ensure at least 1 sample tolerance
+        let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
         
         // Check if the history position itself is still a zero-cross
         if history_idx < data.len() - 1 && data[history_idx] <= 0.0 && data[history_idx + 1] > 0.0 {
@@ -266,8 +265,10 @@ impl ZeroCrossDetector {
         }
         
         // Look backward from start_index
+        // Since we validated start_index < data.len() above, and we iterate from 1 to start_index,
+        // all indices are guaranteed to be within bounds
         for i in (1..=start_index).rev() {
-            if i < data.len() && data[i - 1] <= 0.0 && data[i] > 0.0 {
+            if data[i - 1] <= 0.0 && data[i] > 0.0 {
                 return Some(i - 1);
             }
         }
