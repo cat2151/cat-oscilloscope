@@ -29,6 +29,16 @@ export class WaveformRenderer {
     }
     this.ctx = context;
     this.overlaysLayout = overlaysLayout || DEFAULT_OVERLAYS_LAYOUT;
+    
+    // Warn if canvas is using default dimensions (300x150)
+    // This causes layout issues when CSS dimensions differ from canvas resolution
+    if (canvas.width === 300 && canvas.height === 150) {
+      console.warn(
+        'Canvas element is using default dimensions (300x150). ' +
+        'Set explicit width and height attributes on the canvas element to match desired resolution. ' +
+        'Example: <canvas id="oscilloscope" width="1800" height="1000"></canvas>'
+      );
+    }
   }
 
   /**

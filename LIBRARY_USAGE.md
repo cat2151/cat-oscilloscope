@@ -347,7 +347,32 @@ const isDebugEnabled = oscilloscope.getDebugOverlaysEnabled();
 
 ### オーバーレイのレイアウトカスタマイズ
 
-**v0.0.2以降**: デバッグオーバーレイの位置とサイズを外部から制御できるようになりました。これにより、外部アプリケーションで独自のレイアウトを実現できます。
+#### デフォルトレイアウトについて（重要）
+
+**cat-oscilloscopeは、どのようなキャンバスサイズでも適切に動作するデフォルトレイアウトを内蔵しています。**
+
+デフォルトレイアウトでは：
+- **FFTスペクトラム**: 左下に画面の35%×35%で配置
+- **倍音分析**: 左上に500px幅で配置
+- **周波数推移プロット**: 右上に280×120pxで配置
+
+これらのデフォルト設定は、800×400pxの標準サイズだけでなく、1800×1000pxなどの大きなキャンバスでも正しく機能します。**ほとんどのユースケースでは、カスタムレイアウト設定は不要です。**
+
+```typescript
+// デフォルトレイアウトを使用する場合（推奨）
+const oscilloscope = new Oscilloscope(
+  canvas,
+  previousWaveformCanvas,
+  currentWaveformCanvas,
+  similarityPlotCanvas,
+  frameBufferCanvas
+  // overlaysLayoutパラメータは省略 - デフォルトが使用されます
+);
+```
+
+#### カスタムレイアウトの設定（必要な場合のみ）
+
+特別な要件がある場合のみ、オーバーレイの位置とサイズをカスタマイズできます：
 
 ```typescript
 import { Oscilloscope, OverlaysLayoutConfig } from 'cat-oscilloscope';
@@ -402,6 +427,25 @@ await oscilloscope.start();
 
 ## レイアウト設計ガイドライン
 
+### ⚠️ 重要: Canvas要素のwidth/height属性の設定
+
+**Canvas要素には必ず`width`および`height`属性を設定してください。** CSSでサイズを指定するだけでは不十分です。
+
+```html
+<!-- ❌ 間違い: CSS のみでサイズ指定 -->
+<canvas id="oscilloscope" style="width: 1800px; height: 1000px;"></canvas>
+
+<!-- ✅ 正しい: width/height 属性を設定 -->
+<canvas id="oscilloscope" width="1800" height="1000"></canvas>
+```
+
+**理由:**
+- Canvas要素は内部解像度（`canvas.width`/`canvas.height`）と表示サイズ（CSS）が別々に管理されます
+- 属性未設定の場合、内部解像度はデフォルトの**300x150px**になります
+- CSSで引き伸ばされた結果、オーバーレイの配置が崩れ、オレンジ色の周波数推移フレームが画面全体に広がるなどの問題が発生します
+
+cat-oscilloscopeは、canvas要素がデフォルト解像度（300x150）の場合、コンソールに警告を出力します。
+
 ### 推奨キャンバスサイズ
 
 cat-oscilloscopeは、以下のキャンバスサイズで最適化されています：
@@ -409,6 +453,8 @@ cat-oscilloscopeは、以下のキャンバスサイズで最適化されてい�
 - **メインキャンバス**: `800x400px` または `800x350px`
   - 波形とグリッド表示に最適なアスペクト比
   - デバッグオーバーレイを無効にすれば、より小さなサイズでも使用可能
+- **大型キャンバス**: `1800x1000px`などの大きなサイズも正しく動作します
+  - デフォルトのオーバーレイレイアウトが自動的に適応します
 
 ### 表示要素の制御
 

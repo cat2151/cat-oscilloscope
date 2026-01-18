@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Dimension Warning Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    h1 {
+      color: #ff5555;
+      font-size: 20px;
+    }
+    .test-case {
+      margin: 20px 0;
+      padding: 15px;
+      background: #333;
+      border-radius: 4px;
+    }
+    .test-case h3 {
+      color: #00ff00;
+      margin-top: 0;
+    }
+    canvas {
+      border: 2px solid #666;
+      display: block;
+      margin: 10px 0;
+    }
+    .warning {
+      color: #ffaa00;
+      background: #443300;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .success {
+      color: #00ff00;
+      background: #003300;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐛 Canvas Dimension Warning Test - Reproducing wavlpf Issue</h1>
+  
+  <div class="warning">
+    <strong>⚠️ このテストでは意図的に間違った設定をしています</strong><br>
+    ブラウザのコンソールを開いて警告メッセージを確認してください。
+  </div>
+
+  <div class="test-case">
+    <h3>Test 1: 間違った設定（wavlpfと同じ問題を再現）</h3>
+    <p>Canvas要素にwidth/height属性なし、CSSのみでサイズ指定</p>
+    <canvas id="bad-canvas" style="width: 1800px; height: 1000px; max-width: 100%; max-height: 400px;"></canvas>
+    <p><strong>期待される結果:</strong> コンソールに警告が表示され、オレンジ色の枠が異常に大きく表示される</p>
+    <p id="bad-canvas-info"></p>
+  </div>
+
+  <div class="test-case">
+    <h3>Test 2: 正しい設定</h3>
+    <p>Canvas要素にwidth/height属性を設定</p>
+    <canvas id="good-canvas" width="1800" height="1000" style="width: 1800px; height: 1000px; max-width: 100%; max-height: 400px;"></canvas>
+    <p><strong>期待される結果:</strong> 警告なし、オレンジ色の枠が右上の小さな領域に正しく表示される</p>
+    <p id="good-canvas-info"></p>
+  </div>
+
+  <div class="success">
+    <strong>✅ 解決策:</strong> Canvas要素には必ずwidth/height属性を設定してください。
+    <pre>&lt;canvas id="oscilloscope" width="1800" height="1000"&gt;&lt;/canvas&gt;</pre>
+  </div>
+
+  <script type="module">
+    import { Oscilloscope, BufferSource } from '../src/index.ts';
+
+    // Intercept console.warn to display warnings on the page
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      
+      // Display warning on the page
+      const warningText = args.join(' ');
+      if (warningText.includes('Canvas element is using default dimensions')) {
+        const badInfo = document.getElementById('bad-canvas-info');
+        badInfo.innerHTML = '<span style="color: #ff5555;">❌ 警告が検出されました: ' + warningText + '</span>';
+      }
+    };
+
+    // Test 1: Bad canvas (no width/height attributes)
+    const badCanvas = document.getElementById('bad-canvas');
+    const badInfo = document.getElementById('bad-canvas-info');
+    
+    try {
+      badInfo.textContent = `Canvas内部解像度: ${badCanvas.width}x${badCanvas.height} (デフォルト)`;
+      
+      // Hidden canvases for the oscilloscope
+      const prevCanvas1 = document.createElement('canvas');
+      const currCanvas1 = document.createElement('canvas');
+      const simCanvas1 = document.createElement('canvas');
+      const frameCanvas1 = document.createElement('canvas');
+      prevCanvas1.width = currCanvas1.width = simCanvas1.width = 250;
+      prevCanvas1.height = currCanvas1.height = simCanvas1.height = 120;
+      frameCanvas1.width = 800;
+      frameCanvas1.height = 120;
+      
+      const osc1 = new Oscilloscope(badCanvas, prevCanvas1, currCanvas1, simCanvas1, frameCanvas1);
+      
+      // Generate test signal
+      const sampleRate = 44100;
+      const audioData = new Float32Array(sampleRate);
+      for (let i = 0; i < audioData.length; i++) {
+        audioData[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate);
+      }
+      const buffer1 = new BufferSource(audioData, sampleRate, { loop: true });
+      
+      osc1.setDebugOverlaysEnabled(true);
+      await osc1.startFromBuffer(buffer1);
+    } catch (error) {
+      badInfo.innerHTML += '<br><span style="color: #ff5555;">Error: ' + error.message + '</span>';
+    }
+
+    // Test 2: Good canvas (with width/height attributes)
+    const goodCanvas = document.getElementById('good-canvas');
+    const goodInfo = document.getElementById('good-canvas-info');
+    
+    try {
+      goodInfo.textContent = `Canvas内部解像度: ${goodCanvas.width}x${goodCanvas.height} (正しく設定されています)`;
+      
+      // Hidden canvases for the oscilloscope
+      const prevCanvas2 = document.createElement('canvas');
+      const currCanvas2 = document.createElement('canvas');
+      const simCanvas2 = document.createElement('canvas');
+      const frameCanvas2 = document.createElement('canvas');
+      prevCanvas2.width = currCanvas2.width = simCanvas2.width = 250;
+      prevCanvas2.height = currCanvas2.height = simCanvas2.height = 120;
+      frameCanvas2.width = 800;
+      frameCanvas2.height = 120;
+      
+      const osc2 = new Oscilloscope(goodCanvas, prevCanvas2, currCanvas2, simCanvas2, frameCanvas2);
+      
+      // Generate test signal
+      const sampleRate = 44100;
+      const audioData = new Float32Array(sampleRate);
+      for (let i = 0; i < audioData.length; i++) {
+        audioData[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate);
+      }
+      const buffer2 = new BufferSource(audioData, sampleRate, { loop: true });
+      
+      osc2.setDebugOverlaysEnabled(true);
+      await osc2.startFromBuffer(buffer2);
+      
+      goodInfo.innerHTML += '<br><span style="color: #00ff00;">✅ 警告なし。正しく動作しています。</span>';
+    } catch (error) {
+      goodInfo.innerHTML += '<br><span style="color: #ff5555;">Error: ' + error.message + '</span>';
+    }
+  </script>
+</body>
+</html>

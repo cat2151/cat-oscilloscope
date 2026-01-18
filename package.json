@@ -29,7 +29,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "screenshot:local": "node scripts/screenshot-local.js",
+    "screenshot:local:all": "node scripts/screenshot-local.js test-pages/test-canvas-dimension-warning.html screenshots/dimension-warning.png"
   },
   "devDependencies": {
     "@vitest/ui": "^4.0.16",
