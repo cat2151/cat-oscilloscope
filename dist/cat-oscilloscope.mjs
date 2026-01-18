@@ -1,28 +1,28 @@
 var L = Object.defineProperty;
 var k = (f, t, e) => t in f ? L(f, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : f[t] = e;
-var n = (f, t, e) => k(f, typeof t != "symbol" ? t + "" : t, e);
-function O(f) {
+var r = (f, t, e) => k(f, typeof t != "symbol" ? t + "" : t, e);
+function z(f) {
   return Math.pow(10, f / 20);
 }
-function G(f) {
+function O(f) {
   return f <= 0 ? -1 / 0 : 20 * Math.log10(f);
 }
 function P(f) {
   if (f <= 0 || !isFinite(f))
     return null;
-  const e = 440 * Math.pow(2, -4.75), i = 12 * Math.log2(f / e), r = Math.round(i), a = Math.round((i - r) * 100), o = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], s = Math.floor(r / 12);
+  const e = 440 * Math.pow(2, -4.75), i = 12 * Math.log2(f / e), n = Math.round(i), a = Math.round((i - n) * 100), o = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], s = Math.floor(n / 12);
   return {
-    noteName: `${o[(r % 12 + 12) % 12]}${s}`,
+    noteName: `${o[(n % 12 + 12) % 12]}${s}`,
     cents: a
   };
 }
-const N = -48;
-function D(f) {
-  const t = f.numberOfChannels, e = f.sampleRate, i = f.length, r = [];
+const D = -48;
+function G(f) {
+  const t = f.numberOfChannels, e = f.sampleRate, i = f.length, n = [];
   let a = 0;
   for (let c = 0; c < t; c++) {
     const d = f.getChannelData(c);
-    r.push(d);
+    n.push(d);
     for (let l = 0; l < i; l++) {
       const m = Math.abs(d[l]);
       m > a && (a = m);
@@ -30,12 +30,12 @@ function D(f) {
   }
   if (a === 0)
     return f;
-  const o = a * Math.pow(10, N / 20);
+  const o = a * Math.pow(10, D / 20);
   let s = i;
   for (let c = 0; c < i; c++) {
     let d = !0;
     for (let l = 0; l < t; l++)
-      if (Math.abs(r[l][c]) > o) {
+      if (Math.abs(n[l][c]) > o) {
         d = !1;
         break;
       }
@@ -50,7 +50,7 @@ function D(f) {
   for (let c = i - 1; c >= s; c--) {
     let d = !0;
     for (let l = 0; l < t; l++)
-      if (Math.abs(r[l][c]) > o) {
+      if (Math.abs(n[l][c]) > o) {
         d = !1;
         break;
       }
@@ -67,24 +67,24 @@ function D(f) {
     sampleRate: e
   });
   for (let c = 0; c < t; c++) {
-    const d = r[c], l = u.getChannelData(c);
+    const d = n[c], l = u.getChannelData(c);
     for (let m = 0; m < y; m++)
       l[m] = d[s + m];
   }
   return u;
 }
-class z {
+class N {
   constructor() {
-    n(this, "audioContext", null);
-    n(this, "analyser", null);
-    n(this, "mediaStream", null);
-    n(this, "audioBufferSource", null);
-    n(this, "bufferSource", null);
-    n(this, "dataArray", null);
-    n(this, "frequencyData", null);
-    n(this, "frameBufferHistory", []);
+    r(this, "audioContext", null);
+    r(this, "analyser", null);
+    r(this, "mediaStream", null);
+    r(this, "audioBufferSource", null);
+    r(this, "bufferSource", null);
+    r(this, "dataArray", null);
+    r(this, "frequencyData", null);
+    r(this, "frameBufferHistory", []);
     // History of frame buffers for extended FFT
-    n(this, "MAX_FRAME_HISTORY", 16);
+    r(this, "MAX_FRAME_HISTORY", 16);
   }
   // Support up to 16x buffer size
   /**
@@ -117,7 +117,7 @@ class z {
       const e = await t.arrayBuffer();
       this.audioContext && this.audioContext.state !== "closed" && await this.audioContext.close(), this.audioContext = new AudioContext();
       let i = await this.audioContext.decodeAudioData(e);
-      i = D(i), this.initializeAnalyser(), this.audioBufferSource = this.audioContext.createBufferSource(), this.audioBufferSource.buffer = i, this.audioBufferSource.loop = !0, this.audioBufferSource.connect(this.analyser), this.analyser.connect(this.audioContext.destination), this.audioBufferSource.start(0);
+      i = G(i), this.initializeAnalyser(), this.audioBufferSource = this.audioContext.createBufferSource(), this.audioBufferSource.buffer = i, this.audioBufferSource.loop = !0, this.audioBufferSource.connect(this.analyser), this.analyser.connect(this.audioContext.destination), this.audioBufferSource.start(0);
     } catch (e) {
       throw console.error("Error loading audio file:", e), e;
     }
@@ -188,11 +188,11 @@ class z {
       return this.dataArray;
     if (!this.dataArray || this.frameBufferHistory.length < t)
       return null;
-    const e = this.frameBufferHistory.slice(-t), i = e.reduce((o, s) => o + s.length, 0), r = new Float32Array(i);
+    const e = this.frameBufferHistory.slice(-t), i = e.reduce((o, s) => o + s.length, 0), n = new Float32Array(i);
     let a = 0;
     for (const o of e)
-      r.set(o, a), a += o.length;
-    return r;
+      n.set(o, a), a += o.length;
+    return n;
   }
   /**
    * Clear frame buffer history
@@ -237,10 +237,10 @@ class z {
 }
 class q {
   constructor() {
-    n(this, "autoGainEnabled", !0);
-    n(this, "currentGain", 1);
-    n(this, "noiseGateEnabled", !0);
-    n(this, "noiseGateThreshold", O(-60));
+    r(this, "autoGainEnabled", !0);
+    r(this, "currentGain", 1);
+    r(this, "noiseGateEnabled", !0);
+    r(this, "noiseGateThreshold", z(-60));
   }
   // Default threshold (-60dB)
   setAutoGain(t) {
@@ -267,15 +267,15 @@ class q {
 }
 class B {
   constructor() {
-    n(this, "frequencyEstimationMethod", "fft");
-    n(this, "estimatedFrequency", 0);
-    n(this, "MIN_FREQUENCY_HZ", 20);
+    r(this, "frequencyEstimationMethod", "fft");
+    r(this, "estimatedFrequency", 0);
+    r(this, "MIN_FREQUENCY_HZ", 20);
     // Minimum detectable frequency (Hz)
-    n(this, "MAX_FREQUENCY_HZ", 5e3);
+    r(this, "MAX_FREQUENCY_HZ", 5e3);
     // Maximum detectable frequency (Hz)
-    n(this, "bufferSizeMultiplier", 16);
+    r(this, "bufferSizeMultiplier", 16);
     // Buffer size multiplier for extended FFT
-    n(this, "frequencyPlotHistory", []);
+    r(this, "frequencyPlotHistory", []);
   }
   // プロット用の推定周波数の履歴
   /**
@@ -338,25 +338,27 @@ const K = {
 class Y {
   // 周波数範囲のパディング比率 (10%)
   constructor(t, e) {
-    n(this, "canvas");
-    n(this, "ctx");
-    n(this, "fftDisplayEnabled", !0);
-    n(this, "debugOverlaysEnabled", !0);
+    r(this, "canvas");
+    r(this, "ctx");
+    r(this, "fftDisplayEnabled", !0);
+    r(this, "debugOverlaysEnabled", !0);
     // Control debug overlays (harmonic analysis, frequency plot)
-    n(this, "overlaysLayout");
+    r(this, "overlaysLayout");
     // Layout configuration for overlays
-    n(this, "FFT_OVERLAY_HEIGHT_RATIO", 0.9);
+    r(this, "FFT_OVERLAY_HEIGHT_RATIO", 0.9);
     // Spectrum bar height ratio within overlay (90%)
-    n(this, "FFT_MIN_BAR_WIDTH", 1);
+    r(this, "FFT_MIN_BAR_WIDTH", 1);
     // Minimum bar width in pixels
-    n(this, "FREQ_PLOT_MIN_RANGE_PADDING_HZ", 50);
+    r(this, "FREQ_PLOT_MIN_RANGE_PADDING_HZ", 50);
     // 周波数範囲の最小パディング (Hz)
-    n(this, "FREQ_PLOT_RANGE_PADDING_RATIO", 0.1);
+    r(this, "FREQ_PLOT_RANGE_PADDING_RATIO", 0.1);
     this.canvas = t;
     const i = t.getContext("2d");
     if (!i)
       throw new Error("Could not get 2D context");
-    this.ctx = i, this.overlaysLayout = e || K;
+    this.ctx = i, this.overlaysLayout = e || K, t.width === 300 && t.height === 150 && console.warn(
+      'Canvas element is using default dimensions (300x150). Set explicit width and height attributes on the canvas element to match desired resolution. Example: <canvas id="oscilloscope" width="1800" height="1000"></canvas>'
+    );
   }
   /**
    * Clear canvas and draw grid with measurement labels
@@ -375,9 +377,9 @@ class Y {
    */
   drawGrid(t, e, i) {
     this.ctx.strokeStyle = "#222222", this.ctx.lineWidth = 1, this.ctx.beginPath();
-    const r = 5;
-    for (let o = 0; o <= r; o++) {
-      const s = this.canvas.height / r * o;
+    const n = 5;
+    for (let o = 0; o <= n; o++) {
+      const s = this.canvas.height / n * o;
       this.ctx.moveTo(0, s), this.ctx.lineTo(this.canvas.width, s);
     }
     const a = 10;
@@ -395,7 +397,7 @@ class Y {
    */
   drawGridLabels(t, e, i) {
     this.ctx.save(), this.ctx.font = "11px monospace", this.ctx.fillStyle = "#666666";
-    const r = e / t * 1e3, a = 10, o = r / a;
+    const n = e / t * 1e3, a = 10, o = n / a;
     for (let u = 0; u <= a; u++) {
       const c = this.canvas.width / a * u, d = o * u;
       let l;
@@ -410,7 +412,7 @@ class Y {
       if (l === 0)
         m = "0dB*";
       else {
-        const g = G(Math.abs(l)), E = l > 0 ? "+" : "-", w = Math.abs(g);
+        const g = O(Math.abs(l)), E = l > 0 ? "+" : "-", w = Math.abs(g);
         w >= 100 ? m = `${E}${w.toFixed(0)}dB` : m = `${E}${w.toFixed(1)}dB`;
       }
       this.ctx.fillText(m, 3, c + 10);
@@ -420,11 +422,11 @@ class Y {
   /**
    * Draw waveform
    */
-  drawWaveform(t, e, i, r) {
+  drawWaveform(t, e, i, n) {
     const a = i - e;
     if (a <= 0) return;
     this.ctx.strokeStyle = "#00ff00", this.ctx.lineWidth = 2, this.ctx.beginPath();
-    const o = this.canvas.width / a, s = this.canvas.height / 2, y = this.canvas.height / 2 * r;
+    const o = this.canvas.width / a, s = this.canvas.height / 2, y = this.canvas.height / 2 * n;
     for (let u = 0; u < a; u++) {
       const c = e + u, d = t[c], l = s - d * y, m = Math.min(this.canvas.height, Math.max(0, l)), g = u * o;
       u === 0 ? this.ctx.moveTo(g, m) : this.ctx.lineTo(g, m);
@@ -434,10 +436,10 @@ class Y {
   /**
    * Draw FFT spectrum overlay (position and size configurable via overlaysLayout)
    */
-  drawFFTOverlay(t, e, i, r, a) {
+  drawFFTOverlay(t, e, i, n, a) {
     if (!this.fftDisplayEnabled)
       return;
-    const o = i / r, s = Math.floor(this.canvas.width * 0.35), h = Math.floor(this.canvas.height * 0.35), y = 10, u = this.canvas.height - h - 10, { x: c, y: d, width: l, height: m } = this.calculateOverlayDimensions(
+    const o = i / n, s = Math.floor(this.canvas.width * 0.35), h = Math.floor(this.canvas.height * 0.35), y = 10, u = this.canvas.height - h - 10, { x: c, y: d, width: l, height: m } = this.calculateOverlayDimensions(
       this.overlaysLayout.fftOverlay,
       y,
       u,
@@ -468,7 +470,7 @@ class Y {
    * Displays debugging information about frequency estimation when FFT method is used
    * Position and size configurable via overlaysLayout
    */
-  drawHarmonicAnalysis(t, e, i, r, a, o, s) {
+  drawHarmonicAnalysis(t, e, i, n, a, o, s) {
     if (!this.debugOverlaysEnabled || !this.fftDisplayEnabled || t === void 0 && !e && !i && !o)
       return;
     const h = 16, u = (1 + // Title
@@ -491,7 +493,7 @@ class Y {
     }
     if (e && s) {
       g += h, this.ctx.fillStyle = "#ff00ff", this.ctx.font = "11px monospace";
-      const E = e.map((v, T) => `${T + 1}x:${v.toFixed(2)}`).join(" "), w = r !== void 0 ? ` (重み付け: ${r.toFixed(1)})` : "";
+      const E = e.map((v, T) => `${T + 1}x:${v.toFixed(2)}`).join(" "), w = n !== void 0 ? ` (重み付け: ${n.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補1 (${s.toFixed(1)}Hz) 倍音: ${E}${w}`,
         c + 5,
@@ -528,15 +530,15 @@ class Y {
   drawFrequencyPlot(t, e, i) {
     if (!this.debugOverlaysEnabled || !t || t.length === 0)
       return;
-    const { x: r, y: a, width: o, height: s } = this.calculateOverlayDimensions(
+    const { x: n, y: a, width: o, height: s } = this.calculateOverlayDimensions(
       this.overlaysLayout.frequencyPlot,
       this.canvas.width - 280 - 10,
       10,
       280,
       120
     );
-    this.ctx.save(), this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)", this.ctx.fillRect(r, a, o, s), this.ctx.strokeStyle = "#ffaa00", this.ctx.lineWidth = 2, this.ctx.strokeRect(r, a, o, s), this.ctx.fillStyle = "#ffaa00", this.ctx.font = "bold 12px Arial", this.ctx.fillText(`周波数推移 (${t.length}frame)`, r + 5, a + 15);
-    const h = r + 35, y = a + 25, u = o - 45, c = s - 45, d = t.filter((x) => x > 0);
+    this.ctx.save(), this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)", this.ctx.fillRect(n, a, o, s), this.ctx.strokeStyle = "#ffaa00", this.ctx.lineWidth = 2, this.ctx.strokeRect(n, a, o, s), this.ctx.fillStyle = "#ffaa00", this.ctx.font = "bold 12px Arial", this.ctx.fillText(`周波数推移 (${t.length}frame)`, n + 5, a + 15);
+    const h = n + 35, y = a + 25, u = o - 45, c = s - 45, d = t.filter((x) => x > 0);
     if (d.length === 0) {
       this.ctx.restore();
       return;
@@ -615,7 +617,7 @@ class Y {
    * @param displayStartIndex - Start index of the displayed region
    * @param displayEndIndex - End index of the displayed region
    */
-  drawPhaseMarkers(t, e, i, r, a, o) {
+  drawPhaseMarkers(t, e, i, n, a, o) {
     if (a === void 0 || o === void 0)
       return;
     const s = o - a;
@@ -629,7 +631,7 @@ class Y {
       const l = d / s * this.canvas.width;
       this.ctx.strokeStyle = u, this.ctx.lineWidth = c, this.ctx.beginPath(), this.ctx.moveTo(l, 0), this.ctx.lineTo(l, this.canvas.height), this.ctx.stroke();
     };
-    i !== void 0 && h(i, "#ff8800", 2), r !== void 0 && h(r, "#ff8800", 2), t !== void 0 && h(t, "#ff0000", 2), e !== void 0 && h(e, "#ff0000", 2), this.ctx.restore();
+    i !== void 0 && h(i, "#ff8800", 2), n !== void 0 && h(n, "#ff8800", 2), t !== void 0 && h(t, "#ff0000", 2), e !== void 0 && h(e, "#ff0000", 2), this.ctx.restore();
   }
   // Getters and setters
   setFFTDisplay(t) {
@@ -672,13 +674,13 @@ class Y {
   /**
    * Helper method to calculate overlay dimensions based on layout config
    */
-  calculateOverlayDimensions(t, e, i, r, a) {
+  calculateOverlayDimensions(t, e, i, n, a) {
     if (!t)
-      return { x: e, y: i, width: r, height: a };
-    let o = e, s = i, h = r, y = a;
+      return { x: e, y: i, width: n, height: a };
+    let o = e, s = i, h = n, y = a;
     if (t.position.x !== void 0)
       if (typeof t.position.x == "string" && t.position.x.startsWith("right-")) {
-        const u = parseInt(t.position.x.substring(6), 10), c = typeof t.size.width == "string" && t.size.width.endsWith("%") ? A(t.size.width, this.canvas.width) : typeof t.size.width == "number" ? t.size.width : r;
+        const u = parseInt(t.position.x.substring(6), 10), c = typeof t.size.width == "string" && t.size.width.endsWith("%") ? A(t.size.width, this.canvas.width) : typeof t.size.width == "number" ? t.size.width : n;
         o = this.canvas.width - c - u;
       } else
         o = A(t.position.x, this.canvas.width);
@@ -687,7 +689,8 @@ class Y {
 }
 class $ {
   constructor() {
-    n(this, "usePeakMode", !1);
+    r(this, "usePeakMode", !1);
+    r(this, "zeroCrossMode", "hysteresis");
   }
   /**
    * Set whether to use peak mode instead of zero-crossing mode
@@ -702,6 +705,19 @@ class $ {
     return this.usePeakMode;
   }
   /**
+   * Set zero-cross detection mode
+   * @param mode - Zero-cross detection algorithm to use
+   */
+  setZeroCrossMode(t) {
+    this.zeroCrossMode = t;
+  }
+  /**
+   * Get current zero-cross detection mode
+   */
+  getZeroCrossMode() {
+    return this.zeroCrossMode;
+  }
+  /**
    * Reset state (e.g., when stopping)
    */
   reset() {
@@ -709,8 +725,8 @@ class $ {
 }
 class U {
   constructor() {
-    n(this, "previousWaveform", null);
-    n(this, "lastSimilarity", 0);
+    r(this, "previousWaveform", null);
+    r(this, "lastSimilarity", 0);
   }
   /**
    * Get the last calculated similarity score
@@ -739,23 +755,23 @@ class U {
 }
 class X {
   // Default scaling factor when peak is too small
-  constructor(t, e, i, r) {
-    n(this, "previousCanvas");
-    n(this, "currentCanvas");
-    n(this, "similarityCanvas");
-    n(this, "bufferCanvas");
-    n(this, "previousCtx");
-    n(this, "currentCtx");
-    n(this, "similarityCtx");
-    n(this, "bufferCtx");
+  constructor(t, e, i, n) {
+    r(this, "previousCanvas");
+    r(this, "currentCanvas");
+    r(this, "similarityCanvas");
+    r(this, "bufferCanvas");
+    r(this, "previousCtx");
+    r(this, "currentCtx");
+    r(this, "similarityCtx");
+    r(this, "bufferCtx");
     // Auto-scaling constants
-    n(this, "TARGET_FILL_RATIO", 0.9);
+    r(this, "TARGET_FILL_RATIO", 0.9);
     // Target 90% of distance from center to edge (canvas half-height) for auto-scaled waveforms
-    n(this, "MIN_PEAK_THRESHOLD", 1e-3);
+    r(this, "MIN_PEAK_THRESHOLD", 1e-3);
     // Minimum peak to trigger auto-scaling (below this uses default)
-    n(this, "DEFAULT_AMPLITUDE_RATIO", 0.4);
-    this.previousCanvas = t, this.currentCanvas = e, this.similarityCanvas = i, this.bufferCanvas = r;
-    const a = t.getContext("2d"), o = e.getContext("2d"), s = i.getContext("2d"), h = r.getContext("2d");
+    r(this, "DEFAULT_AMPLITUDE_RATIO", 0.4);
+    this.previousCanvas = t, this.currentCanvas = e, this.similarityCanvas = i, this.bufferCanvas = n;
+    const a = t.getContext("2d"), o = e.getContext("2d"), s = i.getContext("2d"), h = n.getContext("2d");
     if (!a || !o || !s || !h)
       throw new Error("Could not get 2D context for comparison canvases");
     this.previousCtx = a, this.currentCtx = o, this.similarityCtx = s, this.bufferCtx = h, this.clearAllCanvases();
@@ -777,13 +793,13 @@ class X {
    * Used for auto-scaling waveforms to fill the vertical space
    */
   findPeakAmplitude(t, e, i) {
-    let r = 0;
+    let n = 0;
     const a = Math.max(0, e), o = Math.min(t.length, i);
     for (let s = a; s < o; s++) {
       const h = Math.abs(t[s]);
-      h > r && (r = h);
+      h > n && (n = h);
     }
-    return r;
+    return n;
   }
   /**
    * Draw a waveform on a canvas with auto-scaling
@@ -791,10 +807,10 @@ class X {
    * from the vertical center line to the top/bottom edge (i.e. 90% of half the height).
    * For example, if peak amplitude is 0.01, it will be scaled 90x relative to that center-to-edge range.
    */
-  drawWaveform(t, e, i, r, a, o, s) {
+  drawWaveform(t, e, i, n, a, o, s) {
     const h = o - a;
     if (h <= 0) return;
-    const y = this.findPeakAmplitude(r, a, o);
+    const y = this.findPeakAmplitude(n, a, o);
     t.strokeStyle = s, t.lineWidth = 1.5, t.beginPath();
     const u = e / h, c = i / 2;
     let d;
@@ -805,8 +821,8 @@ class X {
       d = i * this.DEFAULT_AMPLITUDE_RATIO;
     for (let l = 0; l < h; l++) {
       const m = a + l;
-      if (m >= r.length) break;
-      const g = r[m], E = c - g * d, w = Math.min(i, Math.max(0, E)), v = l * u;
+      if (m >= n.length) break;
+      const g = n[m], E = c - g * d, w = Math.min(i, Math.max(0, E)), v = l * u;
       l === 0 ? t.moveTo(v, w) : t.lineTo(v, w);
     }
     t.stroke();
@@ -822,8 +838,8 @@ class X {
    */
   drawSimilarityText(t) {
     this.currentCtx.fillStyle = "#00aaff", this.currentCtx.font = "bold 14px Arial";
-    const e = `Similarity: ${t.toFixed(3)}`, i = this.currentCtx.measureText(e).width, r = (this.currentCanvas.width - i) / 2;
-    this.currentCtx.fillText(e, r, 20);
+    const e = `Similarity: ${t.toFixed(3)}`, i = this.currentCtx.measureText(e).width, n = (this.currentCanvas.width - i) / 2;
+    this.currentCtx.fillText(e, n, 20);
   }
   /**
    * Draw similarity history plot on similarity canvas
@@ -835,9 +851,9 @@ class X {
   drawSimilarityPlot(t) {
     if (!t || t.length === 0)
       return;
-    const e = this.similarityCtx, i = this.similarityCanvas.width, r = this.similarityCanvas.height;
-    e.save(), e.fillStyle = "#000000", e.fillRect(0, 0, i, r), e.strokeStyle = "#00aaff", e.lineWidth = 2, e.strokeRect(0, 0, i, r), e.fillStyle = "#00aaff", e.font = "bold 12px Arial", e.fillText("類似度推移 (Similarity)", 5, 15);
-    const a = 40, o = 25, s = i - 50, h = r - 35, y = -1, u = 1;
+    const e = this.similarityCtx, i = this.similarityCanvas.width, n = this.similarityCanvas.height;
+    e.save(), e.fillStyle = "#000000", e.fillRect(0, 0, i, n), e.strokeStyle = "#00aaff", e.lineWidth = 2, e.strokeRect(0, 0, i, n), e.fillStyle = "#00aaff", e.font = "bold 12px Arial", e.fillText("類似度推移 (Similarity)", 5, 15);
+    const a = 40, o = 25, s = i - 50, h = n - 35, y = -1, u = 1;
     e.strokeStyle = "#333333", e.lineWidth = 1, e.beginPath();
     for (let l = 0; l <= 4; l++) {
       const m = o + h / 4 * l;
@@ -865,9 +881,9 @@ class X {
   /**
    * Draw vertical position markers
    */
-  drawPositionMarkers(t, e, i, r, a, o) {
+  drawPositionMarkers(t, e, i, n, a, o) {
     if (o <= 0) return;
-    const s = r / o * e, h = a / o * e;
+    const s = n / o * e, h = a / o * e;
     t.strokeStyle = "#ff0000", t.lineWidth = 2, t.beginPath(), t.moveTo(s, 0), t.lineTo(s, i), t.stroke(), t.beginPath(), t.moveTo(h, 0), t.lineTo(h, i), t.stroke(), t.fillStyle = "#ff0000", t.font = "10px Arial", t.fillText("S", s + 2, 12), t.fillText("E", h + 2, 12);
   }
   /**
@@ -880,7 +896,7 @@ class X {
    * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
    * @param similarityHistory - Array of similarity values over time for history plot
    */
-  updatePanels(t, e, i, r, a, o, s = []) {
+  updatePanels(t, e, i, n, a, o, s = []) {
     this.clearAllCanvases(), t && (this.drawCenterLine(this.previousCtx, this.previousCanvas.width, this.previousCanvas.height), this.drawWaveform(
       this.previousCtx,
       this.previousCanvas.width,
@@ -889,13 +905,13 @@ class X {
       0,
       t.length,
       "#ffaa00"
-    )), this.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height), r - i > 0 && this.drawWaveform(
+    )), this.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height), n - i > 0 && this.drawWaveform(
       this.currentCtx,
       this.currentCanvas.width,
       this.currentCanvas.height,
       e,
       i,
-      r,
+      n,
       "#00ff00"
     ), t && this.drawSimilarityText(o), s.length > 0 && this.drawSimilarityPlot(s), this.drawCenterLine(this.bufferCtx, this.bufferCanvas.width, this.bufferCanvas.height), this.drawWaveform(
       this.bufferCtx,
@@ -910,7 +926,7 @@ class X {
       this.bufferCanvas.width,
       this.bufferCanvas.height,
       i,
-      r,
+      n,
       a.length
     );
   }
@@ -922,15 +938,16 @@ class X {
   }
 }
 const M = class M {
-  constructor(t, e, i, r) {
-    n(this, "audioManager");
-    n(this, "gainController");
-    n(this, "frequencyEstimator");
-    n(this, "waveformSearcher");
-    n(this, "wasmProcessor", null);
-    n(this, "isInitialized", !1);
-    n(this, "cachedBasePath", null);
-    this.audioManager = t, this.gainController = e, this.frequencyEstimator = i, this.waveformSearcher = r;
+  constructor(t, e, i, n, a) {
+    r(this, "audioManager");
+    r(this, "gainController");
+    r(this, "frequencyEstimator");
+    r(this, "waveformSearcher");
+    r(this, "zeroCrossDetector");
+    r(this, "wasmProcessor", null);
+    r(this, "isInitialized", !1);
+    r(this, "cachedBasePath", null);
+    this.audioManager = t, this.gainController = e, this.frequencyEstimator = i, this.waveformSearcher = n, this.zeroCrossDetector = a;
   }
   /**
    * Initialize the WASM module
@@ -995,8 +1012,8 @@ const M = class M {
       } catch {
       }
     if (t || (t = this.getBasePathFromScripts()), !t && window.location.pathname && window.location.pathname !== "/") {
-      const r = window.location.pathname.split("/").filter((a) => a.length > 0);
-      r.length > 0 && (t = `/${r[0]}/`);
+      const n = window.location.pathname.split("/").filter((a) => a.length > 0);
+      n.length > 0 && (t = `/${n[0]}/`);
     }
     return t || (t = "/"), t.endsWith("/") || (t += "/"), this.cachedBasePath = t, t;
   }
@@ -1017,8 +1034,8 @@ const M = class M {
             if (s >= 0)
               return s === 0 ? "/" : a.substring(0, s) + "/";
           }
-        } catch (r) {
-          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && console.debug("Failed to parse script URL:", i, r);
+        } catch (n) {
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && console.debug("Failed to parse script URL:", i, n);
           continue;
         }
     }
@@ -1028,7 +1045,7 @@ const M = class M {
    * Sync TypeScript configuration to WASM processor
    */
   syncConfigToWasm() {
-    this.wasmProcessor && (this.wasmProcessor.setAutoGain(this.gainController.getAutoGainEnabled()), this.wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled()), this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold()), this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod()), this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier()));
+    this.wasmProcessor && (this.wasmProcessor.setAutoGain(this.gainController.getAutoGainEnabled()), this.wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled()), this.wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold()), this.wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod()), this.wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier()), this.wasmProcessor.setZeroCrossMode(this.zeroCrossDetector.getZeroCrossMode()));
   }
   /**
    * Sync WASM results back to TypeScript objects
@@ -1054,13 +1071,13 @@ const M = class M {
     const e = this.audioManager.getTimeDomainData();
     if (!e)
       return null;
-    const i = this.audioManager.getSampleRate(), r = this.audioManager.getFFTSize(), o = this.frequencyEstimator.getFrequencyEstimationMethod() === "fft" || t ? this.audioManager.getFrequencyData() : null;
+    const i = this.audioManager.getSampleRate(), n = this.audioManager.getFFTSize(), o = this.frequencyEstimator.getFrequencyEstimationMethod() === "fft" || t ? this.audioManager.getFrequencyData() : null;
     this.syncConfigToWasm();
     const s = this.wasmProcessor.processFrame(
       e,
       o,
       i,
-      r,
+      n,
       t
     );
     if (!s)
@@ -1100,7 +1117,7 @@ const M = class M {
   }
 };
 // Asset directory patterns used for base path detection
-n(M, "ASSET_PATTERNS", ["/assets/", "/js/", "/dist/"]);
+r(M, "ASSET_PATTERNS", ["/assets/", "/js/", "/dist/"]);
 let R = M;
 class Z {
   // Log FPS every 60 frames (approx. 1 second at 60fps)
@@ -1113,35 +1130,36 @@ class Z {
    * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
    * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
    */
-  constructor(t, e, i, r, a, o) {
-    n(this, "audioManager");
-    n(this, "gainController");
-    n(this, "frequencyEstimator");
-    n(this, "renderer");
-    n(this, "zeroCrossDetector");
-    n(this, "waveformSearcher");
-    n(this, "comparisonRenderer");
-    n(this, "dataProcessor");
-    n(this, "animationId", null);
-    n(this, "isRunning", !1);
-    n(this, "isPaused", !1);
+  constructor(t, e, i, n, a, o) {
+    r(this, "audioManager");
+    r(this, "gainController");
+    r(this, "frequencyEstimator");
+    r(this, "renderer");
+    r(this, "zeroCrossDetector");
+    r(this, "waveformSearcher");
+    r(this, "comparisonRenderer");
+    r(this, "dataProcessor");
+    r(this, "animationId", null);
+    r(this, "isRunning", !1);
+    r(this, "isPaused", !1);
     // Frame processing diagnostics
-    n(this, "lastFrameTime", 0);
-    n(this, "frameProcessingTimes", []);
-    n(this, "MAX_FRAME_TIMES", 100);
-    n(this, "TARGET_FRAME_TIME", 16.67);
+    r(this, "lastFrameTime", 0);
+    r(this, "frameProcessingTimes", []);
+    r(this, "MAX_FRAME_TIMES", 100);
+    r(this, "TARGET_FRAME_TIME", 16.67);
     // 60fps target
-    n(this, "FPS_LOG_INTERVAL_FRAMES", 60);
-    this.audioManager = new z(), this.gainController = new q(), this.frequencyEstimator = new B(), this.renderer = new Y(t, o), this.zeroCrossDetector = new $(), this.waveformSearcher = new U(), this.comparisonRenderer = new X(
+    r(this, "FPS_LOG_INTERVAL_FRAMES", 60);
+    this.audioManager = new N(), this.gainController = new q(), this.frequencyEstimator = new B(), this.renderer = new Y(t, o), this.zeroCrossDetector = new $(), this.waveformSearcher = new U(), this.comparisonRenderer = new X(
       e,
       i,
-      r,
+      n,
       a
     ), this.dataProcessor = new R(
       this.audioManager,
       this.gainController,
       this.frequencyEstimator,
-      this.waveformSearcher
+      this.waveformSearcher,
+      this.zeroCrossDetector
     );
   }
   async start() {
@@ -1178,8 +1196,8 @@ class Z {
       return;
     const t = performance.now();
     if (!this.isPaused) {
-      const r = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
-      r && this.renderFrame(r);
+      const n = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
+      n && this.renderFrame(n);
     }
     const i = performance.now() - t;
     if (this.frameProcessingTimes.push(i), this.frameProcessingTimes.length > this.MAX_FRAME_TIMES && this.frameProcessingTimes.shift(), i > this.TARGET_FRAME_TIME && console.warn(`Frame processing time: ${i.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`), this.lastFrameTime > 0) {
@@ -1335,6 +1353,12 @@ class Z {
   getUsePeakMode() {
     return this.zeroCrossDetector.getUsePeakMode();
   }
+  setZeroCrossMode(t) {
+    this.zeroCrossDetector.setZeroCrossMode(t);
+  }
+  getZeroCrossMode() {
+    return this.zeroCrossDetector.getZeroCrossMode();
+  }
   setPauseDrawing(t) {
     this.isPaused = t;
   }
@@ -1344,33 +1368,33 @@ class Z {
 }
 class V {
   constructor(t) {
-    n(this, "canvas");
-    n(this, "ctx");
+    r(this, "canvas");
+    r(this, "ctx");
     // 周波数範囲 (50Hz～2000Hz)
-    n(this, "MIN_FREQ", 50);
-    n(this, "MAX_FREQ", 2e3);
+    r(this, "MIN_FREQ", 50);
+    r(this, "MAX_FREQ", 2e3);
     // ピアノ鍵盤の定数
-    n(this, "WHITE_KEY_WIDTH", 20);
-    n(this, "WHITE_KEY_HEIGHT", 60);
-    n(this, "BLACK_KEY_WIDTH", 12);
-    n(this, "BLACK_KEY_HEIGHT", 38);
+    r(this, "WHITE_KEY_WIDTH", 20);
+    r(this, "WHITE_KEY_HEIGHT", 60);
+    r(this, "BLACK_KEY_WIDTH", 12);
+    r(this, "BLACK_KEY_HEIGHT", 38);
     // 色定義
-    n(this, "WHITE_KEY_COLOR", "#ffffff");
-    n(this, "BLACK_KEY_COLOR", "#000000");
-    n(this, "WHITE_KEY_HIGHLIGHT", "#00ff00");
-    n(this, "BLACK_KEY_HIGHLIGHT", "#00cc00");
-    n(this, "KEY_BORDER", "#333333");
+    r(this, "WHITE_KEY_COLOR", "#ffffff");
+    r(this, "BLACK_KEY_COLOR", "#000000");
+    r(this, "WHITE_KEY_HIGHLIGHT", "#00ff00");
+    r(this, "BLACK_KEY_HIGHLIGHT", "#00cc00");
+    r(this, "KEY_BORDER", "#333333");
     // 音名パターン定数（配列アロケーションを避けるため）
     // 白鍵: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
-    n(this, "WHITE_KEY_NOTES", [0, 2, 4, 5, 7, 9, 11]);
+    r(this, "WHITE_KEY_NOTES", [0, 2, 4, 5, 7, 9, 11]);
     // 黒鍵: C#(1), D#(3), F#(6), G#(8), A#(10)
-    n(this, "BLACK_KEY_NOTES", [1, 3, 6, 8, 10]);
+    r(this, "BLACK_KEY_NOTES", [1, 3, 6, 8, 10]);
     // キャッシュされた鍵盤範囲（コンストラクタで一度だけ計算）
-    n(this, "keyboardRange");
+    r(this, "keyboardRange");
     // センタリング用のオフセット（コンストラクタで一度だけ計算）
-    n(this, "xOffset");
+    r(this, "xOffset");
     // 白鍵の総数（コンストラクタで一度だけ計算）
-    n(this, "whiteKeyCount");
+    r(this, "whiteKeyCount");
     this.canvas = t;
     const e = t.getContext("2d");
     if (!e)
@@ -1388,7 +1412,7 @@ class V {
     const i = e.noteName.match(/^([A-G]#?)(\d+)$/);
     if (!i)
       return { note: -1, octave: -1, noteInOctave: -1 };
-    const r = i[1], a = parseInt(i[2], 10), s = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].indexOf(r);
+    const n = i[1], a = parseInt(i[2], 10), s = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"].indexOf(n);
     return { note: a * 12 + s, octave: a, noteInOctave: s };
   }
   /**
@@ -1409,8 +1433,8 @@ class V {
     const t = this.keyboardRange;
     let e = 0;
     for (let i = t.startNote; i <= t.endNote; i++) {
-      const r = (i % 12 + 12) % 12;
-      this.WHITE_KEY_NOTES.includes(r) && e++;
+      const n = (i % 12 + 12) % 12;
+      this.WHITE_KEY_NOTES.includes(n) && e++;
     }
     return e;
   }
@@ -1428,19 +1452,19 @@ class V {
   render(t) {
     this.ctx.fillStyle = "#1a1a1a", this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     const e = this.keyboardRange, i = t > 0 ? this.frequencyToNoteInfo(t) : null;
-    let r = 0;
+    let n = 0;
     for (let h = e.startNote; h <= e.endNote; h++) {
       const y = (h % 12 + 12) % 12;
       if (this.WHITE_KEY_NOTES.includes(y)) {
-        const u = this.xOffset + r * this.WHITE_KEY_WIDTH, c = i && i.note === h;
-        this.ctx.fillStyle = c ? this.WHITE_KEY_HIGHLIGHT : this.WHITE_KEY_COLOR, this.ctx.fillRect(u, 0, this.WHITE_KEY_WIDTH, this.WHITE_KEY_HEIGHT), this.ctx.strokeStyle = this.KEY_BORDER, this.ctx.lineWidth = 1, this.ctx.strokeRect(u, 0, this.WHITE_KEY_WIDTH, this.WHITE_KEY_HEIGHT), r++;
+        const u = this.xOffset + n * this.WHITE_KEY_WIDTH, c = i && i.note === h;
+        this.ctx.fillStyle = c ? this.WHITE_KEY_HIGHLIGHT : this.WHITE_KEY_COLOR, this.ctx.fillRect(u, 0, this.WHITE_KEY_WIDTH, this.WHITE_KEY_HEIGHT), this.ctx.strokeStyle = this.KEY_BORDER, this.ctx.lineWidth = 1, this.ctx.strokeRect(u, 0, this.WHITE_KEY_WIDTH, this.WHITE_KEY_HEIGHT), n++;
       }
     }
-    r = 0;
+    n = 0;
     for (let h = e.startNote; h <= e.endNote; h++) {
       const y = (h % 12 + 12) % 12;
-      if (this.WHITE_KEY_NOTES.includes(y) && r++, this.BLACK_KEY_NOTES.includes(y)) {
-        const u = this.xOffset + r * this.WHITE_KEY_WIDTH - this.BLACK_KEY_WIDTH / 2, c = i && i.note === h;
+      if (this.WHITE_KEY_NOTES.includes(y) && n++, this.BLACK_KEY_NOTES.includes(y)) {
+        const u = this.xOffset + n * this.WHITE_KEY_WIDTH - this.BLACK_KEY_WIDTH / 2, c = i && i.note === h;
         this.ctx.fillStyle = c ? this.BLACK_KEY_HIGHLIGHT : this.BLACK_KEY_COLOR, this.ctx.fillRect(u, 0, this.BLACK_KEY_WIDTH, this.BLACK_KEY_HEIGHT), this.ctx.strokeStyle = this.KEY_BORDER, this.ctx.lineWidth = 1, this.ctx.strokeRect(u, 0, this.BLACK_KEY_WIDTH, this.BLACK_KEY_HEIGHT);
       }
     }
@@ -1463,12 +1487,12 @@ class W {
    * @param options - Optional configuration
    */
   constructor(t, e, i) {
-    n(this, "buffer");
-    n(this, "sampleRate");
-    n(this, "position", 0);
-    n(this, "chunkSize", 4096);
+    r(this, "buffer");
+    r(this, "sampleRate");
+    r(this, "position", 0);
+    r(this, "chunkSize", 4096);
     // Default FFT size
-    n(this, "isLooping", !1);
+    r(this, "isLooping", !1);
     if (e <= 0 || !isFinite(e))
       throw new Error("Sample rate must be a positive finite number");
     if (this.buffer = t, this.sampleRate = e, (i == null ? void 0 : i.chunkSize) !== void 0) {
@@ -1489,8 +1513,8 @@ class W {
       throw new Error(
         `Invalid channel index ${i}. AudioBuffer has ${t.numberOfChannels} channel(s).`
       );
-    const r = t.getChannelData(i);
-    return new W(r, t.sampleRate, {
+    const n = t.getChannelData(i);
+    return new W(n, t.sampleRate, {
       chunkSize: e == null ? void 0 : e.chunkSize,
       loop: e == null ? void 0 : e.loop
     });
@@ -1509,8 +1533,8 @@ class W {
         return null;
     const t = Math.min(this.position + this.chunkSize, this.buffer.length), e = this.buffer.slice(this.position, t);
     if (e.length < this.chunkSize && this.isLooping) {
-      const i = this.chunkSize - e.length, r = Math.min(i, this.buffer.length), a = new Float32Array(this.chunkSize);
-      return a.set(e, 0), a.set(this.buffer.slice(0, r), e.length), this.position = r, a;
+      const i = this.chunkSize - e.length, n = Math.min(i, this.buffer.length), a = new Float32Array(this.chunkSize);
+      return a.set(e, 0), a.set(this.buffer.slice(0, n), e.length), this.position = n, a;
     }
     if (this.position = t, e.length < this.chunkSize) {
       const i = new Float32Array(this.chunkSize);
@@ -1583,7 +1607,7 @@ class W {
   }
 }
 export {
-  z as AudioManager,
+  N as AudioManager,
   W as BufferSource,
   X as ComparisonPanelRenderer,
   K as DEFAULT_OVERLAYS_LAYOUT,
@@ -1595,9 +1619,9 @@ export {
   Y as WaveformRenderer,
   U as WaveformSearcher,
   $ as ZeroCrossDetector,
-  G as amplitudeToDb,
-  O as dbToAmplitude,
+  O as amplitudeToDb,
+  z as dbToAmplitude,
   A as resolveValue,
-  D as trimSilence
+  G as trimSilence
 };
 //# sourceMappingURL=cat-oscilloscope.mjs.map

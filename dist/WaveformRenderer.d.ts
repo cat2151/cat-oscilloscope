@@ -101,4 +101,3 @@ export declare class WaveformRenderer {
      */
     private calculateOverlayDimensions;
 }
-//# sourceMappingURL=WaveformRenderer.d.ts.map

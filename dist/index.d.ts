@@ -17,4 +17,3 @@ export type { WaveformRenderData } from './WaveformRenderData';
 export type { OverlayPosition, OverlaySize, OverlayLayout, OverlaysLayoutConfig } from './OverlayLayout';
 export { DEFAULT_OVERLAYS_LAYOUT, resolveValue } from './OverlayLayout';
 export { dbToAmplitude, amplitudeToDb, trimSilence } from './utils';
-//# sourceMappingURL=index.d.ts.map

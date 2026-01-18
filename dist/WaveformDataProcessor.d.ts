@@ -3,6 +3,7 @@ import { AudioManager } from './AudioManager';
 import { GainController } from './GainController';
 import { FrequencyEstimator } from './FrequencyEstimator';
 import { WaveformSearcher } from './WaveformSearcher';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
 /**
  * WaveformDataProcessor - Processes waveform data using Rust WASM implementation
  *
@@ -19,10 +20,11 @@ export declare class WaveformDataProcessor {
     private gainController;
     private frequencyEstimator;
     private waveformSearcher;
+    private zeroCrossDetector;
     private wasmProcessor;
     private isInitialized;
     private cachedBasePath;
-    constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher);
+    constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
      * Must be called before processFrame
@@ -72,4 +74,3 @@ export declare class WaveformDataProcessor {
      */
     reset(): void;
 }
-//# sourceMappingURL=WaveformDataProcessor.d.ts.map

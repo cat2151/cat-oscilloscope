@@ -6,9 +6,11 @@
  *
  * Responsible for:
  * - Storing peak mode configuration (legacy compatibility)
+ * - Storing zero-cross detection mode configuration
  */
 export declare class ZeroCrossDetector {
     private usePeakMode;
+    private zeroCrossMode;
     /**
      * Set whether to use peak mode instead of zero-crossing mode
      */
@@ -18,8 +20,16 @@ export declare class ZeroCrossDetector {
      */
     getUsePeakMode(): boolean;
     /**
+     * Set zero-cross detection mode
+     * @param mode - Zero-cross detection algorithm to use
+     */
+    setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void;
+    /**
+     * Get current zero-cross detection mode
+     */
+    getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero';
+    /**
      * Reset state (e.g., when stopping)
      */
     reset(): void;
 }
-//# sourceMappingURL=ZeroCrossDetector.d.ts.map

@@ -101,7 +101,8 @@ export declare class Oscilloscope {
     isSimilaritySearchActive(): boolean;
     setUsePeakMode(enabled: boolean): void;
     getUsePeakMode(): boolean;
+    setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void;
+    getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero';
     setPauseDrawing(paused: boolean): void;
     getPauseDrawing(): boolean;
 }
-//# sourceMappingURL=Oscilloscope.d.ts.map

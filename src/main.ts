@@ -21,6 +21,7 @@ const thresholdValue = document.getElementById('thresholdValue') as HTMLSpanElem
 const statusElement = document.getElementById('status') as HTMLSpanElement;
 const frequencyMethod = document.getElementById('frequencyMethod') as HTMLSelectElement;
 const bufferSizeMultiplier = document.getElementById('bufferSizeMultiplier') as HTMLSelectElement;
+const zeroCrossMode = document.getElementById('zeroCrossMode') as HTMLSelectElement;
 const frequencyValue = document.getElementById('frequencyValue') as HTMLSpanElement;
 const noteValue = document.getElementById('noteValue') as HTMLSpanElement;
 const gainValue = document.getElementById('gainValue') as HTMLSpanElement;
@@ -46,6 +47,7 @@ const requiredElements = [
   { element: statusElement, name: 'status' },
   { element: frequencyMethod, name: 'frequencyMethod' },
   { element: bufferSizeMultiplier, name: 'bufferSizeMultiplier' },
+  { element: zeroCrossMode, name: 'zeroCrossMode' },
   { element: frequencyValue, name: 'frequencyValue' },
   { element: noteValue, name: 'noteValue' },
   { element: gainValue, name: 'gainValue' },
@@ -99,6 +101,13 @@ oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
 // Synchronize pause drawing control
 oscilloscope.setPauseDrawing(pauseDrawingCheckbox.checked);
 
+// Synchronize zero-cross mode from UI
+const initialZeroCrossMode = zeroCrossMode.value;
+const validModes = ['standard', 'peak-backtrack-history', 'bidirectional-nearest', 'gradient-based', 'adaptive-step', 'hysteresis', 'closest-to-zero'];
+if (validModes.includes(initialZeroCrossMode)) {
+  oscilloscope.setZeroCrossMode(initialZeroCrossMode as any);
+}
+
 // Auto gain checkbox handler
 autoGainCheckbox.addEventListener('change', () => {
   oscilloscope.setAutoGain(autoGainCheckbox.checked);
@@ -142,6 +151,20 @@ bufferSizeMultiplier.addEventListener('change', () => {
     // Reset to default
     bufferSizeMultiplier.value = '1';
     oscilloscope.setBufferSizeMultiplier(1);
+  }
+});
+
+// Zero-cross mode selector handler
+zeroCrossMode.addEventListener('change', () => {
+  const mode = zeroCrossMode.value;
+  const validModes = ['standard', 'peak-backtrack-history', 'bidirectional-nearest', 'gradient-based', 'adaptive-step', 'hysteresis', 'closest-to-zero'];
+  if (validModes.includes(mode)) {
+    oscilloscope.setZeroCrossMode(mode as any);
+  } else {
+    console.error('Invalid zero-cross mode:', mode);
+    // Reset to default
+    zeroCrossMode.value = 'hysteresis';
+    oscilloscope.setZeroCrossMode('hysteresis');
   }
 });
 
