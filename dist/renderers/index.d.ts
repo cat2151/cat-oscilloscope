@@ -1,3 +1,4 @@
+export { BaseOverlayRenderer } from './BaseOverlayRenderer';
 export { GridRenderer } from './GridRenderer';
 export { WaveformLineRenderer } from './WaveformLineRenderer';
 export { FFTOverlayRenderer } from './FFTOverlayRenderer';
