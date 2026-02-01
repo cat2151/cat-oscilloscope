@@ -74,6 +74,17 @@ export declare class Oscilloscope {
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
     /**
+     * Enable or disable harmonic analysis overlay
+     * When disabled, the yellow-bordered harmonic analysis panel in the top-left corner is hidden
+     * @param enabled - true to show harmonic analysis overlay, false to hide it
+     */
+    setHarmonicAnalysisEnabled(enabled: boolean): void;
+    /**
+     * Get the current state of harmonic analysis overlay
+     * @returns true if harmonic analysis overlay is enabled, false otherwise
+     */
+    getHarmonicAnalysisEnabled(): boolean;
+    /**
      * Enable or disable debug overlays (harmonic analysis, frequency plot)
      * Debug overlays show detailed debugging information with yellow borders (#ffaa00)
      * including harmonic analysis and frequency history plot
