@@ -531,7 +531,7 @@ impl WasmDataProcessor {
         let segment = &data[segment_buffer_position..segment_end];
         
         // Capture history before calling find_phase_zero_in_segment
-        let history_before = self.zero_cross_detector.absolute_phase_offset;
+        let history_before = self.zero_cross_detector.get_absolute_phase_offset();
         
         // Calculate 1% tolerance for debugging
         let tolerance = ((cycle_length * 0.01) as usize).max(1);

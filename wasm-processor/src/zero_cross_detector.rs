@@ -102,6 +102,12 @@ impl ZeroCrossDetector {
         self.segment_phase_offset
     }
     
+    /// Get current absolute phase offset for debugging
+    /// Returns absolute position in the full buffer
+    pub fn get_absolute_phase_offset(&self) -> Option<usize> {
+        self.absolute_phase_offset
+    }
+    
     /// Reset detector state
     pub fn reset(&mut self) {
         self.previous_zero_cross_index = None;
