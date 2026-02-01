@@ -43,6 +43,7 @@ export class UIEventHandlers {
     this.oscilloscope.setAutoGain(this.dom.autoGainCheckbox.checked);
     this.oscilloscope.setNoiseGate(this.dom.noiseGateCheckbox.checked);
     this.oscilloscope.setFFTDisplay(this.dom.fftDisplayCheckbox.checked);
+    this.oscilloscope.setHarmonicAnalysisEnabled(this.dom.harmonicAnalysisCheckbox.checked);
     this.oscilloscope.setPauseDrawing(this.dom.pauseDrawingCheckbox.checked);
 
     // Synchronize noise gate threshold
@@ -78,6 +79,11 @@ export class UIEventHandlers {
     // FFT display checkbox
     this.dom.fftDisplayCheckbox.addEventListener('change', () => {
       this.oscilloscope.setFFTDisplay(this.dom.fftDisplayCheckbox.checked);
+    });
+
+    // Harmonic analysis checkbox
+    this.dom.harmonicAnalysisCheckbox.addEventListener('change', () => {
+      this.oscilloscope.setHarmonicAnalysisEnabled(this.dom.harmonicAnalysisCheckbox.checked);
     });
 
     // Pause drawing checkbox

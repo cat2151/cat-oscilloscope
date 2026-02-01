@@ -452,6 +452,7 @@ describe('WaveformRenderer', () => {
     it('should draw harmonic analysis when debug overlays are enabled', () => {
       renderer.setFFTDisplay(true);
       renderer.setDebugOverlaysEnabled(true);
+      renderer.setHarmonicAnalysisEnabled(true); // Enable harmonic analysis overlay
       
       renderer.drawHarmonicAnalysis(
         50.0,

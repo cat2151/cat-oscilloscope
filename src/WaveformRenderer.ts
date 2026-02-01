@@ -20,6 +20,7 @@ export class WaveformRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private fftDisplayEnabled = true;
+  private harmonicAnalysisEnabled = false; // Control harmonic analysis overlay independently
   private debugOverlaysEnabled = true; // Control debug overlays (harmonic analysis, frequency plot)
   private overlaysLayout: OverlaysLayoutConfig; // Layout configuration for overlays
 
@@ -133,6 +134,11 @@ export class WaveformRenderer {
     selectionReason?: string,
     estimatedFrequency?: number
   ): void {
+    // Skip if harmonic analysis display is disabled
+    if (!this.harmonicAnalysisEnabled) {
+      return;
+    }
+    
     // Skip if debug overlays are disabled
     if (!this.debugOverlaysEnabled) {
       return;
@@ -220,6 +226,23 @@ export class WaveformRenderer {
 
   getFFTDisplayEnabled(): boolean {
     return this.fftDisplayEnabled;
+  }
+
+  /**
+   * Enable or disable harmonic analysis overlay
+   * When disabled, the yellow-bordered harmonic analysis panel is hidden
+   * @param enabled - true to show harmonic analysis overlay, false to hide it
+   */
+  setHarmonicAnalysisEnabled(enabled: boolean): void {
+    this.harmonicAnalysisEnabled = enabled;
+  }
+
+  /**
+   * Get the current state of harmonic analysis overlay
+   * @returns true if harmonic analysis overlay is enabled, false otherwise
+   */
+  getHarmonicAnalysisEnabled(): boolean {
+    return this.harmonicAnalysisEnabled;
   }
 
   /**

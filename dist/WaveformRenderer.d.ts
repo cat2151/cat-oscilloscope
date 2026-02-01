@@ -11,6 +11,7 @@ export declare class WaveformRenderer {
     private canvas;
     private ctx;
     private fftDisplayEnabled;
+    private harmonicAnalysisEnabled;
     private debugOverlaysEnabled;
     private overlaysLayout;
     private gridRenderer;
@@ -70,6 +71,17 @@ export declare class WaveformRenderer {
     }): void;
     setFFTDisplay(enabled: boolean): void;
     getFFTDisplayEnabled(): boolean;
+    /**
+     * Enable or disable harmonic analysis overlay
+     * When disabled, the yellow-bordered harmonic analysis panel is hidden
+     * @param enabled - true to show harmonic analysis overlay, false to hide it
+     */
+    setHarmonicAnalysisEnabled(enabled: boolean): void;
+    /**
+     * Get the current state of harmonic analysis overlay
+     * @returns true if harmonic analysis overlay is enabled, false otherwise
+     */
+    getHarmonicAnalysisEnabled(): boolean;
     /**
      * Enable or disable debug overlays (harmonic analysis, frequency plot)
      * When disabled, yellow-bordered debug information panels are hidden
