@@ -1,12 +1,11 @@
 import { OverlaysLayoutConfig } from './OverlayLayout';
 /**
- * WaveformRenderer handles all canvas drawing operations
+ * WaveformRenderer coordinates all canvas drawing operations
+ * Acts as a facade that delegates to specialized renderer classes
  * Responsible for:
- * - Grid rendering
- * - Waveform visualization
- * - Zero-cross line indicators
- * - FFT spectrum overlay
- * - Canvas coordinate calculations
+ * - Coordinating multiple renderer components
+ * - Managing canvas state
+ * - Providing a unified API for rendering
  */
 export declare class WaveformRenderer {
     private canvas;
@@ -14,10 +13,12 @@ export declare class WaveformRenderer {
     private fftDisplayEnabled;
     private debugOverlaysEnabled;
     private overlaysLayout;
-    private readonly FFT_OVERLAY_HEIGHT_RATIO;
-    private readonly FFT_MIN_BAR_WIDTH;
-    private readonly FREQ_PLOT_MIN_RANGE_PADDING_HZ;
-    private readonly FREQ_PLOT_RANGE_PADDING_RATIO;
+    private gridRenderer;
+    private waveformLineRenderer;
+    private fftOverlayRenderer;
+    private harmonicAnalysisRenderer;
+    private frequencyPlotRenderer;
+    private phaseMarkerRenderer;
     constructor(canvas: HTMLCanvasElement, overlaysLayout?: OverlaysLayoutConfig);
     /**
      * Clear canvas and draw grid with measurement labels
@@ -27,19 +28,9 @@ export declare class WaveformRenderer {
      */
     clearAndDrawGrid(sampleRate?: number, displaySamples?: number, gain?: number): void;
     /**
-     * Draw grid lines with measurement labels
-     * @param sampleRate - Audio sample rate in Hz (optional)
-     * @param displaySamples - Number of samples displayed on screen (optional)
-     * @param gain - Current gain multiplier (optional)
+     * Update all renderer dimensions (call when canvas size changes)
      */
-    private drawGrid;
-    /**
-     * Draw grid measurement labels
-     * @param sampleRate - Audio sample rate in Hz
-     * @param displaySamples - Number of samples displayed on screen
-     * @param gain - Current gain multiplier
-     */
-    private drawGridLabels;
+    private updateRendererDimensions;
     /**
      * Draw waveform
      */
@@ -102,8 +93,4 @@ export declare class WaveformRenderer {
      * @returns Current overlays layout configuration
      */
     getOverlaysLayout(): OverlaysLayoutConfig;
-    /**
-     * Helper method to calculate overlay dimensions based on layout config
-     */
-    private calculateOverlayDimensions;
 }
