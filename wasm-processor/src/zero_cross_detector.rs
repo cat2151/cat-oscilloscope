@@ -37,6 +37,10 @@ pub struct ZeroCrossDetector {
     // Stores the offset within the 4-cycle segment, NOT frame buffer absolute position
     // This ensures the 1% constraint works correctly even when segment position changes each frame
     segment_phase_offset: Option<usize>,
+    // COORDINATE SPACE: absolute (frame buffer position)
+    // History for absolute position tracking (used by find_phase_zero_in_segment)
+    // Stores the absolute position in the full buffer to track across segment position changes
+    absolute_phase_offset: Option<usize>,
 }
 
 impl ZeroCrossDetector {
@@ -49,6 +53,12 @@ impl ZeroCrossDetector {
     const MAX_SEARCH_RANGE_MULTIPLIER: f32 = 5.0;
     /// Number of cycles to display (must match CYCLES_TO_STORE in waveform_searcher)
     const CYCLES_TO_DISPLAY: usize = 4;
+    /// Peak search range multiplier for initial detection
+    const PEAK_SEARCH_MULTIPLIER: f32 = 1.5;
+    /// Extended tolerance ratio for Standard mode (3% of cycle length)
+    const STANDARD_MODE_EXTENDED_TOLERANCE_RATIO: f32 = 0.03;
+    /// Extended tolerance multiplier for other modes (3x normal tolerance)
+    const EXTENDED_TOLERANCE_MULTIPLIER: usize = 3;
     
     pub fn new() -> Self {
         ZeroCrossDetector {
@@ -57,6 +67,7 @@ impl ZeroCrossDetector {
             use_peak_mode: false,
             zero_cross_mode: ZeroCrossMode::Hysteresis,
             segment_phase_offset: None,
+            absolute_phase_offset: None,
         }
     }
     
@@ -70,6 +81,7 @@ impl ZeroCrossDetector {
         self.zero_cross_mode = mode;
         // Clear history when mode changes
         self.segment_phase_offset = None;
+        self.absolute_phase_offset = None;
     }
     
     /// Get current zero-cross detection mode
@@ -96,11 +108,18 @@ impl ZeroCrossDetector {
         self.segment_phase_offset
     }
     
+    /// Get current absolute phase offset for debugging
+    /// Returns absolute position in the full buffer
+    pub fn get_absolute_phase_offset(&self) -> Option<usize> {
+        self.absolute_phase_offset
+    }
+    
     /// Reset detector state
     pub fn reset(&mut self) {
         self.previous_zero_cross_index = None;
         self.previous_peak_index = None;
         self.segment_phase_offset = None;
+        self.absolute_phase_offset = None;
     }
     
     /// Find peak point (maximum absolute amplitude) in the waveform
@@ -672,6 +691,141 @@ impl ZeroCrossDetector {
         }
         
         None
+    }
+    
+    /// Find phase zero position within a segment, maintaining history in absolute coordinates
+    /// This method is designed for Process B (phase marker positioning) where the segment
+    /// position can change between frames due to similarity search.
+    /// 
+    /// # Arguments
+    /// * `segment` - The 4-cycle segment slice
+    /// * `segment_start_abs` - Absolute position of the segment start in the full buffer
+    /// * `estimated_cycle_length` - Length of one cycle in samples
+    /// 
+    /// # Returns
+    /// The segment-relative index of phase 0, or None if not found
+    /// 
+    /// # Coordinate Spaces
+    /// - Input `segment`: relative (0..segment.len())
+    /// - Input `segment_start_abs`: absolute (full buffer position)
+    /// - Internal history: absolute (full buffer position)
+    /// - Return value: relative (0..segment.len())
+    pub fn find_phase_zero_in_segment(
+        &mut self,
+        segment: &[f32],
+        segment_start_abs: usize,
+        estimated_cycle_length: f32,
+    ) -> Option<usize> {
+        // If we don't have history or invalid cycle length, perform initial detection
+        if self.absolute_phase_offset.is_none() || estimated_cycle_length < f32::EPSILON {
+            // Initial detection based on current mode
+            let zero_cross_rel = match self.zero_cross_mode {
+                ZeroCrossMode::Standard => {
+                    self.find_zero_cross(segment, 0)
+                }
+                ZeroCrossMode::PeakBacktrackWithHistory => {
+                    // Find peak and backtrack
+                    let search_end = if estimated_cycle_length > 0.0 {
+                        (estimated_cycle_length * Self::PEAK_SEARCH_MULTIPLIER) as usize
+                    } else {
+                        segment.len() / 2
+                    };
+                    
+                    if let Some(peak_idx) = self.find_peak(segment, 0, Some(search_end.min(segment.len()))) {
+                        self.find_zero_crossing_backward(segment, peak_idx)
+                    } else {
+                        self.find_zero_cross(segment, 0)
+                    }
+                }
+                _ => {
+                    // For other modes, use standard zero-cross detection
+                    self.find_zero_cross(segment, 0)
+                }
+            }?;
+            
+            // Convert to absolute and store
+            let zero_cross_abs = segment_start_abs + zero_cross_rel;
+            self.absolute_phase_offset = Some(zero_cross_abs);
+            return Some(zero_cross_rel);
+        }
+        
+        // We have history - use it with proper coordinate conversion
+        let history_abs = self.absolute_phase_offset.unwrap();
+        
+        // Convert absolute history to segment-relative
+        // Check if history is within the current segment
+        if history_abs < segment_start_abs || history_abs >= segment_start_abs + segment.len() {
+            // History is outside current segment - perform fresh detection
+            let zero_cross_rel = self.find_zero_cross(segment, 0)?;
+            let zero_cross_abs = segment_start_abs + zero_cross_rel;
+            self.absolute_phase_offset = Some(zero_cross_abs);
+            return Some(zero_cross_rel);
+        }
+        
+        let history_rel = history_abs - segment_start_abs;
+        
+        // Apply mode-specific search with 1% tolerance
+        let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
+        
+        match self.zero_cross_mode {
+            ZeroCrossMode::PeakBacktrackWithHistory => {
+                // Strict 1% constraint - search only within tolerance
+                // Check if history position is still a zero-cross
+                if history_rel < segment.len() - 1 && segment[history_rel] <= 0.0 && segment[history_rel + 1] > 0.0 {
+                    return Some(history_rel);
+                }
+                
+                // Search within tolerance range
+                let search_start = history_rel.saturating_sub(tolerance);
+                let search_end = (history_rel + tolerance).min(segment.len());
+                
+                for i in search_start..search_end.saturating_sub(1) {
+                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                        let zero_cross_abs = segment_start_abs + i;
+                        self.absolute_phase_offset = Some(zero_cross_abs);
+                        return Some(i);
+                    }
+                }
+                
+                // No zero-cross in tolerance - keep history (strict mode)
+                Some(history_rel)
+            }
+            _ => {
+                // Other modes: extended search with gradual movement
+                // First try within 1% tolerance
+                let search_start = history_rel.saturating_sub(tolerance);
+                let search_end = (history_rel + tolerance).min(segment.len());
+                
+                for i in search_start..search_end.saturating_sub(1) {
+                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                        let zero_cross_abs = segment_start_abs + i;
+                        self.absolute_phase_offset = Some(zero_cross_abs);
+                        return Some(i);
+                    }
+                }
+                
+                // Extended search (3% for Standard, gradual for others)
+                let extended_tolerance = if self.zero_cross_mode == ZeroCrossMode::Standard {
+                    (estimated_cycle_length * Self::STANDARD_MODE_EXTENDED_TOLERANCE_RATIO) as usize
+                } else {
+                    tolerance * Self::EXTENDED_TOLERANCE_MULTIPLIER
+                };
+                
+                let extended_start = history_rel.saturating_sub(extended_tolerance);
+                let extended_end = (history_rel + extended_tolerance).min(segment.len());
+                
+                if let Some(zero_cross_rel) = self.find_zero_cross(segment, extended_start) {
+                    if zero_cross_rel < extended_end {
+                        let zero_cross_abs = segment_start_abs + zero_cross_rel;
+                        self.absolute_phase_offset = Some(zero_cross_abs);
+                        return Some(zero_cross_rel);
+                    }
+                }
+                
+                // Fall back to history
+                Some(history_rel)
+            }
+        }
     }
     
     /// Calculate display range based on zero-crossing or peak detection
