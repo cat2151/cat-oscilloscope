@@ -37,6 +37,7 @@ export class Oscilloscope {
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
+  private phaseMarkerRangeEnabled = true; // Default: on
 
   // Frame processing diagnostics
   private lastFrameTime = 0;
@@ -217,8 +218,20 @@ export class Oscilloscope {
    * This method contains only rendering logic - no data processing
    */
   private renderFrame(renderData: WaveformRenderData): void {
+    // Determine display range based on phase marker range mode
+    let displayStartIndex = renderData.displayStartIndex;
+    let displayEndIndex = renderData.displayEndIndex;
+    
+    if (this.phaseMarkerRangeEnabled && 
+        renderData.phaseMinusQuarterPiIndex !== undefined && 
+        renderData.phaseTwoPiPlusQuarterPiIndex !== undefined) {
+      // Use phase marker range (orange to orange)
+      displayStartIndex = renderData.phaseMinusQuarterPiIndex;
+      displayEndIndex = renderData.phaseTwoPiPlusQuarterPiIndex;
+    }
+    
     // Clear canvas and draw grid with measurement labels
-    const displaySamples = renderData.displayEndIndex - renderData.displayStartIndex;
+    const displaySamples = displayEndIndex - displayStartIndex;
     this.renderer.clearAndDrawGrid(
       renderData.sampleRate,
       displaySamples,
@@ -228,8 +241,8 @@ export class Oscilloscope {
     // Draw waveform with calculated gain
     this.renderer.drawWaveform(
       renderData.waveformData,
-      renderData.displayStartIndex,
-      renderData.displayEndIndex,
+      displayStartIndex,
+      displayEndIndex,
       renderData.gain
     );
 
@@ -239,8 +252,8 @@ export class Oscilloscope {
       renderData.phaseTwoPiIndex,
       renderData.phaseMinusQuarterPiIndex,
       renderData.phaseTwoPiPlusQuarterPiIndex,
-      renderData.displayStartIndex,
-      renderData.displayEndIndex,
+      displayStartIndex,
+      displayEndIndex,
       {
         phaseZeroSegmentRelative: renderData.phaseZeroSegmentRelative,
         phaseZeroHistory: renderData.phaseZeroHistory,
@@ -282,8 +295,8 @@ export class Oscilloscope {
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,
       renderData.waveformData,
-      renderData.displayStartIndex,
-      renderData.displayEndIndex,
+      displayStartIndex,
+      displayEndIndex,
       renderData.waveformData,
       renderData.similarity,
       renderData.similarityPlotHistory
@@ -447,5 +460,23 @@ export class Oscilloscope {
 
   getPauseDrawing(): boolean {
     return this.isPaused;
+  }
+
+  /**
+   * Enable or disable phase marker range display mode
+   * When enabled (default), displays only the range between orange-red-red-orange markers
+   * When disabled, displays the full waveform segment
+   * @param enabled - true to display only phase marker range, false to display full segment
+   */
+  setPhaseMarkerRangeEnabled(enabled: boolean): void {
+    this.phaseMarkerRangeEnabled = enabled;
+  }
+
+  /**
+   * Get the current state of phase marker range display mode
+   * @returns true if phase marker range display is enabled, false otherwise
+   */
+  getPhaseMarkerRangeEnabled(): boolean {
+    return this.phaseMarkerRangeEnabled;
   }
 }

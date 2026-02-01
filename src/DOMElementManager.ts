@@ -27,6 +27,7 @@ export class DOMElementManager {
   readonly fftDisplayCheckbox: HTMLInputElement;
   readonly harmonicAnalysisCheckbox: HTMLInputElement;
   readonly pauseDrawingCheckbox: HTMLInputElement;
+  readonly phaseMarkerRangeCheckbox: HTMLInputElement;
   readonly noiseGateThreshold: HTMLInputElement;
 
   // Select elements
@@ -65,6 +66,7 @@ export class DOMElementManager {
     this.fftDisplayCheckbox = this.getElement('fftDisplayCheckbox') as HTMLInputElement;
     this.harmonicAnalysisCheckbox = this.getElement('harmonicAnalysisCheckbox') as HTMLInputElement;
     this.pauseDrawingCheckbox = this.getElement('pauseDrawingCheckbox') as HTMLInputElement;
+    this.phaseMarkerRangeCheckbox = this.getElement('phaseMarkerRangeCheckbox') as HTMLInputElement;
     this.noiseGateThreshold = this.getElement('noiseGateThreshold') as HTMLInputElement;
 
     // Retrieve select elements
@@ -118,6 +120,7 @@ export class DOMElementManager {
       { element: this.fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
       { element: this.harmonicAnalysisCheckbox, name: 'harmonicAnalysisCheckbox' },
       { element: this.pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
+      { element: this.phaseMarkerRangeCheckbox, name: 'phaseMarkerRangeCheckbox' },
       { element: this.noiseGateThreshold, name: 'noiseGateThreshold' },
       { element: this.thresholdValue, name: 'thresholdValue' },
       { element: this.statusElement, name: 'status' },

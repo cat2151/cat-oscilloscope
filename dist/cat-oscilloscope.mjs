@@ -428,7 +428,7 @@ class Z {
     this.ctx.restore();
   }
 }
-class X {
+class Q {
   constructor(t, e, i) {
     s(this, "ctx");
     s(this, "canvasWidth");
@@ -456,7 +456,7 @@ class X {
     this.ctx.stroke();
   }
 }
-class Q extends L {
+class X extends L {
   constructor() {
     super(...arguments);
     s(this, "FFT_OVERLAY_HEIGHT_RATIO", 0.9);
@@ -482,15 +482,15 @@ class Q extends L {
     ), E = w / x;
     this.ctx.fillStyle = "#00aaff";
     for (let p = 0; p < x; p++) {
-      const C = e[p] / 255 * m * this.FFT_OVERLAY_HEIGHT_RATIO, A = l + p * E, b = d + m - C;
-      this.ctx.fillRect(A, b, Math.max(E - 1, this.FFT_MIN_BAR_WIDTH), C);
+      const b = e[p] / 255 * m * this.FFT_OVERLAY_HEIGHT_RATIO, A = l + p * E, C = d + m - b;
+      this.ctx.fillRect(A, C, Math.max(E - 1, this.FFT_MIN_BAR_WIDTH), b);
     }
     if (i > 0 && i <= h) {
       const p = i / a, S = l + p * E;
       this.ctx.strokeStyle = "#ff00ff", this.ctx.lineWidth = 2, this.ctx.beginPath(), this.ctx.moveTo(S, d), this.ctx.lineTo(S, d + m), this.ctx.stroke(), this.ctx.fillStyle = "#ff00ff", this.ctx.font = "bold 12px Arial";
-      const C = `${i.toFixed(1)} Hz`, A = this.ctx.measureText(C).width;
-      let b = S + 3;
-      b + A > l + w - 5 && (b = S - A - 3), this.ctx.fillText(C, b, d + 15);
+      const b = `${i.toFixed(1)} Hz`, A = this.ctx.measureText(b).width;
+      let C = S + 3;
+      C + A > l + w - 5 && (C = S - A - 3), this.ctx.fillText(b, C, d + 15);
     }
     this.ctx.restore();
   }
@@ -533,7 +533,7 @@ class V extends L {
     }
     if (i && n) {
       m += g, this.ctx.fillStyle = "#00aaff", this.ctx.font = "11px monospace";
-      const x = n / 2, E = i.map((S, C) => `${C + 1}x:${S.toFixed(2)}`).join(" "), p = o !== void 0 ? ` (重み付け: ${o.toFixed(1)})` : "";
+      const x = n / 2, E = i.map((S, b) => `${b + 1}x:${S.toFixed(2)}`).join(" "), p = o !== void 0 ? ` (重み付け: ${o.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補2 (${x.toFixed(1)}Hz) 倍音: ${E}${p}`,
         y + 5,
@@ -545,8 +545,8 @@ class V extends L {
       const x = d - 10, E = h.split(" ");
       let p = "";
       for (const S of E) {
-        const C = p + (p ? " " : "") + S;
-        this.ctx.measureText(C).width > x && p ? (this.ctx.fillText(p, y + 5, m), m += g, p = S) : p = C;
+        const b = p + (p ? " " : "") + S;
+        this.ctx.measureText(b).width > x && p ? (this.ctx.fillText(p, y + 5, m), m += g, p = S) : p = b;
       }
       p && this.ctx.fillText(p, y + 5, m);
     }
@@ -607,19 +607,19 @@ class j extends L {
       }
     }
     this.ctx.strokeStyle = "#00ff00", this.ctx.lineWidth = 2, this.ctx.beginPath();
-    const S = y / Math.max(e.length - 1, 1), C = Math.max(1, Math.floor(e.length / 4)), A = (v) => {
+    const S = y / Math.max(e.length - 1, 1), b = Math.max(1, Math.floor(e.length / 4)), A = (v) => {
       const M = (Math.max(E, Math.min(p, v)) - E) / (p - E);
       return f + l - M * l;
     };
-    let b = !1;
+    let C = !1;
     for (let v = 0; v < e.length; v++) {
       const T = e[v], M = c + v * S;
       if (T === 0) {
-        b = !1;
+        C = !1;
         continue;
       }
       const F = A(T);
-      b ? this.ctx.lineTo(M, F) : (this.ctx.moveTo(M, F), b = !0);
+      C ? this.ctx.lineTo(M, F) : (this.ctx.moveTo(M, F), C = !0);
     }
     this.ctx.stroke(), this.ctx.font = "9px monospace", this.ctx.textAlign = "center", this.ctx.textBaseline = "top";
     for (let v = 0; v < e.length; v++) {
@@ -629,7 +629,7 @@ class j extends L {
         this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(M, H, 2, 0, Math.PI * 2), this.ctx.fill();
       }
       const F = v === e.length - 1;
-      if (v % C === 0 || F) {
+      if (v % b === 0 || F) {
         this.ctx.fillStyle = "#aaaaaa";
         const H = v - e.length + 1;
         this.ctx.fillText(`${H}`, M, f + l + 2);
@@ -732,7 +732,7 @@ class tt {
     const i = t.getContext("2d");
     if (!i)
       throw new Error("Could not get 2D context");
-    this.ctx = i, this.overlaysLayout = e || U, this.gridRenderer = new Z(this.ctx, t.width, t.height), this.waveformLineRenderer = new X(this.ctx, t.width, t.height), this.fftOverlayRenderer = new Q(this.ctx, t.width, t.height), this.harmonicAnalysisRenderer = new V(this.ctx, t.width, t.height), this.frequencyPlotRenderer = new j(this.ctx, t.width, t.height), this.phaseMarkerRenderer = new J(this.ctx, t.width, t.height, this.debugOverlaysEnabled), t.width === 300 && t.height === 150 && console.warn(
+    this.ctx = i, this.overlaysLayout = e || U, this.gridRenderer = new Z(this.ctx, t.width, t.height), this.waveformLineRenderer = new Q(this.ctx, t.width, t.height), this.fftOverlayRenderer = new X(this.ctx, t.width, t.height), this.harmonicAnalysisRenderer = new V(this.ctx, t.width, t.height), this.frequencyPlotRenderer = new j(this.ctx, t.width, t.height), this.phaseMarkerRenderer = new J(this.ctx, t.width, t.height, this.debugOverlaysEnabled), t.width === 300 && t.height === 150 && console.warn(
       'Canvas element is using default dimensions (300x150). Set explicit width and height attributes on the canvas element to match desired resolution. Example: <canvas id="oscilloscope" width="1800" height="1000"></canvas>'
     );
   }
@@ -1184,8 +1184,8 @@ class rt {
     }
     const l = g / r.length, d = l * 0.15;
     for (let m = 0; m < r.length; m++) {
-      const x = r[m], E = Math.max(f, Math.min(y, x)), p = (E - f) / (y - f), S = a + c - p * c, C = a + c - (0 - f) / (y - f) * c, A = n + m * l + d, b = l - d * 2;
-      x >= 0.9 ? t.fillStyle = "#00ff00" : x >= 0.7 ? t.fillStyle = "#88ff00" : x >= 0.5 ? t.fillStyle = "#ffaa00" : x >= 0 ? t.fillStyle = "#ff6600" : t.fillStyle = "#ff0000", S < C ? t.fillRect(A, S, b, C - S) : t.fillRect(A, C, b, S - C), t.fillStyle = "#ffffff", t.font = "9px monospace", t.textAlign = "center", E >= 0 ? (t.textBaseline = "bottom", t.fillText(x.toFixed(2), A + b / 2, S - 2)) : (t.textBaseline = "top", t.fillText(x.toFixed(2), A + b / 2, S + 2));
+      const x = r[m], E = Math.max(f, Math.min(y, x)), p = (E - f) / (y - f), S = a + c - p * c, b = a + c - (0 - f) / (y - f) * c, A = n + m * l + d, C = l - d * 2;
+      x >= 0.9 ? t.fillStyle = "#00ff00" : x >= 0.7 ? t.fillStyle = "#88ff00" : x >= 0.5 ? t.fillStyle = "#ffaa00" : x >= 0 ? t.fillStyle = "#ff6600" : t.fillStyle = "#ff0000", S < b ? t.fillRect(A, S, C, b - S) : t.fillRect(A, b, C, S - b), t.fillStyle = "#ffffff", t.font = "9px monospace", t.textAlign = "center", E >= 0 ? (t.textBaseline = "bottom", t.fillText(x.toFixed(2), A + C / 2, S - 2)) : (t.textBaseline = "top", t.fillText(x.toFixed(2), A + C / 2, S + 2));
     }
     const w = a + c - (0 - f) / (y - f) * c;
     t.strokeStyle = "#666666", t.lineWidth = 1, t.beginPath(), t.moveTo(n, w), t.lineTo(n + g, w), t.stroke(), t.fillStyle = "#aaaaaa", t.font = "9px Arial", t.textAlign = "center", t.textBaseline = "top";
@@ -1474,6 +1474,8 @@ class ht {
     s(this, "animationId", null);
     s(this, "isRunning", !1);
     s(this, "isPaused", !1);
+    s(this, "phaseMarkerRangeEnabled", !0);
+    // Default: on
     // Frame processing diagnostics
     s(this, "lastFrameTime", 0);
     s(this, "frameProcessingTimes", []);
@@ -1550,23 +1552,25 @@ class ht {
    * This method contains only rendering logic - no data processing
    */
   renderFrame(t) {
-    const e = t.displayEndIndex - t.displayStartIndex;
+    let e = t.displayStartIndex, i = t.displayEndIndex;
+    this.phaseMarkerRangeEnabled && t.phaseMinusQuarterPiIndex !== void 0 && t.phaseTwoPiPlusQuarterPiIndex !== void 0 && (e = t.phaseMinusQuarterPiIndex, i = t.phaseTwoPiPlusQuarterPiIndex);
+    const r = i - e;
     this.renderer.clearAndDrawGrid(
       t.sampleRate,
-      e,
+      r,
       t.gain
     ), this.renderer.drawWaveform(
       t.waveformData,
-      t.displayStartIndex,
-      t.displayEndIndex,
+      e,
+      i,
       t.gain
     ), this.renderer.drawPhaseMarkers(
       t.phaseZeroIndex,
       t.phaseTwoPiIndex,
       t.phaseMinusQuarterPiIndex,
       t.phaseTwoPiPlusQuarterPiIndex,
-      t.displayStartIndex,
-      t.displayEndIndex,
+      e,
+      i,
       {
         phaseZeroSegmentRelative: t.phaseZeroSegmentRelative,
         phaseZeroHistory: t.phaseZeroHistory,
@@ -1594,8 +1598,8 @@ class ht {
     ), this.comparisonRenderer.updatePanels(
       t.previousWaveform,
       t.waveformData,
-      t.displayStartIndex,
-      t.displayEndIndex,
+      e,
+      i,
       t.waveformData,
       t.similarity,
       t.similarityPlotHistory
@@ -1725,6 +1729,22 @@ class ht {
   }
   getPauseDrawing() {
     return this.isPaused;
+  }
+  /**
+   * Enable or disable phase marker range display mode
+   * When enabled (default), displays only the range between orange-red-red-orange markers
+   * When disabled, displays the full waveform segment
+   * @param enabled - true to display only phase marker range, false to display full segment
+   */
+  setPhaseMarkerRangeEnabled(t) {
+    this.phaseMarkerRangeEnabled = t;
+  }
+  /**
+   * Get the current state of phase marker range display mode
+   * @returns true if phase marker range display is enabled, false otherwise
+   */
+  getPhaseMarkerRangeEnabled() {
+    return this.phaseMarkerRangeEnabled;
   }
 }
 class lt {
