@@ -7,7 +7,7 @@ function G(u) {
 function N(u) {
   return u <= 0 ? -1 / 0 : 20 * Math.log10(u);
 }
-function I(u) {
+function W(u) {
   if (u <= 0 || !isFinite(u))
     return null;
   const e = 440 * Math.pow(2, -4.75), i = 12 * Math.log2(u / e), r = Math.round(i), o = Math.round((i - r) * 100), h = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], n = Math.floor(r / 12);
@@ -357,7 +357,7 @@ class L {
     let h = e, n = i, a = r, g = o;
     if (t.position.x !== void 0)
       if (typeof t.position.x == "string" && t.position.x.startsWith("right-")) {
-        const c = parseInt(t.position.x.substring(6), 10), f = typeof t.size.width == "string" && t.size.width.endsWith("%") ? R(t.size.width, this.canvasWidth) : typeof t.size.width == "number" ? t.size.width : r;
+        const c = parseInt(t.position.x.substring(6), 10), f = t.size.width !== void 0 && t.size.width !== "auto" ? R(t.size.width, this.canvasWidth) : r;
         h = this.canvasWidth - f - c;
       } else
         h = R(t.position.x, this.canvasWidth);
@@ -600,7 +600,7 @@ class j extends L {
     }
     this.ctx.fillStyle = "#88ccff", this.ctx.font = "9px monospace", this.ctx.textAlign = "right", this.ctx.textBaseline = "middle";
     for (let v = 0; v <= 4; v++) {
-      const E = p - (p - S) * (v / 4), M = f + l / 4 * v, F = I(E);
+      const E = p - (p - S) * (v / 4), M = f + l / 4 * v, F = W(E);
       if (F) {
         const k = F.cents >= 0 ? "+" : "";
         this.ctx.fillText(`${k}${F.cents}¢`, c + y - 5, M);
@@ -625,19 +625,19 @@ class j extends L {
     for (let v = 0; v < e.length; v++) {
       const E = e[v], M = c + v * T;
       if (E !== 0) {
-        const W = A(E);
-        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(M, W, 2, 0, Math.PI * 2), this.ctx.fill();
+        const I = A(E);
+        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(M, I, 2, 0, Math.PI * 2), this.ctx.fill();
       }
       const F = v === e.length - 1;
       if (v % C === 0 || F) {
         this.ctx.fillStyle = "#aaaaaa";
-        const W = v - e.length + 1;
-        this.ctx.fillText(`${W}`, M, f + l + 2);
+        const I = v - e.length + 1;
+        this.ctx.fillText(`${I}`, M, f + l + 2);
       }
     }
     const _ = e[e.length - 1];
     if (_ > 0) {
-      const v = I(_);
+      const v = W(_);
       this.ctx.fillStyle = "#00ff00", this.ctx.font = "bold 11px Arial", this.ctx.textAlign = "left", this.ctx.textBaseline = "bottom";
       let E = `${_.toFixed(1)} Hz`;
       if (v) {
@@ -754,20 +754,20 @@ class tt {
    * Draw waveform
    */
   drawWaveform(t, e, i, r) {
-    this.waveformLineRenderer.drawWaveform(t, e, i, r);
+    this.updateRendererDimensions(), this.waveformLineRenderer.drawWaveform(t, e, i, r);
   }
   /**
    * Draw FFT spectrum overlay (position and size configurable via overlaysLayout)
    */
   drawFFTOverlay(t, e, i, r, o) {
-    this.fftDisplayEnabled && this.fftOverlayRenderer.drawFFTOverlay(
+    this.fftDisplayEnabled && (this.updateRendererDimensions(), this.fftOverlayRenderer.drawFFTOverlay(
       t,
       e,
       i,
       r,
       o,
       this.overlaysLayout.fftOverlay
-    );
+    ));
   }
   /**
    * Draw harmonic analysis information overlay
@@ -775,7 +775,7 @@ class tt {
    * Position and size configurable via overlaysLayout
    */
   drawHarmonicAnalysis(t, e, i, r, o, h, n) {
-    this.debugOverlaysEnabled && this.fftDisplayEnabled && this.harmonicAnalysisRenderer.drawHarmonicAnalysis(
+    this.debugOverlaysEnabled && this.fftDisplayEnabled && (this.updateRendererDimensions(), this.harmonicAnalysisRenderer.drawHarmonicAnalysis(
       t,
       e,
       i,
@@ -784,7 +784,7 @@ class tt {
       h,
       n,
       this.overlaysLayout.harmonicAnalysis
-    );
+    ));
   }
   /**
    * Draw frequency plot overlay
@@ -793,12 +793,12 @@ class tt {
    * One data point is added per frame
    */
   drawFrequencyPlot(t, e, i) {
-    this.debugOverlaysEnabled && this.frequencyPlotRenderer.drawFrequencyPlot(
+    this.debugOverlaysEnabled && (this.updateRendererDimensions(), this.frequencyPlotRenderer.drawFrequencyPlot(
       t,
       e,
       i,
       this.overlaysLayout.frequencyPlot
-    );
+    ));
   }
   /**
    * Draw phase markers on the waveform
@@ -811,7 +811,7 @@ class tt {
    * @param debugInfo - Optional debug information for phase tracking
    */
   drawPhaseMarkers(t, e, i, r, o, h, n) {
-    this.phaseMarkerRenderer.drawPhaseMarkers(
+    this.updateRendererDimensions(), this.phaseMarkerRenderer.drawPhaseMarkers(
       t,
       e,
       i,
@@ -1735,7 +1735,7 @@ class lt {
    * utils.tsのfrequencyToNote関数を使用し、内部形式に変換
    */
   frequencyToNoteInfo(t) {
-    const e = I(t);
+    const e = W(t);
     if (!e)
       return { note: -1, octave: -1, noteInOctave: -1 };
     const i = e.noteName.match(/^([A-G]#?)(\d+)$/);

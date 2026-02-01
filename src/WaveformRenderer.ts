@@ -96,6 +96,7 @@ export class WaveformRenderer {
    * Draw waveform
    */
   drawWaveform(data: Float32Array, startIndex: number, endIndex: number, gain: number): void {
+    this.updateRendererDimensions();
     this.waveformLineRenderer.drawWaveform(data, startIndex, endIndex, gain);
   }
 
@@ -107,6 +108,7 @@ export class WaveformRenderer {
       return;
     }
 
+    this.updateRendererDimensions();
     this.fftOverlayRenderer.drawFFTOverlay(
       frequencyData,
       estimatedFrequency,
@@ -140,6 +142,7 @@ export class WaveformRenderer {
       return;
     }
 
+    this.updateRendererDimensions();
     this.harmonicAnalysisRenderer.drawHarmonicAnalysis(
       halfFreqPeakStrengthPercent,
       candidate1Harmonics,
@@ -164,6 +167,7 @@ export class WaveformRenderer {
       return;
     }
 
+    this.updateRendererDimensions();
     this.frequencyPlotRenderer.drawFrequencyPlot(
       frequencyHistory,
       minFrequency,
@@ -196,6 +200,7 @@ export class WaveformRenderer {
       zeroCrossModeName?: string;
     }
   ): void {
+    this.updateRendererDimensions();
     this.phaseMarkerRenderer.drawPhaseMarkers(
       phaseZeroIndex,
       phaseTwoPiIndex,

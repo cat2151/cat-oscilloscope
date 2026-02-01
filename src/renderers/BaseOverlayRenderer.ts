@@ -46,9 +46,10 @@ export abstract class BaseOverlayRenderer {
     if (layout.position.x !== undefined) {
       if (typeof layout.position.x === 'string' && layout.position.x.startsWith('right-')) {
         const offset = parseInt(layout.position.x.substring(6), 10);
-        const resolvedWidth = typeof layout.size.width === 'string' && layout.size.width.endsWith('%')
-          ? resolveValue(layout.size.width, this.canvasWidth)
-          : (typeof layout.size.width === 'number' ? layout.size.width : defaultWidth);
+        const resolvedWidth =
+          layout.size.width !== undefined && layout.size.width !== 'auto'
+            ? resolveValue(layout.size.width, this.canvasWidth)
+            : defaultWidth;
         x = this.canvasWidth - resolvedWidth - offset;
       } else {
         x = resolveValue(layout.position.x, this.canvasWidth);
