@@ -26,6 +26,7 @@ export declare class Oscilloscope {
     private animationId;
     private isRunning;
     private isPaused;
+    private phaseMarkerRangeEnabled;
     private lastFrameTime;
     private frameProcessingTimes;
     private readonly MAX_FRAME_TIMES;
@@ -121,4 +122,16 @@ export declare class Oscilloscope {
     getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero';
     setPauseDrawing(paused: boolean): void;
     getPauseDrawing(): boolean;
+    /**
+     * Enable or disable phase marker range display mode
+     * When enabled (default), displays only the range between orange-red-red-orange markers
+     * When disabled, displays the full waveform segment
+     * @param enabled - true to display only phase marker range, false to display full segment
+     */
+    setPhaseMarkerRangeEnabled(enabled: boolean): void;
+    /**
+     * Get the current state of phase marker range display mode
+     * @returns true if phase marker range display is enabled, false otherwise
+     */
+    getPhaseMarkerRangeEnabled(): boolean;
 }

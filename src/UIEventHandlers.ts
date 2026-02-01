@@ -45,6 +45,7 @@ export class UIEventHandlers {
     this.oscilloscope.setFFTDisplay(this.dom.fftDisplayCheckbox.checked);
     this.oscilloscope.setHarmonicAnalysisEnabled(this.dom.harmonicAnalysisCheckbox.checked);
     this.oscilloscope.setPauseDrawing(this.dom.pauseDrawingCheckbox.checked);
+    this.oscilloscope.setPhaseMarkerRangeEnabled(this.dom.phaseMarkerRangeCheckbox.checked);
 
     // Synchronize noise gate threshold
     const initialThreshold = this.sliderValueToThreshold(this.dom.noiseGateThreshold.value);
@@ -89,6 +90,11 @@ export class UIEventHandlers {
     // Pause drawing checkbox
     this.dom.pauseDrawingCheckbox.addEventListener('change', () => {
       this.oscilloscope.setPauseDrawing(this.dom.pauseDrawingCheckbox.checked);
+    });
+
+    // Phase marker range checkbox
+    this.dom.phaseMarkerRangeCheckbox.addEventListener('change', () => {
+      this.oscilloscope.setPhaseMarkerRangeEnabled(this.dom.phaseMarkerRangeCheckbox.checked);
     });
   }
 

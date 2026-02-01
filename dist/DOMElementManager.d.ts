@@ -22,6 +22,7 @@ export declare class DOMElementManager {
     readonly fftDisplayCheckbox: HTMLInputElement;
     readonly harmonicAnalysisCheckbox: HTMLInputElement;
     readonly pauseDrawingCheckbox: HTMLInputElement;
+    readonly phaseMarkerRangeCheckbox: HTMLInputElement;
     readonly noiseGateThreshold: HTMLInputElement;
     readonly frequencyMethod: HTMLSelectElement;
     readonly bufferSizeMultiplier: HTMLSelectElement;

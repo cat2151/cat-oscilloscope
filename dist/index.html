@@ -133,7 +133,7 @@
       max-width: 600px;
     }
   </style>
-  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-BSIPHox7.js"></script>
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/index-Da3a2jwr.js"></script>
 </head>
 <body>
   <canvas
@@ -262,6 +262,16 @@
       >
       <span>FFT Display</span>
     </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="harmonicAnalysisCheckbox"
+        style="cursor: pointer;"
+        aria-label="Display harmonic analysis overlay"
+        title="Display harmonic analysis overlay in top-left corner"
+      >
+      <span>倍音分析</span>
+    </label>
 
     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
       <input
@@ -272,6 +282,17 @@
         title="Pause drawing to examine the waveform"
       >
       <span>描画の一時停止</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="phaseMarkerRangeCheckbox"
+        checked
+        style="cursor: pointer;"
+        aria-label="Display only the range between phase markers (orange-red-red-orange)"
+        title="Display only the range between phase markers"
+      >
+      <span>位相マーカー範囲のみ表示</span>
     </label>
     <label style="display: flex; align-items: center; gap: 10px;">
       <span>Threshold:</span>
