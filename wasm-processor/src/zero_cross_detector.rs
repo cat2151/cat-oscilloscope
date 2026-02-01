@@ -53,6 +53,12 @@ impl ZeroCrossDetector {
     const MAX_SEARCH_RANGE_MULTIPLIER: f32 = 5.0;
     /// Number of cycles to display (must match CYCLES_TO_STORE in waveform_searcher)
     const CYCLES_TO_DISPLAY: usize = 4;
+    /// Peak search range multiplier for initial detection
+    const PEAK_SEARCH_MULTIPLIER: f32 = 1.5;
+    /// Extended tolerance ratio for Standard mode (3% of cycle length)
+    const STANDARD_MODE_EXTENDED_TOLERANCE_RATIO: f32 = 0.03;
+    /// Extended tolerance multiplier for other modes (3x normal tolerance)
+    const EXTENDED_TOLERANCE_MULTIPLIER: usize = 3;
     
     pub fn new() -> Self {
         ZeroCrossDetector {
@@ -711,7 +717,7 @@ impl ZeroCrossDetector {
         estimated_cycle_length: f32,
     ) -> Option<usize> {
         // If we don't have history or invalid cycle length, perform initial detection
-        if self.absolute_phase_offset.is_none() || estimated_cycle_length <= 0.0 {
+        if self.absolute_phase_offset.is_none() || estimated_cycle_length < f32::EPSILON {
             // Initial detection based on current mode
             let zero_cross_rel = match self.zero_cross_mode {
                 ZeroCrossMode::Standard => {
@@ -720,7 +726,7 @@ impl ZeroCrossDetector {
                 ZeroCrossMode::PeakBacktrackWithHistory => {
                     // Find peak and backtrack
                     let search_end = if estimated_cycle_length > 0.0 {
-                        (estimated_cycle_length * 1.5) as usize
+                        (estimated_cycle_length * Self::PEAK_SEARCH_MULTIPLIER) as usize
                     } else {
                         segment.len() / 2
                     };
@@ -800,9 +806,9 @@ impl ZeroCrossDetector {
                 
                 // Extended search (3% for Standard, gradual for others)
                 let extended_tolerance = if self.zero_cross_mode == ZeroCrossMode::Standard {
-                    (estimated_cycle_length * 0.03) as usize
+                    (estimated_cycle_length * Self::STANDARD_MODE_EXTENDED_TOLERANCE_RATIO) as usize
                 } else {
-                    tolerance * 3
+                    tolerance * Self::EXTENDED_TOLERANCE_MULTIPLIER
                 };
                 
                 let extended_start = history_rel.saturating_sub(extended_tolerance);
