@@ -224,7 +224,8 @@ export class Oscilloscope {
     
     if (this.phaseMarkerRangeEnabled && 
         renderData.phaseMinusQuarterPiIndex !== undefined && 
-        renderData.phaseTwoPiPlusQuarterPiIndex !== undefined) {
+        renderData.phaseTwoPiPlusQuarterPiIndex !== undefined &&
+        renderData.phaseMinusQuarterPiIndex <= renderData.phaseTwoPiPlusQuarterPiIndex) {
       // Use phase marker range (orange to orange)
       displayStartIndex = renderData.phaseMinusQuarterPiIndex;
       displayEndIndex = renderData.phaseTwoPiPlusQuarterPiIndex;

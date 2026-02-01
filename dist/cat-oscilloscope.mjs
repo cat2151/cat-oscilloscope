@@ -1553,7 +1553,7 @@ class ht {
    */
   renderFrame(t) {
     let e = t.displayStartIndex, i = t.displayEndIndex;
-    this.phaseMarkerRangeEnabled && t.phaseMinusQuarterPiIndex !== void 0 && t.phaseTwoPiPlusQuarterPiIndex !== void 0 && (e = t.phaseMinusQuarterPiIndex, i = t.phaseTwoPiPlusQuarterPiIndex);
+    this.phaseMarkerRangeEnabled && t.phaseMinusQuarterPiIndex !== void 0 && t.phaseTwoPiPlusQuarterPiIndex !== void 0 && t.phaseMinusQuarterPiIndex <= t.phaseTwoPiPlusQuarterPiIndex && (e = t.phaseMinusQuarterPiIndex, i = t.phaseTwoPiPlusQuarterPiIndex);
     const r = i - e;
     this.renderer.clearAndDrawGrid(
       t.sampleRate,
