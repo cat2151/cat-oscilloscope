@@ -25,6 +25,7 @@ export class DOMElementManager {
   readonly autoGainCheckbox: HTMLInputElement;
   readonly noiseGateCheckbox: HTMLInputElement;
   readonly fftDisplayCheckbox: HTMLInputElement;
+  readonly harmonicAnalysisCheckbox: HTMLInputElement;
   readonly pauseDrawingCheckbox: HTMLInputElement;
   readonly noiseGateThreshold: HTMLInputElement;
 
@@ -62,6 +63,7 @@ export class DOMElementManager {
     this.autoGainCheckbox = this.getElement('autoGainCheckbox') as HTMLInputElement;
     this.noiseGateCheckbox = this.getElement('noiseGateCheckbox') as HTMLInputElement;
     this.fftDisplayCheckbox = this.getElement('fftDisplayCheckbox') as HTMLInputElement;
+    this.harmonicAnalysisCheckbox = this.getElement('harmonicAnalysisCheckbox') as HTMLInputElement;
     this.pauseDrawingCheckbox = this.getElement('pauseDrawingCheckbox') as HTMLInputElement;
     this.noiseGateThreshold = this.getElement('noiseGateThreshold') as HTMLInputElement;
 
@@ -114,6 +116,7 @@ export class DOMElementManager {
       { element: this.autoGainCheckbox, name: 'autoGainCheckbox' },
       { element: this.noiseGateCheckbox, name: 'noiseGateCheckbox' },
       { element: this.fftDisplayCheckbox, name: 'fftDisplayCheckbox' },
+      { element: this.harmonicAnalysisCheckbox, name: 'harmonicAnalysisCheckbox' },
       { element: this.pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
       { element: this.noiseGateThreshold, name: 'noiseGateThreshold' },
       { element: this.thresholdValue, name: 'thresholdValue' },
