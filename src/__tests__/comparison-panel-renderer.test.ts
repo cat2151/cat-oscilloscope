@@ -160,11 +160,11 @@ describe('ComparisonPanelRenderer', () => {
 
     it('should update all panels with valid data', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
-      const currentWaveform = new Float32Array(200).fill(0.3);
+      const currentWaveform = new Float32Array(100).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.95;
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, fullBuffer, 0, 100, similarity);
 
       // Verify that drawing operations were called on all contexts
       const prevCtx = previousCanvas.getContext('2d') as any;
@@ -177,11 +177,11 @@ describe('ComparisonPanelRenderer', () => {
     });
 
     it('should handle null previous waveform', () => {
-      const currentWaveform = new Float32Array(200).fill(0.3);
+      const currentWaveform = new Float32Array(100).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0;
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(null, currentWaveform, fullBuffer, 0, 100, similarity);
 
       // Should still work without errors
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -190,11 +190,11 @@ describe('ComparisonPanelRenderer', () => {
 
     it('should draw similarity text when previous waveform exists', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
-      const currentWaveform = new Float32Array(200).fill(0.3);
+      const currentWaveform = new Float32Array(100).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.87;
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, fullBuffer, 0, 100, similarity);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       expect(currCtx.fillText).toHaveBeenCalled();
@@ -209,13 +209,13 @@ describe('ComparisonPanelRenderer', () => {
 
     it('should draw position markers on buffer canvas', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
-      const currentWaveform = new Float32Array(200).fill(0.3);
+      const currentWaveform = new Float32Array(100).fill(0.3);
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.9;
       const startIndex = 50;
       const endIndex = 150;
 
-      renderer.updatePanels(previousWaveform, currentWaveform, startIndex, endIndex, fullBuffer, similarity);
+      renderer.updatePanels(previousWaveform, currentWaveform, fullBuffer, startIndex, endIndex, similarity);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
       
@@ -273,7 +273,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(100).fill(0);
 
-      renderer.updatePanels(null, smallWaveform, 0, 100, fullBuffer, 0);
+      renderer.updatePanels(null, smallWaveform, fullBuffer, 0, 100, 0);
 
       const currCtx = currentCanvas.getContext('2d') as any;
       
@@ -291,7 +291,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw
       expect(() => {
-        renderer.updatePanels(null, zeroWaveform, 0, 100, fullBuffer, 0);
+        renderer.updatePanels(null, zeroWaveform, fullBuffer, 0, 100, 0);
       }).not.toThrow();
     });
 
@@ -306,7 +306,7 @@ describe('ComparisonPanelRenderer', () => {
 
       // Should not throw and should use default scaling
       expect(() => {
-        renderer.updatePanels(null, tinyWaveform, 0, 100, fullBuffer, 0);
+        renderer.updatePanels(null, tinyWaveform, fullBuffer, 0, 100, 0);
       }).not.toThrow();
 
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -316,7 +316,7 @@ describe('ComparisonPanelRenderer', () => {
     it('should auto-scale previous waveform independently', () => {
       // Create waveforms with different amplitudes
       const previousWaveform = new Float32Array(100);
-      const currentWaveform = new Float32Array(200);
+      const currentWaveform = new Float32Array(100);
       
       for (let i = 0; i < previousWaveform.length; i++) {
         previousWaveform[i] = 0.05 * Math.sin((i / previousWaveform.length) * Math.PI * 2);
@@ -326,7 +326,7 @@ describe('ComparisonPanelRenderer', () => {
       }
       const fullBuffer = new Float32Array(200).fill(0);
 
-      renderer.updatePanels(previousWaveform, currentWaveform, 0, 100, fullBuffer, 0.85);
+      renderer.updatePanels(previousWaveform, currentWaveform, fullBuffer, 0, 100, 0.85);
 
       const prevCtx = previousCanvas.getContext('2d') as any;
       const currCtx = currentCanvas.getContext('2d') as any;
@@ -338,7 +338,7 @@ describe('ComparisonPanelRenderer', () => {
 
     it('should auto-scale frame buffer waveform independently', () => {
       // Create a full buffer with different amplitude
-      const currentWaveform = new Float32Array(200);
+      const currentWaveform = new Float32Array(100);
       const fullBuffer = new Float32Array(200);
       
       for (let i = 0; i < currentWaveform.length; i++) {
@@ -348,7 +348,7 @@ describe('ComparisonPanelRenderer', () => {
         fullBuffer[i] = 0.03 * Math.sin((i / fullBuffer.length) * Math.PI * 2);
       }
 
-      renderer.updatePanels(null, currentWaveform, 0, 100, fullBuffer, 0);
+      renderer.updatePanels(null, currentWaveform, fullBuffer, 0, 100, 0);
 
       const buffCtx = bufferCanvas.getContext('2d') as any;
 

@@ -329,19 +329,19 @@ export class ComparisonPanelRenderer {
   /**
    * Update all comparison panels
    * @param previousWaveform - Previous frame's waveform data (null if no previous frame exists)
-   * @param currentWaveform - Full buffer containing current frame's audio data
-   * @param currentStart - Start index of the extracted waveform within currentWaveform
-   * @param currentEnd - End index of the extracted waveform within currentWaveform (exclusive)
-   * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
+   * @param currentWaveform - Current frame's 4-cycle waveform for comparison display (null if no previous frame exists)
+   * @param fullBuffer - Complete frame buffer to display
+   * @param displayStart - Start index of the display segment within fullBuffer
+   * @param displayEnd - End index of the display segment within fullBuffer (exclusive)
    * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
    * @param similarityHistory - Array of similarity values over time for history plot
    */
   updatePanels(
     previousWaveform: Float32Array | null,
-    currentWaveform: Float32Array,
-    currentStart: number,
-    currentEnd: number,
+    currentWaveform: Float32Array | null,
     fullBuffer: Float32Array,
+    displayStart: number,
+    displayEnd: number,
     similarity: number,
     similarityHistory: number[] = []
   ): void {
@@ -362,17 +362,16 @@ export class ComparisonPanelRenderer {
       );
     }
 
-    // Draw current waveform with similarity score
+    // Draw current waveform (4 cycles extracted from current frame)
     this.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
-    const currentLength = currentEnd - currentStart;
-    if (currentLength > 0) {
+    if (currentWaveform && currentWaveform.length > 0) {
       this.drawWaveform(
         this.currentCtx,
         this.currentCanvas.width,
         this.currentCanvas.height,
         currentWaveform,
-        currentStart,
-        currentEnd,
+        0,
+        currentWaveform.length,
         '#00ff00'
       );
     }
@@ -400,8 +399,8 @@ export class ComparisonPanelRenderer {
       this.bufferCtx,
       this.bufferCanvas.width,
       this.bufferCanvas.height,
-      currentStart,
-      currentEnd,
+      displayStart,
+      displayEnd,
       fullBuffer.length
     );
   }

@@ -295,10 +295,10 @@ export class Oscilloscope {
     // Update comparison panels with similarity history
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,
+      renderData.currentWaveform,
       renderData.waveformData,
       displayStartIndex,
       displayEndIndex,
-      renderData.waveformData,
       renderData.similarity,
       renderData.similarityPlotHistory
     );

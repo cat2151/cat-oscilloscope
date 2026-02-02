@@ -47,6 +47,9 @@ export interface WaveformRenderData {
   /** Previous frame's waveform for comparison (null if not available) */
   previousWaveform: Float32Array | null;
   
+  /** Current frame's 4-cycle waveform for comparison display (null if not available) */
+  currentWaveform: Float32Array | null;
+  
   /** Similarity score between current and previous waveform (-1 to +1) */
   similarity: number;
   
