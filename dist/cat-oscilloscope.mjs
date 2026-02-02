@@ -7,7 +7,7 @@ function G(u) {
 function N(u) {
   return u <= 0 ? -1 / 0 : 20 * Math.log10(u);
 }
-function I(u) {
+function H(u) {
   if (u <= 0 || !isFinite(u))
     return null;
   const e = 440 * Math.pow(2, -4.75), i = 12 * Math.log2(u / e), r = Math.round(i), o = Math.round((i - r) * 100), h = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], n = Math.floor(r / 12);
@@ -600,7 +600,7 @@ class j extends L {
     }
     this.ctx.fillStyle = "#88ccff", this.ctx.font = "9px monospace", this.ctx.textAlign = "right", this.ctx.textBaseline = "middle";
     for (let v = 0; v <= 4; v++) {
-      const T = p - (p - E) * (v / 4), M = f + l / 4 * v, F = I(T);
+      const T = p - (p - E) * (v / 4), M = f + l / 4 * v, F = H(T);
       if (F) {
         const k = F.cents >= 0 ? "+" : "";
         this.ctx.fillText(`${k}${F.cents}¢`, c + y - 5, M);
@@ -625,19 +625,19 @@ class j extends L {
     for (let v = 0; v < e.length; v++) {
       const T = e[v], M = c + v * S;
       if (T !== 0) {
-        const H = A(T);
-        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(M, H, 2, 0, Math.PI * 2), this.ctx.fill();
+        const I = A(T);
+        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(M, I, 2, 0, Math.PI * 2), this.ctx.fill();
       }
       const F = v === e.length - 1;
       if (v % b === 0 || F) {
         this.ctx.fillStyle = "#aaaaaa";
-        const H = v - e.length + 1;
-        this.ctx.fillText(`${H}`, M, f + l + 2);
+        const I = v - e.length + 1;
+        this.ctx.fillText(`${I}`, M, f + l + 2);
       }
     }
     const _ = e[e.length - 1];
     if (_ > 0) {
-      const v = I(_);
+      const v = H(_);
       this.ctx.fillStyle = "#00ff00", this.ctx.font = "bold 11px Arial", this.ctx.textAlign = "left", this.ctx.textBaseline = "bottom";
       let T = `${_.toFixed(1)} Hz`;
       if (v) {
@@ -1598,8 +1598,8 @@ class ht {
     ), this.comparisonRenderer.updatePanels(
       t.previousWaveform,
       t.waveformData,
-      e,
-      i,
+      t.displayStartIndex,
+      t.displayEndIndex,
       t.waveformData,
       t.similarity,
       t.similarityPlotHistory
@@ -1787,7 +1787,7 @@ class lt {
    * utils.tsのfrequencyToNote関数を使用し、内部形式に変換
    */
   frequencyToNoteInfo(t) {
-    const e = I(t);
+    const e = H(t);
     if (!e)
       return { note: -1, octave: -1, noteInOctave: -1 };
     const i = e.noteName.match(/^([A-G]#?)(\d+)$/);

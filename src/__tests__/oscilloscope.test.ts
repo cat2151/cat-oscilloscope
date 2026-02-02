@@ -576,4 +576,49 @@ describe('Oscilloscope Class', () => {
       expect(oscilloscope.getDebugOverlaysEnabled()).toBe(true);
     });
   });
+
+  describe('Comparison Panel Data Passing', () => {
+    it('should pass original WASM range to comparison panel, not phase-marker-narrowed range', async () => {
+      const oscilloscope = new Oscilloscope(canvas, previousWaveformCanvas, currentWaveformCanvas, similarityPlotCanvas, frameBufferCanvas);
+      
+      // Spy on the comparison renderer's updatePanels method
+      // Access the private comparisonRenderer through type assertion
+      const comparisonRenderer = (oscilloscope as any).comparisonRenderer;
+      const updatePanelsSpy = vi.spyOn(comparisonRenderer, 'updatePanels');
+      
+      await oscilloscope.start();
+      
+      // Wait for at least one frame to be processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Check that updatePanels was called
+      expect(updatePanelsSpy).toHaveBeenCalled();
+      
+      // Verify that the indices passed to updatePanels are from renderData
+      // (not the phase-marker-narrowed displayStartIndex/displayEndIndex)
+      // The call signature should be:
+      // updatePanels(previousWaveform, currentWaveform, currentStart, currentEnd, fullBuffer, similarity, similarityHistory)
+      // where currentStart and currentEnd come from renderData.displayStartIndex/displayEndIndex
+      
+      if (updatePanelsSpy.mock.calls.length > 0) {
+        const lastCall = updatePanelsSpy.mock.calls[updatePanelsSpy.mock.calls.length - 1];
+        const currentWaveform = lastCall[1]; // Full buffer
+        const currentStart = lastCall[2]; // Should be renderData.displayStartIndex
+        const currentEnd = lastCall[3]; // Should be renderData.displayEndIndex
+        const fullBuffer = lastCall[4]; // Should be the same buffer
+        
+        // Verify that currentWaveform and fullBuffer are the same reference
+        expect(currentWaveform).toBe(fullBuffer);
+        
+        // The indices should represent a 4-cycle range from WASM, not a 1-cycle phase-marker range
+        // A 4-cycle range is significantly larger than a 1-cycle range
+        // For a typical signal, 4 cycles would be at least several hundred samples
+        const rangeLength = currentEnd - currentStart;
+        expect(rangeLength).toBeGreaterThan(100); // 4 cycles should be > 100 samples
+      }
+      
+      await oscilloscope.stop();
+      updatePanelsSpy.mockRestore();
+    });
+  });
 });
