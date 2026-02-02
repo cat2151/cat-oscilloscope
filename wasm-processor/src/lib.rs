@@ -40,7 +40,6 @@ pub struct WaveformRenderData {
     
     // Waveform search information
     previous_waveform: Option<Vec<f32>>,
-    current_waveform: Option<Vec<f32>>,  // Current frame's 4-cycle waveform (for comparison display)
     similarity: f32,
     similarity_plot_history: Vec<f32>,
     used_similarity_search: bool,
@@ -132,11 +131,6 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = previousWaveform)]
     pub fn previous_waveform(&self) -> Option<Vec<f32>> {
         self.previous_waveform.clone()
-    }
-    
-    #[wasm_bindgen(getter, js_name = currentWaveform)]
-    pub fn current_waveform(&self) -> Option<Vec<f32>> {
-        self.current_waveform.clone()
     }
     
     #[wasm_bindgen(getter)]
@@ -363,16 +357,11 @@ impl WasmDataProcessor {
         let gain = self.gain_controller.get_current_gain();
         
         // Store waveform for next frame (N cycles worth, where N is CYCLES_TO_STORE)
-        // Also extract current waveform for display in comparison panel
-        let current_waveform = if cycle_length > 0.0 {
+        if cycle_length > 0.0 {
             let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
             let end_index = (selected_segment_buffer_position + waveform_length).min(data.len());
             self.waveform_searcher.store_waveform(&data, selected_segment_buffer_position, end_index);
-            // Extract current 4-cycle waveform for display
-            Some(data[selected_segment_buffer_position..end_index].to_vec())
-        } else {
-            None
-        };
+        }
         
         // Get waveform search data
         let previous_waveform = self.waveform_searcher.get_previous_waveform();
@@ -416,7 +405,6 @@ impl WasmDataProcessor {
             is_signal_above_noise_gate,
             max_frequency: self.frequency_estimator.get_max_frequency(),
             previous_waveform,
-            current_waveform,
             similarity,
             similarity_plot_history,
             used_similarity_search,

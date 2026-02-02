@@ -62,14 +62,14 @@ export declare class ComparisonPanelRenderer {
     /**
      * Update all comparison panels
      * @param previousWaveform - Previous frame's waveform data (null if no previous frame exists)
-     * @param currentWaveform - Current frame's 4-cycle waveform for comparison display (null if no previous frame exists)
-     * @param fullBuffer - Complete frame buffer to display
-     * @param displayStart - Start index of the display segment within fullBuffer
-     * @param displayEnd - End index of the display segment within fullBuffer (exclusive)
+     * @param currentWaveform - Full buffer containing current frame's audio data
+     * @param currentStart - Start index of the extracted waveform within currentWaveform
+     * @param currentEnd - End index of the extracted waveform within currentWaveform (exclusive)
+     * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
      * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
      * @param similarityHistory - Array of similarity values over time for history plot
      */
-    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array | null, fullBuffer: Float32Array, displayStart: number, displayEnd: number, similarity: number, similarityHistory?: number[]): void;
+    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array, currentStart: number, currentEnd: number, fullBuffer: Float32Array, similarity: number, similarityHistory?: number[]): void;
     /**
      * Clear all panels (e.g., when stopped)
      */

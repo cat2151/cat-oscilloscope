@@ -293,12 +293,14 @@ export class Oscilloscope {
     );
 
     // Update comparison panels with similarity history
+    // Use original 4-cycle range from WASM (renderData.displayStartIndex/displayEndIndex)
+    // instead of the phase-marker-narrowed range (displayStartIndex/displayEndIndex)
     this.comparisonRenderer.updatePanels(
       renderData.previousWaveform,
-      renderData.currentWaveform,
       renderData.waveformData,
-      displayStartIndex,
-      displayEndIndex,
+      renderData.displayStartIndex,
+      renderData.displayEndIndex,
+      renderData.waveformData,
       renderData.similarity,
       renderData.similarityPlotHistory
     );

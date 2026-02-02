@@ -169,7 +169,6 @@ export class WaveformDataProcessor {
       isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
       maxFrequency: wasmResult.maxFrequency,
       previousWaveform: wasmResult.previousWaveform ? new Float32Array(wasmResult.previousWaveform) : null,
-      currentWaveform: wasmResult.currentWaveform ? new Float32Array(wasmResult.currentWaveform) : null,
       similarity: wasmResult.similarity,
       similarityPlotHistory: wasmResult.similarityPlotHistory ? Array.from(wasmResult.similarityPlotHistory) : [],
       usedSimilaritySearch: wasmResult.usedSimilaritySearch,
