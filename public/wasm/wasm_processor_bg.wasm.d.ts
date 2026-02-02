@@ -17,7 +17,6 @@ export const waveformrenderdata_candidate1Harmonics: (a: number) => [number, num
 export const waveformrenderdata_candidate1WeightedScore: (a: number) => number;
 export const waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];
 export const waveformrenderdata_candidate2WeightedScore: (a: number) => number;
-export const waveformrenderdata_currentWaveform: (a: number) => [number, number];
 export const waveformrenderdata_cycleSimilarities2div: (a: number) => [number, number];
 export const waveformrenderdata_cycleSimilarities4div: (a: number) => [number, number];
 export const waveformrenderdata_cycleSimilarities8div: (a: number) => [number, number];

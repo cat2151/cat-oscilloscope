@@ -150,18 +150,6 @@ export class WaveformRenderData {
         return ret === 0x100000001 ? undefined : ret;
     }
     /**
-     * @returns {Float32Array | undefined}
-     */
-    get currentWaveform() {
-        const ret = wasm.waveformrenderdata_currentWaveform(this.__wbg_ptr);
-        let v1;
-        if (ret[0] !== 0) {
-            v1 = getArrayF32FromWasm0(ret[0], ret[1]).slice();
-            wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
-        }
-        return v1;
-    }
-    /**
      * @returns {Float32Array}
      */
     get cycleSimilarities2div() {
