@@ -14,9 +14,10 @@
 
 ## 🌐 ライブデモ
 
-**[https://cat2151.github.io/cat-oscilloscope/](https://cat2151.github.io/cat-oscilloscope/)**
+**フルバージョン**: [https://cat2151.github.io/cat-oscilloscope/](https://cat2151.github.io/cat-oscilloscope/)  
+**簡易デモ（ライブラリ利用例）**: [https://cat2151.github.io/cat-oscilloscope/demo-simple.html](https://cat2151.github.io/cat-oscilloscope/demo-simple.html)
 
-上記のURLでアプリケーションを試すことができます。マイクへのアクセス許可が必要です。
+上記のURLでアプリケーションを試すことができます。フルバージョンではマイクへのアクセス許可が必要です。簡易デモはBufferSourceを使った最小限の実装例で、CDN経由でのライブラリ利用方法を示しています。
 
 ## 実装状況
 
