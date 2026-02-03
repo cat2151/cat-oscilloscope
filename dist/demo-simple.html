@@ -123,7 +123,7 @@
       margin-right: 5px;
     }
   </style>
-  <script type="module" crossorigin src="/cat-oscilloscope/assets/demo-BYFCSdd4.js"></script>
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/demo-B6ajcrE2.js"></script>
   <link rel="modulepreload" crossorigin href="/cat-oscilloscope/assets/modulepreload-polyfill-B5Qt9EMX.js">
 </head>
 <body>
@@ -201,7 +201,19 @@ import { Oscilloscope, BufferSource } from
 
 // Oscilloscopeインスタンスを作成
 const canvas = document.getElementById('oscilloscope');
-const oscilloscope = new Oscilloscope(canvas);
+
+// 他のビュー用のhidden canvasを作成
+const hiddenCanvas = document.createElement('canvas');
+hiddenCanvas.width = 250;
+hiddenCanvas.height = 120;
+
+const oscilloscope = new Oscilloscope(
+  canvas,
+  hiddenCanvas,  // previousWaveformCanvas
+  hiddenCanvas,  // currentWaveformCanvas
+  hiddenCanvas,  // similarityPlotCanvas
+  hiddenCanvas   // frameBufferCanvas
+);
 
 // 440Hz サイン波データを生成
 const sampleRate = 44100;

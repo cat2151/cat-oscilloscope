@@ -1,4 +1,10 @@
 // CDN経由でライブラリをインポート
+// NOTE:
+//   このデモでは最新版を手軽に試せるよう、jsDelivr の `@main` を利用しています。
+//   本番環境で利用する場合は、CDN キャッシュの不整合を避けるため、必ずバージョンタグ
+//   もしくはコミットハッシュを指定してください（例）:
+//   import { Oscilloscope, BufferSource } from
+//     'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v1.0.0/dist/cat-oscilloscope.mjs';
 import { Oscilloscope, BufferSource } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
 
 // Canvas要素とUI要素を取得
@@ -91,7 +97,11 @@ startBtn.addEventListener('click', async () => {
     statusElement.textContent = '初期化中...';
     
     // 選択された波形タイプを取得
-    const selectedWaveform = document.querySelector('input[name="waveform"]:checked').value;
+    const selectedElement = document.querySelector('input[name="waveform"]:checked');
+    if (!selectedElement) {
+      throw new Error('波形が選択されていません');
+    }
+    const selectedWaveform = selectedElement.value;
     
     // 波形データを生成
     const sampleRate = 44100;
