@@ -112,4 +112,11 @@ export interface WaveformRenderData {
   
   /** Current zero-cross detection mode name (for debugging) */
   zeroCrossModeName?: string;
+  
+  // Phase marker relative offset history (issue #236)
+  /** History of relative offsets for phase zero marker (start red line) as percentages (0-100) */
+  phaseZeroOffsetHistory?: number[];
+  
+  /** History of relative offsets for phase 2π marker (end red line) as percentages (0-100) */
+  phaseTwoPiOffsetHistory?: number[];
 }

@@ -29,6 +29,11 @@ export class WaveformDataProcessor {
   private zeroCrossDetector: ZeroCrossDetector;
   private basePathResolver: BasePathResolver;
   private wasmLoader: WasmModuleLoader;
+  
+  // Phase marker offset history for overlay graphs (issue #236)
+  private phaseZeroOffsetHistory: number[] = [];
+  private phaseTwoPiOffsetHistory: number[] = [];
+  private readonly MAX_OFFSET_HISTORY = 100; // Keep last 100 frames of offset data
 
   constructor(
     audioManager: AudioManager,
@@ -185,10 +190,56 @@ export class WaveformDataProcessor {
       cycleSimilarities2div: wasmResult.cycleSimilarities2div ? Array.from(wasmResult.cycleSimilarities2div) : undefined,
     };
     
+    // Calculate and update phase marker offset history (issue #236)
+    this.updatePhaseOffsetHistory(renderData);
+    
+    // Add offset history to render data
+    renderData.phaseZeroOffsetHistory = [...this.phaseZeroOffsetHistory];
+    renderData.phaseTwoPiOffsetHistory = [...this.phaseTwoPiOffsetHistory];
+    
     // Sync results back to TypeScript objects so getters work correctly
     this.syncResultsFromWasm(renderData);
     
     return renderData;
+  }
+  
+  /**
+   * Calculate relative offset percentages for phase markers and update history
+   * @param renderData - Render data containing phase indices
+   */
+  private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
+    // Only update if we have valid phase markers
+    if (renderData.phaseZeroIndex !== undefined && 
+        renderData.displayStartIndex !== undefined && 
+        renderData.displayEndIndex !== undefined) {
+      const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
+      if (displayLength > 0) {
+        // Calculate relative offset as percentage (0-100)
+        const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
+        const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+        
+        this.phaseZeroOffsetHistory.push(phaseZeroPercent);
+        if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+          this.phaseZeroOffsetHistory.shift();
+        }
+      }
+    }
+    
+    if (renderData.phaseTwoPiIndex !== undefined && 
+        renderData.displayStartIndex !== undefined && 
+        renderData.displayEndIndex !== undefined) {
+      const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
+      if (displayLength > 0) {
+        // Calculate relative offset as percentage (0-100)
+        const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
+        const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+        
+        this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
+        if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+          this.phaseTwoPiOffsetHistory.shift();
+        }
+      }
+    }
   }
   
   /**
@@ -199,5 +250,8 @@ export class WaveformDataProcessor {
     if (wasmProcessor) {
       wasmProcessor.reset();
     }
+    // Clear phase offset history (issue #236)
+    this.phaseZeroOffsetHistory = [];
+    this.phaseTwoPiOffsetHistory = [];
   }
 }
