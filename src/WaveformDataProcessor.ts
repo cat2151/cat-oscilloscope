@@ -208,36 +208,38 @@ export class WaveformDataProcessor {
    * @param renderData - Render data containing phase indices
    */
   private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
-    // Only update if we have valid phase markers
-    if (renderData.phaseZeroIndex !== undefined && 
-        renderData.displayStartIndex !== undefined && 
-        renderData.displayEndIndex !== undefined) {
-      const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
-      if (displayLength > 0) {
-        // Calculate relative offset as percentage (0-100)
-        const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
-        const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
-        
-        this.phaseZeroOffsetHistory.push(phaseZeroPercent);
-        if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
-          this.phaseZeroOffsetHistory.shift();
-        }
+    // Check if we have valid display indices
+    if (renderData.displayStartIndex === undefined || 
+        renderData.displayEndIndex === undefined) {
+      return;
+    }
+    
+    const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
+    if (displayLength <= 0) {
+      return;
+    }
+    
+    // Update phase zero offset history if available
+    if (renderData.phaseZeroIndex !== undefined) {
+      // Calculate relative offset as percentage (0-100)
+      const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
+      const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+      
+      this.phaseZeroOffsetHistory.push(phaseZeroPercent);
+      if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+        this.phaseZeroOffsetHistory.shift();
       }
     }
     
-    if (renderData.phaseTwoPiIndex !== undefined && 
-        renderData.displayStartIndex !== undefined && 
-        renderData.displayEndIndex !== undefined) {
-      const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
-      if (displayLength > 0) {
-        // Calculate relative offset as percentage (0-100)
-        const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
-        const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
-        
-        this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
-        if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
-          this.phaseTwoPiOffsetHistory.shift();
-        }
+    // Update phase 2π offset history if available
+    if (renderData.phaseTwoPiIndex !== undefined) {
+      // Calculate relative offset as percentage (0-100)
+      const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
+      const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+      
+      this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
+      if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+        this.phaseTwoPiOffsetHistory.shift();
       }
     }
   }
