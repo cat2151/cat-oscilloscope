@@ -132,6 +132,22 @@
       color: #aaaaaa;
       max-width: 600px;
     }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-size: 11px;
+    }
+
+    footer a {
+      color: #888;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #bbb;
+    }
   </style>
   <script type="module" crossorigin src="/cat-oscilloscope/assets/main-0gzdtBCU.js"></script>
   <link rel="modulepreload" crossorigin href="/cat-oscilloscope/assets/modulepreload-polyfill-B5Qt9EMX.js">
@@ -384,8 +400,8 @@
       aria-label="Piano keyboard visualization showing highlighted key for detected fundamental frequency"
     ></canvas>
   </div>
-  <footer style="position: fixed; bottom: 10px; left: 10px; font-size: 11px; opacity: 0.5;">
-    <a href="https://github.com/cat2151/cat-oscilloscope" target="_blank" rel="noopener noreferrer" style="color: #888; text-decoration: none;" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#888'">GitHub</a>
+  <footer>
+    <a href="https://github.com/cat2151/cat-oscilloscope" target="_blank" rel="noopener noreferrer">GitHub</a>
   </footer>
 </body>
 </html>
