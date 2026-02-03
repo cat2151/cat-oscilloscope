@@ -5,6 +5,9 @@
 //   もしくはコミットハッシュを指定してください（例）:
 //   import { Oscilloscope, BufferSource } from
 //     'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v1.0.0/dist/cat-oscilloscope.mjs';
+//
+// ローカル開発時は、次の行のコメントを外して、上記CDNのimportをコメントアウトしてください:
+// import { Oscilloscope, BufferSource } from '/src/index.ts';
 import { Oscilloscope, BufferSource } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
 
 // Canvas要素とUI要素を取得
@@ -90,8 +93,8 @@ function generateWaveform(type, sampleRate = 44100, duration = 1) {
   return audioData;
 }
 
-// 開始ボタン
-startBtn.addEventListener('click', async () => {
+// 開始処理を実行する関数
+async function startOscilloscope() {
   try {
     startBtn.disabled = true;
     statusElement.textContent = '初期化中...';
@@ -124,7 +127,10 @@ startBtn.addEventListener('click', async () => {
     statusElement.textContent = 'エラー';
     startBtn.disabled = false;
   }
-});
+}
+
+// 開始ボタン
+startBtn.addEventListener('click', startOscilloscope);
 
 // 停止ボタン
 stopBtn.addEventListener('click', async () => {
@@ -141,4 +147,11 @@ stopBtn.addEventListener('click', async () => {
   } catch (error) {
     console.error('Failed to stop oscilloscope:', error);
   }
+});
+
+// ページロード時に自動的に440Hzで開始（デバッグ用）
+window.addEventListener('DOMContentLoaded', () => {
+  // 440Hzが選択されていることを確認（デフォルトでchecked属性がついている）
+  console.log('Auto-starting oscilloscope with 440Hz...');
+  startOscilloscope();
 });
