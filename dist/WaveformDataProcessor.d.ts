@@ -26,6 +26,9 @@ export declare class WaveformDataProcessor {
     private zeroCrossDetector;
     private basePathResolver;
     private wasmLoader;
+    private phaseZeroOffsetHistory;
+    private phaseTwoPiOffsetHistory;
+    private readonly MAX_OFFSET_HISTORY;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
@@ -51,6 +54,11 @@ export declare class WaveformDataProcessor {
      * Process current frame and generate complete render data using WASM
      */
     processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null;
+    /**
+     * Calculate relative offset percentages for phase markers and update history
+     * @param renderData - Render data containing phase indices
+     */
+    private updatePhaseOffsetHistory;
     /**
      * Reset the WASM processor state
      */

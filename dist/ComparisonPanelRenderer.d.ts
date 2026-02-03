@@ -60,6 +60,13 @@ export declare class ComparisonPanelRenderer {
      */
     private drawPositionMarkers;
     /**
+     * Draw phase marker offset overlay graphs on current waveform canvas
+     * Displays two line graphs showing the relative offset progression of phase markers
+     * @param phaseZeroOffsetHistory - Array of relative offset percentages for phase zero (start red line)
+     * @param phaseTwoPiOffsetHistory - Array of relative offset percentages for phase 2π (end red line)
+     */
+    private drawOffsetOverlayGraphs;
+    /**
      * Update all comparison panels
      * @param previousWaveform - Previous frame's waveform data (null if no previous frame exists)
      * @param currentWaveform - Full buffer containing current frame's audio data
@@ -68,8 +75,10 @@ export declare class ComparisonPanelRenderer {
      * @param fullBuffer - Complete frame buffer to display (typically same as currentWaveform)
      * @param similarity - Correlation coefficient between current and previous waveform (-1 to +1)
      * @param similarityHistory - Array of similarity values over time for history plot
+     * @param phaseZeroOffsetHistory - Array of relative offset percentages for phase zero marker (issue #236)
+     * @param phaseTwoPiOffsetHistory - Array of relative offset percentages for phase 2π marker (issue #236)
      */
-    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array, currentStart: number, currentEnd: number, fullBuffer: Float32Array, similarity: number, similarityHistory?: number[]): void;
+    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array, currentStart: number, currentEnd: number, fullBuffer: Float32Array, similarity: number, similarityHistory?: number[], phaseZeroOffsetHistory?: number[], phaseTwoPiOffsetHistory?: number[]): void;
     /**
      * Clear all panels (e.g., when stopped)
      */
