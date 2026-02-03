@@ -28,6 +28,7 @@ export class DOMElementManager {
   readonly harmonicAnalysisCheckbox: HTMLInputElement;
   readonly pauseDrawingCheckbox: HTMLInputElement;
   readonly phaseMarkerRangeCheckbox: HTMLInputElement;
+  readonly cycleSimilarityDisplayCheckbox: HTMLInputElement;
   readonly noiseGateThreshold: HTMLInputElement;
 
   // Select elements
@@ -36,6 +37,7 @@ export class DOMElementManager {
   readonly zeroCrossMode: HTMLSelectElement;
 
   // Display elements
+  readonly cycleSimilarityPanel: HTMLDivElement;
   readonly thresholdValue: HTMLSpanElement;
   readonly statusElement: HTMLSpanElement;
   readonly frequencyValue: HTMLSpanElement;
@@ -67,6 +69,7 @@ export class DOMElementManager {
     this.harmonicAnalysisCheckbox = this.getElement('harmonicAnalysisCheckbox') as HTMLInputElement;
     this.pauseDrawingCheckbox = this.getElement('pauseDrawingCheckbox') as HTMLInputElement;
     this.phaseMarkerRangeCheckbox = this.getElement('phaseMarkerRangeCheckbox') as HTMLInputElement;
+    this.cycleSimilarityDisplayCheckbox = this.getElement('cycleSimilarityDisplayCheckbox') as HTMLInputElement;
     this.noiseGateThreshold = this.getElement('noiseGateThreshold') as HTMLInputElement;
 
     // Retrieve select elements
@@ -75,6 +78,7 @@ export class DOMElementManager {
     this.zeroCrossMode = this.getElement('zeroCrossMode') as HTMLSelectElement;
 
     // Retrieve display elements
+    this.cycleSimilarityPanel = this.getElement('cycleSimilarityPanel') as HTMLDivElement;
     this.thresholdValue = this.getElement('thresholdValue') as HTMLSpanElement;
     this.statusElement = this.getElement('status') as HTMLSpanElement;
     this.frequencyValue = this.getElement('frequencyValue') as HTMLSpanElement;
@@ -121,8 +125,10 @@ export class DOMElementManager {
       { element: this.harmonicAnalysisCheckbox, name: 'harmonicAnalysisCheckbox' },
       { element: this.pauseDrawingCheckbox, name: 'pauseDrawingCheckbox' },
       { element: this.phaseMarkerRangeCheckbox, name: 'phaseMarkerRangeCheckbox' },
+      { element: this.cycleSimilarityDisplayCheckbox, name: 'cycleSimilarityDisplayCheckbox' },
       { element: this.noiseGateThreshold, name: 'noiseGateThreshold' },
       { element: this.thresholdValue, name: 'thresholdValue' },
+      { element: this.cycleSimilarityPanel, name: 'cycleSimilarityPanel' },
       { element: this.statusElement, name: 'status' },
       { element: this.frequencyMethod, name: 'frequencyMethod' },
       { element: this.bufferSizeMultiplier, name: 'bufferSizeMultiplier' },
