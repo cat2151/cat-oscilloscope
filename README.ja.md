@@ -9,6 +9,9 @@
 
 ブラウザで動く、オシロスコープ風の波形ビジュアライザー
 
+## 状況
+- このドキュメントはまだAI生成の文章があり読みづらいです。今後文章を人間の手で読みやすく改善する予定です
+
 ## 🌐 ライブデモ
 
 **[https://cat2151.github.io/cat-oscilloscope/](https://cat2151.github.io/cat-oscilloscope/)**
