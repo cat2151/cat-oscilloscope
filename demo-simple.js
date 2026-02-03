@@ -150,8 +150,15 @@ stopBtn.addEventListener('click', async () => {
 });
 
 // ページロード時に自動的に440Hzで開始（デバッグ用）
-window.addEventListener('DOMContentLoaded', () => {
-  // 440Hzが選択されていることを確認（デフォルトでchecked属性がついている）
+// DOMContentLoadedイベントが既に発火している可能性を考慮
+if (document.readyState === 'loading') {
+  // まだDOMがロード中の場合はイベントリスナーを設定
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Auto-starting oscilloscope with 440Hz...');
+    startOscilloscope();
+  });
+} else {
+  // DOMが既にロード済みの場合は即座に実行
   console.log('Auto-starting oscilloscope with 440Hz...');
   startOscilloscope();
-});
+}
