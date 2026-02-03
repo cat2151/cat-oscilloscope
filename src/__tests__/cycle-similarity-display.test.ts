@@ -18,9 +18,6 @@ describe('Cycle Similarity Display Toggle', () => {
       <canvas id="currentWaveformCanvas" width="250" height="120"></canvas>
       <canvas id="similarityPlotCanvas" width="250" height="120"></canvas>
       <canvas id="frameBufferCanvas" width="800" height="120"></canvas>
-      <canvas id="cycleSimilarity8divCanvas" width="250" height="150"></canvas>
-      <canvas id="cycleSimilarity4divCanvas" width="250" height="150"></canvas>
-      <canvas id="cycleSimilarity2divCanvas" width="250" height="150"></canvas>
       <canvas id="pianoKeyboardCanvas" width="800" height="60"></canvas>
       
       <div id="cycleSimilarityPanel" style="display: none;">
@@ -200,35 +197,79 @@ describe('Cycle Similarity Display Toggle', () => {
   });
 
   describe('Toggle Functionality', () => {
-    it('should show panel when checkbox is checked', () => {
-      // Manually toggle the checkbox
+    it('should show panel when checkbox is checked via event handler', () => {
+      // Setup event handlers
+      const oscilloscope = new Oscilloscope(
+        dom.canvas,
+        dom.previousWaveformCanvas,
+        dom.currentWaveformCanvas,
+        dom.similarityPlotCanvas,
+        dom.frameBufferCanvas,
+        dom.cycleSimilarity8divCanvas,
+        dom.cycleSimilarity4divCanvas,
+        dom.cycleSimilarity2divCanvas
+      );
+      
+      const pianoKeyboardRenderer = new PianoKeyboardRenderer(dom.pianoKeyboardCanvas);
+      const displayUpdater = new DisplayUpdater(
+        oscilloscope,
+        pianoKeyboardRenderer,
+        dom.frequencyValue,
+        dom.noteValue,
+        dom.gainValue,
+        dom.similarityValue
+      );
+      
+      const eventHandlers = new UIEventHandlers(oscilloscope, dom, displayUpdater);
+      eventHandlers.setupEventHandlers();
+
+      // Initially hidden
+      expect(cycleSimilarityPanel.style.display).toBe('none');
+      
+      // Check the checkbox and trigger change event
       cycleSimilarityDisplayCheckbox.checked = true;
+      cycleSimilarityDisplayCheckbox.dispatchEvent(new Event('change'));
       
-      // Trigger change event
-      const event = new Event('change');
-      cycleSimilarityDisplayCheckbox.dispatchEvent(event);
-      
-      // Manually update display (simulating the event handler)
-      cycleSimilarityPanel.style.display = cycleSimilarityDisplayCheckbox.checked ? 'flex' : 'none';
-      
+      // Panel should now be visible through event handler
       expect(cycleSimilarityPanel.style.display).toBe('flex');
     });
 
-    it('should hide panel when checkbox is unchecked', () => {
-      // Start with panel visible
-      cycleSimilarityPanel.style.display = 'flex';
+    it('should hide panel when checkbox is unchecked via event handler', () => {
+      // Setup event handlers
+      const oscilloscope = new Oscilloscope(
+        dom.canvas,
+        dom.previousWaveformCanvas,
+        dom.currentWaveformCanvas,
+        dom.similarityPlotCanvas,
+        dom.frameBufferCanvas,
+        dom.cycleSimilarity8divCanvas,
+        dom.cycleSimilarity4divCanvas,
+        dom.cycleSimilarity2divCanvas
+      );
+      
+      const pianoKeyboardRenderer = new PianoKeyboardRenderer(dom.pianoKeyboardCanvas);
+      const displayUpdater = new DisplayUpdater(
+        oscilloscope,
+        pianoKeyboardRenderer,
+        dom.frequencyValue,
+        dom.noteValue,
+        dom.gainValue,
+        dom.similarityValue
+      );
+      
+      const eventHandlers = new UIEventHandlers(oscilloscope, dom, displayUpdater);
+      eventHandlers.setupEventHandlers();
+
+      // First, show the panel
       cycleSimilarityDisplayCheckbox.checked = true;
+      cycleSimilarityDisplayCheckbox.dispatchEvent(new Event('change'));
+      expect(cycleSimilarityPanel.style.display).toBe('flex');
       
-      // Uncheck the checkbox
+      // Then hide it by unchecking
       cycleSimilarityDisplayCheckbox.checked = false;
+      cycleSimilarityDisplayCheckbox.dispatchEvent(new Event('change'));
       
-      // Trigger change event
-      const event = new Event('change');
-      cycleSimilarityDisplayCheckbox.dispatchEvent(event);
-      
-      // Manually update display (simulating the event handler)
-      cycleSimilarityPanel.style.display = cycleSimilarityDisplayCheckbox.checked ? 'flex' : 'none';
-      
+      // Panel should now be hidden through event handler
       expect(cycleSimilarityPanel.style.display).toBe('none');
     });
 
