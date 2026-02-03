@@ -57,4 +57,8 @@ export declare class UIEventHandlers {
      * Format threshold display text
      */
     private formatThresholdDisplay;
+    /**
+     * Update cycle similarity panel display
+     */
+    private updateCycleSimilarityPanelDisplay;
 }

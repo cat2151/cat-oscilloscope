@@ -192,7 +192,7 @@
       ></canvas>
     </div>
   </div>
-  <div id="cycleSimilarityPanel" style="margin-top: 15px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+  <div id="cycleSimilarityPanel" style="margin-top: 15px; display: none; gap: 8px; justify-content: center; flex-wrap: wrap;">
     <div class="canvasContainer">
       <span class="canvasLabel">8分割 (1/2周期ごとの類似度)</span>
       <canvas
@@ -292,6 +292,16 @@
         title="Display only the range between phase markers"
       >
       <span>位相マーカー範囲のみ表示</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="cycleSimilarityDisplayCheckbox"
+        style="cursor: pointer;"
+        aria-label="Display cycle similarity panel (8-division, 4-division, 2-division)"
+        title="Display cycle similarity panel"
+      >
+      <span>周期類似度表示</span>
     </label>
     <label style="display: flex; align-items: center; gap: 10px;">
       <span>Threshold:</span>

@@ -47,6 +47,9 @@ export class UIEventHandlers {
     this.oscilloscope.setPauseDrawing(this.dom.pauseDrawingCheckbox.checked);
     this.oscilloscope.setPhaseMarkerRangeEnabled(this.dom.phaseMarkerRangeCheckbox.checked);
 
+    // Synchronize cycle similarity panel display
+    this.updateCycleSimilarityPanelDisplay(this.dom.cycleSimilarityDisplayCheckbox.checked);
+
     // Synchronize noise gate threshold
     const initialThreshold = this.sliderValueToThreshold(this.dom.noiseGateThreshold.value);
     this.oscilloscope.setNoiseGateThreshold(initialThreshold.amplitude);
@@ -95,6 +98,11 @@ export class UIEventHandlers {
     // Phase marker range checkbox
     this.dom.phaseMarkerRangeCheckbox.addEventListener('change', () => {
       this.oscilloscope.setPhaseMarkerRangeEnabled(this.dom.phaseMarkerRangeCheckbox.checked);
+    });
+
+    // Cycle similarity display checkbox
+    this.dom.cycleSimilarityDisplayCheckbox.addEventListener('change', () => {
+      this.updateCycleSimilarityPanelDisplay(this.dom.cycleSimilarityDisplayCheckbox.checked);
     });
   }
 
@@ -267,5 +275,12 @@ export class UIEventHandlers {
    */
   private formatThresholdDisplay(db: number, amplitude: number): string {
     return `${db.toFixed(0)} dB (${amplitude.toFixed(3)})`;
+  }
+
+  /**
+   * Update cycle similarity panel display
+   */
+  private updateCycleSimilarityPanelDisplay(visible: boolean): void {
+    this.dom.cycleSimilarityPanel.style.display = visible ? 'flex' : 'none';
   }
 }

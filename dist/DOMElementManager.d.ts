@@ -23,10 +23,12 @@ export declare class DOMElementManager {
     readonly harmonicAnalysisCheckbox: HTMLInputElement;
     readonly pauseDrawingCheckbox: HTMLInputElement;
     readonly phaseMarkerRangeCheckbox: HTMLInputElement;
+    readonly cycleSimilarityDisplayCheckbox: HTMLInputElement;
     readonly noiseGateThreshold: HTMLInputElement;
     readonly frequencyMethod: HTMLSelectElement;
     readonly bufferSizeMultiplier: HTMLSelectElement;
     readonly zeroCrossMode: HTMLSelectElement;
+    readonly cycleSimilarityPanel: HTMLDivElement;
     readonly thresholdValue: HTMLSpanElement;
     readonly statusElement: HTMLSpanElement;
     readonly frequencyValue: HTMLSpanElement;
