@@ -2,6 +2,10 @@
 
 cat-oscilloscopeをnpmライブラリとして他のプロジェクトから利用する方法を説明します。
 
+## 🎯 クイックスタート
+
+**動くサンプルをすぐに見たい方は**: [簡易デモページ](https://cat2151.github.io/cat-oscilloscope/demo-simple.html) をご覧ください。CDN経由でライブラリを使用する最小限の実装例が掲載されています。
+
 ## インストール
 
 ### CDN経由での利用（推奨）
@@ -542,6 +546,78 @@ const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
 const oscilloscope = new Oscilloscope(canvas);
 await oscilloscope.startFromBuffer(bufferSource);
 ```
+
+#### BufferSourceでの周波数推定の使い方
+
+BufferSourceモードでも、WASM実装の周波数推定は正常に動作します。推定された周波数は通常通り`getEstimatedFrequency()`メソッドで取得できます。
+
+```typescript
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
+
+// 440Hz サイン波を生成
+const sampleRate = 44100;
+const frequency = 440;
+const audioData = new Float32Array(sampleRate); // 1秒分
+for (let i = 0; i < audioData.length; i++) {
+  audioData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+}
+
+const canvas = document.getElementById('oscilloscope') as HTMLCanvasElement;
+// 最小限の構成: 必須のcanvasパラメータのみ
+const hiddenCanvas = document.createElement('canvas');
+const oscilloscope = new Oscilloscope(canvas, hiddenCanvas, hiddenCanvas, hiddenCanvas, hiddenCanvas);
+
+// BufferSourceから可視化を開始
+const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
+await oscilloscope.startFromBuffer(bufferSource);
+
+// 周波数推定メソッドを設定（オプション）
+oscilloscope.setFrequencyEstimationMethod('autocorrelation'); // または 'zero-crossing', 'fft', 'stft', 'cqt'
+
+// 推定された周波数を取得
+setInterval(() => {
+  const estimatedFreq = oscilloscope.getEstimatedFrequency();
+  console.log(`推定周波数: ${estimatedFreq.toFixed(1)} Hz`);
+}, 100);
+```
+
+**周波数推定の注意点:**
+
+1. **初期化の遅延**: WASMモジュールの初期化に時間がかかる場合があります。最初のフレームでは周波数が0または不正確な値になることがあります。
+
+2. **推定方式の選択**: 
+   - `'zero-crossing'`: 高速だが単純な波形に限定
+   - `'autocorrelation'`: バランスが良く、ほとんどの場合に適している（推奨）
+   - `'fft'`: 高周波に強いが、低周波では精度が落ちる
+   - `'stft'`: 低周波の検出に優れている
+   - `'cqt'`: 音楽分析に最適
+
+3. **サンプルレートの重要性**: BufferSourceを作成する際は、正しいサンプルレートを指定してください。間違ったサンプルレートは周波数推定を失敗させます。
+
+4. **データ品質**: ノイズが多いデータや振幅が極端に小さいデータでは、周波数推定が失敗する可能性があります。必要に応じて`setAutoGain(true)`を使用してください。
+
+5. **FFTオーバーレイの制限**: BufferSourceモードでは、FFTスペクトラムオーバーレイは表示されません（技術的制約）。ただし、周波数推定自体は正常に機能します。
+
+**wavlpfなどのライブラリとの統合時のヒント:**
+
+```typescript
+// 処理後のデータを可視化する場合の推奨設定
+oscilloscope.setAutoGain(true);  // 振幅の自動調整を有効化
+oscilloscope.setNoiseGate(false);  // フィルタ処理済みデータの場合は無効化を推奨
+oscilloscope.setFrequencyEstimationMethod('autocorrelation');  // 汎用的な推定方式
+oscilloscope.setDebugOverlaysEnabled(false);  // シンプルな表示にする
+
+// 推定周波数の取得（リアルタイム更新）
+const updateFrequency = () => {
+  const freq = oscilloscope.getEstimatedFrequency();
+  if (freq > 0) {
+    console.log(`推定周波数: ${freq.toFixed(1)} Hz`);
+  }
+  requestAnimationFrame(updateFrequency);
+};
+updateFrequency();
+```
+
 
 ### 個別のモジュールを使用
 

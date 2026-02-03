@@ -40,7 +40,13 @@ export default defineConfig({
   } : {
     // Application build configuration (default) - generates static web app for GitHub Pages
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        demo: resolve(__dirname, 'demo-simple.html'),
+      }
+    }
   },
   test: {
     globals: true,
