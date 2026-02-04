@@ -7,7 +7,7 @@ function G(m) {
 function N(m) {
   return m <= 0 ? -1 / 0 : 20 * Math.log10(m);
 }
-function _(m) {
+function I(m) {
   if (m <= 0 || !isFinite(m))
     return null;
   const t = 440 * Math.pow(2, -4.75), i = 12 * Math.log2(m / t), r = Math.round(i), o = Math.round((i - r) * 100), h = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], a = Math.floor(r / 12);
@@ -618,7 +618,7 @@ class J extends O {
     }
     this.ctx.fillStyle = "#88ccff", this.ctx.font = "9px monospace", this.ctx.textAlign = "right", this.ctx.textBaseline = "middle";
     for (let x = 0; x <= 4; x++) {
-      const E = T - (T - p) * (x / 4), A = d + l / 4 * x, M = _(E);
+      const E = T - (T - p) * (x / 4), A = d + l / 4 * x, M = I(E);
       if (M) {
         const k = M.cents >= 0 ? "+" : "";
         this.ctx.fillText(`${k}${M.cents}¢`, c + g - 5, A);
@@ -643,19 +643,19 @@ class J extends O {
     for (let x = 0; x < t.length; x++) {
       const E = t[x], A = c + x * S;
       if (E !== 0) {
-        const I = R(E);
-        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(A, I, 2, 0, Math.PI * 2), this.ctx.fill();
+        const _ = R(E);
+        this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(A, _, 2, 0, Math.PI * 2), this.ctx.fill();
       }
       const M = x === t.length - 1;
       if (x % b === 0 || M) {
         this.ctx.fillStyle = "#aaaaaa";
-        const I = x - t.length + 1;
-        this.ctx.fillText(`${I}`, A, d + l + 2);
+        const _ = x - t.length + 1;
+        this.ctx.fillText(`${_}`, A, d + l + 2);
       }
     }
     const F = t[t.length - 1];
     if (F > 0) {
-      const x = _(F);
+      const x = I(F);
       this.ctx.fillStyle = "#00ff00", this.ctx.font = "bold 11px Arial", this.ctx.textAlign = "left", this.ctx.textBaseline = "bottom";
       let E = `${F.toFixed(1)} Hz`;
       if (x) {
@@ -1394,7 +1394,7 @@ class ce {
         }
         const r = setTimeout(() => {
           a(), i(new Error(`WASM module loading timed out after ${this.LOAD_TIMEOUT_MS / 1e3} seconds`));
-        }, this.LOAD_TIMEOUT_MS), o = `${e}wasm/wasm_processor.js`, h = document.createElement("script");
+        }, this.LOAD_TIMEOUT_MS), o = `${e}wasm/signal_processor_wasm.js`, h = document.createElement("script");
         h.type = "module", h.textContent = `
         import init, { WasmDataProcessor } from '${o}';
         await init();
@@ -1901,7 +1901,7 @@ class me {
    * utils.tsのfrequencyToNote関数を使用し、内部形式に変換
    */
   frequencyToNoteInfo(e) {
-    const t = _(e);
+    const t = I(e);
     if (!t)
       return { note: -1, octave: -1, noteInOctave: -1 };
     const i = t.noteName.match(/^([A-G]#?)(\d+)$/);

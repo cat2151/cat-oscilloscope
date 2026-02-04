@@ -1,4 +1,4 @@
-/* @ts-self-types="./wasm_processor.d.ts" */
+/* @ts-self-types="./signal_processor_wasm.d.ts" */
 
 /**
  * WasmDataProcessor - WASM implementation of WaveformDataProcessor
@@ -404,7 +404,7 @@ function __wbg_get_imports() {
         __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_error_1529ada434ef54b4: function(arg0, arg1) {
+        __wbg_error_e66c2d6e320cbdd4: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_log_6b5ca2e6124b2808: function(arg0) {
@@ -430,7 +430,7 @@ function __wbg_get_imports() {
     };
     return {
         __proto__: null,
-        "./wasm_processor_bg.js": import0,
+        "./signal_processor_wasm_bg.js": import0,
     };
 }
 
@@ -634,7 +634,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('wasm_processor_bg.wasm', import.meta.url);
+        module_or_path = new URL('signal_processor_wasm_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 

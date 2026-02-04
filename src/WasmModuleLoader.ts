@@ -64,7 +64,7 @@ export class WasmModuleLoader {
         reject(new Error(`WASM module loading timed out after ${this.LOAD_TIMEOUT_MS / 1000} seconds`));
       }, this.LOAD_TIMEOUT_MS);
       
-      const wasmPath = `${basePath}wasm/wasm_processor.js`;
+      const wasmPath = `${basePath}wasm/signal_processor_wasm.js`;
       
       const script = document.createElement('script');
       script.type = 'module';

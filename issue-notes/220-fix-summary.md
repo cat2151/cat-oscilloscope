@@ -70,7 +70,7 @@ This method:
    - Changed from `calculate_display_range()` to `find_phase_zero_in_segment()`
    - Passes segment AND absolute position
 
-3. **public/wasm/wasm_processor_bg.wasm** & **dist/wasm/wasm_processor_bg.wasm**
+3. **public/wasm/signal_processor_wasm_bg.wasm** & **dist/wasm/signal_processor_wasm_bg.wasm**
    - Rebuilt WASM modules with the fix
 
 ## Verification
