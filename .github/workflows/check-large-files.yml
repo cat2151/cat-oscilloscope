@@ -32,9 +32,10 @@ jobs:
           
           # Check if output file exists
           if [ ! -f "$OUTPUT_DIR/file_count.txt" ]; then
-            echo "Error: Output file not created"
+            echo "Warning: Output file not created, assuming no files found"
+            echo "count=0" >> $GITHUB_OUTPUT
             echo "found=false" >> $GITHUB_OUTPUT
-            exit 1
+            exit 0
           fi
           
           # Read outputs
@@ -61,21 +62,21 @@ jobs:
             const title = fs.readFileSync(path.join(outputDir, 'issue_title.txt'), 'utf8').trim();
             const body = fs.readFileSync(path.join(outputDir, 'issue_body.txt'), 'utf8');
             const labelsStr = fs.readFileSync(path.join(outputDir, 'issue_labels.txt'), 'utf8').trim();
+            const titlePattern = fs.readFileSync(path.join(outputDir, 'issue_title_pattern.txt'), 'utf8').trim();
             const labels = labelsStr.split(',');
             
-            // Check if similar issue already exists (search by title pattern)
-            // Note: GitHub API doesn't support searching by multiple labels in listForRepo,
-            // so we search by the primary label and then filter by title
+            // Check if similar issue already exists
+            // We search all open issues and then filter by title to avoid
+            // missing matches when a label does not exist yet.
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              labels: labels[0],
-              per_page: 10
+              per_page: 30
             });
             
             const existingIssue = issues.data.find(issue => 
-              issue.title.includes('大きなファイルの検出')
+              issue.title.includes(titlePattern)
             );
             
             if (existingIssue) {

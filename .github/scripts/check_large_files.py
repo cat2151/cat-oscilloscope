@@ -15,8 +15,21 @@ import json
 
 def load_config(config_path: str) -> Dict[str, Any]:
     """Load configuration from TOML file"""
-    with open(config_path, 'rb') as f:
-        return tomllib.load(f)
+    try:
+        with open(config_path, 'rb') as f:
+            return tomllib.load(f)
+    except FileNotFoundError:
+        print(f"Error: Config file not found: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError:
+        print(f"Error: Permission denied when reading config file: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    except tomllib.TOMLDecodeError as e:
+        print(f"Error: Failed to parse TOML config file {config_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+    except OSError as e:
+        print(f"Error: Failed to read config file {config_path}: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def count_lines(file_path: str) -> int:
@@ -26,13 +39,20 @@ def count_lines(file_path: str) -> int:
             # Count newlines in chunks for efficiency
             count = 0
             chunk_size = 1024 * 1024  # 1MB chunks
+            last_byte = None
             while True:
                 chunk = f.read(chunk_size)
                 if not chunk:
                     break
                 count += chunk.count(b'\n')
-            # If file doesn't end with newline, add 1
-            if chunk and not chunk.endswith(b'\n'):
+                # Remember the last byte of the last non-empty chunk
+                last_byte = chunk[-1]
+            # Handle empty files and files not ending with newline
+            if last_byte is None:
+                # Empty file - treat as 1 line (editor-style behavior)
+                return 1
+            if last_byte != b'\n'[0]:
+                # File doesn't end with newline, add 1
                 count += 1
             return count
     except Exception as e:
@@ -56,10 +76,19 @@ def should_exclude(file_path: str, exclude_patterns: List[str], exclude_files: L
 
 def find_large_files(config: Dict[str, Any], repo_root: str) -> List[Dict[str, Any]]:
     """Find files exceeding line count threshold"""
-    max_lines = config['settings']['max_lines']
-    include_patterns = config['scan']['include_patterns']
-    exclude_patterns = config['scan']['exclude_patterns']
-    exclude_files = config['scan'].get('exclude_files', [])
+    # Safely access configuration sections
+    settings = config.get('settings') or {}
+    scan = config.get('scan') or {}
+    
+    # Validate required setting
+    if 'max_lines' not in settings:
+        print("Error: Missing required configuration field 'settings.max_lines' in TOML file.", file=sys.stderr)
+        sys.exit(1)
+    
+    max_lines = settings['max_lines']
+    include_patterns = scan.get('include_patterns', [])
+    exclude_patterns = scan.get('exclude_patterns', [])
+    exclude_files = scan.get('exclude_files', [])
     
     large_files = []
     
@@ -138,7 +167,7 @@ def create_output_files(large_files: List[Dict[str, Any]], config: Dict[str, Any
         f.write(issue_body)
     
     # Write issue title
-    title_template = config['settings']['issue_title']
+    title_template = config.get('settings', {}).get('issue_title', '大きなファイルの検出: {count}個のファイルが{max_lines}行を超えています')
     title = title_template.format(
         count=len(large_files),
         max_lines=config['settings']['max_lines']
@@ -147,8 +176,15 @@ def create_output_files(large_files: List[Dict[str, Any]], config: Dict[str, Any
     with open(title_file, 'w', encoding='utf-8') as f:
         f.write(title)
     
+    # Write title pattern for search (extract key phrase from title)
+    title_pattern_file = os.path.join(output_dir, 'issue_title_pattern.txt')
+    with open(title_pattern_file, 'w', encoding='utf-8') as f:
+        # Extract first meaningful part before colon as search pattern
+        pattern = title.split(':')[0] if ':' in title else title[:20]
+        f.write(pattern)
+    
     # Write labels
-    labels = ','.join(config['settings']['issue_labels'])
+    labels = ','.join(config.get('settings', {}).get('issue_labels', ['refactoring', 'code-quality', 'automated']))
     labels_file = os.path.join(output_dir, 'issue_labels.txt')
     with open(labels_file, 'w', encoding='utf-8') as f:
         f.write(labels)

@@ -2,7 +2,7 @@
 # Configuration for detecting large files
 
 [settings]
-# 行数の閾値（この値以上でissueを起票）
+# 行数の閾値（この値を超えた場合にissueを起票）
 max_lines = 500
 
 # issue作成時のラベル
