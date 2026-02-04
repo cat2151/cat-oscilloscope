@@ -70,9 +70,22 @@ def should_exclude(file_path: str, exclude_patterns: List[str], exclude_files: L
         return True
     
     # Check exclude_patterns (glob match)
+    path_obj = Path(file_path)
     for pattern in exclude_patterns:
-        if Path(file_path).match(pattern):
+        # Path.match works from any part of the path
+        if path_obj.match(pattern):
             return True
+        # Also check if pattern matches the full path (for root-level files)
+        # Remove leading **/ to match files at any level including root
+        if pattern.startswith('**/'):
+            simple_pattern = pattern[3:]  # Remove '**/
+            if path_obj.match(simple_pattern):
+                return True
+        # For patterns like "dist/**", check if file is under that directory
+        if pattern.endswith('/**'):
+            dir_prefix = pattern[:-3]  # Remove '/**'
+            if str(path_obj).startswith(dir_prefix + '/') or str(path_obj).startswith(dir_prefix + '\\'):
+                return True
     
     return False
 
@@ -104,7 +117,8 @@ def find_large_files(config: Dict[str, Any], repo_root: str) -> List[Dict[str, A
         all_files = set()
         for pattern in include_patterns:
             matched = glob.glob(pattern, recursive=True)
-            all_files.update(matched)
+            # Filter out directories - only keep files
+            all_files.update(f for f in matched if os.path.isfile(f))
         
         # Check each file
         for file_path in sorted(all_files):
