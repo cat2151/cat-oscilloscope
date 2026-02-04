@@ -7,6 +7,11 @@
 export class WasmDataProcessor {
     free(): void;
     [Symbol.dispose](): void;
+    /**
+     * Compute FFT frequency data from time-domain data for BufferSource mode
+     * Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
+     */
+    computeFrequencyData(time_domain_data: Float32Array, fft_size: number): Uint8Array | undefined;
     constructor();
     /**
      * Process a frame and return WaveformRenderData
@@ -70,6 +75,7 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
     readonly __wbg_waveformrenderdata_free: (a: number, b: number) => void;
+    readonly wasmdataprocessor_computeFrequencyData: (a: number, b: number, c: number, d: number) => [number, number];
     readonly wasmdataprocessor_new: () => number;
     readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
     readonly wasmdataprocessor_reset: (a: number) => void;
@@ -114,8 +120,8 @@ export interface InitOutput {
     readonly waveformrenderdata_zeroCrossModeName: (a: number) => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
-    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_start: () => void;
 }
 
