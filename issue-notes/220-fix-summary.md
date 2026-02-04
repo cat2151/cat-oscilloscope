@@ -61,16 +61,16 @@ This method:
 
 ## Files Changed
 
-1. **wasm-processor/src/zero_cross_detector.rs**
+1. **signal-processor-wasm/src/zero_cross_detector.rs**
    - Added `find_phase_zero_in_segment()` method (~117 lines)
    - Added helper methods: `search_zero_cross_in_segment()`, `search_zero_cross_in_segment_extended()`
 
-2. **wasm-processor/src/lib.rs**
+2. **signal-processor-wasm/src/lib.rs**
    - Updated `calculate_phase_markers()` to use new method
    - Changed from `calculate_display_range()` to `find_phase_zero_in_segment()`
    - Passes segment AND absolute position
 
-3. **public/wasm/wasm_processor_bg.wasm** & **dist/wasm/wasm_processor_bg.wasm**
+3. **public/wasm/signal_processor_wasm_bg.wasm** & **dist/wasm/signal_processor_wasm_bg.wasm**
    - Rebuilt WASM modules with the fix
 
 ## Verification

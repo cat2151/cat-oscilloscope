@@ -97,10 +97,10 @@ Last updated: 2026-02-04
   📄 utils.d.ts.map
   📁 wasm/
     📊 package.json
-    📘 wasm_processor.d.ts
-    📜 wasm_processor.js
-    📄 wasm_processor_bg.wasm
-    📘 wasm_processor_bg.wasm.d.ts
+    📘 signal_processor_wasm.d.ts
+    📜 signal_processor_wasm.js
+    📄 signal_processor_wasm_bg.wasm
+    📘 signal_processor_wasm_bg.wasm.d.ts
 🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
@@ -209,10 +209,10 @@ Last updated: 2026-02-04
 📁 public/
   📁 wasm/
     📊 package.json
-    📘 wasm_processor.d.ts
-    📜 wasm_processor.js
-    📄 wasm_processor_bg.wasm
-    📘 wasm_processor_bg.wasm.d.ts
+    📘 signal_processor_wasm.d.ts
+    📜 signal_processor_wasm.js
+    📄 signal_processor_wasm_bg.wasm
+    📘 signal_processor_wasm_bg.wasm.d.ts
 📁 scripts/
   📜 screenshot-local.js
 📁 src/
@@ -272,7 +272,7 @@ Last updated: 2026-02-04
 📊 tsconfig.json
 📊 tsconfig.lib.json
 📘 vite.config.ts
-📁 wasm-processor/
+📁 signal-processor-wasm/
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs
@@ -329,10 +329,10 @@ Last updated: 2026-02-04
     - **dist/utils.d.ts**: 共通で利用されるユーティリティ関数の型定義ファイル。
     - **dist/wasm/**: WebAssemblyモジュールとそれに関連するファイルが格納されるディレクトリ。
         - **dist/wasm/package.json**: WASMモジュール用のパッケージ情報。
-        - **dist/wasm/wasm_processor.d.ts**: WebAssemblyプロセッサモジュールの型定義ファイル。
-        - **dist/wasm/wasm_processor.js**: WebAssemblyモジュールをブラウザでロードし、JavaScriptから利用するためのグルーコード。
-        - **dist/wasm/wasm_processor_bg.wasm**: Rustで書かれた主要なデータ処理アルゴリズムをWebAssemblyにコンパイルしたバイナリファイル。
-        - **dist/wasm/wasm_processor_bg.wasm.d.ts**: WASMバイナリの型定義ファイル。
+        - **dist/wasm/signal_processor_wasm.d.ts**: WebAssemblyプロセッサモジュールの型定義ファイル。
+        - **dist/wasm/signal_processor_wasm.js**: WebAssemblyモジュールをブラウザでロードし、JavaScriptから利用するためのグルーコード。
+        - **dist/wasm/signal_processor_wasm_bg.wasm**: Rustで書かれた主要なデータ処理アルゴリズムをWebAssemblyにコンパイルしたバイナリファイル。
+        - **dist/wasm/signal_processor_wasm_bg.wasm.d.ts**: WASMバイナリの型定義ファイル。
 - **example-library-usage.html**: `cat-oscilloscope` をnpmライブラリとして利用する際の具体的なコード例を示すHTMLファイル。
 - **generated-docs/**: 何らかのツールによって生成されたドキュメントが格納されるディレクトリ。
 - **index.html**: アプリケーションのメインとなるHTMLファイル（開発用またはソース）。
@@ -383,23 +383,23 @@ Last updated: 2026-02-04
 - **tsconfig.json**: TypeScriptコンパイラのプロジェクト全体の設定ファイル。
 - **tsconfig.lib.json**: TypeScriptコンパイラのライブラリビルド用の設定ファイル。
 - **vite.config.ts**: Viteビルドツールの設定ファイルで、プラグインやビルドオプションを定義。
-- **wasm-processor/**: Rustで書かれたWebAssemblyモジュールのソースコードディレクトリ。
-    - **wasm-processor/Cargo.toml**: Rustプロジェクト（クレート）の設定ファイル。
-    - **wasm-processor/src/**: Rustのソースコードファイル群。
-        - **wasm-processor/src/bpf.rs**: バンドパスフィルター（BPF）関連のロジック。
-        - **wasm-processor/src/frequency_estimator.rs**: Rust実装の周波数推定アルゴリズム。
-        - **wasm-processor/src/gain_controller.rs**: Rust実装のゲイン制御ロジック。
-        - **wasm-processor/src/lib.rs**: Rustクレートのメインライブラリファイルで、JavaScriptとWebAssembly間のインターフェースを定義。
-        - **wasm-processor/src/waveform_searcher.rs**: Rust実装の波形検索アルゴリズム。
-        - **wasm-processor/src/zero_cross_detector.rs**: Rust実装のゼロクロス検出アルゴリズム。
+- **signal-processor-wasm/**: Rustで書かれたWebAssemblyモジュールのソースコードディレクトリ。
+    - **signal-processor-wasm/Cargo.toml**: Rustプロジェクト（クレート）の設定ファイル。
+    - **signal-processor-wasm/src/**: Rustのソースコードファイル群。
+        - **signal-processor-wasm/src/bpf.rs**: バンドパスフィルター（BPF）関連のロジック。
+        - **signal-processor-wasm/src/frequency_estimator.rs**: Rust実装の周波数推定アルゴリズム。
+        - **signal-processor-wasm/src/gain_controller.rs**: Rust実装のゲイン制御ロジック。
+        - **signal-processor-wasm/src/lib.rs**: Rustクレートのメインライブラリファイルで、JavaScriptとWebAssembly間のインターフェースを定義。
+        - **signal-processor-wasm/src/waveform_searcher.rs**: Rust実装の波形検索アルゴリズム。
+        - **signal-processor-wasm/src/zero_cross_detector.rs**: Rust実装のゼロクロス検出アルゴリズム。
 
 ## 関数詳細説明
-- **initSync(module_or_path, maybe_memory)** (dist/wasm/wasm_processor.d.ts):
+- **initSync(module_or_path, maybe_memory)** (dist/wasm/signal_processor_wasm.d.ts):
     - 役割: WebAssemblyモジュールを同期的に初期化する。
     - 引数: `module_or_path`: WebAssemblyモジュールまたはそのパス、`maybe_memory`: (オプション) WebAssemblyのメモリ。
     - 戻り値: なし
     - 機能: WASMモジュールのロードと初期化を行い、JavaScriptからWASMの機能を利用可能にする。
-- **__wbg_get_imports()** (dist/wasm/wasm_processor.js):
+- **__wbg_get_imports()** (dist/wasm/signal_processor_wasm.js):
     - 役割: WebAssemblyモジュールが必要とするインポートオブジェクトを取得する内部関数。
     - 引数: なし
     - 戻り値: インポートオブジェクト
@@ -814,7 +814,7 @@ Last updated: 2026-02-04
     - 引数: なし
     - 戻り値: なし
     - 機能: 推定周波数、類似度スコア、FFTデータなどWASMで計算された結果をJavaScript側で取得し、UI更新などに利用する。
-- **processFrame(timeDomainData, frequencyData, sampleRate, fftSize, bufferSizeMultiplier)** (dist/assets/index-R-ZInwxZ.js, dist/wasm/wasm_processor.js):
+- **processFrame(timeDomainData, frequencyData, sampleRate, fftSize, bufferSizeMultiplier)** (dist/assets/index-R-ZInwxZ.js, dist/wasm/signal_processor_wasm.js):
     - 役割: 単一の音声フレームを処理し、周波数推定や波形分析を行う。
     - 引数: `timeDomainData`: Float32Array（時間領域データ）、`frequencyData`: Uint8Array（周波数データ）、`sampleRate`: サンプルレート、`fftSize`: FFTサイズ、`bufferSizeMultiplier`: バッファサイズ乗数。
     - 戻り値: なし
@@ -1077,7 +1077,7 @@ Last updated: 2026-02-04
 
 ## 関数呼び出し階層ツリー
 ```
-- initSync (dist/wasm/wasm_processor.d.ts)
+- initSync (dist/wasm/signal_processor_wasm.d.ts)
   - t (dist/assets/index-R-ZInwxZ.js)
     - i ()
     - L ()
@@ -1197,7 +1197,7 @@ Last updated: 2026-02-04
     - sliderValueToThreshold ()
     - formatThresholdDisplay ()
     - updateCycleSimilarityPanelDisplay ()
-- __wbg_get_imports (dist/wasm/wasm_processor.js)
+- __wbg_get_imports (dist/wasm/signal_processor_wasm.js)
 - drawOffsetLine (src/ComparisonPanelRenderer.ts)
 - handleLoad (src/WasmModuleLoader.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)

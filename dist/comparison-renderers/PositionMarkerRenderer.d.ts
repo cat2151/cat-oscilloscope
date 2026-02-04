@@ -8,4 +8,3 @@ export declare class PositionMarkerRenderer {
      */
     drawPositionMarkers(ctx: CanvasRenderingContext2D, width: number, height: number, startIndex: number, endIndex: number, totalLength: number): void;
 }
-//# sourceMappingURL=PositionMarkerRenderer.d.ts.map

@@ -177,7 +177,7 @@ cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートし
 
 ### WASM実装のビルド
 
-WASM実装は `wasm-processor` ディレクトリにあります。
+WASM実装は `signal-processor-wasm` ディレクトリにあります。
 
 ```bash
 # WASM実装のビルド（wasm-packが必要）
@@ -426,10 +426,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📄 utils.d.ts.map
   📁 wasm/
     📊 package.json
-    📘 wasm_processor.d.ts
-    📜 wasm_processor.js
-    📄 wasm_processor_bg.wasm
-    📘 wasm_processor_bg.wasm.d.ts
+    📘 signal_processor_wasm.d.ts
+    📜 signal_processor_wasm.js
+    📄 signal_processor_wasm_bg.wasm
+    📘 signal_processor_wasm_bg.wasm.d.ts
 🌐 example-library-usage.html
 📁 generated-docs/
 🌐 index.html
@@ -538,10 +538,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📁 public/
   📁 wasm/
     📊 package.json
-    📘 wasm_processor.d.ts
-    📜 wasm_processor.js
-    📄 wasm_processor_bg.wasm
-    📘 wasm_processor_bg.wasm.d.ts
+    📘 signal_processor_wasm.d.ts
+    📜 signal_processor_wasm.js
+    📄 signal_processor_wasm_bg.wasm
+    📘 signal_processor_wasm_bg.wasm.d.ts
 📁 scripts/
   📜 screenshot-local.js
 📁 src/
@@ -601,7 +601,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📊 tsconfig.json
 📊 tsconfig.lib.json
 📘 vite.config.ts
-📁 wasm-processor/
+📁 signal-processor-wasm/
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs
@@ -736,15 +736,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: dbToAmplitude, amplitudeToDb, frequencyToNote, trimSilence
   - インポート: なし
 
-**dist/wasm/wasm_processor.d.ts** (143行, 7504バイト)
+**dist/wasm/signal_processor_wasm.d.ts** (143行, 7504バイト)
   - 関数: initSync, __wbg_init
   - インポート: なし
 
-**dist/wasm/wasm_processor.js** (633行, 20157バイト)
+**dist/wasm/signal_processor_wasm.js** (633行, 20157バイト)
   - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, if, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossModeName, function, for, catch, switch
   - インポート: なし
 
-**dist/wasm/wasm_processor_bg.wasm.d.ts** (53行, 3923バイト)
+**dist/wasm/signal_processor_wasm_bg.wasm.d.ts** (53行, 3923バイト)
   - 関数: なし
   - インポート: なし
 
@@ -756,15 +756,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**public/wasm/wasm_processor.d.ts** (143行, 7504バイト)
+**public/wasm/signal_processor_wasm.d.ts** (143行, 7504バイト)
   - 関数: initSync, __wbg_init
   - インポート: なし
 
-**public/wasm/wasm_processor.js** (633行, 20157バイト)
+**public/wasm/signal_processor_wasm.js** (633行, 20157バイト)
   - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, if, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossModeName, function, for, catch, switch
   - インポート: なし
 
-**public/wasm/wasm_processor_bg.wasm.d.ts** (53行, 3923バイト)
+**public/wasm/signal_processor_wasm_bg.wasm.d.ts** (53行, 3923バイト)
   - 関数: なし
   - インポート: なし
 
@@ -969,7 +969,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - インポート: vite, path, vite-plugin-dts
 
 ## 関数呼び出し階層
-- initSync (dist/wasm/wasm_processor.d.ts)
+- initSync (dist/wasm/signal_processor_wasm.d.ts)
   - t (dist/assets/index-R-ZInwxZ.js)
     - i ()
     - L ()
@@ -1057,7 +1057,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - cleanup (src/WasmModuleLoader.ts)
       - normalize (src/__tests__/normalized-harmonics-issue197.test.ts)
     - constructor (undefined)
-- __wbg_get_imports (dist/wasm/wasm_processor.js)
+- __wbg_get_imports (dist/wasm/signal_processor_wasm.js)
 - drawOffsetLine (src/ComparisonPanelRenderer.ts)
 - handleLoad (src/WasmModuleLoader.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)

@@ -9,7 +9,7 @@ import { dbToAmplitude } from '../utils';
  * Configuration and API tests
  * 
  * Note: Algorithm implementation tests have been removed since all algorithms
- * are now implemented in Rust WASM (wasm-processor module). The Rust implementation
+ * are now implemented in Rust WASM (signal-processor-wasm module). The Rust implementation
  * has its own test suite using wasm-bindgen-test.
  * 
  * These tests focus on configuration management and API surface.

@@ -114,7 +114,7 @@ All data processing (waveform search, frequency estimation, zero-crossing detect
 
 ### Building the WASM Implementation
 
-The WASM implementation is located in the `wasm-processor` directory.
+The WASM implementation is located in the `signal-processor-wasm` directory.
 
 ```bash
 # Build WASM implementation (requires wasm-pack)

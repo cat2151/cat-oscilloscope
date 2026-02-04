@@ -8,6 +8,10 @@ export interface WasmProcessorInstance {
   setUsePeakMode(enabled: boolean): void;
   setZeroCrossMode(mode: string): void;
   reset(): void;
+  computeFrequencyData(
+    timeDomainData: Float32Array,
+    fftSize: number
+  ): Uint8Array | undefined;
   processFrame(
     waveformData: Float32Array,
     frequencyData: Uint8Array | null,
@@ -60,7 +64,7 @@ export class WasmModuleLoader {
         reject(new Error(`WASM module loading timed out after ${this.LOAD_TIMEOUT_MS / 1000} seconds`));
       }, this.LOAD_TIMEOUT_MS);
       
-      const wasmPath = `${basePath}wasm/wasm_processor.js`;
+      const wasmPath = `${basePath}wasm/signal_processor_wasm.js`;
       
       const script = document.createElement('script');
       script.type = 'module';

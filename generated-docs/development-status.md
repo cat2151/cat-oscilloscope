@@ -22,12 +22,12 @@ Last updated: 2026-02-04
         ```
 
 2.  `cat-oscilloscope` の周波数推定ロジックのレビューと潜在的な問題の特定 [Issue #209](../issue-notes/209.md)
-    -   最初の小さな一歩: `src/FrequencyEstimator.ts` と `wasm-processor/src/frequency_estimator.rs` のファイルの内容を読み込み、主要な周波数推定アルゴリズムとその入力・出力を把握します。
+    -   最初の小さな一歩: `src/FrequencyEstimator.ts` と `signal-processor-wasm/src/frequency_estimator.rs` のファイルの内容を読み込み、主要な周波数推定アルゴリズムとその入力・出力を把握します。
     -   Agent実行プロンプト:
         ```
-        対象ファイル: `src/FrequencyEstimator.ts`, `wasm-processor/src/frequency_estimator.rs`
+        対象ファイル: `src/FrequencyEstimator.ts`, `signal-processor-wasm/src/frequency_estimator.rs`
 
-        実行内容: `src/FrequencyEstimator.ts` と `wasm-processor/src/frequency_estimator.rs` 内の周波数推定ロジックについて、主要なアルゴリズム、入力データの形式、出力データの形式、および推定プロセスにおける潜在的なエッジケースや制限を分析してください。
+        実行内容: `src/FrequencyEstimator.ts` と `signal-processor-wasm/src/frequency_estimator.rs` 内の周波数推定ロジックについて、主要なアルゴリズム、入力データの形式、出力データの形式、および推定プロセスにおける潜在的なエッジケースや制限を分析してください。
 
         確認事項: 周波数推定に影響を与える可能性のある設定値（例: サンプリングレート、バッファサイズ）がどのように処理されているか、またそれらが外部からどのように制御されるかを確認してください。
 

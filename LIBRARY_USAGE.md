@@ -51,7 +51,7 @@ cat-oscilloscopeは高速な波形処理のため、Rust/WASMを使用してい�
 
 ### WASMファイルが必要な理由
 
-cat-oscilloscopeは、初期化時に`{basePath}/wasm/wasm_processor.js`からWASMモジュールを動的に読み込みます。このファイルがブラウザからアクセスできる場所に配置されていないと、以下のようなエラーが発生します：
+cat-oscilloscopeは、初期化時に`{basePath}/wasm/signal_processor_wasm.js`からWASMモジュールを動的に読み込みます。このファイルがブラウザからアクセスできる場所に配置されていないと、以下のようなエラーが発生します：
 
 ```
 Failed to update oscilloscope
@@ -85,10 +85,10 @@ const destDir = path.join(__dirname, '..', 'public', 'wasm'); // Vite/Reactの�
 
 // 必要なファイルリスト
 const files = [
-  'wasm_processor.js',
-  'wasm_processor_bg.wasm',
-  'wasm_processor.d.ts',
-  'wasm_processor_bg.wasm.d.ts',
+  'signal_processor_wasm.js',
+  'signal_processor_wasm_bg.wasm',
+  'signal_processor_wasm.d.ts',
+  'signal_processor_wasm_bg.wasm.d.ts',
   'package.json'
 ];
 
@@ -148,10 +148,10 @@ export default defineConfig({
       }
       
       const files = [
-        'wasm_processor.js',
-        'wasm_processor_bg.wasm',
-        'wasm_processor.d.ts',
-        'wasm_processor_bg.wasm.d.ts',
+        'signal_processor_wasm.js',
+        'signal_processor_wasm_bg.wasm',
+        'signal_processor_wasm.d.ts',
+        'signal_processor_wasm_bg.wasm.d.ts',
         'package.json'
       ];
       
@@ -197,8 +197,8 @@ public/wasm/
 
 WASMファイルが正しく配置されていません。以下を確認してください：
 
-1. `public/wasm/wasm_processor.js`が存在するか
-2. ブラウザの開発者ツールのNetworkタブで、`/wasm/wasm_processor.js`へのリクエストが404エラーになっていないか
+1. `public/wasm/signal_processor_wasm.js`が存在するか
+2. ブラウザの開発者ツールのNetworkタブで、`/wasm/signal_processor_wasm.js`へのリクエストが404エラーになっていないか
 3. ビルドツールの設定で`public`ディレクトリが正しく配信されているか
 
 #### CDN経由での使用の場合

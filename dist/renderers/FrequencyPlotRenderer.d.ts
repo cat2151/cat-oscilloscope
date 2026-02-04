@@ -17,4 +17,3 @@ export declare class FrequencyPlotRenderer extends BaseOverlayRenderer {
      */
     drawFrequencyPlot(frequencyHistory: number[], minFrequency: number, maxFrequency: number, layout?: OverlayLayout): void;
 }
-//# sourceMappingURL=FrequencyPlotRenderer.d.ts.map

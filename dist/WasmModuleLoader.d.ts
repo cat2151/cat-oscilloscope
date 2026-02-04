@@ -7,6 +7,7 @@ export interface WasmProcessorInstance {
     setUsePeakMode(enabled: boolean): void;
     setZeroCrossMode(mode: string): void;
     reset(): void;
+    computeFrequencyData(timeDomainData: Float32Array, fftSize: number): Uint8Array | undefined;
     processFrame(waveformData: Float32Array, frequencyData: Uint8Array | null, sampleRate: number, fftSize: number, fftDisplayEnabled: boolean): any;
 }
 /**
@@ -34,4 +35,3 @@ export declare class WasmModuleLoader {
      */
     isReady(): boolean;
 }
-//# sourceMappingURL=WasmModuleLoader.d.ts.map

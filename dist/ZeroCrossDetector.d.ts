@@ -2,7 +2,7 @@
  * ZeroCrossDetector - Configuration holder for zero-cross/peak detection
  *
  * This class only holds configuration state. All actual zero-crossing and peak
- * detection algorithms are implemented in Rust WASM (wasm-processor module).
+ * detection algorithms are implemented in Rust WASM (signal-processor-wasm module).
  *
  * Responsible for:
  * - Storing peak mode configuration (legacy compatibility)
@@ -33,4 +33,3 @@ export declare class ZeroCrossDetector {
      */
     reset(): void;
 }
-//# sourceMappingURL=ZeroCrossDetector.d.ts.map

@@ -9,7 +9,7 @@ WAVファイルで単純波形を入力した場合は問題ない。
 
 ### 類似度計算の処理フロー
 
-`wasm-processor/src/lib.rs` の `process_frame` メソッドにおいて、以下の流れで類似度が計算される：
+`signal-processor-wasm/src/lib.rs` の `process_frame` メソッドにおいて、以下の流れで類似度が計算される：
 
 1. **周波数推定** (line 177-183)
    ```rust

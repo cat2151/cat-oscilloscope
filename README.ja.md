@@ -115,7 +115,7 @@ cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートし
 
 ### WASM実装のビルド
 
-WASM実装は `wasm-processor` ディレクトリにあります。
+WASM実装は `signal-processor-wasm` ディレクトリにあります。
 
 ```bash
 # WASM実装のビルド（wasm-packが必要）

@@ -2,7 +2,7 @@
  * GainController - Configuration holder for gain control
  *
  * This class only holds configuration state. All actual gain control
- * and noise gate algorithms are implemented in Rust WASM (wasm-processor module).
+ * and noise gate algorithms are implemented in Rust WASM (signal-processor-wasm module).
  *
  * Responsible for:
  * - Storing auto-gain enabled/disabled state
@@ -23,4 +23,3 @@ export declare class GainController {
     getNoiseGateThreshold(): number;
     getCurrentGain(): number;
 }
-//# sourceMappingURL=GainController.d.ts.map
