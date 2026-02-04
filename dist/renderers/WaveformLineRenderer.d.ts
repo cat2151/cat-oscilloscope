@@ -17,4 +17,3 @@ export declare class WaveformLineRenderer {
      */
     drawWaveform(data: Float32Array, startIndex: number, endIndex: number, gain: number): void;
 }
-//# sourceMappingURL=WaveformLineRenderer.d.ts.map
