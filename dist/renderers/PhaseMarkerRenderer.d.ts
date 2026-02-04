@@ -35,3 +35,4 @@ export declare class PhaseMarkerRenderer {
         zeroCrossModeName?: string;
     }): void;
 }
+//# sourceMappingURL=PhaseMarkerRenderer.d.ts.map

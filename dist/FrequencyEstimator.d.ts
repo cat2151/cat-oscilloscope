@@ -30,3 +30,4 @@ export declare class FrequencyEstimator {
     getMaxFrequency(): number;
     getFrequencyPlotHistory(): number[];
 }
+//# sourceMappingURL=FrequencyEstimator.d.ts.map

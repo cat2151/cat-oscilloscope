@@ -43,3 +43,4 @@ export declare class CycleSimilarityRenderer {
      */
     clear(): void;
 }
+//# sourceMappingURL=CycleSimilarityRenderer.d.ts.map

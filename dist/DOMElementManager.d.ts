@@ -46,3 +46,4 @@ export declare class DOMElementManager {
      */
     private validateElements;
 }
+//# sourceMappingURL=DOMElementManager.d.ts.map

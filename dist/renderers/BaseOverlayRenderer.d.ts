@@ -22,3 +22,4 @@ export declare abstract class BaseOverlayRenderer {
         height: number;
     };
 }
+//# sourceMappingURL=BaseOverlayRenderer.d.ts.map

@@ -13,3 +13,4 @@ export declare class HarmonicAnalysisRenderer extends BaseOverlayRenderer {
      */
     drawHarmonicAnalysis(halfFreqPeakStrengthPercent?: number, candidate1Harmonics?: number[], candidate2Harmonics?: number[], candidate1WeightedScore?: number, candidate2WeightedScore?: number, selectionReason?: string, estimatedFrequency?: number, layout?: OverlayLayout): void;
 }
+//# sourceMappingURL=HarmonicAnalysisRenderer.d.ts.map
