@@ -14,3 +14,4 @@ export declare class OffsetOverlayRenderer {
      */
     drawOffsetOverlayGraphs(ctx: CanvasRenderingContext2D, width: number, height: number, phaseZeroOffsetHistory?: number[], phaseTwoPiOffsetHistory?: number[]): void;
 }
+//# sourceMappingURL=OffsetOverlayRenderer.d.ts.map

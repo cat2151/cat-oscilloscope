@@ -1,12 +1,12 @@
 use wasm_bindgen::prelude::*;
 
-mod frequency_estimator;
+mod frequency_estimation;
 mod zero_cross_detector;
 mod waveform_searcher;
 mod gain_controller;
 mod bpf;
 
-use frequency_estimator::FrequencyEstimator;
+use frequency_estimation::FrequencyEstimator;
 use zero_cross_detector::ZeroCrossDetector;
 use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
 use gain_controller::GainController;

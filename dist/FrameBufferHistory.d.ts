@@ -27,3 +27,4 @@ export declare class FrameBufferHistory {
      */
     clear(): void;
 }
+//# sourceMappingURL=FrameBufferHistory.d.ts.map

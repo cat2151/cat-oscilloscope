@@ -27,3 +27,4 @@ export declare class WaveformPanelRenderer {
      */
     clearCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): void;
 }
+//# sourceMappingURL=WaveformPanelRenderer.d.ts.map

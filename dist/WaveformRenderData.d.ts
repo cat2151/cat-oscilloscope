@@ -75,3 +75,4 @@ export interface WaveformRenderData {
     /** History of relative offsets for phase 2π marker (end red line) as percentages (0-100) */
     phaseTwoPiOffsetHistory?: number[];
 }
+//# sourceMappingURL=WaveformRenderData.d.ts.map
