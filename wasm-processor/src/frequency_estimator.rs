@@ -60,7 +60,8 @@ impl FrequencyEstimator {
                 if let Some(freq_data) = frequency_data {
                     self.estimate_frequency_fft(freq_data, sample_rate, fft_size, is_signal_above_noise_gate)
                 } else {
-                    0.0
+                    // Fallback to autocorrelation when FFT data is not available (e.g., BufferSource mode)
+                    self.estimate_frequency_autocorrelation(data, sample_rate)
                 }
             }
             "stft" => self.estimate_frequency_stft(data, sample_rate, is_signal_above_noise_gate),
