@@ -38,7 +38,7 @@
 | **その他** | `utils.ts` | ユーティリティ（dB変換、無音トリミング） |
 | | `index.ts` | ライブラリエクスポート |
 
-**WASM実装**: `wasm-processor/src/` (Rust) - すべてのデータ処理アルゴリズム  
+**WASM実装**: `signal-processor-wasm/src/` (Rust) - すべてのデータ処理アルゴリズム  
 **ビルド済み**: `public/wasm/` - 事前ビルド済みWASM
 
 ## 開発コマンド

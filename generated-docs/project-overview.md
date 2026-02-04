@@ -272,7 +272,7 @@ Last updated: 2026-02-04
 📊 tsconfig.json
 📊 tsconfig.lib.json
 📘 vite.config.ts
-📁 wasm-processor/
+📁 signal-processor-wasm/
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs
@@ -383,15 +383,15 @@ Last updated: 2026-02-04
 - **tsconfig.json**: TypeScriptコンパイラのプロジェクト全体の設定ファイル。
 - **tsconfig.lib.json**: TypeScriptコンパイラのライブラリビルド用の設定ファイル。
 - **vite.config.ts**: Viteビルドツールの設定ファイルで、プラグインやビルドオプションを定義。
-- **wasm-processor/**: Rustで書かれたWebAssemblyモジュールのソースコードディレクトリ。
-    - **wasm-processor/Cargo.toml**: Rustプロジェクト（クレート）の設定ファイル。
-    - **wasm-processor/src/**: Rustのソースコードファイル群。
-        - **wasm-processor/src/bpf.rs**: バンドパスフィルター（BPF）関連のロジック。
-        - **wasm-processor/src/frequency_estimator.rs**: Rust実装の周波数推定アルゴリズム。
-        - **wasm-processor/src/gain_controller.rs**: Rust実装のゲイン制御ロジック。
-        - **wasm-processor/src/lib.rs**: Rustクレートのメインライブラリファイルで、JavaScriptとWebAssembly間のインターフェースを定義。
-        - **wasm-processor/src/waveform_searcher.rs**: Rust実装の波形検索アルゴリズム。
-        - **wasm-processor/src/zero_cross_detector.rs**: Rust実装のゼロクロス検出アルゴリズム。
+- **signal-processor-wasm/**: Rustで書かれたWebAssemblyモジュールのソースコードディレクトリ。
+    - **signal-processor-wasm/Cargo.toml**: Rustプロジェクト（クレート）の設定ファイル。
+    - **signal-processor-wasm/src/**: Rustのソースコードファイル群。
+        - **signal-processor-wasm/src/bpf.rs**: バンドパスフィルター（BPF）関連のロジック。
+        - **signal-processor-wasm/src/frequency_estimator.rs**: Rust実装の周波数推定アルゴリズム。
+        - **signal-processor-wasm/src/gain_controller.rs**: Rust実装のゲイン制御ロジック。
+        - **signal-processor-wasm/src/lib.rs**: Rustクレートのメインライブラリファイルで、JavaScriptとWebAssembly間のインターフェースを定義。
+        - **signal-processor-wasm/src/waveform_searcher.rs**: Rust実装の波形検索アルゴリズム。
+        - **signal-processor-wasm/src/zero_cross_detector.rs**: Rust実装のゼロクロス検出アルゴリズム。
 
 ## 関数詳細説明
 - **initSync(module_or_path, maybe_memory)** (dist/wasm/wasm_processor.d.ts):

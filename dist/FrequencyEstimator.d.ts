@@ -2,7 +2,7 @@
  * FrequencyEstimator - Configuration holder for frequency estimation
  *
  * This class only holds configuration state. All actual frequency estimation
- * algorithms are implemented in Rust WASM (wasm-processor module).
+ * algorithms are implemented in Rust WASM (signal-processor-wasm module).
  *
  * Responsible for:
  * - Storing frequency estimation method configuration

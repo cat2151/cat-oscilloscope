@@ -1,5 +1,5 @@
 [package]
-name = "wasm-processor"
+name = "signal-processor-wasm"
 version = "0.1.0"
 edition = "2021"
 authors = ["Cat Oscilloscope Contributors"]

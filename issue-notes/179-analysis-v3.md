@@ -20,7 +20,7 @@
 
 ### 1. 類似度が0になる条件の隠蔽（最重要）
 
-**場所**: `wasm-processor/src/waveform_searcher.rs`
+**場所**: `signal-processor-wasm/src/waveform_searcher.rs`
 
 #### 問題点1: cycle_lengthが0以下の場合（86-89行）
 ```rust
@@ -75,7 +75,7 @@ pub fn record_no_search(&mut self) {
 
 ### 2. ノイズゲートによるデータ消失の隠蔽
 
-**場所**: `wasm-processor/src/gain_controller.rs:112-116`
+**場所**: `signal-processor-wasm/src/gain_controller.rs:112-116`
 
 ```rust
 pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
@@ -94,7 +94,7 @@ pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
 
 ### 3. 空データの黙認
 
-**場所**: `wasm-processor/src/lib.rs:154-156`
+**場所**: `signal-processor-wasm/src/lib.rs:154-156`
 
 ```rust
 if waveform_data.is_empty() {
@@ -181,7 +181,7 @@ analyser.getFloatTimeDomainData(dataArray);
 
 1. **バッファサイズ不足の検出**:
 ```rust
-// wasm-processor/src/waveform_searcher.rs:94-97
+// signal-processor-wasm/src/waveform_searcher.rs:94-97
 if current_frame.len() < waveform_length {
     web_sys::console::log_1(&format!(
         "BUFFER TOO SHORT: current_frame.len()={}, waveform_length={}, cycle_length={}",
@@ -194,7 +194,7 @@ if current_frame.len() < waveform_length {
 
 2. **周波数推定失敗の検出**:
 ```rust
-// wasm-processor/src/waveform_searcher.rs:86-89
+// signal-processor-wasm/src/waveform_searcher.rs:86-89
 if cycle_length <= 0.0 {
     web_sys::console::log_1(&format!(
         "INVALID CYCLE LENGTH: cycle_length={}", cycle_length
@@ -228,7 +228,7 @@ private render(): void {
 
 4. **ノイズゲート適用の検出**:
 ```rust
-// wasm-processor/src/gain_controller.rs:112-116
+// signal-processor-wasm/src/gain_controller.rs:112-116
 pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
     if !self.is_signal_above_noise_gate(data) {
         web_sys::console::log_1(&"NOISE GATE: Signal below threshold, filling with 0.0".into());
@@ -244,9 +244,9 @@ pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
 問題を隠蔽せず、明示的にログ出力する。
 
 **変更ファイル**:
-- `wasm-processor/src/waveform_searcher.rs`
-- `wasm-processor/src/gain_controller.rs`
-- `wasm-processor/src/lib.rs`
+- `signal-processor-wasm/src/waveform_searcher.rs`
+- `signal-processor-wasm/src/gain_controller.rs`
+- `signal-processor-wasm/src/lib.rs`
 - `src/Oscilloscope.ts`
 
 **目的**:
@@ -260,7 +260,7 @@ pub fn apply_noise_gate(&mut self, data: &mut [f32]) {
 
 #### オプション1: バッファサイズ不足時のfail fast（推奨）
 ```rust
-// wasm-processor/src/waveform_searcher.rs
+// signal-processor-wasm/src/waveform_searcher.rs
 if current_frame.len() < waveform_length {
     web_sys::console::error_1(&format!(
         "CRITICAL: Buffer too short. current={}, required={}. Cannot perform similarity search.",

@@ -1,5 +1,5 @@
 {
-  "name": "wasm-processor",
+  "name": "signal-processor-wasm",
   "type": "module",
   "collaborators": [
     "Cat Oscilloscope Contributors"

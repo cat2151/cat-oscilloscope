@@ -440,13 +440,13 @@ Last updated: 2026-02-04
 - tsconfig.json
 - tsconfig.lib.json
 - vite.config.ts
-- wasm-processor/Cargo.toml
-- wasm-processor/src/bpf.rs
-- wasm-processor/src/frequency_estimator.rs
-- wasm-processor/src/gain_controller.rs
-- wasm-processor/src/lib.rs
-- wasm-processor/src/waveform_searcher.rs
-- wasm-processor/src/zero_cross_detector.rs
+- signal-processor-wasm/Cargo.toml
+- signal-processor-wasm/src/bpf.rs
+- signal-processor-wasm/src/frequency_estimator.rs
+- signal-processor-wasm/src/gain_controller.rs
+- signal-processor-wasm/src/lib.rs
+- signal-processor-wasm/src/waveform_searcher.rs
+- signal-processor-wasm/src/zero_cross_detector.rs
 
 ## 現在のオープンIssues
 ## [Issue #209](../issue-notes/209.md): このリポジトリをライブラリとして利用したwavlpfで、周波数推定に失敗している。その件について、API設計やライブラリ利用方法のドキュメントも含めて見直す

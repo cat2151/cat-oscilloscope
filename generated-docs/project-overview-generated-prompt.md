@@ -177,7 +177,7 @@ cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートし
 
 ### WASM実装のビルド
 
-WASM実装は `wasm-processor` ディレクトリにあります。
+WASM実装は `signal-processor-wasm` ディレクトリにあります。
 
 ```bash
 # WASM実装のビルド（wasm-packが必要）
@@ -601,7 +601,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📊 tsconfig.json
 📊 tsconfig.lib.json
 📘 vite.config.ts
-📁 wasm-processor/
+📁 signal-processor-wasm/
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs

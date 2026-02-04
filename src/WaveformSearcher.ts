@@ -12,7 +12,7 @@ export const CYCLES_TO_SEARCH = 4;
  * WaveformSearcher - Configuration and state holder for waveform similarity search
  * 
  * This class only holds state. All actual waveform similarity search
- * algorithms are implemented in Rust WASM (wasm-processor module).
+ * algorithms are implemented in Rust WASM (signal-processor-wasm module).
  * 
  * Responsible for:
  * - Holding previous waveform data (updated by WASM processor)
