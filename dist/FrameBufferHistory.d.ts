@@ -3,11 +3,12 @@
  * Responsible for:
  * - Storing past frame buffers
  * - Providing concatenated buffers with specified multiplier
- * - Efficient buffer reuse to avoid allocations
+ * - Efficient buffer reuse to avoid allocations in updateHistory
  */
 export declare class FrameBufferHistory {
     private frameBufferHistory;
     private readonly MAX_FRAME_HISTORY;
+    private extendedBufferCache;
     /**
      * Update frame buffer history with the current frame
      * Reuses existing buffers to avoid allocating a new Float32Array every frame
@@ -15,6 +16,7 @@ export declare class FrameBufferHistory {
     updateHistory(currentBuffer: Float32Array): void;
     /**
      * Get extended time-domain data by concatenating past frame buffers
+     * Reuses cached buffers to avoid allocation on every call
      * @param multiplier - Buffer size multiplier (1, 4, or 16)
      * @param currentBuffer - Current frame buffer for 1x multiplier
      * @returns Combined buffer or null if insufficient history

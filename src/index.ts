@@ -17,6 +17,17 @@ export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 export { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
 
+// Frame buffer history - for advanced AudioManager usage
+export { FrameBufferHistory } from './FrameBufferHistory';
+
+// Comparison renderers - specialized renderer components
+export {
+  WaveformPanelRenderer,
+  SimilarityPlotRenderer,
+  PositionMarkerRenderer,
+  OffsetOverlayRenderer,
+} from './comparison-renderers';
+
 // BufferSource - for static buffer visualization
 export { BufferSource } from './BufferSource';
 

@@ -3,11 +3,12 @@
  * Responsible for:
  * - Storing past frame buffers
  * - Providing concatenated buffers with specified multiplier
- * - Efficient buffer reuse to avoid allocations
+ * - Efficient buffer reuse to avoid allocations in updateHistory
  */
 export class FrameBufferHistory {
   private frameBufferHistory: Float32Array[] = [];
   private readonly MAX_FRAME_HISTORY = 16; // Support up to 16x buffer size
+  private extendedBufferCache: Map<number, Float32Array> = new Map(); // Cache for reused extended buffers
 
   /**
    * Update frame buffer history with the current frame
@@ -37,6 +38,7 @@ export class FrameBufferHistory {
 
   /**
    * Get extended time-domain data by concatenating past frame buffers
+   * Reuses cached buffers to avoid allocation on every call
    * @param multiplier - Buffer size multiplier (1, 4, or 16)
    * @param currentBuffer - Current frame buffer for 1x multiplier
    * @returns Combined buffer or null if insufficient history
@@ -54,10 +56,18 @@ export class FrameBufferHistory {
     // Get the most recent 'multiplier' buffers
     const recentBuffers = this.frameBufferHistory.slice(-multiplier);
 
-    // Concatenate buffers
+    // Calculate total length
     const totalLength = recentBuffers.reduce((sum, buf) => sum + buf.length, 0);
-    const extendedBuffer = new Float32Array(totalLength);
+    
+    // Get or create cached buffer
+    let extendedBuffer = this.extendedBufferCache.get(multiplier);
+    if (!extendedBuffer || extendedBuffer.length !== totalLength) {
+      // Allocate new buffer only if size changed or doesn't exist
+      extendedBuffer = new Float32Array(totalLength);
+      this.extendedBufferCache.set(multiplier, extendedBuffer);
+    }
 
+    // Concatenate buffers into the cached buffer
     let offset = 0;
     for (const buffer of recentBuffers) {
       extendedBuffer.set(buffer, offset);
@@ -72,5 +82,6 @@ export class FrameBufferHistory {
    */
   clear(): void {
     this.frameBufferHistory = [];
+    this.extendedBufferCache.clear();
   }
 }
