@@ -20,10 +20,21 @@ def load_config(config_path: str) -> Dict[str, Any]:
 
 
 def count_lines(file_path: str) -> int:
-    """Count lines in a file"""
+    """Count lines in a file efficiently"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return sum(1 for _ in f)
+        with open(file_path, 'rb') as f:
+            # Count newlines in chunks for efficiency
+            count = 0
+            chunk_size = 1024 * 1024  # 1MB chunks
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                count += chunk.count(b'\n')
+            # If file doesn't end with newline, add 1
+            if chunk and not chunk.endswith(b'\n'):
+                count += 1
+            return count
     except Exception as e:
         print(f"Warning: Could not read {file_path}: {e}", file=sys.stderr)
         return 0
@@ -182,12 +193,8 @@ def main():
     create_output_files(large_files, config, output_dir)
     print(f"\nOutput files created in {output_dir}")
     
-    # Exit with appropriate code
-    if large_files:
-        sys.exit(0)  # Found large files (not an error, just a detection)
-    else:
-        print("\nNo large files found!")
-        sys.exit(0)
+    # Exit with success (detection is not an error condition)
+    sys.exit(0)
 
 
 if __name__ == '__main__':

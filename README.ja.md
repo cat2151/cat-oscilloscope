@@ -274,7 +274,7 @@ npm run test:ui
   - 設定ファイル: `.github/check-large-files.toml`
   - 実行スクリプト: `.github/scripts/check_large_files.py`
   - ワークフロー: `.github/workflows/check-large-files.yml`
-  - 日本時間 毎日09:00に自動実行（手動実行も可能）
+  - 日本時間 毎日09:00に自動実行 (手動実行も可能)
 
 この仕組みにより、ファイルが大きくなりすぎる前に早期発見し、適切なタイミングでリファクタリングを検討できます。
 
