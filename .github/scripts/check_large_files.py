@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import List, Dict, Any
 import json
 
+# Constants
+TITLE_PATTERN_FALLBACK_LENGTH = 20  # Length to use when extracting title pattern if no separator found
+
 
 def load_config(config_path: str) -> Dict[str, Any]:
     """Load configuration from TOML file"""
@@ -49,8 +52,8 @@ def count_lines(file_path: str) -> int:
                 last_byte = chunk[-1]
             # Handle empty files and files not ending with newline
             if last_byte is None:
-                # Empty file - treat as 1 line (editor-style behavior)
-                return 1
+                # Empty file
+                return 0
             if last_byte != b'\n'[0]:
                 # File doesn't end with newline, add 1
                 count += 1
@@ -180,7 +183,7 @@ def create_output_files(large_files: List[Dict[str, Any]], config: Dict[str, Any
     title_pattern_file = os.path.join(output_dir, 'issue_title_pattern.txt')
     with open(title_pattern_file, 'w', encoding='utf-8') as f:
         # Extract first meaningful part before colon as search pattern
-        pattern = title.split(':')[0] if ':' in title else title[:20]
+        pattern = title.split(':')[0] if ':' in title else title[:TITLE_PATTERN_FALLBACK_LENGTH]
         f.write(pattern)
     
     # Write labels
