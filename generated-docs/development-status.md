@@ -1,50 +1,50 @@
-Last updated: 2026-02-04
+Last updated: 2026-02-05
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #209](../issue-notes/209.md) では、`cat-oscilloscope` をライブラリとして利用している `wavlpf` プロジェクトで周波数推定が失敗する問題が報告されています。
-- この問題の解決には、`cat-oscilloscope` のAPI設計、ライブラリ利用方法のドキュメント、および周波数推定ロジックの広範な見直しが必要とされています。
-- 具体的な失敗原因の特定と、より堅牢なAPI提供、明確な利用ガイドの整備が喫緊の課題です。
+- [Issue #255](../issue-notes/255.md) 簡易デモへのリンクが上部に目立つため、UX改善のため下部に移動し文言を「ライブラリ利用例」に変更します。
+- [Issue #254](../issue-notes/254.md) 波形オーバーレイのOffset %表示に、仕様の1%を超えるスパイクが発生することがあり、その原因を調査します。
+- [Issue #253](../issue-notes/253.md) 簡易デモの挙動に違和感があるため、FFTなどの主要処理が正しく適用されているか設計不備の観点から分析します。
 
 ## 次の一手候補
-1.  `wavlpf` における周波数推定失敗の原因特定とAPI利用状況の調査 [Issue #209](../issue-notes/209.md)
-    -   最初の小さな一歩: `issue-notes` ディレクトリ内を検索し、`wavlpf` に関連する既存の情報や議論、特に [Issue #209](../issue-notes/209.md) の詳細や背景情報を収集します。
-    -   Agent実行プロンプ:
-        ```
-        対象ファイル: `issue-notes/209.md` および `issue-notes/` ディレクトリ内の全Markdownファイル
+1. [Issue #255](../issue-notes/255.md): 簡易デモリンクのUX改善と文言変更
+   - 最初の小さな一歩: `README.ja.md`内の簡易デモリンクの場所と文言を変更し、`demo-simple.html`での表示への影響を確認する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `README.ja.md`, `README.md`, `demo-simple.html`
 
-        実行内容: `issue-notes` ディレクトリ内のMarkdownファイルを対象に、"wavlpf" というキーワード、および [Issue #209](../issue-notes/209.md) に関連する情報（例: 周波数推定、API利用）を収集し、`cat-oscilloscope` が `wavlpf` でどのように利用されているか、または利用されようとしているかに関する情報を抽出してください。
+     実行内容: `README.ja.md` 内の簡易デモへのリンク(`https://cat2151.github.io/cat-oscilloscope/demo-simple.html`)を、GitHubへのリンクと同様に画面下部に移動させ、リンク文言を「ライブラリ利用例」に変更してください。また、`README.md`も自動翻訳されるため、変更が反映されることを確認してください。`demo-simple.html`のコンテンツや表示に直接的な変更は必要ありませんが、参照される可能性のある箇所は確認してください。
 
-        確認事項: `wavlpf` の利用状況に関する具体的なコードや設定ファイルが `cat-oscilloscope` リポジトリ内に存在するかどうかも確認し、もしあればそのパスを特定してください。
+     確認事項: `README.ja.md`と`README.md`の両方でリンクの場所と文言が正しく変更され、かつ既存の他のリンク（特に「フルバージョン」）との整合性が保たれていることを確認してください。`_config.yml`や`index.html`など、サイト全体のナビゲーションに影響を与える可能性のあるファイルも考慮してください。
 
-        期待する出力: `wavlpf` の利用状況、特に `cat-oscilloscope` のどの機能が使われており、どのような問題が発生しているかについての現状分析をMarkdown形式で出力してください。もし具体的なコードパスが見つかれば、それも記載してください。
-        ```
+     期待する出力: `README.ja.md`と`README.md`の修正差分、および変更後の`README.ja.md`の内容。
+     ```
 
-2.  `cat-oscilloscope` の周波数推定ロジックのレビューと潜在的な問題の特定 [Issue #209](../issue-notes/209.md)
-    -   最初の小さな一歩: `src/FrequencyEstimator.ts` と `signal-processor-wasm/src/frequency_estimator.rs` のファイルの内容を読み込み、主要な周波数推定アルゴリズムとその入力・出力を把握します。
-    -   Agent実行プロンプト:
-        ```
-        対象ファイル: `src/FrequencyEstimator.ts`, `signal-processor-wasm/src/frequency_estimator.rs`
+2. [Issue #254](../issue-notes/254.md): 波形オーバーレイOffset %スパイクの原因調査
+   - 最初の小さな一歩: `src/comparison-renderers/OffsetOverlayRenderer.ts` および関連する波形データ処理部分（WASM側を含む）を調査し、Offset %の計算ロジックと値の範囲を確認する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `src/comparison-renderers/OffsetOverlayRenderer.ts`, `src/WaveformSearcher.ts`, `signal-processor-wasm/src/waveform_searcher.rs`, `issue-notes/254.md`
 
-        実行内容: `src/FrequencyEstimator.ts` と `signal-processor-wasm/src/frequency_estimator.rs` 内の周波数推定ロジックについて、主要なアルゴリズム、入力データの形式、出力データの形式、および推定プロセスにおける潜在的なエッジケースや制限を分析してください。
+     実行内容: `OffsetOverlayRenderer.ts`で描画されるOffset %の値が、`waveform_searcher.rs`や`WaveformSearcher.ts`からのデータに基づいてどのように計算されているかを分析してください。特に、Offset %が1フレームあたり1%を超えるスパイクとして表示される可能性のあるロジック上の欠陥やデータフローの問題を特定してください。
 
-        確認事項: 周波数推定に影響を与える可能性のある設定値（例: サンプリングレート、バッファサイズ）がどのように処理されているか、またそれらが外部からどのように制御されるかを確認してください。
+     確認事項: `waveform_searcher.rs`内の波形探索アルゴリズム、特に`calculate_similarity`やオフセット算出部分が、仕様（1フレーム1%以内）に準拠しているか確認してください。TypeScript側の描画ロジックが、WASMから受け取った値をそのまま表示しているか、または追加の計算を行っているかを確認してください。
 
-        期待する出力: 周波数推定ロジックの概要、入力・出力の仕様、および考えられる失敗要因（例: 無効な入力データ、特定の周波数範囲での精度問題、ノイズ耐性）をMarkdown形式で記述してください。
-        ```
+     期待する出力: Offset %の計算と表示に関する詳細な分析結果（Markdown形式）。スパイク発生の可能性のあるコード箇所とその理由、および修正の方向性に関する提案を含めてください。必要に応じて、`issue-notes/254.md`に分析結果を追記する。
+     ```
 
-3.  `cat-oscilloscope` のライブラリとしての利用ガイドおよびAPIドキュメントの初期レビュー [Issue #209](../issue-notes/209.md)
-    -   最初の小さな一歩: `README.md` と `LIBRARY_USAGE.md` を読み込み、現在のライブラリ利用に関する説明がどの程度網羅的であるか、また`cat-oscilloscope.mjs`や`cat-oscilloscope.cjs`などのエントリーポイントの説明があるかを確認します。
-    -   Agent実行プロンプト:
-        ```
-        対象ファイル: `README.md`, `README.ja.md`, `LIBRARY_USAGE.md`, `src/index.ts`
+3. [Issue #253](../issue-notes/253.md): 簡易デモの挙動に関する設計分析
+   - 最初の小さな一歩: `demo-simple.html`の初期化とデータフローを分析し、FFTや周波数推定などの主要な処理が正しく適用されているか確認する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `demo-simple.html`, `src/index.ts`, `src/Oscilloscope.ts`, `src/WaveformDataProcessor.ts`, `src/WasmModuleLoader.ts`
 
-        実行内容: `README.md`, `README.ja.md`, `LIBRARY_USAGE.md` を対象に、`cat-oscilloscope` をライブラリとして利用するための手順、公開されているAPI、および主要な設定オプションが明確に記述されているかをレビューしてください。特に、`src/index.ts` でエクスポートされている主要なクラスや関数がドキュメントで十分に説明されているかを確認してください。
+     実行内容: `demo-simple.html`がどのように`cat-oscilloscope`ライブラリを初期化し、`BufferSource`からのデータが`Oscilloscope`インスタンスに渡され、その後のFFTや周波数推定、その他のデータ処理パイプライン（`WaveformDataProcessor`やWASMモジュールを含む）がどのように機能しているかを詳細に分析してください。特に、メイン版 (`index.html`) と比較して、簡易デモで特定の処理（例: FFT、周波数推定）が実行されていない、または異なる方法で実行されている可能性を設計の観点から調査してください。
 
-        確認事項: 現在のドキュメントが、異なる利用シナリオ（例: ブラウザ環境、Node.js環境、ESM/CJSモジュール）に対応しているか、また初期化プロセスやイベントハンドリングに関する説明が不足していないかを確認してください。
+     確認事項: `demo-simple.html`で`Oscilloscope.startFromBuffer()`が呼び出された際のデータ処理パスをトレースし、`WaveformDataProcessor`や`FrequencyEstimator`が期待通りに動作しているか確認してください。`WasmModuleLoader`が正しくWASMモジュールをロードし、関連するWASM関数が呼び出されているかどうかも含めて確認してください。
 
-        期待する出力: `cat-oscilloscope` のライブラリとしての利用ガイドに関する現状の評価をMarkdown形式で出力してください。改善点、不足しているセクション、または誤解を招く可能性のある箇所を具体的に提案してください。
+     期待する出力: 簡易デモにおけるデータ処理フローの図解（テキストベースまたは擬似コード）、およびメイン版との比較分析結果（Markdown形式）。設計上の問題点や改善提案を具体的に記述してください。必要に応じて、`issue-notes/253.md`に分析結果を追記する。
 
 ---
-Generated at: 2026-02-04 07:14:00 JST
+Generated at: 2026-02-05 07:11:26 JST
