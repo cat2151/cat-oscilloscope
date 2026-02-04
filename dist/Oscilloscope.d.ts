@@ -135,3 +135,4 @@ export declare class Oscilloscope {
      */
     getPhaseMarkerRangeEnabled(): boolean;
 }
+//# sourceMappingURL=Oscilloscope.d.ts.map

@@ -12,9 +12,12 @@ export { WaveformSearcher } from './WaveformSearcher';
 export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 export { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
+export { FrameBufferHistory } from './FrameBufferHistory';
+export { WaveformPanelRenderer, SimilarityPlotRenderer, PositionMarkerRenderer, OffsetOverlayRenderer, } from './comparison-renderers';
 export { BufferSource } from './BufferSource';
 export { WaveformDataProcessor } from './WaveformDataProcessor';
 export type { WaveformRenderData } from './WaveformRenderData';
 export type { OverlayPosition, OverlaySize, OverlayLayout, OverlaysLayoutConfig } from './OverlayLayout';
 export { DEFAULT_OVERLAYS_LAYOUT, resolveValue } from './OverlayLayout';
 export { dbToAmplitude, amplitudeToDb, trimSilence } from './utils';
+//# sourceMappingURL=index.d.ts.map

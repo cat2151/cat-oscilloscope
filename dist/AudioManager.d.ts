@@ -17,7 +17,6 @@ export declare class AudioManager {
     private dataArray;
     private frequencyData;
     private frameBufferHistory;
-    private readonly MAX_FRAME_HISTORY;
     /**
      * Initialize analyser node and data arrays
      */
@@ -46,20 +45,11 @@ export declare class AudioManager {
      */
     getTimeDomainData(): Float32Array | null;
     /**
-     * Update frame buffer history with the current frame
-     * Reuses existing buffers to avoid allocating a new Float32Array every frame
-     */
-    private updateFrameBufferHistory;
-    /**
      * Get extended time-domain data by concatenating past frame buffers
      * @param multiplier - Buffer size multiplier (1, 4, or 16)
      * @returns Combined buffer or null if insufficient history
      */
     getExtendedTimeDomainData(multiplier: 1 | 4 | 16): Float32Array | null;
-    /**
-     * Clear frame buffer history
-     */
-    clearFrameBufferHistory(): void;
     /**
      * Get frequency-domain data (FFT)
      * In buffer mode, FFT is computed from time-domain data
@@ -82,3 +72,4 @@ export declare class AudioManager {
      */
     isReady(): boolean;
 }
+//# sourceMappingURL=AudioManager.d.ts.map
