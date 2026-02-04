@@ -18,6 +18,7 @@ include_patterns = [
     "src/**/*.tsx",
     "src/**/*.js",
     "src/**/*.jsx",
+    "signal-processor-wasm/src/**/*.rs",
 ]
 
 # 除外するファイルパターン
