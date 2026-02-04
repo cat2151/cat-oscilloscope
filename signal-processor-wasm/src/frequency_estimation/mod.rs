@@ -133,8 +133,10 @@ impl FrequencyEstimator {
     pub fn set_frequency_estimation_method(&mut self, method: &str) {
         if self.frequency_estimation_method != method {
             self.frequency_estimation_method = method.to_string();
-            // Clear history when method changes to avoid confusion
-            self.clear_history();
+            // Clear only frequency histories when method changes
+            // (preserving harmonic analysis data which may still be useful)
+            self.frequency_history.clear();
+            self.frequency_plot_history.clear();
         }
     }
     
@@ -159,11 +161,12 @@ impl FrequencyEstimator {
         
         if !valid_multipliers.contains(&multiplier) {
             web_sys::console::warn_1(&format!(
-                "Invalid buffer_size_multiplier: {}. Must be one of {:?}. Using 16 as default.",
+                "Invalid buffer_size_multiplier: {}. Must be one of {:?}. Keeping current value {}.",
                 multiplier,
-                valid_multipliers
+                valid_multipliers,
+                self.buffer_size_multiplier
             ).into());
-            self.buffer_size_multiplier = 16;
+            // Keep current value, don't change to 16
         } else {
             self.buffer_size_multiplier = multiplier;
         }
