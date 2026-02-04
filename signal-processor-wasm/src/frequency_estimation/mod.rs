@@ -153,22 +153,33 @@ impl FrequencyEstimator {
     }
     
     pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
-        // Multiplier affects buffer size: 1x/4x/16x only
-        // Default is 16 (16384 samples = ~371ms @ 44.1kHz)
-        // This is used by STFT and CQT methods
-        
-        let valid_multipliers = [1, 4, 16];
-        
-        if !valid_multipliers.contains(&multiplier) {
-            web_sys::console::warn_1(&format!(
-                "Invalid buffer_size_multiplier: {}. Must be one of {:?}. Keeping current value {}.",
-                multiplier,
-                valid_multipliers,
-                self.buffer_size_multiplier
-            ).into());
-            // Keep current value, don't change to 16
-        } else {
+        // Validate multiplier is one of the allowed values (1, 4, or 16)
+        // If invalid, keep the current value and log an error
+        if multiplier == 1 || multiplier == 4 || multiplier == 16 {
             self.buffer_size_multiplier = multiplier;
+        } else {
+            #[cfg(target_arch = "wasm32")]
+            {
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = console)]
+                    fn error(s: &str);
+                }
+                error(&format!(
+                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
+                    multiplier,
+                    self.buffer_size_multiplier
+                ));
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                eprintln!(
+                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
+                    multiplier,
+                    self.buffer_size_multiplier
+                );
+            }
         }
     }
     
