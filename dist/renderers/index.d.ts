@@ -5,3 +5,4 @@ export { FFTOverlayRenderer } from './FFTOverlayRenderer';
 export { HarmonicAnalysisRenderer } from './HarmonicAnalysisRenderer';
 export { FrequencyPlotRenderer } from './FrequencyPlotRenderer';
 export { PhaseMarkerRenderer } from './PhaseMarkerRenderer';
+//# sourceMappingURL=index.d.ts.map

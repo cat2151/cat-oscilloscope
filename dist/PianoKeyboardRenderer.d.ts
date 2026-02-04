@@ -51,3 +51,4 @@ export declare class PianoKeyboardRenderer {
      */
     clear(): void;
 }
+//# sourceMappingURL=PianoKeyboardRenderer.d.ts.map
