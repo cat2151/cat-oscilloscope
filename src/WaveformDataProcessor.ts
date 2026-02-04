@@ -142,7 +142,16 @@ export class WaveformDataProcessor {
     
     // Get frequency data if needed
     const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
-    const frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
+    let frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
+    
+    // If frequency data is needed but not available (e.g., BufferSource mode),
+    // compute it from time-domain data using WASM
+    if (needsFrequencyData && !frequencyData && dataArray) {
+      const computedFreqData = wasmProcessor.computeFrequencyData(dataArray, fftSize);
+      if (computedFreqData) {
+        frequencyData = new Uint8Array(computedFreqData);
+      }
+    }
     
     // Sync configuration before processing
     this.syncConfigToWasm();

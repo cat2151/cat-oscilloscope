@@ -14,6 +14,24 @@ export class WasmDataProcessor {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_wasmdataprocessor_free(ptr, 0);
     }
+    /**
+     * Compute FFT frequency data from time-domain data for BufferSource mode
+     * Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
+     * @param {Float32Array} time_domain_data
+     * @param {number} fft_size
+     * @returns {Uint8Array | undefined}
+     */
+    computeFrequencyData(time_domain_data, fft_size) {
+        const ptr0 = passArrayF32ToWasm0(time_domain_data, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.wasmdataprocessor_computeFrequencyData(this.__wbg_ptr, ptr0, len0, fft_size);
+        let v2;
+        if (ret[0] !== 0) {
+            v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+            wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        }
+        return v2;
+    }
     constructor() {
         const ret = wasm.wasmdataprocessor_new();
         this.__wbg_ptr = ret >>> 0;
