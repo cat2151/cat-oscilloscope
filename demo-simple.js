@@ -7,8 +7,8 @@
 //     'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v1.0.0/dist/cat-oscilloscope.mjs';
 //
 // ローカル開発時は、次の行のコメントを外して、上記CDNのimportをコメントアウトしてください:
-// import { Oscilloscope, BufferSource } from '/src/index.ts';
-import { Oscilloscope, BufferSource } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
+import { Oscilloscope, BufferSource } from '/src/index.ts';
+// import { Oscilloscope, BufferSource } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
 
 // Canvas要素とUI要素を取得
 const canvas = document.getElementById('oscilloscope');
