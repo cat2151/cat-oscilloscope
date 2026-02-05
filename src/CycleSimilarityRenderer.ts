@@ -200,6 +200,22 @@ export class CycleSimilarityRenderer {
     // Draw current values for each segment (legend)
     const lastFrame = history[history.length - 1];
     if (lastFrame && lastFrame.length > 0) {
+      // Calculate legend dimensions
+      const legendItemHeight = 11; // Reduced from 12 for tighter spacing
+      const legendHeight = lastFrame.length * legendItemHeight + 4; // Add padding
+      const legendWidth = 65;
+      const legendX = plotX + plotWidth - legendWidth - 2;
+      const legendY = plotY + 2;
+      
+      // Draw semi-transparent background for legend to prevent overlap issues
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+      
+      // Draw border around legend
+      ctx.strokeStyle = '#555555';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+      
       ctx.font = '9px Arial';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
@@ -209,13 +225,13 @@ export class CycleSimilarityRenderer {
         const similarity = lastFrame[segIdx];
         
         // Draw colored box for legend
-        const legendY = plotY + segIdx * 12;
+        const itemY = legendY + 2 + segIdx * legendItemHeight;
         ctx.fillStyle = color;
-        ctx.fillRect(plotX + plotWidth - 60, legendY, 8, 8);
+        ctx.fillRect(legendX + 2, itemY, 8, 8);
         
         // Draw segment label and value
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`${segIdx + 1}-${segIdx + 2}: ${similarity.toFixed(2)}`, plotX + plotWidth - 48, legendY);
+        ctx.fillText(`${segIdx + 1}-${segIdx + 2}: ${similarity.toFixed(2)}`, legendX + 12, itemY);
       }
     }
 
