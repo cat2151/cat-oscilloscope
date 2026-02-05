@@ -1,7 +1,27 @@
 /**
  * BufferSource provides audio data from a static buffer (Float32Array or AudioBuffer)
  * without requiring audio playback through the Web Audio API.
- * This is useful for visualizing pre-recorded audio data or processing results.
+ * 
+ * This is useful for:
+ * - Visualizing pre-recorded audio data
+ * - Processing results from audio analysis libraries
+ * - Creating oscilloscope visualizations without audio playback
+ * - Integration with audio processing libraries (e.g., wavlpf)
+ * 
+ * Feature Parity:
+ * BufferSource mode supports ALL oscilloscope features that microphone/file modes support:
+ * - ✅ Frequency estimation (Zero-Crossing, Autocorrelation, FFT, STFT, CQT)
+ * - ✅ FFT spectrum display overlay
+ * - ✅ Harmonic analysis
+ * - ✅ Auto-gain and noise gate
+ * - ✅ Waveform similarity detection
+ * - ✅ Phase markers and cycle visualization
+ * 
+ * The difference is only in implementation:
+ * - Microphone/file: Uses Web Audio API's AnalyserNode (hardware-accelerated FFT)
+ * - BufferSource: Computes FFT in WASM when needed (pure software implementation)
+ * 
+ * Both approaches produce identical visualization results.
  */
 export class BufferSource {
   private buffer: Float32Array;

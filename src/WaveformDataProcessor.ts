@@ -144,8 +144,12 @@ export class WaveformDataProcessor {
     const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
     let frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
     
-    // If frequency data is needed but not available (e.g., BufferSource mode),
-    // compute it from time-domain data using WASM
+    // IMPORTANT: BufferSource mode FFT computation
+    // In BufferSource mode, AudioManager.getFrequencyData() returns null because there's
+    // no AnalyserNode. However, we automatically compute FFT from time-domain data using
+    // WASM when needed. This ensures BufferSource mode has feature parity with
+    // microphone/file modes for all FFT-dependent features (frequency estimation,
+    // FFT display, harmonic analysis).
     if (needsFrequencyData && !frequencyData && dataArray) {
       const computedFreqData = wasmProcessor.computeFrequencyData(dataArray, fftSize);
       if (computedFreqData) {

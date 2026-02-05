@@ -219,19 +219,26 @@ export class AudioManager {
 
   /**
    * Get frequency-domain data (FFT)
-   * In buffer mode, FFT is computed from time-domain data
+   * 
+   * Architecture note:
+   * - In microphone/file mode: Returns FFT data directly from AnalyserNode (hardware-accelerated)
+   * - In BufferSource mode: Returns null here, but FFT is automatically computed by
+   *   WaveformDataProcessor.processFrame() using WASM when needed for frequency estimation
+   *   or FFT display. This separation keeps AudioManager focused on audio source management
+   *   while WaveformDataProcessor handles data processing.
+   * 
+   * Result: All FFT-dependent features (frequency estimation, FFT display, harmonic analysis)
+   * work identically in both modes, just with different implementation layers.
    */
   getFrequencyData(): Uint8Array | null {
-    // Buffer mode: FFT is not currently supported
-    // Note: FFT could be implemented in the future by computing it from time-domain data
-    // using the same WASM-based FFT that's used for frequency estimation.
-    // This would require integrating with the WaveformDataProcessor's FFT capabilities.
-    // For now, buffer mode focuses on time-domain visualization.
+    // BufferSource mode: Return null here
+    // FFT will be computed on-demand by WaveformDataProcessor using WASM
+    // (see WaveformDataProcessor.processFrame lines 149-154)
     if (this.bufferSource && this.dataArray && this.frequencyData) {
       return null;
     }
     
-    // Normal mode: get data from analyser node
+    // Microphone/file mode: Get FFT data from AnalyserNode
     if (!this.analyser || !this.frequencyData) {
       return null;
     }

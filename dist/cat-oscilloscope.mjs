@@ -220,7 +220,16 @@ class Z {
   }
   /**
    * Get frequency-domain data (FFT)
-   * In buffer mode, FFT is computed from time-domain data
+   * 
+   * Architecture note:
+   * - In microphone/file mode: Returns FFT data directly from AnalyserNode (hardware-accelerated)
+   * - In BufferSource mode: Returns null here, but FFT is automatically computed by
+   *   WaveformDataProcessor.processFrame() using WASM when needed for frequency estimation
+   *   or FFT display. This separation keeps AudioManager focused on audio source management
+   *   while WaveformDataProcessor handles data processing.
+   * 
+   * Result: All FFT-dependent features (frequency estimation, FFT display, harmonic analysis)
+   * work identically in both modes, just with different implementation layers.
    */
   getFrequencyData() {
     return this.bufferSource && this.dataArray && this.frequencyData || !this.analyser || !this.frequencyData ? null : (this.analyser.getByteFrequencyData(this.frequencyData), this.frequencyData);
