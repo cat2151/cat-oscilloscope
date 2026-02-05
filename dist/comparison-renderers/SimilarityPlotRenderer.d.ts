@@ -19,4 +19,3 @@ export declare class SimilarityPlotRenderer {
      */
     drawSimilarityText(ctx: CanvasRenderingContext2D, width: number, similarity: number): void;
 }
-//# sourceMappingURL=SimilarityPlotRenderer.d.ts.map
