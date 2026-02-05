@@ -6,6 +6,9 @@
  * - 2 divisions (2 cycles each)
  */
 export class CycleSimilarityRenderer {
+  private static readonly HISTORY_SIZE = 100;
+  private static readonly SEGMENT_COLORS = ['#00ff00', '#88ff00', '#ffaa00', '#ff6600', '#ff0000', '#ff00ff', '#00ffff'];
+
   private canvas8div: HTMLCanvasElement;
   private canvas4div: HTMLCanvasElement;
   private canvas2div: HTMLCanvasElement;
@@ -14,7 +17,6 @@ export class CycleSimilarityRenderer {
   private ctx2div: CanvasRenderingContext2D;
 
   // History buffers for 100 frames
-  private readonly HISTORY_SIZE = 100;
   private history8div: number[][] = [];
   private history4div: number[][] = [];
   private history2div: number[][] = [];
@@ -157,18 +159,16 @@ export class CycleSimilarityRenderer {
 
     // Number of segments (from first frame)
     const numSegments = history[0].length;
-    
-    // Define colors for each segment line
-    const colors = ['#00ff00', '#88ff00', '#ffaa00', '#ff6600', '#ff0000', '#ff00ff', '#00ffff'];
 
     // Draw line for each segment
     for (let segIdx = 0; segIdx < numSegments; segIdx++) {
-      const color = colors[segIdx % colors.length];
+      const color = CycleSimilarityRenderer.SEGMENT_COLORS[segIdx % CycleSimilarityRenderer.SEGMENT_COLORS.length];
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
 
-      const xStep = plotWidth / Math.max(history.length - 1, 1);
+      // Calculate X step: if only 1 frame, point is at plotX; if multiple frames, spread across width
+      const xStep = history.length > 1 ? plotWidth / (history.length - 1) : 0;
 
       let hasValidPoint = false;
       for (let frameIdx = 0; frameIdx < history.length; frameIdx++) {
@@ -204,7 +204,7 @@ export class CycleSimilarityRenderer {
       ctx.textBaseline = 'top';
 
       for (let segIdx = 0; segIdx < lastFrame.length; segIdx++) {
-        const color = colors[segIdx % colors.length];
+        const color = CycleSimilarityRenderer.SEGMENT_COLORS[segIdx % CycleSimilarityRenderer.SEGMENT_COLORS.length];
         const similarity = lastFrame[segIdx];
         
         // Draw colored box for legend
@@ -241,21 +241,21 @@ export class CycleSimilarityRenderer {
     // Update history buffers
     if (similarities8div && similarities8div.length > 0) {
       this.history8div.push(similarities8div);
-      if (this.history8div.length > this.HISTORY_SIZE) {
+      if (this.history8div.length > CycleSimilarityRenderer.HISTORY_SIZE) {
         this.history8div.shift(); // Remove oldest frame
       }
     }
 
     if (similarities4div && similarities4div.length > 0) {
       this.history4div.push(similarities4div);
-      if (this.history4div.length > this.HISTORY_SIZE) {
+      if (this.history4div.length > CycleSimilarityRenderer.HISTORY_SIZE) {
         this.history4div.shift();
       }
     }
 
     if (similarities2div && similarities2div.length > 0) {
       this.history2div.push(similarities2div);
-      if (this.history2div.length > this.HISTORY_SIZE) {
+      if (this.history2div.length > CycleSimilarityRenderer.HISTORY_SIZE) {
         this.history2div.shift();
       }
     }

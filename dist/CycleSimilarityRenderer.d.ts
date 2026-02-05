@@ -6,13 +6,14 @@
  * - 2 divisions (2 cycles each)
  */
 export declare class CycleSimilarityRenderer {
+    private static readonly HISTORY_SIZE;
+    private static readonly SEGMENT_COLORS;
     private canvas8div;
     private canvas4div;
     private canvas2div;
     private ctx8div;
     private ctx4div;
     private ctx2div;
-    private readonly HISTORY_SIZE;
     private history8div;
     private history4div;
     private history2div;
