@@ -30,10 +30,14 @@ export class WaveformDataProcessor {
   private basePathResolver: BasePathResolver;
   private wasmLoader: WasmModuleLoader;
   
-  // Phase marker offset history for overlay graphs (issue #236)
+  // Phase marker offset history for overlay graphs (issue #236, #254)
   private phaseZeroOffsetHistory: number[] = [];
   private phaseTwoPiOffsetHistory: number[] = [];
   private readonly MAX_OFFSET_HISTORY = 100; // Keep last 100 frames of offset data
+  
+  // Previous frame's phase marker positions for delta calculation (issue #254)
+  private previousPhaseZeroIndex: number | undefined = undefined;
+  private previousPhaseTwoPiIndex: number | undefined = undefined;
 
   constructor(
     audioManager: AudioManager,
@@ -214,6 +218,8 @@ export class WaveformDataProcessor {
   
   /**
    * Calculate relative offset percentages for phase markers and update history
+   * Fixed for issue #254: Now tracks frame-to-frame delta instead of absolute position
+   * to avoid spikes when display window shifts/resizes
    * @param renderData - Render data containing phase indices
    */
   private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
@@ -230,26 +236,47 @@ export class WaveformDataProcessor {
     
     // Update phase zero offset history if available
     if (renderData.phaseZeroIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
-      const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
-      const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+      let phaseZeroPercent: number;
+      
+      if (this.previousPhaseZeroIndex !== undefined) {
+        // Calculate frame-to-frame delta as percentage of display length
+        // This tracks actual marker movement, not position within shifting window
+        const delta = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
+        phaseZeroPercent = (delta / displayLength) * 100;
+      } else {
+        // First frame: start at 0% (no previous reference)
+        phaseZeroPercent = 0;
+      }
       
       this.phaseZeroOffsetHistory.push(phaseZeroPercent);
       if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
         this.phaseZeroOffsetHistory.shift();
       }
+      
+      // Store current position for next frame's delta calculation
+      this.previousPhaseZeroIndex = renderData.phaseZeroIndex;
     }
     
     // Update phase 2π offset history if available
     if (renderData.phaseTwoPiIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
-      const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
-      const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+      let phaseTwoPiPercent: number;
+      
+      if (this.previousPhaseTwoPiIndex !== undefined) {
+        // Calculate frame-to-frame delta as percentage of display length
+        const delta = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
+        phaseTwoPiPercent = (delta / displayLength) * 100;
+      } else {
+        // First frame: start at 0%
+        phaseTwoPiPercent = 0;
+      }
       
       this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
       if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
         this.phaseTwoPiOffsetHistory.shift();
       }
+      
+      // Store current position for next frame's delta calculation
+      this.previousPhaseTwoPiIndex = renderData.phaseTwoPiIndex;
     }
   }
   
@@ -261,8 +288,10 @@ export class WaveformDataProcessor {
     if (wasmProcessor) {
       wasmProcessor.reset();
     }
-    // Clear phase offset history (issue #236)
+    // Clear phase offset history (issue #236, #254)
     this.phaseZeroOffsetHistory = [];
     this.phaseTwoPiOffsetHistory = [];
+    this.previousPhaseZeroIndex = undefined;
+    this.previousPhaseTwoPiIndex = undefined;
   }
 }
