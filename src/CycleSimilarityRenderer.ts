@@ -126,7 +126,7 @@ export class CycleSimilarityRenderer {
       ctx.lineTo(plotX + plotWidth, y);
     }
 
-    // Vertical grid lines (every 25 frames)
+    // Vertical grid lines (4 equal divisions, representing 25-frame intervals at full 100-frame history)
     for (let i = 0; i <= 4; i++) {
       const x = plotX + (plotWidth / 4) * i;
       ctx.moveTo(x, plotY);
@@ -167,7 +167,8 @@ export class CycleSimilarityRenderer {
       ctx.lineWidth = 2;
       ctx.beginPath();
 
-      // Calculate X step: if only 1 frame, point is at plotX; if multiple frames, spread across width
+      // Calculate X step: if only 1 frame, point is at plotX (left edge);
+      // if multiple frames, spread across width
       const xStep = history.length > 1 ? plotWidth / (history.length - 1) : 0;
 
       let hasValidPoint = false;
