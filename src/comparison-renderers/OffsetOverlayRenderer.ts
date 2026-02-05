@@ -1,17 +1,16 @@
 /**
  * OffsetOverlayRenderer - Responsible for drawing phase marker offset overlay graphs
- * Displays frame-to-frame delta of phase markers on current waveform canvas
- * Fixed for issue #254: Now shows deltas instead of absolute positions to avoid spikes
+ * Displays relative offset progression of phase markers on current waveform canvas
  */
 export class OffsetOverlayRenderer {
   /**
    * Draw phase marker offset overlay graphs on current waveform canvas
-   * Displays two line graphs showing the frame-to-frame delta of phase markers
+   * Displays two line graphs showing the relative offset progression of phase markers
    * @param ctx - Canvas 2D rendering context
    * @param width - Canvas width
    * @param height - Canvas height
-   * @param phaseZeroOffsetHistory - Array of frame-to-frame delta percentages for phase zero (start red line)
-   * @param phaseTwoPiOffsetHistory - Array of frame-to-frame delta percentages for phase 2π (end red line)
+   * @param phaseZeroOffsetHistory - Array of relative offset percentages for phase zero (start red line)
+   * @param phaseTwoPiOffsetHistory - Array of relative offset percentages for phase 2π (end red line)
    */
   drawOffsetOverlayGraphs(
     ctx: CanvasRenderingContext2D,
@@ -44,7 +43,7 @@ export class OffsetOverlayRenderer {
     // Title
     ctx.fillStyle = '#00aaff';
     ctx.font = '9px Arial';
-    ctx.fillText('Δ Offset %', plotX + 2, plotY + 9);
+    ctx.fillText('Offset %', plotX + 2, plotY + 9);
 
     // Calculate plot area inside border
     const innerPadding = 2;
@@ -53,19 +52,9 @@ export class OffsetOverlayRenderer {
     const innerPlotWidth = plotWidth - innerPadding * 2;
     const innerPlotHeight = plotHeight - 12 - innerPadding;
 
-    // Determine Y-axis range: -5% to +5% (expecting ±1% per frame)
-    // Expanded range to accommodate occasional larger deltas during mode switches
-    const minPercent = -5;
-    const maxPercent = 5;
-    const zeroLine = innerPlotY + innerPlotHeight / 2; // Middle of plot
-
-    // Draw zero reference line
-    ctx.strokeStyle = '#444444';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(innerPlotX, zeroLine);
-    ctx.lineTo(innerPlotX + innerPlotWidth, zeroLine);
-    ctx.stroke();
+    // Determine Y-axis range (0-100%)
+    const minPercent = 0;
+    const maxPercent = 100;
 
     // Helper function to draw offset line
     const drawOffsetLine = (offsetHistory: number[], color: string) => {
@@ -84,7 +73,7 @@ export class OffsetOverlayRenderer {
         // Clamp to display range
         const clampedPercent = Math.max(minPercent, Math.min(maxPercent, percent));
 
-        // Map percentage to Y coordinate (inverted: positive = top, negative = bottom)
+        // Map percentage to Y coordinate (inverted: high percentage = top)
         const normalizedPercent = (clampedPercent - minPercent) / (maxPercent - minPercent);
         const y = innerPlotY + innerPlotHeight - (normalizedPercent * innerPlotHeight);
 
@@ -111,16 +100,13 @@ export class OffsetOverlayRenderer {
     if (phaseZeroOffsetHistory.length > 0) {
       const currentZeroOffset = phaseZeroOffsetHistory[phaseZeroOffsetHistory.length - 1];
       ctx.fillStyle = '#ff0000';
-      // Show + or - sign explicitly (but not for zero)
-      const sign = currentZeroOffset > 0 ? '+' : '';
-      ctx.fillText(`S:${sign}${currentZeroOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 11);
+      ctx.fillText(`S:${currentZeroOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 11);
     }
 
     if (phaseTwoPiOffsetHistory.length > 0) {
       const currentTwoPiOffset = phaseTwoPiOffsetHistory[phaseTwoPiOffsetHistory.length - 1];
       ctx.fillStyle = '#ff8800';
-      const sign = currentTwoPiOffset > 0 ? '+' : '';
-      ctx.fillText(`E:${sign}${currentTwoPiOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 2);
+      ctx.fillText(`E:${currentTwoPiOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 2);
     }
 
     ctx.restore();

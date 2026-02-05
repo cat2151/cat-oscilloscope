@@ -30,14 +30,16 @@ export class WaveformDataProcessor {
   private basePathResolver: BasePathResolver;
   private wasmLoader: WasmModuleLoader;
   
-  // Phase marker offset history for overlay graphs (issue #236, #254)
+  // Phase marker offset history for overlay graphs (issue #236)
   private phaseZeroOffsetHistory: number[] = [];
   private phaseTwoPiOffsetHistory: number[] = [];
   private readonly MAX_OFFSET_HISTORY = 100; // Keep last 100 frames of offset data
   
-  // Previous frame's phase marker positions for delta calculation (issue #254)
+  // Diagnostic tracking for issue #254 analysis
   private previousPhaseZeroIndex: number | undefined = undefined;
   private previousPhaseTwoPiIndex: number | undefined = undefined;
+  private previousDisplayStartIndex: number | undefined = undefined;
+  private previousDisplayEndIndex: number | undefined = undefined;
 
   constructor(
     audioManager: AudioManager,
@@ -218,8 +220,7 @@ export class WaveformDataProcessor {
   
   /**
    * Calculate relative offset percentages for phase markers and update history
-   * Fixed for issue #254: Now tracks frame-to-frame delta instead of absolute position
-   * to avoid spikes when display window shifts/resizes
+   * Issue #254: Added diagnostic logging to identify source of offset spikes
    * @param renderData - Render data containing phase indices
    */
   private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
@@ -234,18 +235,59 @@ export class WaveformDataProcessor {
       return;
     }
     
+    // Diagnostic tracking for issue #254
+    let shouldLog = false;
+    const diagnosticInfo: any = {
+      frame: Date.now(),
+      displayWindow: {
+        start: renderData.displayStartIndex,
+        end: renderData.displayEndIndex,
+        length: displayLength,
+      },
+    };
+    
+    // Track display window changes
+    if (this.previousDisplayStartIndex !== undefined && this.previousDisplayEndIndex !== undefined) {
+      const displayStartDelta = renderData.displayStartIndex - this.previousDisplayStartIndex;
+      const displayEndDelta = renderData.displayEndIndex - this.previousDisplayEndIndex;
+      const displayLengthChange = displayLength - (this.previousDisplayEndIndex - this.previousDisplayStartIndex);
+      
+      diagnosticInfo.displayWindowChange = {
+        startDelta: displayStartDelta,
+        endDelta: displayEndDelta,
+        lengthChange: displayLengthChange,
+      };
+    }
+    
     // Update phase zero offset history if available
     if (renderData.phaseZeroIndex !== undefined) {
-      let phaseZeroPercent: number;
+      // Calculate relative offset as percentage (0-100)
+      const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
+      const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+      
+      // Diagnostic tracking
+      diagnosticInfo.phaseZero = {
+        absoluteIndex: renderData.phaseZeroIndex,
+        offsetPercent: phaseZeroPercent,
+      };
       
       if (this.previousPhaseZeroIndex !== undefined) {
-        // Calculate frame-to-frame delta as percentage of display length
-        // This tracks actual marker movement, not position within shifting window
-        const delta = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
-        phaseZeroPercent = (delta / displayLength) * 100;
-      } else {
-        // First frame: start at 0% (no previous reference)
-        phaseZeroPercent = 0;
+        const markerDelta = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
+        const markerDeltaPercent = (markerDelta / displayLength) * 100;
+        diagnosticInfo.phaseZero.markerDelta = markerDelta;
+        diagnosticInfo.phaseZero.markerDeltaPercent = markerDeltaPercent;
+        
+        // Detect spikes: if absolute offset percent changes by >5% between frames
+        const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseZeroPercent - previousPercent);
+          diagnosticInfo.phaseZero.percentChange = percentChange;
+          
+          if (percentChange > 5) {
+            shouldLog = true;
+            diagnosticInfo.phaseZero.SPIKE_DETECTED = true;
+          }
+        }
       }
       
       this.phaseZeroOffsetHistory.push(phaseZeroPercent);
@@ -253,21 +295,38 @@ export class WaveformDataProcessor {
         this.phaseZeroOffsetHistory.shift();
       }
       
-      // Store current position for next frame's delta calculation
       this.previousPhaseZeroIndex = renderData.phaseZeroIndex;
     }
     
     // Update phase 2π offset history if available
     if (renderData.phaseTwoPiIndex !== undefined) {
-      let phaseTwoPiPercent: number;
+      // Calculate relative offset as percentage (0-100)
+      const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
+      const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+      
+      // Diagnostic tracking
+      diagnosticInfo.phaseTwoPi = {
+        absoluteIndex: renderData.phaseTwoPiIndex,
+        offsetPercent: phaseTwoPiPercent,
+      };
       
       if (this.previousPhaseTwoPiIndex !== undefined) {
-        // Calculate frame-to-frame delta as percentage of display length
-        const delta = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
-        phaseTwoPiPercent = (delta / displayLength) * 100;
-      } else {
-        // First frame: start at 0%
-        phaseTwoPiPercent = 0;
+        const markerDelta = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
+        const markerDeltaPercent = (markerDelta / displayLength) * 100;
+        diagnosticInfo.phaseTwoPi.markerDelta = markerDelta;
+        diagnosticInfo.phaseTwoPi.markerDeltaPercent = markerDeltaPercent;
+        
+        // Detect spikes
+        const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
+          diagnosticInfo.phaseTwoPi.percentChange = percentChange;
+          
+          if (percentChange > 5) {
+            shouldLog = true;
+            diagnosticInfo.phaseTwoPi.SPIKE_DETECTED = true;
+          }
+        }
       }
       
       this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
@@ -275,8 +334,16 @@ export class WaveformDataProcessor {
         this.phaseTwoPiOffsetHistory.shift();
       }
       
-      // Store current position for next frame's delta calculation
       this.previousPhaseTwoPiIndex = renderData.phaseTwoPiIndex;
+    }
+    
+    // Store display window state for next frame
+    this.previousDisplayStartIndex = renderData.displayStartIndex;
+    this.previousDisplayEndIndex = renderData.displayEndIndex;
+    
+    // Log if spike detected
+    if (shouldLog) {
+      console.warn('[Offset Spike Detected - Issue #254]', diagnosticInfo);
     }
   }
   
@@ -291,7 +358,10 @@ export class WaveformDataProcessor {
     // Clear phase offset history (issue #236, #254)
     this.phaseZeroOffsetHistory = [];
     this.phaseTwoPiOffsetHistory = [];
+    // Clear diagnostic tracking (issue #254)
     this.previousPhaseZeroIndex = undefined;
     this.previousPhaseTwoPiIndex = undefined;
+    this.previousDisplayStartIndex = undefined;
+    this.previousDisplayEndIndex = undefined;
   }
 }
