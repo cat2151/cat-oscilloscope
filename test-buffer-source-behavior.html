@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BufferSource Behavior Test</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    canvas {
+      border: 2px solid #00ff00;
+      display: block;
+      margin: 20px 0;
+      background: #000;
+    }
+    button {
+      background: #00ff00;
+      border: none;
+      color: #000;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .log {
+      background: #000;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #00ff00;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      margin: 2px 0;
+    }
+    .success { color: #00ff00; }
+    .warning { color: #ffaa00; }
+    .error { color: #ff0000; }
+  </style>
+</head>
+<body>
+  <h1>BufferSource Behavior Test</h1>
+  
+  <canvas id="oscilloscope" width="800" height="350"></canvas>
+  
+  <div>
+    <button id="startButton">Start BufferSource Test</button>
+    <button id="stopButton">Stop</button>
+  </div>
+  
+  <h2>Test Results:</h2>
+  <div id="results">
+    <div>推定周波数: <span id="frequency">---</span> Hz</div>
+    <div>ゲイン: <span id="gain">---</span>x</div>
+    <div>FFTデータ有無: <span id="fftStatus">---</span></div>
+    <div>周波数推定メソッド: <span id="method">---</span></div>
+  </div>
+  
+  <h2>Debug Log:</h2>
+  <div id="log" class="log"></div>
+
+  <script type="module">
+    import { Oscilloscope, BufferSource } from '/src/index.ts';
+    
+    const canvas = document.getElementById('oscilloscope');
+    const startButton = document.getElementById('startButton');
+    const stopButton = document.getElementById('stopButton');
+    const logDiv = document.getElementById('log');
+    
+    // Create hidden canvases
+    const hiddenCanvas = document.createElement('canvas');
+    hiddenCanvas.width = 250;
+    hiddenCanvas.height = 120;
+    
+    const oscilloscope = new Oscilloscope(
+      canvas,
+      hiddenCanvas,
+      hiddenCanvas,
+      hiddenCanvas,
+      hiddenCanvas
+    );
+    
+    function log(message, type = 'success') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      entry.textContent = `[${timestamp}] ${message}`;
+      logDiv.insertBefore(entry, logDiv.firstChild);
+      console.log(`[${type}] ${message}`);
+    }
+    
+    let updateInterval = null;
+    
+    function startUpdates() {
+      log('Starting periodic updates...', 'success');
+      
+      updateInterval = setInterval(() => {
+        try {
+          const freq = oscilloscope.getEstimatedFrequency();
+          const gain = oscilloscope.getCurrentGain();
+          const method = oscilloscope.getFrequencyEstimationMethod();
+          
+          document.getElementById('frequency').textContent = freq > 0 ? freq.toFixed(1) : '---';
+          document.getElementById('gain').textContent = gain.toFixed(2);
+          document.getElementById('method').textContent = method;
+          
+          if (freq > 0) {
+            log(`Frequency detected: ${freq.toFixed(1)} Hz, Gain: ${gain.toFixed(2)}x`, 'success');
+          }
+        } catch (error) {
+          log(`Update error: ${error.message}`, 'error');
+        }
+      }, 500);
+    }
+    
+    function stopUpdates() {
+      if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+      }
+    }
+    
+    startButton.addEventListener('click', async () => {
+      try {
+        log('=== Starting BufferSource Test ===', 'warning');
+        log('Creating 440Hz sine wave...', 'success');
+        
+        // Generate 440Hz sine wave
+        const sampleRate = 44100;
+        const duration = 1;
+        const frequency = 440;
+        const audioData = new Float32Array(sampleRate * duration);
+        
+        for (let i = 0; i < audioData.length; i++) {
+          audioData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate);
+        }
+        
+        log(`Generated ${audioData.length} samples at ${sampleRate}Hz`, 'success');
+        
+        // Create BufferSource
+        const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
+        log('BufferSource created with loop=true', 'success');
+        
+        // Check current frequency estimation method
+        const method = oscilloscope.getFrequencyEstimationMethod();
+        log(`Current frequency estimation method: ${method}`, 'success');
+        
+        // Start visualization
+        log('Starting oscilloscope from buffer...', 'warning');
+        await oscilloscope.startFromBuffer(bufferSource);
+        log('Oscilloscope started successfully!', 'success');
+        
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        startUpdates();
+        
+        // Log initial state after a short delay
+        setTimeout(() => {
+          const freq = oscilloscope.getEstimatedFrequency();
+          const gain = oscilloscope.getCurrentGain();
+          
+          if (freq > 0) {
+            log(`✓ Frequency estimation working: ${freq.toFixed(1)} Hz (expected: 440Hz)`, 'success');
+            document.getElementById('fftStatus').textContent = 'Available (computed by WASM)';
+            document.getElementById('fftStatus').style.color = '#00ff00';
+          } else {
+            log('✗ Frequency estimation NOT working: 0 Hz', 'error');
+            document.getElementById('fftStatus').textContent = 'NOT Available';
+            document.getElementById('fftStatus').style.color = '#ff0000';
+          }
+          
+          if (gain > 1.0) {
+            log(`✓ Auto-gain working: ${gain.toFixed(2)}x`, 'success');
+          } else {
+            log(`? Auto-gain: ${gain.toFixed(2)}x (may be disabled or signal too strong)`, 'warning');
+          }
+        }, 1000);
+        
+      } catch (error) {
+        log(`ERROR: ${error.message}`, 'error');
+        console.error('Full error:', error);
+        startButton.disabled = false;
+      }
+    });
+    
+    stopButton.addEventListener('click', async () => {
+      try {
+        log('Stopping oscilloscope...', 'warning');
+        await oscilloscope.stop();
+        log('Oscilloscope stopped', 'success');
+        
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        stopUpdates();
+        
+        document.getElementById('frequency').textContent = '---';
+        document.getElementById('gain').textContent = '---';
+      } catch (error) {
+        log(`Stop error: ${error.message}`, 'error');
+      }
+    });
+    
+    log('Test page initialized. Click "Start BufferSource Test" to begin.', 'success');
+  </script>
+</body>
+</html>
