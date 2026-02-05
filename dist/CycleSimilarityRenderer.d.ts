@@ -12,6 +12,10 @@ export declare class CycleSimilarityRenderer {
     private ctx8div;
     private ctx4div;
     private ctx2div;
+    private readonly HISTORY_SIZE;
+    private history8div;
+    private history4div;
+    private history2div;
     constructor(canvas8div: HTMLCanvasElement, canvas4div: HTMLCanvasElement, canvas2div: HTMLCanvasElement);
     /**
      * Clear all canvases
@@ -22,11 +26,11 @@ export declare class CycleSimilarityRenderer {
      */
     private clearCanvas;
     /**
-     * Draw a similarity graph on a canvas
+     * Draw a similarity line graph on a canvas showing history for each segment
      * @param ctx Canvas context
      * @param width Canvas width
      * @param height Canvas height
-     * @param similarities Array of similarity values (-1 to 1)
+     * @param history History of similarity arrays (each array contains similarities for all segments)
      * @param title Title text for the graph
      * @param segmentLabel Label for what each segment represents (e.g., "1/2 cycle")
      */
@@ -43,4 +47,3 @@ export declare class CycleSimilarityRenderer {
      */
     clear(): void;
 }
-//# sourceMappingURL=CycleSimilarityRenderer.d.ts.map

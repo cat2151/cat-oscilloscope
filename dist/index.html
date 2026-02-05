@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cat Oscilloscope</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+      text-align: center;
+    }
+
+    #canvas {
+      background-color: #000000;
+      border: 2px solid #00ff00;
+      border-radius: 4px;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    #frameBufferContainer {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    #frameBufferCanvas {
+      background-color: #000000;
+      border: 2px solid #0088ff;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+      width: 100%;
+    }
+
+    #comparisonPanel {
+      margin-top: 15px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .comparisonCanvas {
+      background-color: #000000;
+      border: 2px solid #0088ff;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+    }
+
+    .canvasContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .canvasLabel {
+      font-size: 12px;
+      color: #aaaaaa;
+      text-align: center;
+    }
+
+    #pianoKeyboardCanvas {
+      background-color: #1a1a1a;
+      border: 2px solid #ff8800;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(255, 136, 0, 0.3);
+    }
+
+    #controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #00ff00;
+      color: #000000;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #00cc00;
+    }
+
+    button:disabled {
+      background-color: #666666;
+      color: #333333;
+      cursor: not-allowed;
+    }
+
+    #status {
+      font-size: 14px;
+      color: #aaaaaa;
+    }
+
+    .info {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #aaaaaa;
+      max-width: 600px;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-size: 11px;
+      z-index: 1000;
+    }
+
+    footer a {
+      color: #999;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #ccc;
+    }
+  </style>
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/main-BriLaP5O.js"></script>
+  <link rel="modulepreload" crossorigin href="/cat-oscilloscope/assets/modulepreload-polyfill-B5Qt9EMX.js">
+</head>
+<body>
+  <div style="text-align: center; margin-bottom: 10px;">
+    <a href="demo-simple.html" style="color: #00ff00; text-decoration: none; padding: 8px 16px; border: 2px solid #00ff00; border-radius: 4px; display: inline-block; font-size: 14px;">
+      📘 簡易デモ（ライブラリ利用例）
+    </a>
+  </div>
+  <canvas
+    id="canvas"
+    width="800"
+    height="350"
+    aria-label="Oscilloscope waveform visualization canvas for microphone audio"
+  ></canvas>
+  <p
+    id="comparisonPanelDescription"
+    style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;"
+  >
+    比較パネルには、前回の波形、今回の波形とその類似度が表示されます。フレームバッファ全体の波形は上部に大きなキャンバスとして表示されます。
+  </p>
+  <div id="frameBufferContainer">
+    <span class="canvasLabel">フレームバッファ全体</span>
+    <canvas
+      id="frameBufferCanvas"
+      width="800"
+      height="120"
+      aria-label="フレームバッファ全体に蓄積された波形のプレビュー"
+      aria-describedby="comparisonPanelDescription"
+    ></canvas>
+  </div>
+  <div id="comparisonPanel">
+    <div class="canvasContainer">
+      <span class="canvasLabel">前回の波形</span>
+      <canvas
+        id="previousWaveformCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="120"
+        aria-label="前回の入力から取得した波形のプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">今回の波形</span>
+      <canvas
+        id="currentWaveformCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="120"
+        aria-label="今回の入力波形のプレビュー"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">類似度推移</span>
+      <canvas
+        id="similarityPlotCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="120"
+        aria-label="前回の波形と今回の波形の類似度推移グラフ"
+        aria-describedby="comparisonPanelDescription"
+      ></canvas>
+    </div>
+  </div>
+  <div id="cycleSimilarityPanel" style="margin-top: 15px; display: none; gap: 8px; justify-content: center; flex-wrap: wrap;">
+    <div class="canvasContainer">
+      <span class="canvasLabel">8分割 (1/2周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity8divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を8分割(1/2周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">4分割 (1周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity4divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を4分割(1周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+    <div class="canvasContainer">
+      <span class="canvasLabel">2分割 (2周期ごとの類似度)</span>
+      <canvas
+        id="cycleSimilarity2divCanvas"
+        class="comparisonCanvas"
+        width="250"
+        height="150"
+        aria-label="4周期を2分割(2周期ごと)した連続セグメント間の類似度グラフ"
+      ></canvas>
+    </div>
+  </div>
+  <div id="controls">
+    <button id="startButton">Start</button>
+    <button id="loadFileButton">Load WAV File</button>
+    <input type="file" id="fileInput" accept="audio/wav,audio/wave,audio/x-wav" style="display: none;">
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="autoGainCheckbox"
+        checked
+        style="cursor: pointer;"
+        aria-label="Automatically adjusts waveform amplitude to optimize visibility"
+        title="Automatically adjusts waveform amplitude to optimize visibility"
+      >
+      <span>Auto Gain</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="noiseGateCheckbox"
+        checked
+        style="cursor: pointer;"
+        aria-label="Enable noise gate to suppress low-level signals"
+        title="Enable noise gate to suppress low-level signals"
+      >
+      <span>Noise Gate</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="fftDisplayCheckbox"
+        checked
+        style="cursor: pointer;"
+        aria-label="Display FFT spectrum overlay"
+        title="Display FFT spectrum overlay in bottom-left corner"
+      >
+      <span>FFT Display</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="harmonicAnalysisCheckbox"
+        style="cursor: pointer;"
+        aria-label="Display harmonic analysis overlay"
+        title="Display harmonic analysis overlay in top-left corner"
+      >
+      <span>倍音分析</span>
+    </label>
+
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="pauseDrawingCheckbox"
+        style="cursor: pointer;"
+        aria-label="Pause drawing to freeze the current waveform display"
+        title="Pause drawing to examine the waveform"
+      >
+      <span>描画の一時停止</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="phaseMarkerRangeCheckbox"
+        checked
+        style="cursor: pointer;"
+        aria-label="Display only the range between phase markers (orange-red-red-orange)"
+        title="Display only the range between phase markers"
+      >
+      <span>位相マーカー範囲のみ表示</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="cycleSimilarityDisplayCheckbox"
+        style="cursor: pointer;"
+        aria-label="Display cycle similarity panel (8-division, 4-division, 2-division)"
+        title="Display cycle similarity panel"
+      >
+      <span>周期類似度表示</span>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Threshold:</span>
+      <input
+        type="range"
+        id="noiseGateThreshold"
+        min="-60"
+        max="0"
+        value="-60"
+        step="1"
+        style="width: 150px;"
+        aria-label="Noise gate threshold level in decibels"
+        title="Adjust noise gate threshold (dB scale)"
+      >
+      <span id="thresholdValue" style="min-width: 100px; font-family: monospace;">-60 dB (0.001)</span>
+    </label>
+    <span id="status">Click Start to begin</span>
+  </div>
+  <div id="frequencyDisplay" style="margin-top: 12px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Frequency Estimation:</span>
+      <select id="frequencyMethod" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select frequency estimation method">
+        <option value="zero-crossing">Zero-Crossing</option>
+        <option value="autocorrelation">Autocorrelation</option>
+        <option value="fft" selected>FFT</option>
+        <option value="stft">STFT</option>
+        <option value="cqt">CQT</option>
+      </select>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Buffer Size:</span>
+      <select id="bufferSizeMultiplier" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select buffer size multiplier for extended FFT/STFT/CQT" title="Larger buffers improve low frequency detection">
+        <option value="1">1x (Standard)</option>
+        <option value="4">4x (Better Low Freq)</option>
+        <option value="16" selected>16x (Best Low Freq)</option>
+      </select>
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px;">
+      <span>Phase 0 Detection:</span>
+      <select id="zeroCrossMode" style="padding: 5px 10px; background-color: #333; color: #fff; border: 1px solid #00ff00; border-radius: 4px; cursor: pointer;" aria-label="Select phase 0 detection method" title="Choose how phase 0 (red line) position is determined">
+        <option value="standard">Standard (0.5 cycle tolerance)</option>
+        <option value="peak-backtrack-history">Peak+History (1% stable)</option>
+        <option value="bidirectional-nearest">Bidirectional Nearest (gradual move)</option>
+        <option value="gradient-based">Gradient Based (signal direction)</option>
+        <option value="adaptive-step">Adaptive Step (distance-based)</option>
+        <option value="hysteresis" selected>Hysteresis (far=gradual, near=jump)</option>
+        <option value="closest-to-zero">Closest to Zero (min abs value)</option>
+      </select>
+    </label>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: bold;">Frequency:</span>
+      <span id="frequencyValue" style="min-width: 100px; font-family: monospace; font-size: 18px; color: #00ff00;" aria-live="polite">--- Hz</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: bold;">Note:</span>
+      <span id="noteValue" style="min-width: 120px; font-family: monospace; font-size: 18px; color: #00ff00;" aria-live="polite">---</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: bold;">Auto Gain:</span>
+      <span id="gainValue" style="min-width: 80px; font-family: monospace; font-size: 18px; color: #ffaa00;" aria-live="polite">---x</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: bold;">Similarity:</span>
+      <span id="similarityValue" style="min-width: 80px; font-family: monospace; font-size: 18px; color: #00aaff;" aria-live="polite">---</span>
+    </div>
+  </div>
+  <div id="pianoKeyboardContainer" style="margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+    <span class="canvasLabel">ピアノ鍵盤 (Piano Keyboard) - 50Hz～2000Hz</span>
+    <canvas
+      id="pianoKeyboardCanvas"
+      width="800"
+      height="60"
+      aria-label="Piano keyboard visualization showing highlighted key for detected fundamental frequency"
+    ></canvas>
+  </div>
+  <footer>
+    <a href="https://github.com/cat2151/cat-oscilloscope" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </footer>
+</body>
+</html>

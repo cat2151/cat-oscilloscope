@@ -13,6 +13,12 @@ export class CycleSimilarityRenderer {
   private ctx4div: CanvasRenderingContext2D;
   private ctx2div: CanvasRenderingContext2D;
 
+  // History buffers for 100 frames
+  private readonly HISTORY_SIZE = 100;
+  private history8div: number[][] = [];
+  private history4div: number[][] = [];
+  private history2div: number[][] = [];
+
   constructor(
     canvas8div: HTMLCanvasElement,
     canvas4div: HTMLCanvasElement,
@@ -55,11 +61,11 @@ export class CycleSimilarityRenderer {
   }
 
   /**
-   * Draw a similarity graph on a canvas
+   * Draw a similarity line graph on a canvas showing history for each segment
    * @param ctx Canvas context
    * @param width Canvas width
    * @param height Canvas height
-   * @param similarities Array of similarity values (-1 to 1)
+   * @param history History of similarity arrays (each array contains similarities for all segments)
    * @param title Title text for the graph
    * @param segmentLabel Label for what each segment represents (e.g., "1/2 cycle")
    */
@@ -67,7 +73,7 @@ export class CycleSimilarityRenderer {
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
-    similarities: number[],
+    history: number[][],
     title: string,
     segmentLabel: string
   ): void {
@@ -88,7 +94,7 @@ export class CycleSimilarityRenderer {
     ctx.fillText(title, 5, 15);
 
     // Check if we have data
-    if (!similarities || similarities.length === 0) {
+    if (!history || history.length === 0 || !history[0] || history[0].length === 0) {
       ctx.fillStyle = '#666666';
       ctx.font = '11px Arial';
       ctx.fillText('データなし (No data)', width / 2 - 50, height / 2);
@@ -118,9 +124,9 @@ export class CycleSimilarityRenderer {
       ctx.lineTo(plotX + plotWidth, y);
     }
 
-    // Vertical grid lines
-    for (let i = 0; i <= similarities.length; i++) {
-      const x = plotX + (plotWidth / similarities.length) * i;
+    // Vertical grid lines (every 25 frames)
+    for (let i = 0; i <= 4; i++) {
+      const x = plotX + (plotWidth / 4) * i;
       ctx.moveTo(x, plotY);
       ctx.lineTo(x, plotY + plotHeight);
     }
@@ -140,65 +146,6 @@ export class CycleSimilarityRenderer {
       ctx.fillText(label, plotX - 5, y);
     }
 
-    // Draw similarity bars
-    const barWidth = plotWidth / similarities.length;
-    const barPadding = barWidth * 0.15;
-
-    for (let i = 0; i < similarities.length; i++) {
-      const similarity = similarities[i];
-
-      // Clamp similarity to display range
-      const clampedSimilarity = Math.max(displayMin, Math.min(displayMax, similarity));
-
-      // Calculate bar position and height relative to zero line
-      const normalizedSimilarity = (clampedSimilarity - displayMin) / (displayMax - displayMin);
-      const valueY = plotY + plotHeight - (normalizedSimilarity * plotHeight);
-      const zeroY = plotY + plotHeight - (0 - displayMin) / (displayMax - displayMin) * plotHeight;
-
-      const x = plotX + i * barWidth + barPadding;
-      const w = barWidth - barPadding * 2;
-
-      // Color based on similarity value
-      if (similarity >= 0.9) {
-        ctx.fillStyle = '#00ff00'; // High similarity - green
-      } else if (similarity >= 0.7) {
-        ctx.fillStyle = '#88ff00'; // Good similarity - yellow-green
-      } else if (similarity >= 0.5) {
-        ctx.fillStyle = '#ffaa00'; // Medium similarity - orange
-      } else if (similarity >= 0) {
-        ctx.fillStyle = '#ff6600'; // Low similarity - red-orange
-      } else {
-        ctx.fillStyle = '#ff0000'; // Negative correlation - red
-      }
-
-      // Draw bar from zero line to value
-      // Note: In canvas coordinates, Y increases downward (Y=0 is at top)
-      // For positive similarity: valueY < zeroY (bar extends upward from zero line)
-      // For negative similarity: valueY > zeroY (bar extends downward from zero line)
-      // fillRect expects positive width/height, so we pass top-left corner and positive dimensions
-      if (valueY < zeroY) {
-        // Positive values: bar extends upward from zero line
-        // Draw from valueY (top of bar) down to zeroY (zero line)
-        ctx.fillRect(x, valueY, w, zeroY - valueY);
-      } else {
-        // Negative values: bar extends downward from zero line
-        // Draw from zeroY (zero line) down to valueY (bottom of bar)
-        ctx.fillRect(x, zeroY, w, valueY - zeroY);
-      }
-
-      // Draw value text above/below bar depending on sign
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '9px monospace';
-      ctx.textAlign = 'center';
-      if (clampedSimilarity >= 0) {
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(similarity.toFixed(2), x + w / 2, valueY - 2);
-      } else {
-        ctx.textBaseline = 'top';
-        ctx.fillText(similarity.toFixed(2), x + w / 2, valueY + 2);
-      }
-    }
-
     // Draw zero line (at y = 0)
     const zeroY = plotY + plotHeight - (0 - displayMin) / (displayMax - displayMin) * plotHeight;
     ctx.strokeStyle = '#666666';
@@ -208,15 +155,67 @@ export class CycleSimilarityRenderer {
     ctx.lineTo(plotX + plotWidth, zeroY);
     ctx.stroke();
 
-    // Draw X-axis labels (segment indices)
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = '9px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
+    // Number of segments (from first frame)
+    const numSegments = history[0].length;
+    
+    // Define colors for each segment line
+    const colors = ['#00ff00', '#88ff00', '#ffaa00', '#ff6600', '#ff0000', '#ff00ff', '#00ffff'];
 
-    for (let i = 0; i < similarities.length; i++) {
-      const x = plotX + (i + 0.5) * barWidth;
-      ctx.fillText(`${i + 1}-${i + 2}`, x, plotY + plotHeight + 2);
+    // Draw line for each segment
+    for (let segIdx = 0; segIdx < numSegments; segIdx++) {
+      const color = colors[segIdx % colors.length];
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      const xStep = plotWidth / Math.max(history.length - 1, 1);
+
+      let hasValidPoint = false;
+      for (let frameIdx = 0; frameIdx < history.length; frameIdx++) {
+        const frame = history[frameIdx];
+        if (frame && frame.length > segIdx) {
+          const similarity = frame[segIdx];
+          const x = plotX + frameIdx * xStep;
+
+          // Clamp similarity to display range
+          const clampedSimilarity = Math.max(displayMin, Math.min(displayMax, similarity));
+
+          // Map similarity to Y coordinate (inverted: high similarity = top)
+          const normalizedSimilarity = (clampedSimilarity - displayMin) / (displayMax - displayMin);
+          const y = plotY + plotHeight - (normalizedSimilarity * plotHeight);
+
+          if (!hasValidPoint) {
+            ctx.moveTo(x, y);
+            hasValidPoint = true;
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+      }
+
+      ctx.stroke();
+    }
+
+    // Draw current values for each segment (legend)
+    const lastFrame = history[history.length - 1];
+    if (lastFrame && lastFrame.length > 0) {
+      ctx.font = '9px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      for (let segIdx = 0; segIdx < lastFrame.length; segIdx++) {
+        const color = colors[segIdx % colors.length];
+        const similarity = lastFrame[segIdx];
+        
+        // Draw colored box for legend
+        const legendY = plotY + segIdx * 12;
+        ctx.fillStyle = color;
+        ctx.fillRect(plotX + plotWidth - 60, legendY, 8, 8);
+        
+        // Draw segment label and value
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`${segIdx + 1}-${segIdx + 2}: ${similarity.toFixed(2)}`, plotX + plotWidth - 48, legendY);
+      }
     }
 
     // Draw segment label
@@ -239,12 +238,34 @@ export class CycleSimilarityRenderer {
     similarities4div?: number[],
     similarities2div?: number[]
   ): void {
+    // Update history buffers
+    if (similarities8div && similarities8div.length > 0) {
+      this.history8div.push(similarities8div);
+      if (this.history8div.length > this.HISTORY_SIZE) {
+        this.history8div.shift(); // Remove oldest frame
+      }
+    }
+
+    if (similarities4div && similarities4div.length > 0) {
+      this.history4div.push(similarities4div);
+      if (this.history4div.length > this.HISTORY_SIZE) {
+        this.history4div.shift();
+      }
+    }
+
+    if (similarities2div && similarities2div.length > 0) {
+      this.history2div.push(similarities2div);
+      if (this.history2div.length > this.HISTORY_SIZE) {
+        this.history2div.shift();
+      }
+    }
+
     // 8 divisions graph
     this.drawSimilarityGraph(
       this.ctx8div,
       this.canvas8div.width,
       this.canvas8div.height,
-      similarities8div || [],
+      this.history8div,
       '8分割 (1/2周期)',
       '連続する1/2周期間の類似度'
     );
@@ -254,7 +275,7 @@ export class CycleSimilarityRenderer {
       this.ctx4div,
       this.canvas4div.width,
       this.canvas4div.height,
-      similarities4div || [],
+      this.history4div,
       '4分割 (1周期)',
       '連続する1周期間の類似度'
     );
@@ -264,7 +285,7 @@ export class CycleSimilarityRenderer {
       this.ctx2div,
       this.canvas2div.width,
       this.canvas2div.height,
-      similarities2div || [],
+      this.history2div,
       '2分割 (2周期)',
       '連続する2周期間の類似度'
     );
@@ -274,6 +295,9 @@ export class CycleSimilarityRenderer {
    * Clear all graphs
    */
   clear(): void {
+    this.history8div = [];
+    this.history4div = [];
+    this.history2div = [];
     this.clearAllCanvases();
   }
 }

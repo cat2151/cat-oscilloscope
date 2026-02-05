@@ -50,4 +50,3 @@ export declare function resolveValue(value: number | string, canvasSize: number)
  * Default layout configuration
  */
 export declare const DEFAULT_OVERLAYS_LAYOUT: OverlaysLayoutConfig;
-//# sourceMappingURL=OverlayLayout.d.ts.map

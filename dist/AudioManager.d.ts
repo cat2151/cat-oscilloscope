@@ -72,4 +72,3 @@ export declare class AudioManager {
      */
     isReady(): boolean;
 }
-//# sourceMappingURL=AudioManager.d.ts.map

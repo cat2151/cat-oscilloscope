@@ -29,4 +29,3 @@ export declare function frequencyToNote(frequency: number): {
  * @returns A new AudioBuffer with silence trimmed, or the original if no trimming is needed
  */
 export declare function trimSilence(audioBuffer: AudioBuffer): AudioBuffer;
-//# sourceMappingURL=utils.d.ts.map

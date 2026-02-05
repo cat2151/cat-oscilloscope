@@ -42,4 +42,3 @@ export declare class ComparisonPanelRenderer {
      */
     clear(): void;
 }
-//# sourceMappingURL=ComparisonPanelRenderer.d.ts.map

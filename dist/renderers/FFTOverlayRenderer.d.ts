@@ -14,4 +14,3 @@ export declare class FFTOverlayRenderer extends BaseOverlayRenderer {
      */
     drawFFTOverlay(frequencyData: Uint8Array, estimatedFrequency: number, sampleRate: number, fftSize: number, maxFrequency: number, layout?: OverlayLayout): void;
 }
-//# sourceMappingURL=FFTOverlayRenderer.d.ts.map
