@@ -29,6 +29,8 @@ export declare class WaveformDataProcessor {
     private phaseZeroOffsetHistory;
     private phaseTwoPiOffsetHistory;
     private readonly MAX_OFFSET_HISTORY;
+    private previousPhaseZeroIndex;
+    private previousPhaseTwoPiIndex;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
@@ -56,6 +58,8 @@ export declare class WaveformDataProcessor {
     processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null;
     /**
      * Calculate relative offset percentages for phase markers and update history
+     * Fixed for issue #254: Now tracks frame-to-frame delta instead of absolute position
+     * to avoid spikes when display window shifts/resizes
      * @param renderData - Render data containing phase indices
      */
     private updatePhaseOffsetHistory;
