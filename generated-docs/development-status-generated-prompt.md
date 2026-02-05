@@ -1,4 +1,4 @@
-Last updated: 2026-02-05
+Last updated: 2026-02-06
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -103,6 +103,7 @@ Last updated: 2026-02-05
 - Issue番号を記載する際は、必ず [Issue #番号](../issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
 
 ## プロジェクトのファイル一覧
+- .github/CHECK_LARGE_FILES.md
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
@@ -194,10 +195,13 @@ Last updated: 2026-02-05
 - .github/actions-tmp/package-lock.json
 - .github/actions-tmp/package.json
 - .github/actions-tmp/src/main.js
+- .github/check-large-files.toml
 - .github/copilot-instructions.md
+- .github/scripts/check_large_files.py
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-translate-readme.yml
+- .github/workflows/check-large-files.yml
 - .github/workflows/deploy.yml
 - .gitignore
 - ARCHITECTURE.md
@@ -205,6 +209,7 @@ Last updated: 2026-02-05
 - LICENSE
 - README.ja.md
 - README.md
+- REFACTORING_ISSUE_251.md
 - REFACTORING_SUMMARY.md
 - _config.yml
 - demo-simple.html
@@ -249,6 +254,12 @@ Last updated: 2026-02-05
 - dist/WaveformSearcher.d.ts.map
 - dist/ZeroCrossDetector.d.ts
 - dist/ZeroCrossDetector.d.ts.map
+- dist/assets/demo-DsYptmO3.js
+- dist/assets/demo-DsYptmO3.js.map
+- dist/assets/main-DUIA4vI1.js
+- dist/assets/main-DUIA4vI1.js.map
+- dist/assets/modulepreload-polyfill-B5Qt9EMX.js
+- dist/assets/modulepreload-polyfill-B5Qt9EMX.js.map
 - dist/cat-oscilloscope.cjs
 - dist/cat-oscilloscope.cjs.map
 - dist/cat-oscilloscope.mjs
@@ -263,8 +274,10 @@ Last updated: 2026-02-05
 - dist/comparison-renderers/WaveformPanelRenderer.d.ts.map
 - dist/comparison-renderers/index.d.ts
 - dist/comparison-renderers/index.d.ts.map
+- dist/demo-simple.html
 - dist/index.d.ts
 - dist/index.d.ts.map
+- dist/index.html
 - dist/renderers/BaseOverlayRenderer.d.ts
 - dist/renderers/BaseOverlayRenderer.d.ts.map
 - dist/renderers/FFTOverlayRenderer.d.ts
@@ -375,6 +388,7 @@ Last updated: 2026-02-05
 - issue-notes/253.md
 - issue-notes/254.md
 - issue-notes/255.md
+- issue-notes/257.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -410,7 +424,15 @@ Last updated: 2026-02-05
 - scripts/screenshot-local.js
 - signal-processor-wasm/Cargo.toml
 - signal-processor-wasm/src/bpf.rs
-- signal-processor-wasm/src/frequency_estimator.rs
+- signal-processor-wasm/src/frequency_estimation/autocorrelation.rs
+- signal-processor-wasm/src/frequency_estimation/cqt.rs
+- signal-processor-wasm/src/frequency_estimation/dsp_utils.rs
+- signal-processor-wasm/src/frequency_estimation/fft.rs
+- signal-processor-wasm/src/frequency_estimation/harmonic_analysis.rs
+- signal-processor-wasm/src/frequency_estimation/mod.rs
+- signal-processor-wasm/src/frequency_estimation/smoothing.rs
+- signal-processor-wasm/src/frequency_estimation/stft.rs
+- signal-processor-wasm/src/frequency_estimation/zero_crossing.rs
 - signal-processor-wasm/src/gain_controller.rs
 - signal-processor-wasm/src/lib.rs
 - signal-processor-wasm/src/waveform_searcher.rs
@@ -476,21 +498,6 @@ Last updated: 2026-02-05
 - vite.config.ts
 
 ## 現在のオープンIssues
-## [Issue #255](../issue-notes/255.md): 簡易デモへのリンクが上部に目立つ表示がされておりUX悪化。GitHubへのリンク同様に画面下部に目立たない形で移動し、リンク文言は「ライブラリ利用例」にする
-[issue-notes/255.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/255.md)
-
-...
-ラベル: good first issue
---- issue-notes/255.md の内容 ---
-
-```markdown
-# issue 簡易デモへのリンクが上部に目立つ表示がされておりUX悪化。GitHubへのリンク同様に画面下部に目立たない形で移動し、リンク文言は「ライブラリ利用例」にする #255
-[issues #255](https://github.com/cat2151/cat-oscilloscope/issues/255)
-
-
-
-```
-
 ## [Issue #254](../issue-notes/254.md): 「今回の波形」にオーバーレイ表示しているOffset %が、とても1フレ1%とは思えない例えば1フレ40%に見えるスパイクを描画することがある
 [issue-notes/254.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/254.md)
 
@@ -507,62 +514,6 @@ Last updated: 2026-02-05
 - もし「こういうときは1%になりません」ということがあれば、PRコメントに報告、README.ja.mdに明記、をすること
   - その場合は「移動できない」に倒したほうがいいくらいの考え
     - そこでoffset %が大きく移動してしまう（スパイクになる）のがNG
-
-```
-
-## [Issue #253](../issue-notes/253.md): 簡易デモの挙動に違和感がある。設計不備の可能性の観点から分析する
-[issue-notes/253.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/253.md)
-
-...
-ラベル: good first issue
---- issue-notes/253.md の内容 ---
-
-```markdown
-# issue 簡易デモの挙動に違和感がある。設計不備の可能性の観点から分析する #253
-[issues #253](https://github.com/cat2151/cat-oscilloscope/issues/253)
-
-# 詳細
-- おかしい。
-- そもそもメイン版でwavファイルをアップロードしたときと同じふるまい
-    - （マイクのとき同様に周波数推定などすべてが成功する状態）
-    - になるはずでは？
-- もし、ふるまいが、そうでないなら、
-    - アーキテクチャや設計のレイヤーからおかしい可能性がある。
-        - 例えばFFTが、「マイク」または「wavファイルのアップロード」にしか対応していない
-            - （それとは別にバイナリバッファで波形を受け取った場合にはFFTしない）
-            - というDRY違反な設計になっている等
-    - FFTに限らず、全体にアーキテクチャや設計のレイヤーからおかしい可能性もありうる
-
-
-```
-
-## [Issue #252](../issue-notes/252.md): 8分割、4分割、2分割、の一致度の棒グラフを、棒グラフをやめて過去100frameの折れ線グラフにする
-[issue-notes/252.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/252.md)
-
-...
-ラベル: good first issue
---- issue-notes/252.md の内容 ---
-
-```markdown
-# issue 8分割、4分割、2分割、の一致度の棒グラフを、棒グラフをやめて過去100frameの折れ線グラフにする #252
-[issues #252](https://github.com/cat2151/cat-oscilloscope/issues/252)
-
-
-
-```
-
-## [Issue #251](../issue-notes/251.md): Rust側の巨大ソースを、単一責任の原則に従い分割する
-[issue-notes/251.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/251.md)
-
-...
-ラベル: good first issue
---- issue-notes/251.md の内容 ---
-
-```markdown
-# issue Rust側の巨大ソースを、単一責任の原則に従い分割する #251
-[issues #251](https://github.com/cat2151/cat-oscilloscope/issues/251)
-
-
 
 ```
 
@@ -869,267 +820,25 @@ npm run test:ui
 
 これらはアプリケーションの制限ではなく、マイクというデバイスの特性によるものです。
 
+## 開発・保守
+
+### コード品質の自動チェック
+
+このプロジェクトでは、コード品質を維持するために以下の自動チェックが実行されます：
+
+- **大きなファイルの検出**: 日次バッチでソースファイルの行数をチェックし、500行を超えるファイルがあればissueを自動起票します
+  - 設定ファイル: `.github/check-large-files.toml`
+  - 実行スクリプト: `.github/scripts/check_large_files.py`
+  - ワークフロー: `.github/workflows/check-large-files.yml`
+  - 日本時間 毎日09:00に自動実行 (手動実行も可能)
+
+この仕組みにより、ファイルが大きくなりすぎる前に早期発見し、適切なタイミングでリファクタリングを検討できます。
+
 ## ライセンス
 
 MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
 
 *Big Brother is listening to you. Now it’s the cat.* 🐱
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/2.md
-```md
-{% raw %}
-# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
-[issues #2](https://github.com/cat2151/github-actions/issues/2)
-
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
-まずplanしてください
-```
-
-# 結果
-- indent
-    - linter？がindentのエラーを出しているがyml内容は見た感じOK
-    - テキストエディタとagentの相性問題と判断する
-    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
-    - indentのエラーは解消した
-- LLMレビュー
-    - agent以外の複数のLLMにレビューさせる
-    - prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 共通ワークフロー
-
-# GitHub Actions Reusable Workflow for Call Graph Generation
-name: Generate Call Graph
-
-# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
-#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
-#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
-
-on:
-  workflow_call:
-
-jobs:
-  check-commits:
-    runs-on: ubuntu-latest
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 50 # 過去のコミットを取得
-
-      - name: Check for user commits in last 24 hours
-        id: check
-        run: |
-          node .github/scripts/callgraph_enhanced/check-commits.cjs
-
-  generate-callgraph:
-    needs: check-commits
-    if: needs.check-commits.outputs.should-run == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      security-events: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Remove old CodeQL packages cache
-        run: rm -rf ~/.codeql/packages
-
-      - name: Check Node.js version
-        run: |
-          node .github/scripts/callgraph_enhanced/check-node-version.cjs
-
-      - name: Install CodeQL CLI
-        run: |
-          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
-          unzip codeql-linux64.zip
-          sudo mv codeql /opt/codeql
-          echo "/opt/codeql" >> $GITHUB_PATH
-
-      - name: Install CodeQL query packs
-        run: |
-          /opt/codeql/codeql pack install .github/codeql-queries
-
-      - name: Check CodeQL exists
-        run: |
-          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
-
-      - name: Verify CodeQL Configuration
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
-
-      - name: Remove existing CodeQL DB (if any)
-        run: |
-          rm -rf codeql-db
-
-      - name: Perform CodeQL Analysis
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
-
-      - name: Check CodeQL Analysis Results
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
-
-      - name: Debug CodeQL execution
-        run: |
-          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
-
-      - name: Wait for CodeQL results
-        run: |
-          node -e "setTimeout(()=>{}, 10000)"
-
-      - name: Find and process CodeQL results
-        run: |
-          node .github/scripts/callgraph_enhanced/find-process-results.cjs
-
-      - name: Generate HTML graph
-        run: |
-          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
-
-      - name: Copy files to generated-docs and commit results
-        run: |
-          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
-
---- 呼び出し元
-# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
-name: Call Call Graph Enhanced
-
-on:
-  schedule:
-    # 毎日午前5時(JST) = UTC 20:00前日
-    - cron: '0 20 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-callgraph-enhanced:
-    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
-    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
-```
-
-# レビュー結果OKと判断する
-- レビュー結果を人力でレビューした形になった
-
-# test
-- #4 同様にローカル WSL + act でtestする
-- エラー。userのtest設計ミス。
-  - scriptの挙動 : src/ がある前提
-  - 今回の共通ワークフローのリポジトリ : src/ がない
-  - 今回testで実現したいこと
-    - 仮のソースでよいので、関数コールグラフを生成させる
-  - 対策
-    - src/ にダミーを配置する
-- test green
-  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
-  - もしそうなったら別issueとしよう
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-- もしhtml内容が0件NG、などになったら、別issueとするつもり
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/3.md
-```md
-{% raw %}
-# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
-[issues #3](https://github.com/cat2151/github-actions/issues/3)
-
-- 前提
-  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
-  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
-
-- prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlはまだ共通ワークフロー化されず、
-呼び出し元からコピーされたままの状態です。
-このymlファイル名のまま、
-中身を共通ワークフロー化してください。
-呼び出し元ymlは別途書きますので気にしないでください。
-まずplanしてください
-```
-
-- plan 生成結果
-```
-共通ワークフロー化のためのplanは以下の通りです。
-
-1. 目的
-現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
-2. 主な変更点
-on: トリガーを workflow_call に変更（直接イベントで起動しない）。
-必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
-github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
-既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
-3. 具体的な修正内容
-on: issues: → on: workflow_call: に変更。
-inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
-スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
-github-script ステップも同様にinputsを参照。
-必要に応じて secrets も workflow_call で受け取れるようにする。
-4. ファイル名・配置
-ファイル名はそのまま issue-note.yml。
-配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
-5. 呼び出し元への影響
-呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
-このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
-```
-
-- userがplanレビューし、OKを出した
-- agentに生成結果ymlをレビューさせた、OKとなった
-  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
--  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
-```
-原因の分析：
-
-呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
-共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
-しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
-エラーの本質的な原因：
-
-actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
-script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
-そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
-正しい書き方：
-
-actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
-例（修正版）：
-
-このように、inputs の値を env で渡し、script 内では process.env で参照してください。
-
-まとめ：
-
-actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
-env: で値を渡し、process.env で参照するのが正しい
-修正が必要です。修正版のワークフローが必要な場合はお知らせください。
-```
-
-- test green
-- closeとする
 
 {% endraw %}
 ```
@@ -1280,50 +989,6 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/251.md
-```md
-{% raw %}
-# issue Rust側の巨大ソースを、単一責任の原則に従い分割する #251
-[issues #251](https://github.com/cat2151/cat-oscilloscope/issues/251)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/252.md
-```md
-{% raw %}
-# issue 8分割、4分割、2分割、の一致度の棒グラフを、棒グラフをやめて過去100frameの折れ線グラフにする #252
-[issues #252](https://github.com/cat2151/cat-oscilloscope/issues/252)
-
-
-
-{% endraw %}
-```
-
-### issue-notes/253.md
-```md
-{% raw %}
-# issue 簡易デモの挙動に違和感がある。設計不備の可能性の観点から分析する #253
-[issues #253](https://github.com/cat2151/cat-oscilloscope/issues/253)
-
-# 詳細
-- おかしい。
-- そもそもメイン版でwavファイルをアップロードしたときと同じふるまい
-    - （マイクのとき同様に周波数推定などすべてが成功する状態）
-    - になるはずでは？
-- もし、ふるまいが、そうでないなら、
-    - アーキテクチャや設計のレイヤーからおかしい可能性がある。
-        - 例えばFFTが、「マイク」または「wavファイルのアップロード」にしか対応していない
-            - （それとは別にバイナリバッファで波形を受け取った場合にはFFTしない）
-            - というDRY違反な設計になっている等
-    - FFTに限らず、全体にアーキテクチャや設計のレイヤーからおかしい可能性もありうる
-
-
-{% endraw %}
-```
-
 ### issue-notes/254.md
 ```md
 {% raw %}
@@ -1339,111 +1004,61 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/255.md
-```md
-{% raw %}
-# issue 簡易デモへのリンクが上部に目立つ表示がされておりUX悪化。GitHubへのリンク同様に画面下部に目立たない形で移動し、リンク文言は「ライブラリ利用例」にする #255
-[issues #255](https://github.com/cat2151/cat-oscilloscope/issues/255)
-
-
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-43e3ede Auto-translate README.ja.md to README.md [auto]
-1d87855 Merge pull request #250 from cat2151/copilot/rename-wasm-processor-directory
-227b7e2 WASMファイル名を wasm_processor から signal_processor_wasm に変更
-260b147 Add issue note for #255 [auto]
-683ac1b Enhance issue notes with investigation details
-80a3052 WasmProcessorInstance型定義を修正し、ビルドを成功させる
-31d6772 Add issue note for #254 [auto]
-9ad88d4 Expand issue #253 with detailed analysis
-943d80f ディレクトリ名を wasm-processor から signal-processor-wasm に変更し、すべての参照を更新
-0248105 Add issue note for #253 [auto]
+29764f2 Merge pull request #261 from cat2151/copilot/move-demo-link-to-footer
+4faffa4 Rebuild dist files after whitespace fix
+12bf077 Remove trailing space after pipe character in footer
+927c60b Rebuild dist files after index.html changes
+e2989c5 Move demo link to footer with subtle styling
+1c085a7 Initial plan
+5ba6a94 Merge pull request #259 from cat2151/copilot/update-graph-from-bar-to-line
+a3c43a0 Fix legend overlap: add semi-transparent background and reduce spacing
+94ac74e Improve documentation and comments for clarity
+d6e30ff Address code review feedback: extract constants and improve clarity
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
-.gitignore
-LIBRARY_USAGE.md
+.github/CHECK_LARGE_FILES.md
+.github/check-large-files.toml
+.github/scripts/check_large_files.py
+.github/workflows/check-large-files.yml
 README.ja.md
 README.md
-dist/AudioManager.d.ts
-dist/BasePathResolver.d.ts
-dist/BufferSource.d.ts
-dist/ComparisonPanelRenderer.d.ts
+REFACTORING_ISSUE_251.md
 dist/CycleSimilarityRenderer.d.ts
-dist/DOMElementManager.d.ts
-dist/DisplayUpdater.d.ts
-dist/FrameBufferHistory.d.ts
-dist/FrequencyEstimator.d.ts
-dist/GainController.d.ts
-dist/Oscilloscope.d.ts
-dist/OverlayLayout.d.ts
-dist/PianoKeyboardRenderer.d.ts
-dist/UIEventHandlers.d.ts
-dist/WasmModuleLoader.d.ts
-dist/WasmModuleLoader.d.ts.map
-dist/WaveformDataProcessor.d.ts
-dist/WaveformRenderData.d.ts
-dist/WaveformRenderer.d.ts
-dist/WaveformSearcher.d.ts
-dist/ZeroCrossDetector.d.ts
+dist/CycleSimilarityRenderer.d.ts.map
+dist/assets/demo-DsYptmO3.js
+dist/assets/demo-DsYptmO3.js.map
+dist/assets/main-DUIA4vI1.js
+dist/assets/main-DUIA4vI1.js.map
+dist/assets/modulepreload-polyfill-B5Qt9EMX.js
+dist/assets/modulepreload-polyfill-B5Qt9EMX.js.map
 dist/cat-oscilloscope.cjs
 dist/cat-oscilloscope.cjs.map
 dist/cat-oscilloscope.mjs
 dist/cat-oscilloscope.mjs.map
-dist/comparison-renderers/OffsetOverlayRenderer.d.ts
-dist/comparison-renderers/PositionMarkerRenderer.d.ts
-dist/comparison-renderers/SimilarityPlotRenderer.d.ts
-dist/comparison-renderers/WaveformPanelRenderer.d.ts
-dist/comparison-renderers/index.d.ts
-dist/index.d.ts
-dist/renderers/BaseOverlayRenderer.d.ts
-dist/renderers/FFTOverlayRenderer.d.ts
-dist/renderers/FrequencyPlotRenderer.d.ts
-dist/renderers/GridRenderer.d.ts
-dist/renderers/HarmonicAnalysisRenderer.d.ts
-dist/renderers/PhaseMarkerRenderer.d.ts
-dist/renderers/WaveformLineRenderer.d.ts
-dist/renderers/index.d.ts
-dist/utils.d.ts
-dist/wasm/package.json
-dist/wasm/signal_processor_wasm.d.ts
-dist/wasm/signal_processor_wasm.js
-dist/wasm/signal_processor_wasm_bg.wasm
-dist/wasm/signal_processor_wasm_bg.wasm.d.ts
+dist/demo-simple.html
+dist/index.html
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/179-analysis-v3.md
-issue-notes/179-analysis.md
-issue-notes/220-fix-summary.md
-issue-notes/253.md
-issue-notes/254.md
-issue-notes/255.md
-package.json
-public/wasm/package.json
-public/wasm/signal_processor_wasm.d.ts
-public/wasm/signal_processor_wasm.js
-public/wasm/signal_processor_wasm_bg.wasm
-public/wasm/signal_processor_wasm_bg.wasm.d.ts
-signal-processor-wasm/Cargo.toml
-signal-processor-wasm/src/bpf.rs
+index.html
+issue-notes/257.md
+package-lock.json
+signal-processor-wasm/src/frequency_estimation/autocorrelation.rs
+signal-processor-wasm/src/frequency_estimation/cqt.rs
+signal-processor-wasm/src/frequency_estimation/dsp_utils.rs
+signal-processor-wasm/src/frequency_estimation/fft.rs
+signal-processor-wasm/src/frequency_estimation/harmonic_analysis.rs
+signal-processor-wasm/src/frequency_estimation/mod.rs
+signal-processor-wasm/src/frequency_estimation/smoothing.rs
+signal-processor-wasm/src/frequency_estimation/stft.rs
+signal-processor-wasm/src/frequency_estimation/zero_crossing.rs
 signal-processor-wasm/src/frequency_estimator.rs
-signal-processor-wasm/src/gain_controller.rs
 signal-processor-wasm/src/lib.rs
-signal-processor-wasm/src/waveform_searcher.rs
-signal-processor-wasm/src/zero_cross_detector.rs
-src/FrequencyEstimator.ts
-src/GainController.ts
-src/WasmModuleLoader.ts
-src/WaveformSearcher.ts
-src/ZeroCrossDetector.ts
-src/__tests__/algorithms.test.ts
+src/CycleSimilarityRenderer.ts
 
 
 ---
-Generated at: 2026-02-05 07:11:09 JST
+Generated at: 2026-02-06 07:12:18 JST

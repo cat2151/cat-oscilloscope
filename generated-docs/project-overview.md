@@ -1,21 +1,21 @@
-Last updated: 2026-02-05
+Last updated: 2026-02-06
 
 # Project Overview
 
 ## プロジェクト概要
-- ブラウザ上で動作する、リアルタイムの音波形ビジュアライザーです。
-- Rust/WebAssemblyを用いて高速なデータ処理を実現し、様々な周波数推定方式に対応しています。
-- マイク入力、オーディオファイル、プログラムからのバッファに対応し、npmライブラリとしても利用可能です。
+- ブラウザ上でリアルタイムに音波を視覚化するオシロスコープ風のWebアプリケーションです。
+- 高速なRust/WebAssemblyによるデータ処理と、マイク入力・ファイル再生に対応した音源分析機能を持ちます。
+- 複数周波数推定アルゴリズムや波形比較、ピアノ鍵盤表示など多彩な視覚化機能を提供します。
 
 ## 技術スタック
-- フロントエンド: **TypeScript** (JavaScriptに型安全性をもたらし、大規模なアプリケーション開発を支援します。設定管理とレンダリングロジックに使用されます。), **HTML Canvas** (2Dグラフィックスの描画に使用され、波形やスペクトラム、鍵盤などのビジュアル要素をレンダリングします。), **Web Audio API** (マイクからのリアルタイム音声入力、オーディオファイルの再生・分析など、ブラウザ上での高度な音声処理を可能にします。)
-- 音楽・オーディオ: **Web Audio API** (マイクやファイルからの音源取得、音声データの加工・分析に活用されます。)
-- 開発ツール: **Vite** (非常に高速な開発サーバーとバンドル機能を提供し、モダンなWeb開発の効率を向上させます。), **npm / yarn** (JavaScriptプロジェクトのパッケージ管理ツールで、依存ライブラリのインストールやスクリプトの実行に利用されます。)
-- テスト: **Vitest** (高速な単体テストフレームワークで、各種コンポーネントやアルゴリズムの動作検証に使用されます。), **happy-dom** (Vitestと連携し、Node.js環境でブラウザのDOMをシミュレートすることで、DOM操作を含むテストを可能にします。), **@vitest/ui** (テスト結果を視覚的に表示するユーザーインターフェースを提供し、テストの実行状況やカバレッジを分かりやすく確認できます。)
-- ビルドツール: **Vite** (開発サーバーとしての役割に加え、本番向けにコードをバンドル・最適化します。), **wasm-pack** (RustのコードをWebAssemblyにコンパイルし、JavaScriptから利用可能な形式にパッケージ化するためのツールです。), **vite-plugin-dts** (TypeScriptの型定義ファイル（.d.ts）を自動生成し、ライブラリの型安全な利用をサポートします。)
-- 言語機能: **Rust/WebAssembly** (コアとなるデータ処理アルゴリズムを実装するために使用されます。高いパフォーマンスとメモリ安全性を持ち、ブラウザ上での複雑な計算を高速に実行します。), **TypeScript** (アプリケーションの主要なロジックを記述し、開発効率とコードの品質を向上させます。)
-- 自動化・CI/CD: (特定のツールや設定に関する情報が提供されていません。)
-- 開発標準: **TypeScript** (厳格な型チェックにより、コードの品質と保守性を高める役割を果たします。)
+- フロントエンド: **TypeScript** (型安全なJavaScriptでアプリケーションロジック、設定管理、レンダリングを担当)、**Web Audio API** (マイクからの音声キャプチャ、WAVファイルの再生、音声データのリアルタイム分析)、**HTML Canvas** (波形、スペクトラム、鍵盤などの2Dグラフィック描画)
+- 音楽・オーディオ: **Web Audio API** (音声ストリーム処理)、**5つの周波数推定方式** (Zero-Crossing, Autocorrelation, FFT, STFT, CQTをサポートし、多様な音源の周波数分析に対応)
+- 開発ツール: **Vite** (高速な開発サーバーとバンドラー)、**npm/yarn** (JavaScript/TypeScriptパッケージ管理)、**wasm-pack** (RustコードをWebAssemblyにコンパイルするためのツール)
+- テスト: **Vitest** (高速な単体テストフレームワーク)、**@vitest/ui** (テスト実行結果をGUIで表示)、**happy-dom** (DOM環境をエミュレートし、ブラウザAPIに依存するコンポーネントのテストを可能にする)
+- ビルドツール: **Vite** (本番用ビルドの最適化、バンドル処理)、**vite-plugin-dts** (TypeScriptの型定義ファイル `.d.ts` を自動生成)
+- 言語機能: **TypeScript** (JavaScriptに静的型チェックを導入し、開発の信頼性と保守性を向上)、**Rust** (主要なデータ処理アルゴリズムを実装し、高いパフォーマンスと型安全性を実現)
+- 自動化・CI/CD: **GitHub Actions** (日次でソースファイルの行数をチェックし、大規模なファイルを自動で検出しissueを起票する仕組み)
+- 開発標準: (特筆すべき開発標準ツールは明示されていませんが、TypeScriptとRustの型システムがコード品質を担保しています)
 
 ## ファイル階層ツリー
 ```
@@ -25,6 +25,7 @@ Last updated: 2026-02-05
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
+📖 REFACTORING_ISSUE_251.md
 📖 REFACTORING_SUMMARY.md
 📄 _config.yml
 🌐 demo-simple.html
@@ -70,6 +71,13 @@ Last updated: 2026-02-05
   📄 WaveformSearcher.d.ts.map
   📘 ZeroCrossDetector.d.ts
   📄 ZeroCrossDetector.d.ts.map
+  📁 assets/
+    📜 demo-DsYptmO3.js
+    📄 demo-DsYptmO3.js.map
+    📜 main-DUIA4vI1.js
+    📄 main-DUIA4vI1.js.map
+    📜 modulepreload-polyfill-B5Qt9EMX.js
+    📄 modulepreload-polyfill-B5Qt9EMX.js.map
   📄 cat-oscilloscope.cjs
   📄 cat-oscilloscope.cjs.map
   📄 cat-oscilloscope.mjs
@@ -85,8 +93,10 @@ Last updated: 2026-02-05
     📄 WaveformPanelRenderer.d.ts.map
     📘 index.d.ts
     📄 index.d.ts.map
+  🌐 demo-simple.html
   📘 index.d.ts
   📄 index.d.ts.map
+  🌐 index.html
   📁 renderers/
     📘 BaseOverlayRenderer.d.ts
     📄 BaseOverlayRenderer.d.ts.map
@@ -200,6 +210,7 @@ Last updated: 2026-02-05
   📖 253.md
   📖 254.md
   📖 255.md
+  📖 257.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -240,7 +251,16 @@ Last updated: 2026-02-05
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs
-    📄 frequency_estimator.rs
+    📁 frequency_estimation/
+      📄 autocorrelation.rs
+      📄 cqt.rs
+      📄 dsp_utils.rs
+      📄 fft.rs
+      📄 harmonic_analysis.rs
+      📄 mod.rs
+      📄 smoothing.rs
+      📄 stft.rs
+      📄 zero_crossing.rs
     📄 gain_controller.rs
     📄 lib.rs
     📄 waveform_searcher.rs
@@ -312,177 +332,219 @@ Last updated: 2026-02-05
 ```
 
 ## ファイル詳細説明
-
--   **README.md / README.ja.md**: プロジェクトの概要、機能、技術スタック、使用方法などを説明する主要なドキュメントファイルです。日本語版と英語版があります。
--   **ARCHITECTURE.md**: プロジェクトのアーキテクチャや設計思想について記述されたドキュメントです。
--   **LIBRARY_USAGE.md**: 本プロジェクトをnpmライブラリとして他のプロジェクトで利用する方法について詳細に説明したドキュメントです。
--   **LICENSE**: プロジェクトのライセンス情報（MITライセンス）が記載されています。
--   **_config.yml**: GitHub Pagesなどの設定ファイルです。
--   **demo-simple.html / demo-simple.js**: ライブラリのシンプルな利用例を示すデモページとそのスクリプトです。CDN経由での利用方法が紹介されています。
--   **index.html**: アプリケーションのメインとなるHTMLファイルです。UI要素やキャンバスが配置されています。
--   **public/wasm/**: ビルド済みのWebAssembly（WASM）関連ファイルが格納されています。
-    -   **signal_processor_wasm.js**: WASMモジュールをロードし、JavaScriptからRustの関数を呼び出すためのグルースクリプトです。
-    -   **signal_processor_wasm_bg.wasm**: Rustで書かれたデータ処理アルゴリズムのWebAssemblyバイナリファイル本体です。高速な計算処理を担います。
-    -   **signal_processor_wasm.d.ts / signal_processor_wasm_bg.wasm.d.ts**: WASMモジュール用のTypeScript型定義ファイルです。
--   **src/**: TypeScriptのソースコードが格納されている主要なディレクトリです。
-    -   **Oscilloscope.ts**: オシロスコープの中核となるクラス定義ファイルです。音声入力の管理、データ処理、レンダリングの全体的な制御を行います。
-    -   **AudioManager.ts**: Web Audio API を用いて、マイク入力やオーディオファイルからの音声データ取得を管理するクラスです。
-    -   **BufferSource.ts**: 静的オーディオバッファを管理し、ループ再生などのオプションを提供するクラスです。
-    -   **WasmModuleLoader.ts**: WebAssemblyモジュールを非同期でロードし、初期化するためのユーティリティクラスです。
-    -   **WaveformDataProcessor.ts**: WASMモジュールと連携し、生の音声データから波形表示に必要なデータを加工・準備するクラスです。
-    -   **WaveformRenderer.ts**: HTML Canvasに波形を描画する役割を担うクラスです。
-    -   **PianoKeyboardRenderer.ts**: 検出された周波数をピアノ鍵盤上に視覚的に表示するクラスです。
-    -   **UIEventHandlers.ts**: UI要素（ボタン、スライダーなど）のイベントを処理し、アプリケーションの状態を更新するクラスです。
-    -   **GainController.ts**: 音声信号のゲイン（増幅率）を自動調整するロジックを管理するクラスです。
-    -   **FrequencyEstimator.ts**: WASMモジュールが提供する周波数推定方式（FFT, STFT, CQTなど）を管理するクラスです。
-    -   **utils.ts**: プロジェクト全体で利用される汎用的なヘルパー関数（周波数から音符への変換など）を提供します。
-    -   **src/__tests__/**: 各コンポーネントのテストコードが格納されています。
-    -   **src/renderers/**: 波形以外の様々なオーバーレイ（FFTスペクトラム、グリッド、倍音分析など）を描画するクラス群です。
-    -   **src/comparison-renderers/**: 波形比較パネルに関連するレンダリングを行うクラス群です。
--   **signal-processor-wasm/src/**: Rustで書かれたWebAssemblyモジュールのソースコードディレクトリです。
-    -   **lib.rs**: Rustクレートのエントリポイントで、JavaScriptから呼び出されるWASM関数の定義を含みます。
-    -   **frequency_estimator.rs**: 周波数推定アルゴリズム（ゼロクロス、自己相関、FFT、STFT、CQTなど）の実装です。
-    -   **zero_cross_detector.rs**: 波形のゼロクロス点を検出するアルゴリズムの実装です。
-    -   **gain_controller.rs**: WASM内部でゲイン調整ロジックを処理します。
--   **dist/**: ビルドされたJavaScriptファイル、TypeScript型定義ファイル、WASMファイルなどが格納される出力ディレクトリです。本番環境でデプロイされるファイル群です。
--   **package.json / package-lock.json**: プロジェクトのメタデータ、依存関係、スクリプトなどが定義されているファイルです。
--   **vite.config.ts**: Viteビルドツールの設定ファイルです。
+- **`demo-simple.html`**: ライブラリとしての`cat-oscilloscope`の利用方法を示すための、最小限の機能を備えたデモ用HTMLファイルです。
+- **`demo-simple.js`**: `demo-simple.html`で動作するJavaScriptコードで、`cat-oscilloscope`ライブラリをCDN経由でロードし、基本的な波形可視化機能を開始・停止するロジックを含みます。
+- **`src/AudioManager.ts`**: Web Audio APIを介してマイク入力、WAVファイル、または静的バッファからの音声データを管理し、オシロスコープに供給する役割を担います。
+- **`src/BasePathResolver.ts`**: アプリケーションのリソース（特にWASMファイル）のベースパスを動的に解決するためのユーティリティクラスです。
+- **`src/BufferSource.ts`**: Web Audio APIの`AudioBufferSourceNode`に相当する静的音声バッファを管理し、ループ再生などのオプションを提供します。
+- **`src/ComparisonPanelRenderer.ts`**: 過去の波形と現在の波形の類似度や差異を視覚的に表示するパネルの描画ロジックを管理します。
+- **`src/CycleSimilarityRenderer.ts`**: 波形サイクル間の類似度を計算し、その結果をCanvas上に描画する処理を担当します。
+- **`src/DOMElementManager.ts`**: アプリケーションのUIを構成するHTML要素（ボタン、スライダー、表示領域など）へのアクセスと状態管理を一元的に行います。
+- **`src/DisplayUpdater.ts`**: オシロスコープのCanvas以外のUI要素（周波数表示、ゲイン値、類似度スコアなど）を更新する役割を持ちます。
+- **`src/FrameBufferHistory.ts`**: 過去のオーディオフレームデータを保持し、特に低周波検出のために拡張バッファ（バッファサイズマルチプライヤー）機能で利用される履歴管理を行います。
+- **`src/FrequencyEstimator.ts`**: Rust/WASMモジュールを呼び出し、Zero-Crossing、Autocorrelation、FFT、STFT、CQTなど、複数の周波数推定アルゴリズムの結果を提供します。
+- **`src/GainController.ts`**: 入力音声の振幅に基づいて、表示される波形のゲインを自動的に調整するロジックを実装しています。
+- **`src/Oscilloscope.ts`**: `cat-oscilloscope`ライブラリのコアクラスであり、音声入力の開始/停止、データ処理、レンダリング、UIイベントハンドリングなど、オシロスコープ全体の統括的な機能を提供します。
+- **`src/OverlayLayout.ts`**: FFTスペクトラム、倍音分析、周波数推移プロットなどのオーバーレイ表示のレイアウトと、各オーバーレイのCanvas上の描画領域を解決します。
+- **`src/PianoKeyboardRenderer.ts`**: 検出された周波数に対応するピアノの鍵盤をCanvas上に視覚的に表示する機能を提供します。
+- **`src/UIEventHandlers.ts`**: アプリケーションのユーザーインターフェース（ボタン、スライダー、ファイル入力など）からのイベントを捕捉し、`Oscilloscope`インスタンスの適切なメソッドを呼び出して機能を実行します。
+- **`src/WasmModuleLoader.ts`**: Rustで実装されたWebAssemblyモジュールを非同期でロードし、JavaScript環境で利用可能にするためのラッパーです。
+- **`src/WaveformDataProcessor.ts`**: `AudioManager`から取得したオーディオデータを前処理し、`WasmModuleLoader`を介してRust/WASMモジュールに渡し、その処理結果を受け取る役割を担います。
+- **`src/WaveformRenderData.ts`**: オシロスコープのCanvasに波形やオーバーレイを描画するために必要なすべてのデータ（生波形データ、周波数データ、描画設定など）をカプセル化するデータ構造を定義します。
+- **`src/WaveformRenderer.ts`**: HTML Canvas上に波形、グリッド、FFTスペクトラム、倍音分析、周波数推移など、すべての視覚要素を描画する低レベルのレンダリングロジックを管理します。
+- **`src/WaveformSearcher.ts`**: 波形データの中からゼロクロスポイントやピークなどの特定のパターンを効率的に検索するためのアルゴリズムを提供します。
+- **`src/ZeroCrossDetector.ts`**: 音波のゼロクロスポイント（波形がゼロを横切る点）を検出し、波形サイクルの特定や周波数推定の基礎データとして利用します。
+- **`src/utils.ts`**: dB値と振幅値の相互変換、周波数を音符名に変換、無音部分のトリムなど、アプリケーション全体で利用される汎用的なユーティリティ関数を提供します。
+- **`signal-processor-wasm/src/lib.rs`**: Rustで書かれたWebAssemblyモジュールのエントリポイント。主要なデータ処理アルゴリズム（周波数推定、ゼロクロス検出など）がここに実装され、JavaScriptから呼び出し可能な形式で公開されます。
+- **`signal-processor-wasm/src/frequency_estimation/mod.rs`**: 自己相関、FFT、STFT、CQT、ゼロクロス法など、異なる周波数推定アルゴリズムを組織するRustモジュールです。
+- **`public/wasm/signal_processor_wasm.js`**: `wasm-pack`によって生成されたWASMローダーのJavaScriptファイルで、WebAssemblyバイナリをウェブブラウザにロードするためのグルーコードを含みます。
+- **`public/wasm/signal_processor_wasm_bg.wasm`**: コンパイルされたRustコードから生成されたWebAssemblyバイナリファイル。高速なオーディオデータ処理のコアロジックを格納しています。
 
 ## 関数詳細説明
-
--   **Oscilloscope.constructor(canvasElement: HTMLCanvasElement)**
-    -   **役割**: オシロスコープのインスタンスを初期化します。
-    -   **引数**: `canvasElement` (波形を描画するHTML Canvas要素)。
-    -   **戻り値**: なし。
-    -   **機能**: 必要な内部コンポーネント（AudioManager, Rendererなど）を設定し、描画準備を行います。
-
--   **Oscilloscope.start(options?: StartOptions)**
-    -   **役割**: マイク入力からのリアルタイム波形可視化を開始します。
-    -   **引数**: `options` (オプション。例: マイク入力設定)。
-    -   **戻り値**: `Promise<void>`。
-    -   **機能**: Web Audio APIを通じてマイク入力を取得し、その音声をリアルタイムで分析・描画する処理を開始します。
-
--   **Oscilloscope.startFromBuffer(bufferSource: BufferSource)**
-    -   **役割**: 提供された静的オーディオバッファからの波形可視化を開始します。
-    -   **引数**: `bufferSource` (音声データとそのプロパティを持つ`BufferSource`インスタンス)。
-    -   **戻り値**: `Promise<void>`。
-    -   **機能**: WAVファイルなどから読み込まれた音声データを解析し、波形として表示します（音声再生なし）。
-
--   **Oscilloscope.stop()**
-    -   **役割**: 現在の音声処理と描画を停止します。
-    -   **引数**: なし。
-    -   **戻り値**: `void`。
-    -   **機能**: マイク入力やオーディオファイルの処理を停止し、画面の更新を止めます。
-
--   **AudioManager.start()**
-    -   **役割**: マイク入力からの音声ストリームの取得を開始します。
-    -   **引数**: なし。
-    -   **戻り値**: `Promise<void>`。
-    -   **機能**: Web Audio APIの `getUserMedia` を使用してマイクアクセスを要求し、音声データを `AudioBufferSourceNode` に接続します。
-
--   **AudioManager.startFromFile(file: File)**
-    -   **役割**: 指定されたオーディオファイル（WAVなど）の再生と音声データ取得を開始します。
-    -   **引数**: `file` (入力となるオーディオファイル)。
-    -   **戻り値**: `Promise<void>`。
-    -   **機能**: ファイルをデコードし、その音声データを `AudioBufferSourceNode` でループ再生しながら取得します。
-
--   **WasmModuleLoader.loadWasmModule(wasmPath: string)**
-    -   **役割**: WebAssemblyモジュールを非同期でロードし、初期化します。
-    -   **引数**: `wasmPath` (WebAssemblyバイナリファイルへのパス)。
-    -   **戻り値**: `Promise<void>`。
-    -   **機能**: WASMファイルを読み込み、JavaScriptからWASM関数を呼び出せるように準備します。
-
--   **signal_processor_wasm.processFrame(waveform_data: Float32Array)**
-    -   **役割**: WASM側で音声フレームの主要なデータ処理（周波数推定、ゼロクロス検出、ゲイン調整など）を実行します。
-    -   **引数**: `waveform_data` (処理対象となる生の音声データ)。
-    -   **戻り値**: 処理結果を含むオブジェクト。
-    -   **機能**: 高速なRustアルゴリズムを用いて、入力された音声データから表示に必要な分析結果（周波数、ゼロクロス点など）を生成します。
-
--   **signal_processor_wasm.computeFrequencyData(method: number, buffer_size_multiplier: number)**
-    -   **役割**: 指定された周波数推定方法とバッファサイズ乗数に基づいて、周波数データを計算します。
-    -   **引数**: `method` (周波数推定アルゴリズムのID), `buffer_size_multiplier` (バッファサイズの倍率)。
-    -   **戻り値**: `Float32Array` (周波数スペクトラムデータ)。
-    -   **機能**: FFT, STFT, CQTなどのアルゴリズムをRustで実行し、音声の周波数成分を解析します。
-
--   **UIEventHandlers.handleStartStopButton()**
-    -   **役割**: UI上の開始/停止ボタンのクリックイベントを処理します。
-    -   **引数**: なし。
-    -   **戻り値**: `void`。
-    -   **機能**: オシロスコープの開始または停止を切り替え、UIの状態を更新します。
-
--   **utils.frequencyToNote(frequency: number)**
-    -   **役割**: 周波数を音名とオクターブの文字列に変換します。
-    -   **引数**: `frequency` (変換対象の周波数)。
-    -   **戻り値**: `string` (例: "A4", "C#5")。
-    -   **機能**: 検出された周波数を、ピアノ鍵盤表示などで使用する人間の理解しやすい音名に変換します。
+- **`Oscilloscope.start()`**:
+    - **役割**: オシロスコープのリアルタイム音声処理と描画を開始。
+    - **引数**: なし。
+    - **戻り値**: `Promise<void>`。非同期処理の完了を待つ。
+    - **機能**: マイク入力の取得を開始し、Web Audio APIを通じて音声データを処理・可視化するループを起動します。
+- **`Oscilloscope.startFromFile(file: File)`**:
+    - **役割**: 指定されたオーディオファイル（WAV）の再生と可視化を開始。
+    - **引数**: `file`: `File`オブジェクト。再生するオーディオファイル。
+    - **戻り値**: `Promise<void>`。
+    - **機能**: ファイルを読み込み、音声データをWeb Audio APIを通じて処理・可視化します。
+- **`Oscilloscope.startFromBuffer(bufferSource: BufferSource)`**:
+    - **役割**: 事前ロードされた音声バッファからの可視化を開始。
+    - **引数**: `bufferSource`: `BufferSource`インスタンス。再生する音声データを含む。
+    - **戻り値**: `Promise<void>`。
+    - **機能**: 提供された音声バッファをループ再生し、その波形を可視化します。
+- **`Oscilloscope.stop()`**:
+    - **役割**: 現在実行中のオシロスコープの処理と描画を停止。
+    - **引数**: なし。
+    - **戻り値**: `void`。
+    - **機能**: マイク入力やファイル再生を停止し、関連するWeb Audio APIリソースを解放します。
+- **`Oscilloscope.setFrequencyEstimationMethod(method: string)`**:
+    - **役割**: 周波数推定アルゴリズムを設定。
+    - **引数**: `method`: 選択する周波数推定方式の文字列（例: 'FFT', 'STFT', 'CQT'）。
+    - **戻り値**: `void`。
+    - **機能**: リアルタイムで周波数推定に利用するアルゴリズムを切り替えます。
+- **`Oscilloscope.setBufferSizeMultiplier(multiplier: number)`**:
+    - **役割**: 低周波検出精度向上のためのバッファサイズ乗数を設定。
+    - **引数**: `multiplier`: バッファサイズの乗数（1, 4, 16など）。
+    - **戻り値**: `void`。
+    - **機能**: 履歴フレームバッファの長さを調整し、特に低周波域での検出精度を向上させます。
+- **`Oscilloscope.getEstimatedFrequency()`**:
+    - **役割**: 現在推定されている周波数を取得。
+    - **引数**: なし。
+    - **戻り値**: `number`。推定された周波数（Hz）。
+    - **機能**: WASMモジュールから最新の周波数推定結果を問い合わせて返します。
+- **`AudioManager.start()`**:
+    - **役割**: マイク入力の取得を開始。
+    - **引数**: なし。
+    - **戻り値**: `Promise<AudioNode>`。Web Audio APIの処理グラフに接続されたAudioNode。
+    - **機能**: ユーザーのマイクにアクセスし、音声ストリームをWeb Audio APIの処理グラフに接続します。
+- **`AudioManager.startFromFile(file: File)`**:
+    - **役割**: WAVファイルからの再生を開始。
+    - **引数**: `file`: `File`オブジェクト。
+    - **戻り値**: `Promise<AudioNode>`。Web Audio APIの処理グラフに接続されたAudioNode。
+    - **機能**: ファイルをデコードし、AudioBufferSourceNodeを作成して再生を開始します。
+- **`WasmModuleLoader.loadWasmModule()`**:
+    - **役割**: RustでビルドされたWebAssemblyモジュールをロード。
+    - **引数**: なし。
+    - **戻り値**: `Promise<any>`。ロードされたWASMモジュールインスタンス。
+    - **機能**: 指定されたパスからWASMバイナリとそれに関連するJSローダーを非同期で読み込み、初期化します。
+- **`signal_processor_wasm.processFrame(wasmConfig: object)`**:
+    - **役割**: WASMモジュール内で単一のオーディオフレームを処理。
+    - **引数**: `wasmConfig`: 設定とデータを含むオブジェクト。
+    - **戻り値**: `object`。処理結果を含むオブジェクト。
+    - **機能**: タイムドメインデータ、周波数推定、ゼロクロス検出、ゲイン調整など、すべてのコアデータ処理を実行します。
+- **`WaveformRenderer.drawWaveform(data: WaveformRenderData)`**:
+    - **役割**: メインの波形をCanvasに描画。
+    - **引数**: `data`: `WaveformRenderData`インスタンス。描画に必要な波形データと設定。
+    - **戻り値**: `void`。
+    - **機能**: 提供されたデータに基づいて、オシロスコープの画面に音波の視覚的な表現を描画します。
+- **`PianoKeyboardRenderer.draw(frequency: number)`**:
+    - **役割**: 検出された周波数をピアノ鍵盤上に表示。
+    - **引数**: `frequency`: `number`。検出された周波数（Hz）。
+    - **戻り値**: `void`。
+    - **機能**: 検出周波数に対応する鍵盤をハイライトし、視覚的なフィードバックを提供します。
+- **`UIEventHandlers.handleStartStopButton()`**:
+    - **役割**: UIの開始/停止ボタンのクリックイベントを処理。
+    - **引数**: なし。
+    - **戻り値**: `Promise<void>`。
+    - **機能**: オシロスコープの起動/停止ロジックをトリガーし、UIの状態を更新します。
+- **`utils.frequencyToNote(frequency: number)`**:
+    - **役割**: 周波数を最も近い音符名に変換。
+    - **引数**: `frequency`: `number`。対象の周波数（Hz）。
+    - **戻り値**: `string`。音符名（例: "A4"）。
+    - **機能**: 音楽理論に基づき、与えられた周波数がどの音符に相当するかを計算します。
 
 ## 関数呼び出し階層ツリー
 ```
-- if (demo-simple.js)
-  - startUpdates (demo-simple.js)
-    - stopUpdates ()
+- B (dist/assets/main-DUIA4vI1.js)
+  - if (demo-simple.js)
+    - startUpdates (demo-simple.js)
+      - stopUpdates ()
       - generateWaveform ()
       - startOscilloscope ()
       - switch ()
+      - d ()
+      - r ()
       - startFromBuffer ()
       - stop ()
-  - catch (demo-simple.js)
-    - takeScreenshot (scripts/screenshot-local.js)
+      - getCurrentGain ()
+      - getEstimatedFrequency ()
+      - setDebugOverlaysEnabled ()
+      - s ()
+    - catch (demo-simple.js)
+      - for (demo-simple.js)
+      - v (dist/assets/demo-DsYptmO3.js)
+      - b ()
+      - w ()
+      - f ()
+      - k ()
+      - takeScreenshot (scripts/screenshot-local.js)
       - close ()
-    - trimSilence ()
-      - dbToAmplitude (dist/utils.d.ts)
-      - amplitudeToDb ()
-      - frequencyToNote ()
-    - reset ()
-    - start ()
+      - updateHistory ()
+      - getExtendedBuffer ()
+      - clear ()
+      - initializeAnalyser ()
+      - start ()
       - startFromFile ()
+      - getTimeDomainData ()
+      - getExtendedTimeDomainData ()
+      - getFrequencyData ()
+      - getSampleRate ()
+      - getFFTSize ()
+      - getFrequencyBinCount ()
+      - isReady ()
+      - reset ()
+      - trimSilence ()
       - createMediaStreamSource ()
       - createAnalyser ()
       - getTracks ()
-  - constructor (undefined)
-  - setBufferSizeMultiplier ()
-  - setFrequencyEstimationMethod ()
-  - resolveValue (dist/OverlayLayout.d.ts)
-  - computeFrequencyData ()
-  - processFrame ()
-  - setAutoGain ()
-  - setNoiseGate ()
-  - setNoiseGateThreshold ()
-  - setUsePeakMode ()
-  - setZeroCrossMode ()
-  - cleanup (src/WasmModuleLoader.ts)
+      - getBasePath ()
+      - getBasePathFromScripts ()
+    - clearHistory ()
+    - setFrequencyEstimationMethod ()
+    - getFrequencyEstimationMethod ()
+    - setBufferSizeMultiplier ()
+    - getBufferSizeMultiplier ()
+    - getMinFrequency ()
+    - getMaxFrequency ()
+    - getFrequencyPlotHistory ()
+    - resolveValue (dist/OverlayLayout.d.ts)
+    - setAutoGain ()
+    - setNoiseGate ()
+    - setNoiseGateThreshold ()
+    - setUsePeakMode ()
+    - setZeroCrossMode ()
     - loadWasmModule ()
-  - normalize (src/__tests__/normalized-harmonics-issue197.test.ts)
-  - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
-    - getFFTOverlayDimensions ()
+      - getProcessor ()
+      - processFrame ()
+      - computeFrequencyData ()
+      - cleanup (src/WasmModuleLoader.ts)
+    - normalize (src/__tests__/normalized-harmonics-issue197.test.ts)
+    - getAutoGainEnabled ()
+    - getNoiseGateEnabled ()
+    - getNoiseGateThreshold ()
+    - setFFTDisplay ()
+    - getFFTDisplayEnabled ()
+    - getDebugOverlaysEnabled ()
+    - updatePanels ()
+    - getIsRunning ()
+    - getSimilarityScore ()
+    - isSimilaritySearchActive ()
+    - setPauseDrawing ()
+    - getPauseDrawing ()
+    - dbToAmplitude (dist/utils.d.ts)
+      - amplitudeToDb ()
+      - frequencyToNote ()
+    - createSilentMockAudioContext (src/__tests__/oscilloscope.test.ts)
+      - getFFTOverlayDimensions ()
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
-  - drawOffsetLine (src/comparison-renderers/OffsetOverlayRenderer.ts)
-- for (demo-simple.js)
+    - drawOffsetOverlayGraphs ()
+    - drawOffsetLine (src/comparison-renderers/OffsetOverlayRenderer.ts)
+    - drawSimilarityPlot ()
+    - drawSimilarityText ()
+    - drawWaveform ()
+    - findPeakAmplitude ()
+    - drawCenterLine ()
+    - clearCanvas ()
+    - calculateOverlayDimensions ()
+    - drawFFTOverlay ()
+    - Y ()
+    - drawFrequencyPlot ()
+    - drawHarmonicAnalysis ()
+  - H ()
+  - Z ()
+  - constructor (undefined)
+- initSync (dist/wasm/signal_processor_wasm.d.ts)
 - __wbg_get_imports (dist/wasm/signal_processor_wasm.js)
-  - initSync (dist/wasm/signal_processor_wasm.d.ts)
-    - free ()
-  - __wbg_init ()
-  - getArrayF32FromWasm0 ()
-  - getArrayU8FromWasm0 ()
-  - getFloat32ArrayMemory0 ()
-  - getStringFromWasm0 ()
-  - getUint8ArrayMemory0 ()
-  - isLikeNone ()
-  - passArray8ToWasm0 ()
-  - passArrayF32ToWasm0 ()
-  - passStringToWasm0 ()
-  - decodeText ()
-  - __wbg_finalize_init ()
-  - __wbg_load ()
-  - expectedResponseType ()
-  - __destroy_into_raw ()
 - handleLoad (src/WasmModuleLoader.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 - calculateWeightedScore (src/__tests__/weighted-harmonic-issue195.test.ts)
 - drawVerticalLine (src/renderers/PhaseMarkerRenderer.ts)
-```
 
 ---
-Generated at: 2026-02-05 07:11:45 JST
+Generated at: 2026-02-06 07:13:05 JST
