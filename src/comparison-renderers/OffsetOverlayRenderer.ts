@@ -111,15 +111,15 @@ export class OffsetOverlayRenderer {
     if (phaseZeroOffsetHistory.length > 0) {
       const currentZeroOffset = phaseZeroOffsetHistory[phaseZeroOffsetHistory.length - 1];
       ctx.fillStyle = '#ff0000';
-      // Show + or - sign explicitly
-      const sign = currentZeroOffset >= 0 ? '+' : '';
+      // Show + or - sign explicitly (but not for zero)
+      const sign = currentZeroOffset > 0 ? '+' : '';
       ctx.fillText(`S:${sign}${currentZeroOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 11);
     }
 
     if (phaseTwoPiOffsetHistory.length > 0) {
       const currentTwoPiOffset = phaseTwoPiOffsetHistory[phaseTwoPiOffsetHistory.length - 1];
       ctx.fillStyle = '#ff8800';
-      const sign = currentTwoPiOffset >= 0 ? '+' : '';
+      const sign = currentTwoPiOffset > 0 ? '+' : '';
       ctx.fillText(`E:${sign}${currentTwoPiOffset.toFixed(1)}%`, plotX + 2, plotY + plotHeight - 2);
     }
 

@@ -1113,13 +1113,13 @@ class le {
     if (T(r, "#ff0000"), T(o, "#ff8800"), e.font = "8px monospace", e.textAlign = "left", r.length > 0) {
       const v = r[r.length - 1];
       e.fillStyle = "#ff0000";
-      const S = v >= 0 ? "+" : "";
+      const S = v > 0 ? "+" : "";
       e.fillText(`S:${S}${v.toFixed(1)}%`, n + 2, f + a - 11);
     }
     if (o.length > 0) {
       const v = o[o.length - 1];
       e.fillStyle = "#ff8800";
-      const S = v >= 0 ? "+" : "";
+      const S = v > 0 ? "+" : "";
       e.fillText(`E:${S}${v.toFixed(1)}%`, n + 2, f + a - 2);
     }
     e.restore();
