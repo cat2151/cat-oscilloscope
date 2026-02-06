@@ -31,8 +31,6 @@ export declare class WaveformDataProcessor {
     private readonly MAX_OFFSET_HISTORY;
     private previousPhaseZeroIndex;
     private previousPhaseTwoPiIndex;
-    private previousDisplayStartIndex;
-    private previousDisplayEndIndex;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
