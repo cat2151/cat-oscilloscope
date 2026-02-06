@@ -62,4 +62,3 @@ export declare class UIEventHandlers {
      */
     private updateCycleSimilarityPanelDisplay;
 }
-//# sourceMappingURL=UIEventHandlers.d.ts.map
