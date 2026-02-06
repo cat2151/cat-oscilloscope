@@ -123,7 +123,8 @@ export class AudioManager {
       this.audioContext = new AudioContext();
       
       // Get the audio data from BufferSource
-      bufferSource.reset(); // Start from beginning
+      // Ensure clean state before reading all data
+      bufferSource.reset();
       const chunkSize = 4096;
       bufferSource.setChunkSize(chunkSize);
       
@@ -132,9 +133,8 @@ export class AudioManager {
       const dataLength = bufferSource.getLength();
       const audioBuffer = this.audioContext.createBuffer(1, dataLength, sampleRate);
       
-      // Copy data to AudioBuffer
+      // Copy data to AudioBuffer by reading all chunks
       const channelData = audioBuffer.getChannelData(0);
-      bufferSource.reset(); // Reset to get all data
       let position = 0;
       while (position < dataLength) {
         const chunk = bufferSource.getNextChunk();
@@ -142,7 +142,6 @@ export class AudioManager {
         channelData.set(chunk, position);
         position += chunk.length;
       }
-      bufferSource.reset(); // Reset for actual usage
       
       // Initialize analyser and data arrays (same as startFromFile)
       this.initializeAnalyser();
@@ -153,14 +152,11 @@ export class AudioManager {
       this.audioBufferSource.loop = true;
       
       // Connect nodes: source -> analyser (no connection to destination = no audio playback)
-      // This gives us the same efficient AnalyserNode FFT as startFromFile
+      // This gives us the same AnalyserNode FFT as startFromFile
       this.audioBufferSource.connect(this.analyser!);
       
       // Start processing (no audio output since not connected to destination)
       this.audioBufferSource.start(0);
-      
-      // Clear the bufferSource reference as we're using AudioBufferSourceNode now
-      this.bufferSource = null;
     } catch (error) {
       console.error('Error starting from buffer:', error);
       throw error;
