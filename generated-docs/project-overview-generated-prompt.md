@@ -1,4 +1,4 @@
-Last updated: 2026-02-06
+Last updated: 2026-02-07
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -166,6 +166,26 @@ cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートし
   - STFTとCQTは特に低周波（20-100Hz）の検出に優れています。
   - バッファサイズマルチプライヤーを大きくすると、低周波の精度が向上しますが、レスポンスが若干遅くなります。
   - **パフォーマンス**: 16xバッファサイズでは、STFT/CQTの計算に時間がかかる場合があります（教育目的の実装のため）。
+
+- オフセット%オーバーレイ（Offset %）- Issue #254調査中
+  - 「今回の波形」パネルの右上に表示される、位相マーカーの4周期座標系内での位置を示すグラフ
+  - **重要：座標系の理解**
+    - **4周期座標系**: 表示される4周期分の波形内での相対位置（0-100%）← これが重要
+    - **全フレーム座標系**: サンプルバッファ全体での絶対位置 ← 今回の調査対象外
+  - **用語説明**:
+    - **start offset**: 位相0マーカー（開始位置）が4周期座標系内のどこにあるか（0-100%）
+    - **end offset**: 位相2πマーカー（終了位置）が4周期座標系内のどこにあるか（0-100%）
+    - **offsetChange**: 前フレームからのオフセット変化量（仕様：1%以内）
+  - **表示内容**: 
+    - 赤線（S）: start offset（4周期座標系での位相0の位置、0-100%）
+    - オレンジ線（E）: end offset（4周期座標系での位相2πの位置、0-100%）
+  - **仕様違反検出**: 
+    - 4周期座標系において、フレーム間で1%を超える変化を検出すると警告を出力
+    - 診断情報には以下が含まれます：
+      - start/end offsetの現在値と前フレーム値（4周期座標系内での位置%）
+      - offsetChange（変化量、仕様では1%以内）
+      - SPEC_VIOLATION フラグ
+  - **目的**: 4周期座標系において、オフセットが仕様（1%以内）を遵守しているか検証
 
 ## データ処理の実装について
 
@@ -552,9 +572,13 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 251.md
   📖 252.md
   📖 253.md
+  📖 254-diagnostic-plan.md
   📖 254.md
   📖 255.md
   📖 257.md
+  📖 265.md
+  📖 267.md
+  📖 269.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -604,11 +628,17 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       📄 mod.rs
       📄 smoothing.rs
       📄 stft.rs
+      📄 tests.rs
       📄 zero_crossing.rs
     📄 gain_controller.rs
     📄 lib.rs
+    📄 waveform_render_data.rs
     📄 waveform_searcher.rs
-    📄 zero_cross_detector.rs
+    📁 zero_cross_detector/
+      📄 detection_modes.rs
+      📄 mod.rs
+      📄 types.rs
+      📄 utils.rs
 📁 src/
   📘 AudioManager.ts
   📘 BasePathResolver.ts
@@ -641,6 +671,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
     📘 normalized-harmonics-issue197.test.ts
     📘 oscilloscope.test.ts
     📘 overlay-layout.test.ts
+    📘 performance-issue267.test.ts
     📘 piano-keyboard-renderer.test.ts
     📘 startFromBuffer.test.ts
     📘 utils.test.ts
@@ -683,7 +714,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: startUpdates, stopUpdates, generateWaveform, startOscilloscope, if, switch, for, catch
   - インポート: /src/index.ts, https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs
 
-**dist/AudioManager.d.ts** (75行, 2136バイト)
+**dist/AudioManager.d.ts** (75行, 2146バイト)
   - 関数: なし
   - インポート: ./BufferSource
 
@@ -743,7 +774,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/WaveformDataProcessor.d.ts** (67行, 2704バイト)
+**dist/WaveformDataProcessor.d.ts** (70行, 2857バイト)
   - 関数: なし
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
@@ -879,8 +910,8 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: takeScreenshot, catch, if
   - インポート: playwright, playwright, fs
 
-**src/AudioManager.ts** (285行, 8997バイト)
-  - 関数: if, catch, start, startFromFile, startFromBuffer, stop
+**src/AudioManager.ts** (281行, 9000バイト)
+  - 関数: if, catch, while, start, startFromFile, startFromBuffer, stop
   - インポート: ./utils, ./BufferSource, ./FrameBufferHistory
 
 **src/BasePathResolver.ts** (109行, 3990バイト)
@@ -911,7 +942,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: なし
 
-**src/FrequencyEstimator.ts** (67行, 2133バイト)
+**src/FrequencyEstimator.ts** (68行, 2204バイト)
   - 関数: if
   - インポート: なし
 
@@ -939,7 +970,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: cleanup, handleLoad, if, loadWasmModule
   - インポート: ${wasmPath}
 
-**src/WaveformDataProcessor.ts** (269行, 10938バイト)
+**src/WaveformDataProcessor.ts** (341行, 14406バイト)
   - 関数: constructor, catch, if, initialize
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
@@ -998,6 +1029,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 **src/__tests__/overlay-layout.test.ts** (81行, 3038バイト)
   - 関数: なし
   - インポート: vitest, ../OverlayLayout
+
+**src/__tests__/performance-issue267.test.ts** (135行, 4799バイト)
+  - 関数: for, if
+  - インポート: vitest, ../Oscilloscope, ../BufferSource
 
 **src/__tests__/piano-keyboard-renderer.test.ts** (163行, 5266バイト)
   - 関数: なし
@@ -1184,6 +1219,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - findFFTOverlayBorderCall ()
       - getAudioTracks ()
       - getVideoTracks ()
+    - render ()
     - drawOffsetOverlayGraphs ()
     - drawOffsetLine (src/comparison-renderers/OffsetOverlayRenderer.ts)
     - drawSimilarityPlot ()
@@ -1202,6 +1238,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - constructor (undefined)
 - initSync (dist/wasm/signal_processor_wasm.d.ts)
 - __wbg_get_imports (dist/wasm/signal_processor_wasm.js)
+- while (src/AudioManager.ts)
 - handleLoad (src/WasmModuleLoader.ts)
 - createAudioBuffer (src/__tests__/utils.test.ts)
 - calculateWeightedScore (src/__tests__/weighted-harmonic-issue195.test.ts)
@@ -1253,4 +1290,4 @@ example-library-usage.html
 
 
 ---
-Generated at: 2026-02-06 07:12:18 JST
+Generated at: 2026-02-07 07:09:20 JST

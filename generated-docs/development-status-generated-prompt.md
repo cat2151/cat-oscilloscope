@@ -1,4 +1,4 @@
-Last updated: 2026-02-06
+Last updated: 2026-02-07
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -386,9 +386,13 @@ Last updated: 2026-02-06
 - issue-notes/251.md
 - issue-notes/252.md
 - issue-notes/253.md
+- issue-notes/254-diagnostic-plan.md
 - issue-notes/254.md
 - issue-notes/255.md
 - issue-notes/257.md
+- issue-notes/265.md
+- issue-notes/267.md
+- issue-notes/269.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -432,11 +436,16 @@ Last updated: 2026-02-06
 - signal-processor-wasm/src/frequency_estimation/mod.rs
 - signal-processor-wasm/src/frequency_estimation/smoothing.rs
 - signal-processor-wasm/src/frequency_estimation/stft.rs
+- signal-processor-wasm/src/frequency_estimation/tests.rs
 - signal-processor-wasm/src/frequency_estimation/zero_crossing.rs
 - signal-processor-wasm/src/gain_controller.rs
 - signal-processor-wasm/src/lib.rs
+- signal-processor-wasm/src/waveform_render_data.rs
 - signal-processor-wasm/src/waveform_searcher.rs
-- signal-processor-wasm/src/zero_cross_detector.rs
+- signal-processor-wasm/src/zero_cross_detector/detection_modes.rs
+- signal-processor-wasm/src/zero_cross_detector/mod.rs
+- signal-processor-wasm/src/zero_cross_detector/types.rs
+- signal-processor-wasm/src/zero_cross_detector/utils.rs
 - src/AudioManager.ts
 - src/BasePathResolver.ts
 - src/BufferSource.ts
@@ -467,6 +476,7 @@ Last updated: 2026-02-06
 - src/__tests__/normalized-harmonics-issue197.test.ts
 - src/__tests__/oscilloscope.test.ts
 - src/__tests__/overlay-layout.test.ts
+- src/__tests__/performance-issue267.test.ts
 - src/__tests__/piano-keyboard-renderer.test.ts
 - src/__tests__/startFromBuffer.test.ts
 - src/__tests__/utils.test.ts
@@ -498,567 +508,1525 @@ Last updated: 2026-02-06
 - vite.config.ts
 
 ## 現在のオープンIssues
-## [Issue #254](../issue-notes/254.md): 「今回の波形」にオーバーレイ表示しているOffset %が、とても1フレ1%とは思えない例えば1フレ40%に見えるスパイクを描画することがある
-[issue-notes/254.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/254.md)
+## [Issue #271](../issue-notes/271.md): 大きなファイルの検出: 1個のファイルが500行を超えています
+以下のファイルが500行を超えています。リファクタリングを検討してください。
 
-...
-ラベル: good first issue
---- issue-notes/254.md の内容 ---
+## 検出されたファイル
+
+| ファイル | 行数 | 超過行数 |
+|---------|------|----------|
+| `signal-processor-wasm/src/lib.rs` | 502 | +2 |
+
+## 推奨事項
+
+1. ファイルを機能ごとに分割する
+2. 共通ロジックを別モジュールに抽出する
+3. クラスやインターフェースを適切なサイズに保つ
+
+---
+*このissueは自動生成されました*...
+ラベル: refactoring, code-quality, automated
+--- issue-notes/271.md の内容 ---
 
 ```markdown
-# issue 今回の波形にオーバーレイ表示しているOffset %が、とても1フレ1%とは思えないスパイクを描画することがある。仕様では1フレ1%以内のはずなので、スパイクの原因を調査する #254
-[issues #254](https://github.com/cat2151/cat-oscilloscope/issues/254)
 
-# 詳細
-- 仕様では1フレ1%以内のはずなので、スパイクの原因を調査すること
-- もし「こういうときは1%になりません」ということがあれば、PRコメントに報告、README.ja.mdに明記、をすること
-  - その場合は「移動できない」に倒したほうがいいくらいの考え
-    - そこでoffset %が大きく移動してしまう（スパイクになる）のがNG
+```
+
+## [Issue #270](../issue-notes/270.md): Add opt-in frame timing instrumentation for #269 performance diagnosis
+Issue #269 reports 400ms+ frame times in demo-library after PR #267. Need to determine if this is a build/deploy issue or actual performance regression.
+
+## Changes
+
+**Instrumentation added:**
+- `Oscilloscope.ts`: Split frame timing into data processing vs rendering
+- `WaveformDataProcessor.ts`: 9-s...
+ラベル: 
+--- issue-notes/270.md の内容 ---
+
+```markdown
+
+```
+
+## [Issue #269](../issue-notes/269.md): PR 267を取り込んだが、demo-libraryの1frameごとの処理が相変わらず異常に遅くて1frameに400ms以上かかっている
+[issue-notes/269.md](https://github.com/cat2151/cat-oscilloscope/blob/main/issue-notes/269.md)
+
+...
+ラベル: 
+--- issue-notes/269.md の内容 ---
+
+```markdown
+# issue PR 267を取り込んだが、demo-libraryの1frameごとの処理が相変わらず異常に遅くて1frameに400ms以上かかっている #269
+[issues #269](https://github.com/cat2151/cat-oscilloscope/issues/269)
+
+
 
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/README.ja.md
+### .github/actions-tmp/issue-notes/9.md
 ```md
 {% raw %}
-# GitHub Actions 共通ワークフロー集
-
-このリポジトリは、**複数プロジェクトで使い回せるGitHub Actions共通ワークフロー集**です
-
-<p align="left">
-  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
-  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
-</p>
-
-# 3行で説明
-- 🚀 プロジェクトごとのGitHub Actions管理をもっと楽に
-- 🔗 共通化されたワークフローで、どのプロジェクトからも呼ぶだけでOK
-- ✅ メンテは一括、プロジェクト開発に集中できます
-
-## Quick Links
-| 項目 | リンク |
-|------|--------|
-| 📖 プロジェクト概要 | [generated-docs/project-overview.md](generated-docs/project-overview.md) |
-| 📖 コールグラフ | [generated-docs/callgraph.html](https://cat2151.github.io/github-actions/generated-docs/callgraph.html) |
-| 📊 開発状況 | [generated-docs/development-status.md](generated-docs/development-status.md) |
-
-# notes
-- まだ共通化の作業中です
-- まだワークフロー内容を改善中です
-
-※README.md は README.ja.md を元にGeminiの翻訳でGitHub Actionsで自動生成しています
-
-{% endraw %}
-```
-
-### README.ja.md
-```md
-{% raw %}
-# cat-oscilloscope
-
-<p align="left">
-  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
-  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
-  <a href="https://deepwiki.com/cat2151/cat-oscilloscope"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-  <a href="https://cat2151.github.io/cat-oscilloscope/"><img src="https://img.shields.io/badge/🌐-Live_Demo-green.svg" alt="Live Demo"></a>
-</p>
-
-ブラウザで動く、オシロスコープ風の波形ビジュアライザー
-
-## 状況
-- このドキュメントはまだAI生成の文章があり読みづらいです。今後文章を人間の手で読みやすく改善する予定です
-
-## 🌐 ライブデモ
-
-**フルバージョン**: [https://cat2151.github.io/cat-oscilloscope/](https://cat2151.github.io/cat-oscilloscope/)  
-**簡易デモ（ライブラリ利用例）**: [https://cat2151.github.io/cat-oscilloscope/demo-simple.html](https://cat2151.github.io/cat-oscilloscope/demo-simple.html)
-
-上記のURLでアプリケーションを試すことができます。フルバージョンではマイクへのアクセス許可が必要です。簡易デモはBufferSourceを使った最小限の実装例で、CDN経由でのライブラリ利用方法を示しています。
-
-## 実装状況
-
-### ✅ 完了済みの主要実装
-
-- **Rust/WASM統合**: すべてのデータ処理アルゴリズムがRust/WASMで実装され、高速で型安全な処理を実現
-- **ライブラリ対応**: npmライブラリとして他のプロジェクトから利用可能（ESM/CJS両対応、完全な型定義サポート）
-- **5つの周波数推定方式**: Zero-Crossing、Autocorrelation、FFT、STFT、CQTをサポート
-- **バッファサイズマルチプライヤー**: 低周波検出精度を向上させる拡張バッファ機能（1x/4x/16x）
-- **波形比較パネル**: 前回と今回の波形の類似度をリアルタイム表示
-- **ピアノ鍵盤表示**: 検出した周波数を視覚的に表示
-
-### 現在の安定性
-
-- ✅ 大きなバグは解決済み
-- ✅ WAVファイルからのオーディオ再生時は高い実用性
-- ⚠️ マイク入力は環境音の影響を受けるため、静かな環境での使用を推奨
-
-## 📚 ライブラリとしての使用
-
-cat-oscilloscopeは、あなた自身のプロジェクトでnpmライブラリとして使用できます。詳細な手順は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) をご覧ください。
-
-⚠️ **重要**: npmやGitHubからインストールする場合、WASMファイルの手動セットアップが必要です。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「WASMファイルのセットアップ」セクションをご覧ください。
-
-```typescript
-import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
-
-const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const oscilloscope = new Oscilloscope(canvas);
-
-// マイク入力から可視化
-await oscilloscope.start();
-
-// 静的バッファから可視化（オーディオ再生なし）
-const audioData = new Float32Array(44100); // 1秒分のデータ
-const bufferSource = new BufferSource(audioData, 44100, { loop: true });
-await oscilloscope.startFromBuffer(bufferSource);
-```
-
-**BufferSource機能**: wavlpfなどの音声処理ライブラリとの統合に最適な、静的バッファからの可視化機能を提供します。
-
-**表示制御**: オーバーレイ（FFTスペクトラム、倍音分析、周波数推移プロット）の表示/非表示は`setDebugOverlaysEnabled()`で制御できます。また、`setOverlaysLayout()`でレイアウトをカスタマイズできます。詳細は [LIBRARY_USAGE.md](./LIBRARY_USAGE.md) の「デバッグオーバーレイ表示の制御」と「オーバーレイのレイアウトカスタマイズ」をご覧ください。
-
-
-## 機能
-
-### 周波数推定
-
-cat-oscilloscopeは、5つの周波数推定アルゴリズムをサポートしています：
-
-1. **Zero-Crossing（ゼロクロス法）**: シンプルで高速。単純な波形に適しています。
-2. **Autocorrelation（自己相関法）**: 複雑な波形に対してバランスの良い精度。
-3. **FFT（高速フーリエ変換）**: デフォルト。周波数スペクトラム解析。高周波に強い。
-4. **STFT（短時間フーリエ変換）**: 可変窓長により、低周波の検出精度が向上。
-5. **CQT（定Q変換）**: 低周波域で高い周波数分解能を持つ。音楽分析に適しています。
-
-### バッファサイズマルチプライヤー
-
-低周波の検出精度を向上させるため、過去のフレームバッファを利用した拡張バッファをサポート：
-
-- **1x (Standard)**: 標準バッファサイズ（約1/60秒）
-- **4x (Better Low Freq)**: 4倍の拡張バッファで低周波の検出精度向上
-- **16x (Best Low Freq)**: 16倍の拡張バッファで最高の低周波検出精度
-
-**使用例**: 20-50Hzの低周波を検出する場合、STFT または CQT を選択し、Buffer Size を 16x に設定すると最適です。
-
-**重要な注意事項:**
-- バッファサイズを変更すると、履歴が蓄積されるまで（最大16フレーム）、新しいバッファサイズが有効になりません
-- 大きなバッファサイズ（16x）では、初回の周波数検出に約0.3秒かかります
-
-### 検出可能な周波数範囲
-
-バッファサイズによって、検出可能な最低周波数が異なります：
-
-- **1x (4096サンプル @ 48kHz)**: 約80Hz以上（標準使用）
-- **4x (16384サンプル)**: 約30Hz以上（低周波向上）
-- **16x (65536サンプル)**: 約20Hz以上（最良の低周波検出）
-
-## メモ
-
-- 周波数推定
-  - FFTが正確なときと、FFT以外が正確なとき、それぞれがあります。
-  - STFTとCQTは特に低周波（20-100Hz）の検出に優れています。
-  - バッファサイズマルチプライヤーを大きくすると、低周波の精度が向上しますが、レスポンスが若干遅くなります。
-  - **パフォーマンス**: 16xバッファサイズでは、STFT/CQTの計算に時間がかかる場合があります（教育目的の実装のため）。
-
-## データ処理の実装について
-
-すべてのデータ処理（波形探索、周波数推定、ゼロクロス検出など）は**Rust/WASMで実装**されています。
-
-- **高速な処理性能**: Rustの最適化により効率的な実行
-- **型安全で信頼性の高い実装**: Rustの厳格な型システムによる安全性
-- **単一実装**: アルゴリズムはWASMのみで実装され、TypeScriptとの二重管理を解消
-- **TypeScriptの役割**: 設定管理とレンダリングのみを担当
-
-### WASM実装のビルド
-
-WASM実装は `signal-processor-wasm` ディレクトリにあります。
-
-```bash
-# WASM実装のビルド（wasm-packが必要）
-npm run build:wasm
-
-# アプリ全体のビルド（WASMも含む）
-npm run build
-```
-
-**必要なツール**:
-- Rust toolchain (rustc, cargo)
-- wasm-pack (`cargo install wasm-pack`)
-
-**注意**: 通常の使用では、事前ビルド済みのWASMファイルが `public/wasm/` に含まれているため、Rustツールチェーンは不要です。
-
-## 主な機能
-
-- 🎤 **マイク入力** - マイクからの音声をリアルタイムでキャプチャ
-- 📂 **オーディオファイル** - WAVファイルのループ再生に対応
-- 📊 **周波数推定** - ゼロクロス、自己相関、FFT、STFT、CQTの5つの方式
-- 🎹 **ピアノ鍵盤表示** - 検出した周波数を鍵盤上に表示
-- 🎚️ **自動ゲイン** - 波形の振幅を自動調整
-- 🔇 **ノイズゲート** - 閾値以下の信号をカット
-- 📈 **FFTスペクトラム** - 周波数スペクトラムをオーバーレイ表示
-- 🔍 **波形比較パネル** - 前回と今回の波形の類似度を表示
-- ⏸️ **描画の一時停止** - 波形を静止して観察可能
-
-## はじめに
-
-### 必要条件
-
-- Node.js（v16以上を推奨）
-- npm または yarn
-
-### インストール
-
-```bash
-npm install
-```
-
-### 開発
-
-開発サーバーを起動：
-
-```bash
-npm run dev
-```
-
-ブラウザで `http://localhost:3000/` を開いてください。
-
-### ビルド
-
-本番用にビルド：
-
-```bash
-npm run build
-```
-
-ビルドされたファイルは `dist` ディレクトリに出力されます。
-
-### 本番ビルドのプレビュー
-
-```bash
-npm run preview
-```
-
-### テスト
-
-テストを実行：
-
-```bash
-npm test
-```
-
-カバレッジレポートを生成：
-
-```bash
-npm run test:coverage
-```
-
-テストUIを起動：
-
-```bash
-npm run test:ui
-```
-
-## 仕組み
-
-### ゼロクロス検出アルゴリズム
-
-このオシロスコープは、以下のようなゼロクロス検出アルゴリズムを実装しています：
-
-1. 音声バッファをスキャンし、波形がマイナス（またはゼロ）からプラスに交差するポイントを検出
-2. 最初のゼロクロスポイントを特定
-3. 次のゼロクロスポイントを見つけて、1つの完全な波形サイクルを決定
-4. ゼロクロスポイントの前後にわずかなパディングを付けて波形を表示
-
-これにより、安定した非スクロール表示が実現されます。
-
-### 技術的詳細
-
-- **FFTサイズ**: 高解像度のため4096サンプル
-- **スムージング**: 正確な波形表現のため無効（0）
-- **表示パディング**: ゼロクロスポイントの前後に20サンプル
-- **オートゲイン**: 
-  - キャンバスの高さの80%を目標に自動調整
-  - ピーク追跡による滑らかな遷移（減衰率: 0.95）
-  - ゲイン範囲: 0.5倍〜99倍
-  - 補間係数: 0.1（段階的な調整）
-  - UIチェックボックスで有効/無効を切り替え可能（デフォルト: 有効）
-- **キャンバス解像度**: 800x400ピクセル
-- **リフレッシュレート**: ブラウザのrequestAnimationFrameに同期（約60 FPS）
-
-## 技術スタック
-
-- **Rust/WebAssembly** - 高速で型安全なデータ処理アルゴリズム
-- **TypeScript** - 型安全なJavaScript（設定管理とレンダリング）
-- **Vite** - 高速なビルドツールと開発サーバー
-- **Web Audio API** - 音声のキャプチャと分析
-- **HTML Canvas** - 2D波形レンダリング
-
-## ブラウザ要件
-
-このアプリケーションには以下が必要です：
-- Web Audio APIをサポートするモダンブラウザ（Chrome、Firefox、Safari、Edge）
-- ユーザーによるマイクのアクセス許可
-- HTTPSまたはlocalhost（マイクアクセスに必要）
-
-## マイク入力時の制約
-
-マイクからの入力を使用する場合、以下の制約があります：
-
-### 環境音の影響
-
-マイクは周囲のすべての音を拾うため、以下のような環境音が波形に影響を与えます：
-
-- **マウスクリック音**: マウスをクリックする際の機械的な音が波形に現れます。特に一時停止ボタンをマウスでクリックした瞬間、波形が乱れて見えることがあります。
-- **キーボード打鍵音**: キーボードのタイプ音も波形に影響します。ただし、静音性の高いキーボードを使用している場合は、影響が少なくなります。
-- **その他の環境音**: 話し声、室内の空調音、外部からの騒音なども波形に現れます。
-
-### 実用上のヒント
-
-- **一時停止の方法**: マウスクリックの代わりに、静音性の高いキーボードのスペースキーを使用することで、一時停止時の波形への影響を最小限に抑えることができます。
-- **音源の選択**: マイク入力は環境音の影響を受けやすいため、ノイズのない波形を観察したい場合は、WAVファイルなどのオーディオファイルを使用することをお勧めします。
-- **測定環境**: できるだけ静かな環境で使用することで、より正確な波形を観察できます。
-
-これらはアプリケーションの制限ではなく、マイクというデバイスの特性によるものです。
-
-## 開発・保守
-
-### コード品質の自動チェック
-
-このプロジェクトでは、コード品質を維持するために以下の自動チェックが実行されます：
-
-- **大きなファイルの検出**: 日次バッチでソースファイルの行数をチェックし、500行を超えるファイルがあればissueを自動起票します
-  - 設定ファイル: `.github/check-large-files.toml`
-  - 実行スクリプト: `.github/scripts/check_large_files.py`
-  - ワークフロー: `.github/workflows/check-large-files.yml`
-  - 日本時間 毎日09:00に自動実行 (手動実行も可能)
-
-この仕組みにより、ファイルが大きくなりすぎる前に早期発見し、適切なタイミングでリファクタリングを検討できます。
-
-## ライセンス
-
-MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してください
-
-*Big Brother is listening to you. Now it’s the cat.* 🐱
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/4.md
-```md
-{% raw %}
-# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
-[issues #4](https://github.com/cat2151/github-actions/issues/4)
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
-まずplanしてください
-```
-
-# 結果、あちこちハルシネーションのあるymlが生成された
-- agentの挙動があからさまにハルシネーション
-    - インデントが修正できない、「失敗した」という
-    - 構文誤りを認識できない
-- 人力で修正した
-
-# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 呼び出し元
-
-name: Call Daily Project Summary
-
-on:
-  schedule:
-    # 日本時間 07:00 (UTC 22:00 前日)
-    - cron: '0 22 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-daily-project-summary:
-    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
-    secrets:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
---- 共通ワークフロー
-name: Daily Project Summary
-on:
-  workflow_call:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      issues: read
-      pull-requests: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 履歴を取得するため
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          # 一時的なディレクトリで依存関係をインストール
-          mkdir -p /tmp/summary-deps
-          cd /tmp/summary-deps
-          npm init -y
-          npm install @google/generative-ai @octokit/rest
-          # generated-docsディレクトリを作成
-          mkdir -p $GITHUB_WORKSPACE/generated-docs
-
-      - name: Generate project summary
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          NODE_PATH: /tmp/summary-deps/node_modules
-        run: |
-          node .github/scripts/generate-project-summary.cjs
-
-      - name: Check for generated summaries
-        id: check_summaries
-        run: |
-          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
-            echo "summaries_generated=true" >> $GITHUB_OUTPUT
-          else
-            echo "summaries_generated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push summaries
-        if: steps.check_summaries.outputs.summaries_generated == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          # package.jsonの変更のみリセット（generated-docsは保持）
-          git restore package.json 2>/dev/null || true
-          # サマリーファイルのみを追加
-          git add generated-docs/project-overview.md
-          git add generated-docs/development-status.md
-          git commit -m "Update project summaries (overview & development status)"
-          git push
-
-      - name: Summary generation result
-        run: |
-          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
-            echo "✅ Project summaries updated successfully"
-            echo "📊 Generated: project-overview.md & development-status.md"
-          else
-            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
-          fi
-```
-
-# 上記promptで、2つのLLMにレビューさせ、合格した
-
-# 細部を、先行する2つのymlを参照に手直しした
-
-# ローカルtestをしてからcommitできるとよい。方法を検討する
-- ローカルtestのメリット
-    - 素早く修正のサイクルをまわせる
-    - ムダにgit historyを汚さない
-        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
-- 方法
-    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
-    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
-    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
-- 結果
-    - OK
-    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
-    - OK
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
+
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
 
 # test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
 
 # closeとする
 
 {% endraw %}
 ```
 
-### issue-notes/254.md
+### issue-notes/269.md
 ```md
 {% raw %}
-# issue 今回の波形にオーバーレイ表示しているOffset %が、とても1フレ1%とは思えないスパイクを描画することがある。仕様では1フレ1%以内のはずなので、スパイクの原因を調査する #254
-[issues #254](https://github.com/cat2151/cat-oscilloscope/issues/254)
+# issue PR 267を取り込んだが、demo-libraryの1frameごとの処理が相変わらず異常に遅くて1frameに400ms以上かかっている #269
+[issues #269](https://github.com/cat2151/cat-oscilloscope/issues/269)
 
-# 詳細
-- 仕様では1フレ1%以内のはずなので、スパイクの原因を調査すること
-- もし「こういうときは1%になりません」ということがあれば、PRコメントに報告、README.ja.mdに明記、をすること
-  - その場合は「移動できない」に倒したほうがいいくらいの考え
-    - そこでoffset %が大きく移動してしまう（スパイクになる）のがNG
+
+
+{% endraw %}
+```
+
+### issue-notes/70.md
+```md
+{% raw %}
+# issue wavlpfリポジトリの PR 23 を参考に、wavlpfからライブラリとして利用できるようにするための方法を検討する #70
+[issues #70](https://github.com/cat2151/cat-oscilloscope/issues/70)
+
+
+
+{% endraw %}
+```
+
+### signal-processor-wasm/src/lib.rs
+```rs
+{% raw %}
+use wasm_bindgen::prelude::*;
+
+mod frequency_estimation;
+mod zero_cross_detector;
+mod waveform_searcher;
+mod gain_controller;
+mod bpf;
+mod waveform_render_data;
+
+use frequency_estimation::FrequencyEstimator;
+use zero_cross_detector::ZeroCrossDetector;
+use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
+use gain_controller::GainController;
+
+pub use waveform_render_data::WaveformRenderData;
+
+/// WasmDataProcessor - WASM implementation of WaveformDataProcessor
+#[wasm_bindgen]
+pub struct WasmDataProcessor {
+    gain_controller: GainController,
+    frequency_estimator: FrequencyEstimator,
+    zero_cross_detector: ZeroCrossDetector,
+    waveform_searcher: WaveformSearcher,
+}
+
+#[wasm_bindgen]
+impl WasmDataProcessor {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        WasmDataProcessor {
+            gain_controller: GainController::new(),
+            frequency_estimator: FrequencyEstimator::new(),
+            zero_cross_detector: ZeroCrossDetector::new(),
+            waveform_searcher: WaveformSearcher::new(),
+        }
+    }
+    
+    /// Process a frame and return WaveformRenderData
+    #[wasm_bindgen(js_name = processFrame)]
+    pub fn process_frame(
+        &mut self,
+        waveform_data: &[f32],
+        frequency_data: Option<Vec<u8>>,
+        sample_rate: f32,
+        fft_size: usize,
+        fft_display_enabled: bool,
+    ) -> Option<WaveformRenderData> {
+        if waveform_data.is_empty() {
+            web_sys::console::log_1(&"No data: Waveform data is empty".into());
+            return None;
+        }
+        
+        // Convert to mutable Vec for noise gate processing
+        let mut data = waveform_data.to_vec();
+        
+        // Apply noise gate
+        self.gain_controller.apply_noise_gate(&mut data);
+        
+        // Check if signal passed noise gate
+        let is_signal_above_noise_gate = self.gain_controller.is_signal_above_noise_gate(&data);
+        
+        // Determine if we need frequency data
+        let needs_frequency_data = 
+            self.frequency_estimator.get_frequency_estimation_method() == "fft" || fft_display_enabled;
+        let freq_data = if needs_frequency_data {
+            frequency_data
+        } else {
+            None
+        };
+        
+        // Estimate frequency
+        let estimated_frequency = self.frequency_estimator.estimate_frequency(
+            &data,
+            freq_data.as_deref(),
+            sample_rate,
+            fft_size,
+            is_signal_above_noise_gate,
+        );
+        
+        // Calculate cycle length
+        let cycle_length = if estimated_frequency > 0.0 && sample_rate > 0.0 {
+            sample_rate / estimated_frequency
+        } else {
+            0.0
+        };
+        
+        // Try to find similar waveform
+        // COORDINATE SPACE: frame buffer positions
+        let mut selected_segment_buffer_position = 0;
+        let mut selected_segment_buffer_end = data.len();
+        let mut used_similarity_search = false;
+        
+        if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
+            if let Some(search_result) = self.waveform_searcher.search_similar_waveform(&data, cycle_length) {
+                // Display N cycles worth (where N is CYCLES_TO_STORE)
+                let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+                selected_segment_buffer_position = search_result.start_index;
+                selected_segment_buffer_end = (selected_segment_buffer_position + waveform_length).min(data.len());
+                used_similarity_search = true;
+            }
+            // Note: Similarity history is always updated inside search_similar_waveform(),
+            // even when it returns None (validation failures or low similarity)
+        } else {
+            // Cannot perform similarity search (no previous waveform or invalid cycle length)
+            // Record this in history to keep the graph updating
+            if self.waveform_searcher.has_previous_waveform() {
+                self.waveform_searcher.record_no_search();
+            }
+        }
+        
+        // Fallback to zero-cross alignment if similarity search not used
+        if !used_similarity_search {
+            // Use zero-cross alignment
+            if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
+                &data,
+                estimated_frequency,
+                sample_rate,
+            ) {
+                selected_segment_buffer_position = display_range.start_index;
+                selected_segment_buffer_end = display_range.end_index;
+            } else {
+                // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
+                selected_segment_buffer_position = 0;
+                if cycle_length > 0.0 {
+                    let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+                    selected_segment_buffer_end = waveform_length.min(data.len());
+                } else {
+                    // No frequency estimation available, use entire buffer as last resort
+                    selected_segment_buffer_end = data.len();
+                }
+            }
+        }
+        
+        // Calculate auto gain
+        self.gain_controller.calculate_auto_gain(&data, selected_segment_buffer_position, selected_segment_buffer_end);
+        let gain = self.gain_controller.get_current_gain();
+        
+        // Store waveform for next frame (N cycles worth, where N is CYCLES_TO_STORE)
+        if cycle_length > 0.0 {
+            let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+            let end_index = (selected_segment_buffer_position + waveform_length).min(data.len());
+            self.waveform_searcher.store_waveform(&data, selected_segment_buffer_position, end_index);
+        }
+        
+        // Get waveform search data
+        let previous_waveform = self.waveform_searcher.get_previous_waveform();
+        let similarity = self.waveform_searcher.get_last_similarity();
+        let similarity_plot_history = self.waveform_searcher.get_similarity_history();
+        
+        // Calculate phase marker positions and collect debug information
+        // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
+        let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index,
+             phase_zero_segment_relative, phase_zero_history, phase_zero_tolerance) = 
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
+                self.calculate_phase_markers_with_debug(&data, selected_segment_buffer_position, cycle_length, estimated_frequency, sample_rate)
+            } else {
+                (None, None, None, None, None, None, None)
+            };
+        
+        // Get zero-cross mode name for debugging
+        let zero_cross_mode_name = Some(self.zero_cross_detector.get_zero_cross_mode_name());
+        
+        // Calculate cycle similarities for the current waveform
+        let (cycle_similarities_8div, cycle_similarities_4div, cycle_similarities_2div) = 
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
+                self.waveform_searcher.calculate_cycle_similarities(
+                    &data[selected_segment_buffer_position..selected_segment_buffer_end],
+                    cycle_length
+                )
+            } else {
+                (Vec::new(), Vec::new(), Vec::new())
+            };
+        
+        Some(WaveformRenderData {
+            waveform_data: data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+            gain,
+            estimated_frequency,
+            frequency_plot_history: self.frequency_estimator.get_frequency_plot_history(),
+            sample_rate,
+            fft_size,
+            frequency_data: freq_data,
+            is_signal_above_noise_gate,
+            max_frequency: self.frequency_estimator.get_max_frequency(),
+            previous_waveform,
+            similarity,
+            similarity_plot_history,
+            used_similarity_search,
+            phase_zero_index,
+            phase_two_pi_index,
+            phase_minus_quarter_pi_index,
+            phase_two_pi_plus_quarter_pi_index,
+            half_freq_peak_strength_percent: self.frequency_estimator.get_half_freq_peak_strength_percent(),
+            candidate1_harmonics: self.frequency_estimator.get_candidate1_harmonics(),
+            candidate2_harmonics: self.frequency_estimator.get_candidate2_harmonics(),
+            candidate1_weighted_score: self.frequency_estimator.get_candidate1_weighted_score(),
+            candidate2_weighted_score: self.frequency_estimator.get_candidate2_weighted_score(),
+            selection_reason: self.frequency_estimator.get_selection_reason(),
+            cycle_similarities_8div,
+            cycle_similarities_4div,
+            cycle_similarities_2div,
+            phase_zero_segment_relative,
+            phase_zero_history,
+            phase_zero_tolerance,
+            zero_cross_mode_name,
+        })
+    }
+    
+    // Configuration methods
+    #[wasm_bindgen(js_name = setAutoGain)]
+    pub fn set_auto_gain(&mut self, enabled: bool) {
+        self.gain_controller.set_auto_gain(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setNoiseGate)]
+    pub fn set_noise_gate(&mut self, enabled: bool) {
+        self.gain_controller.set_noise_gate(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setNoiseGateThreshold)]
+    pub fn set_noise_gate_threshold(&mut self, threshold: f32) {
+        self.gain_controller.set_noise_gate_threshold(threshold);
+    }
+    
+    #[wasm_bindgen(js_name = setFrequencyEstimationMethod)]
+    pub fn set_frequency_estimation_method(&mut self, method: &str) {
+        self.frequency_estimator.set_frequency_estimation_method(method);
+    }
+    
+    #[wasm_bindgen(js_name = setBufferSizeMultiplier)]
+    pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
+        self.frequency_estimator.set_buffer_size_multiplier(multiplier);
+    }
+    
+    #[wasm_bindgen(js_name = setUsePeakMode)]
+    pub fn set_use_peak_mode(&mut self, enabled: bool) {
+        self.zero_cross_detector.set_use_peak_mode(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setZeroCrossMode)]
+    pub fn set_zero_cross_mode(&mut self, mode: &str) {
+        use zero_cross_detector::ZeroCrossMode;
+        
+        let zero_cross_mode = match mode {
+            "standard" => ZeroCrossMode::Standard,
+            "peak-backtrack-history" => ZeroCrossMode::PeakBacktrackWithHistory,
+            "bidirectional-nearest" => ZeroCrossMode::BidirectionalNearest,
+            "gradient-based" => ZeroCrossMode::GradientBased,
+            "adaptive-step" => ZeroCrossMode::AdaptiveStep,
+            "hysteresis" => ZeroCrossMode::Hysteresis,
+            "closest-to-zero" => ZeroCrossMode::ClosestToZero,
+            _ => {
+                web_sys::console::warn_1(&format!("Unknown zero-cross mode: {}, using default (hysteresis)", mode).into());
+                ZeroCrossMode::Hysteresis
+            }
+        };
+        
+        self.zero_cross_detector.set_zero_cross_mode(zero_cross_mode);
+    }
+    
+    #[wasm_bindgen(js_name = reset)]
+    pub fn reset(&mut self) {
+        self.frequency_estimator.clear_history();
+        self.zero_cross_detector.reset();
+        self.waveform_searcher.reset();
+    }
+    
+    /// Calculate phase marker positions for the waveform
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
+    /// 
+    /// Uses zero_cross_detector to find phase 0 position within the displayed 4-cycle segment,
+    /// respecting the dropdown selection (Hysteresis, Peak+History with 1% constraint, etc.)
+    fn calculate_phase_markers(
+        &mut self,
+        data: &[f32],
+        segment_buffer_position: usize,
+        cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        let (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi, _, _, _) = 
+            self.calculate_phase_markers_with_debug(data, segment_buffer_position, cycle_length, estimated_frequency, sample_rate);
+        (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi)
+    }
+    
+    /// Calculate phase marker positions with debug information
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4, segment_relative, history, tolerance)
+    fn calculate_phase_markers_with_debug(
+        &mut self,
+        data: &[f32],
+        segment_buffer_position: usize,
+        cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        // If we don't have a valid cycle length, can't calculate phase
+        if cycle_length <= 0.0 || !cycle_length.is_finite() {
+            return (None, None, None, None, None, None, None);
+        }
+        
+        // Extract the 4-cycle segment for zero-cross detection
+        let segment_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+        let segment_end = (segment_buffer_position + segment_length).min(data.len());
+        
+        if segment_buffer_position >= segment_end {
+            return (None, None, None, None, None, None, None);
+        }
+        
+        let segment = &data[segment_buffer_position..segment_end];
+        
+        // Capture history before calling find_phase_zero_in_segment
+        let history_before = self.zero_cross_detector.get_absolute_phase_offset();
+        
+        // Calculate 1% tolerance for debugging
+        let tolerance = ((cycle_length * 0.01) as usize).max(1);
+        
+        // Use zero_cross_detector to find phase 0 within the segment
+        // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
+        // The new method maintains history in absolute coordinates to handle segment position changes
+        let phase_zero_segment_relative = match self.zero_cross_detector.find_phase_zero_in_segment(
+            segment,
+            segment_buffer_position,
+            cycle_length,
+        ) {
+            Some(idx) => idx,
+            None => return (None, None, None, None, history_before, history_before, Some(tolerance)),
+        };
+        
+        // Convert to frame buffer position (absolute index in full data buffer)
+        let phase_zero = segment_buffer_position + phase_zero_segment_relative;
+        
+        // Log debug information
+        web_sys::console::log_1(&format!(
+            "Phase Debug: segment_relative={}, history={:?}, tolerance={}, absolute_position={}, segment_buffer_position={}",
+            phase_zero_segment_relative, history_before, tolerance, phase_zero, segment_buffer_position
+        ).into());
+        
+        // Phase 2π is one cycle after phase 0
+        let phase_2pi_idx = phase_zero + cycle_length as usize;
+        
+        // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
+        let eighth_cycle = (cycle_length / 8.0) as usize;
+        
+        // Check if phase_zero is large enough to subtract eighth_cycle
+        let phase_minus_quarter_pi = if phase_zero >= eighth_cycle {
+            Some(phase_zero - eighth_cycle)
+        } else {
+            None
+        };
+        
+        // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
+        let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
+        
+        // Ensure indices are within the data bounds
+        let phase_2pi = if phase_2pi_idx < data.len() {
+            Some(phase_2pi_idx)
+        } else {
+            None
+        };
+        
+        let phase_2pi_plus_quarter_pi = if phase_2pi_plus_quarter_pi_idx < data.len() {
+            Some(phase_2pi_plus_quarter_pi_idx)
+        } else {
+            None
+        };
+        
+        (
+            Some(phase_zero),
+            phase_2pi,
+            phase_minus_quarter_pi,
+            phase_2pi_plus_quarter_pi,
+            Some(phase_zero_segment_relative),
+            history_before,
+            Some(tolerance),
+        )
+    }
+    
+    /// Find the peak (maximum positive amplitude) in the specified range
+    /// Returns None if no peak with positive amplitude (> 0.0) is found in the range
+    fn find_peak_in_range(
+        &self,
+        data: &[f32],
+        start_index: usize,
+        end_index: usize,
+    ) -> Option<usize> {
+        // Validate indices
+        if start_index >= data.len() || end_index <= start_index {
+            return None;
+        }
+        
+        let end = end_index.min(data.len());
+        
+        let mut peak_index = start_index;
+        let mut peak_value = data[start_index];
+        
+        for i in start_index + 1..end {
+            if data[i] > peak_value {
+                peak_value = data[i];
+                peak_index = i;
+            }
+        }
+        
+        // Ensure the peak is positive
+        if peak_value > 0.0 {
+            Some(peak_index)
+        } else {
+            None
+        }
+    }
+    
+    /// Find zero crossing by looking backward from peak
+    /// Zero crossing is defined as: before going back >= 0, after going back < 0
+    /// Returns the "before going back" position
+    fn find_zero_crossing_backward_from_peak(
+        &self,
+        data: &[f32],
+        peak_index: usize,
+    ) -> Option<usize> {
+        // Need at least one sample before peak to look backward
+        if peak_index == 0 {
+            return None;
+        }
+        
+        // Look backward from peak
+        // We start from peak_index - 1 and go backward to index 1
+        // (index 0 cannot be a zero crossing because there's no sample before it)
+        for i in (1..peak_index).rev() {
+            // Check if this is a zero crossing point
+            // data[i] >= 0.0 (before going back)
+            // data[i-1] < 0.0 (after going back one step)
+            if data[i] >= 0.0 && data[i - 1] < 0.0 {
+                return Some(i);  // Return the "before going back" position
+            }
+        }
+        
+        None
+    }
+    
+    /// Compute FFT frequency data from time-domain data for BufferSource mode
+    /// Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
+    #[wasm_bindgen(js_name = computeFrequencyData)]
+    pub fn compute_frequency_data(
+        &self,
+        time_domain_data: &[f32],
+        fft_size: usize,
+    ) -> Option<Vec<u8>> {
+        // Validate input
+        if time_domain_data.is_empty() || fft_size == 0 || fft_size > time_domain_data.len() {
+            return None;
+        }
+        
+        // Ensure fft_size is a power of 2 (standard for FFT)
+        if !fft_size.is_power_of_two() {
+            web_sys::console::warn_1(&format!("FFT size {} is not a power of 2, results may be inaccurate", fft_size).into());
+        }
+        
+        // Use the first fft_size samples
+        let data = &time_domain_data[0..fft_size];
+        
+        // Apply Hann window to reduce spectral leakage
+        let mut windowed_data = vec![0.0f32; fft_size];
+        for i in 0..fft_size {
+            let window_value = 0.5 * (1.0 - ((2.0 * std::f32::consts::PI * i as f32) / (fft_size as f32 - 1.0)).cos());
+            windowed_data[i] = data[i] * window_value;
+        }
+        
+        // Compute DFT (we only need the first half for real input)
+        let num_bins = fft_size / 2;
+        let mut magnitudes = vec![0.0f32; num_bins];
+        
+        for k in 0..num_bins {
+            let mut real = 0.0f32;
+            let mut imag = 0.0f32;
+            let omega = 2.0 * std::f32::consts::PI * k as f32 / fft_size as f32;
+            
+            // Compute DFT bin
+            for n in 0..fft_size {
+                let angle = omega * n as f32;
+                real += windowed_data[n] * angle.cos();
+                imag -= windowed_data[n] * angle.sin();
+            }
+            
+            magnitudes[k] = (real * real + imag * imag).sqrt();
+        }
+        
+        // Normalize and convert to 0-255 range (matching Web Audio API's AnalyserNode behavior)
+        // Find max magnitude for normalization
+        let max_magnitude = magnitudes.iter().fold(0.0f32, |max, &val| max.max(val));
+        
+        let mut frequency_data = vec![0u8; num_bins];
+        if max_magnitude > 0.0 {
+            for i in 0..num_bins {
+                // Normalize to 0-1 range, then scale to 0-255
+                let normalized = magnitudes[i] / max_magnitude;
+                frequency_data[i] = (normalized * 255.0).min(255.0) as u8;
+            }
+        }
+        
+        Some(frequency_data)
+    }
+}
+
+{% endraw %}
+```
+
+### src/Oscilloscope.ts
+```ts
+{% raw %}
+import { AudioManager } from './AudioManager';
+import { GainController } from './GainController';
+import { FrequencyEstimator } from './FrequencyEstimator';
+import { WaveformRenderer } from './WaveformRenderer';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
+import { WaveformSearcher } from './WaveformSearcher';
+import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
+import { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
+import { WaveformDataProcessor } from './WaveformDataProcessor';
+import { WaveformRenderData } from './WaveformRenderData';
+import { BufferSource } from './BufferSource';
+import { OverlaysLayoutConfig } from './OverlayLayout';
+
+/**
+ * Oscilloscope class - Main coordinator for the oscilloscope functionality
+ * Delegates responsibilities to specialized modules:
+ * - AudioManager: Web Audio API integration
+ * - GainController: Auto-gain and noise gate configuration
+ * - FrequencyEstimator: Frequency detection configuration
+ * - WaveformRenderer: Canvas rendering
+ * - ZeroCrossDetector: Zero-crossing detection configuration
+ * - WaveformSearcher: Waveform similarity search state
+ * - ComparisonPanelRenderer: Comparison panel rendering
+ * - CycleSimilarityRenderer: Cycle similarity graph rendering
+ * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
+ */
+export class Oscilloscope {
+  private audioManager: AudioManager;
+  private gainController: GainController;
+  private frequencyEstimator: FrequencyEstimator;
+  private renderer: WaveformRenderer;
+  private zeroCrossDetector: ZeroCrossDetector;
+  private waveformSearcher: WaveformSearcher;
+  private comparisonRenderer: ComparisonPanelRenderer;
+  private cycleSimilarityRenderer: CycleSimilarityRenderer | null = null;
+  private dataProcessor: WaveformDataProcessor;
+  private animationId: number | null = null;
+  private isRunning = false;
+  private isPaused = false;
+  private phaseMarkerRangeEnabled = true; // Default: on
+
+  // Frame processing diagnostics
+  private lastFrameTime = 0;
+  private frameProcessingTimes: number[] = [];
+  private readonly MAX_FRAME_TIMES = 100;
+  private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
+  private readonly FPS_LOG_INTERVAL_FRAMES = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
+
+  /**
+   * Create a new Oscilloscope instance
+   * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
+   * @param previousWaveformCanvas - Canvas for displaying previous frame's waveform (recommended: 250x120px)
+   * @param currentWaveformCanvas - Canvas for displaying current frame's waveform (recommended: 250x120px)
+   * @param similarityPlotCanvas - Canvas for displaying similarity history plot (recommended: 250x120px)
+   * @param frameBufferCanvas - Canvas for displaying full frame buffer with position markers (recommended: 800x120px)
+   * @param cycleSimilarity8divCanvas - Optional canvas for 8-division cycle similarity graph (recommended: 250x150px)
+   * @param cycleSimilarity4divCanvas - Optional canvas for 4-division cycle similarity graph (recommended: 250x150px)
+   * @param cycleSimilarity2divCanvas - Optional canvas for 2-division cycle similarity graph (recommended: 250x150px)
+   * @param overlaysLayout - Optional layout configuration for debug overlays (FFT, harmonic analysis, frequency plot)
+   */
+  constructor(
+    canvas: HTMLCanvasElement,
+    previousWaveformCanvas: HTMLCanvasElement,
+    currentWaveformCanvas: HTMLCanvasElement,
+    similarityPlotCanvas: HTMLCanvasElement,
+    frameBufferCanvas: HTMLCanvasElement,
+    cycleSimilarity8divCanvas?: HTMLCanvasElement,
+    cycleSimilarity4divCanvas?: HTMLCanvasElement,
+    cycleSimilarity2divCanvas?: HTMLCanvasElement,
+    overlaysLayout?: OverlaysLayoutConfig
+  ) {
+    this.audioManager = new AudioManager();
+    this.gainController = new GainController();
+    this.frequencyEstimator = new FrequencyEstimator();
+    this.renderer = new WaveformRenderer(canvas, overlaysLayout);
+    this.zeroCrossDetector = new ZeroCrossDetector();
+    this.waveformSearcher = new WaveformSearcher();
+    this.comparisonRenderer = new ComparisonPanelRenderer(
+      previousWaveformCanvas,
+      currentWaveformCanvas,
+      similarityPlotCanvas,
+      frameBufferCanvas
+    );
+    
+    // Initialize cycle similarity renderer if canvases are provided
+    if (cycleSimilarity8divCanvas && cycleSimilarity4divCanvas && cycleSimilarity2divCanvas) {
+      this.cycleSimilarityRenderer = new CycleSimilarityRenderer(
+        cycleSimilarity8divCanvas,
+        cycleSimilarity4divCanvas,
+        cycleSimilarity2divCanvas
+      );
+    }
+    
+    this.dataProcessor = new WaveformDataProcessor(
+      this.audioManager,
+      this.gainController,
+      this.frequencyEstimator,
+      this.waveformSearcher,
+      this.zeroCrossDetector
+    );
+  }
+
+  async start(): Promise<void> {
+    try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
+      await this.audioManager.start();
+      this.isRunning = true;
+      this.render();
+    } catch (error) {
+      console.error('Error starting oscilloscope:', error);
+      throw error;
+    }
+  }
+
+  async startFromFile(file: File): Promise<void> {
+    try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
+      await this.audioManager.startFromFile(file);
+      this.isRunning = true;
+      this.render();
+    } catch (error) {
+      console.error('Error loading audio file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Start visualization from a static buffer without audio playback
+   * Useful for visualizing pre-recorded audio data or processing results
+   * @param bufferSource - BufferSource instance containing audio data
+   */
+  async startFromBuffer(bufferSource: BufferSource): Promise<void> {
+    try {
+      // Initialize WASM processor if not already initialized
+      await this.dataProcessor.initialize();
+      
+      await this.audioManager.startFromBuffer(bufferSource);
+      this.isRunning = true;
+      this.render();
+    } catch (error) {
+      console.error('Error starting from buffer:', error);
+      throw error;
+    }
+  }
+
+  async stop(): Promise<void> {
+    this.isRunning = false;
+    if (this.animationId !== null) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+    await this.audioManager.stop();
+    this.frequencyEstimator.clearHistory();
+    this.zeroCrossDetector.reset();
+    this.waveformSearcher.reset();
+    this.comparisonRenderer.clear();
+    if (this.cycleSimilarityRenderer) {
+      this.cycleSimilarityRenderer.clear();
+    }
+    this.dataProcessor.reset();
+  }
+
+  private render(): void {
+    if (!this.isRunning) {
+      return;
+    }
+
+    const startTime = performance.now();
+
+    // If paused, skip processing and drawing but continue the animation loop
+    if (!this.isPaused) {
+      // === DATA GENERATION PHASE ===
+      // Process frame and generate all data needed for rendering using WASM processor
+      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
+      
+      if (renderData) {
+        // === RENDERING PHASE ===
+        // All rendering logic uses only the generated data
+        this.renderFrame(renderData);
+      }
+    }
+
+    // Measure frame processing time
+    const endTime = performance.now();
+    const processingTime = endTime - startTime;
+    this.frameProcessingTimes.push(processingTime);
+    if (this.frameProcessingTimes.length > this.MAX_FRAME_TIMES) {
+      this.frameProcessingTimes.shift();
+    }
+
+    // Warn if frame processing exceeds target (60fps)
+    if (processingTime > this.TARGET_FRAME_TIME) {
+      console.warn(`Frame processing time: ${processingTime.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`);
+    }
+
+    // Calculate and log FPS periodically (every FPS_LOG_INTERVAL_FRAMES frames)
+    if (this.lastFrameTime > 0) {
+      const frameInterval = startTime - this.lastFrameTime;
+      const currentFps = 1000 / frameInterval;
+      
+      if (this.frameProcessingTimes.length === this.FPS_LOG_INTERVAL_FRAMES) {
+        const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
+        console.log(`FPS: ${currentFps.toFixed(1)}, Avg frame time: ${avgProcessingTime.toFixed(2)}ms`);
+      }
+    }
+    this.lastFrameTime = startTime;
+
+    // Continue rendering
+    this.animationId = requestAnimationFrame(() => this.render());
+  }
+
+  /**
+   * Render a single frame using pre-processed data
+   * This method contains only rendering logic - no data processing
+   */
+  private renderFrame(renderData: WaveformRenderData): void {
+    // Determine display range based on phase marker range mode
+    let displayStartIndex = renderData.displayStartIndex;
+    let displayEndIndex = renderData.displayEndIndex;
+    
+    if (this.phaseMarkerRangeEnabled && 
+        renderData.phaseMinusQuarterPiIndex !== undefined && 
+        renderData.phaseTwoPiPlusQuarterPiIndex !== undefined &&
+        renderData.phaseMinusQuarterPiIndex <= renderData.phaseTwoPiPlusQuarterPiIndex) {
+      // Use phase marker range (orange to orange)
+      displayStartIndex = renderData.phaseMinusQuarterPiIndex;
+      displayEndIndex = renderData.phaseTwoPiPlusQuarterPiIndex;
+    }
+    
+    // Clear canvas and draw grid with measurement labels
+    const displaySamples = displayEndIndex - displayStartIndex;
+    this.renderer.clearAndDrawGrid(
+      renderData.sampleRate,
+      displaySamples,
+      renderData.gain
+    );
+
+    // Draw waveform with calculated gain
+    this.renderer.drawWaveform(
+      renderData.waveformData,
+      displayStartIndex,
+      displayEndIndex,
+      renderData.gain
+    );
+
+    // Draw phase markers
+    this.renderer.drawPhaseMarkers(
+      renderData.phaseZeroIndex,
+      renderData.phaseTwoPiIndex,
+      renderData.phaseMinusQuarterPiIndex,
+      renderData.phaseTwoPiPlusQuarterPiIndex,
+      displayStartIndex,
+      displayEndIndex,
+      {
+        phaseZeroSegmentRelative: renderData.phaseZeroSegmentRelative,
+        phaseZeroHistory: renderData.phaseZeroHistory,
+        phaseZeroTolerance: renderData.phaseZeroTolerance,
+        zeroCrossModeName: renderData.zeroCrossModeName,
+      }
+    );
+
+    // Draw FFT spectrum overlay if enabled and signal is above noise gate
+    if (renderData.frequencyData && this.renderer.getFFTDisplayEnabled() && renderData.isSignalAboveNoiseGate) {
+      this.renderer.drawFFTOverlay(
+        renderData.frequencyData,
+        renderData.estimatedFrequency,
+        renderData.sampleRate,
+        renderData.fftSize,
+        renderData.maxFrequency
+      );
+      
+      // Draw harmonic analysis overlay (only when FFT method is used and data is available)
+      this.renderer.drawHarmonicAnalysis(
+        renderData.halfFreqPeakStrengthPercent,
+        renderData.candidate1Harmonics,
+        renderData.candidate2Harmonics,
+        renderData.candidate1WeightedScore,
+        renderData.candidate2WeightedScore,
+        renderData.selectionReason,
+        renderData.estimatedFrequency
+      );
+    }
+
+    // 右上に周波数プロットを描画
+    this.renderer.drawFrequencyPlot(
+      renderData.frequencyPlotHistory,
+      this.frequencyEstimator.getMinFrequency(),
+      this.frequencyEstimator.getMaxFrequency()
+    );
+
+    // Update comparison panels with similarity history
+    // Use original 4-cycle range from WASM (renderData.displayStartIndex/displayEndIndex)
+    // instead of the phase-marker-narrowed range (displayStartIndex/displayEndIndex)
+    this.comparisonRenderer.updatePanels(
+      renderData.previousWaveform,
+      renderData.waveformData,
+      renderData.displayStartIndex,
+      renderData.displayEndIndex,
+      renderData.waveformData,
+      renderData.similarity,
+      renderData.similarityPlotHistory,
+      renderData.phaseZeroOffsetHistory,
+      renderData.phaseTwoPiOffsetHistory
+    );
+    
+    // Update cycle similarity graphs if renderer is available
+    if (this.cycleSimilarityRenderer) {
+      this.cycleSimilarityRenderer.updateGraphs(
+        renderData.cycleSimilarities8div,
+        renderData.cycleSimilarities4div,
+        renderData.cycleSimilarities2div
+      );
+    }
+  }
+
+  // Getters and setters - delegate to appropriate modules
+  getIsRunning(): boolean {
+    return this.isRunning;
+  }
+
+  setAutoGain(enabled: boolean): void {
+    this.gainController.setAutoGain(enabled);
+  }
+
+  getAutoGainEnabled(): boolean {
+    return this.gainController.getAutoGainEnabled();
+  }
+
+  setNoiseGate(enabled: boolean): void {
+    this.gainController.setNoiseGate(enabled);
+  }
+
+  getNoiseGateEnabled(): boolean {
+    return this.gainController.getNoiseGateEnabled();
+  }
+
+  setNoiseGateThreshold(threshold: number): void {
+    this.gainController.setNoiseGateThreshold(threshold);
+  }
+
+  getNoiseGateThreshold(): number {
+    return this.gainController.getNoiseGateThreshold();
+  }
+
+  setFrequencyEstimationMethod(method: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt'): void {
+    this.frequencyEstimator.setFrequencyEstimationMethod(method);
+  }
+
+  getFrequencyEstimationMethod(): string {
+    return this.frequencyEstimator.getFrequencyEstimationMethod();
+  }
+
+  setBufferSizeMultiplier(multiplier: 1 | 4 | 16): void {
+    this.frequencyEstimator.setBufferSizeMultiplier(multiplier);
+  }
+
+  getBufferSizeMultiplier(): 1 | 4 | 16 {
+    return this.frequencyEstimator.getBufferSizeMultiplier();
+  }
+
+  getEstimatedFrequency(): number {
+    return this.frequencyEstimator.getEstimatedFrequency();
+  }
+
+  setFFTDisplay(enabled: boolean): void {
+    this.renderer.setFFTDisplay(enabled);
+  }
+
+  getFFTDisplayEnabled(): boolean {
+    return this.renderer.getFFTDisplayEnabled();
+  }
+
+  /**
+   * Enable or disable harmonic analysis overlay
+   * When disabled, the yellow-bordered harmonic analysis panel in the top-left corner is hidden
+   * @param enabled - true to show harmonic analysis overlay, false to hide it
+   */
+  setHarmonicAnalysisEnabled(enabled: boolean): void {
+    this.renderer.setHarmonicAnalysisEnabled(enabled);
+  }
+
+  /**
+   * Get the current state of harmonic analysis overlay
+   * @returns true if harmonic analysis overlay is enabled, false otherwise
+   */
+  getHarmonicAnalysisEnabled(): boolean {
+    return this.renderer.getHarmonicAnalysisEnabled();
+  }
+
+  /**
+   * Enable or disable debug overlays (harmonic analysis, frequency plot)
+   * Debug overlays show detailed debugging information with yellow borders (#ffaa00)
+   * including harmonic analysis and frequency history plot
+   * 
+   * When using cat-oscilloscope as a library, it's recommended to disable these
+   * overlays for a cleaner, more professional appearance
+   * 
+   * @param enabled - true to show debug overlays (default for standalone app),
+   *                  false to hide them (recommended for library usage)
+   */
+  setDebugOverlaysEnabled(enabled: boolean): void {
+    this.renderer.setDebugOverlaysEnabled(enabled);
+  }
+
+  /**
+   * Get the current state of debug overlays
+   * @returns true if debug overlays are enabled, false otherwise
+   */
+  getDebugOverlaysEnabled(): boolean {
+    return this.renderer.getDebugOverlaysEnabled();
+  }
+
+  /**
+   * Set the layout configuration for overlays
+   * Allows external applications to control the position and size of debug overlays
+   * @param layout - Layout configuration for overlays (FFT, harmonic analysis, frequency plot)
+   */
+  setOverlaysLayout(layout: OverlaysLayoutConfig): void {
+    this.renderer.setOverlaysLayout(layout);
+  }
+
+  /**
+   * Get the current overlays layout configuration
+   * @returns Current overlays layout configuration
+   */
+  getOverlaysLayout(): OverlaysLayoutConfig {
+    return this.renderer.getOverlaysLayout();
+  }
+
+  getCurrentGain(): number {
+    return this.gainController.getCurrentGain();
+  }
+  
+  getSimilarityScore(): number {
+    return this.waveformSearcher.getLastSimilarity();
+  }
+  
+  isSimilaritySearchActive(): boolean {
+    return this.waveformSearcher.hasPreviousWaveform();
+  }
+  
+  setUsePeakMode(enabled: boolean): void {
+    this.zeroCrossDetector.setUsePeakMode(enabled);
+  }
+
+  getUsePeakMode(): boolean {
+    return this.zeroCrossDetector.getUsePeakMode();
+  }
+  
+  setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void {
+    this.zeroCrossDetector.setZeroCrossMode(mode);
+  }
+
+  getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero' {
+    return this.zeroCrossDetector.getZeroCrossMode();
+  }
+  
+  setPauseDrawing(paused: boolean): void {
+    this.isPaused = paused;
+  }
+
+  getPauseDrawing(): boolean {
+    return this.isPaused;
+  }
+
+  /**
+   * Enable or disable phase marker range display mode
+   * When enabled (default), displays only the range between orange-red-red-orange markers
+   * When disabled, displays the full waveform segment
+   * @param enabled - true to display only phase marker range, false to display full segment
+   */
+  setPhaseMarkerRangeEnabled(enabled: boolean): void {
+    this.phaseMarkerRangeEnabled = enabled;
+  }
+
+  /**
+   * Get the current state of phase marker range display mode
+   * @returns true if phase marker range display is enabled, false otherwise
+   */
+  getPhaseMarkerRangeEnabled(): boolean {
+    return this.phaseMarkerRangeEnabled;
+  }
+}
+
+{% endraw %}
+```
+
+### src/WaveformDataProcessor.ts
+```ts
+{% raw %}
+import { WaveformRenderData } from './WaveformRenderData';
+import { AudioManager } from './AudioManager';
+import { GainController } from './GainController';
+import { FrequencyEstimator } from './FrequencyEstimator';
+import { WaveformSearcher } from './WaveformSearcher';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
+import { BasePathResolver } from './BasePathResolver';
+import { WasmModuleLoader } from './WasmModuleLoader';
+
+/**
+ * WaveformDataProcessor - Coordinates waveform data processing using Rust WASM implementation
+ * 
+ * This class has been refactored to follow the Single Responsibility Principle.
+ * Its sole responsibility is now coordinating between JavaScript configuration
+ * and the Rust/WASM processor for data processing.
+ * 
+ * Responsibilities delegated to specialized classes:
+ * - BasePathResolver: Determines the base path for loading WASM files
+ * - WasmModuleLoader: Handles WASM module loading and initialization
+ * 
+ * All actual data processing algorithms (frequency estimation, gain control,
+ * zero-cross detection, waveform search) are implemented in Rust WASM.
+ */
+export class WaveformDataProcessor {
+  private audioManager: AudioManager;
+  private gainController: GainController;
+  private frequencyEstimator: FrequencyEstimator;
+  private waveformSearcher: WaveformSearcher;
+  private zeroCrossDetector: ZeroCrossDetector;
+  private basePathResolver: BasePathResolver;
+  private wasmLoader: WasmModuleLoader;
+  
+  // Phase marker offset history for overlay graphs (issue #236)
+  private phaseZeroOffsetHistory: number[] = [];
+  private phaseTwoPiOffsetHistory: number[] = [];
+  private readonly MAX_OFFSET_HISTORY = 100; // Keep last 100 frames of offset data
+  
+  // Diagnostic tracking for issue #254 analysis
+  private previousPhaseZeroIndex: number | undefined = undefined;
+  private previousPhaseTwoPiIndex: number | undefined = undefined;
+
+  constructor(
+    audioManager: AudioManager,
+    gainController: GainController,
+    frequencyEstimator: FrequencyEstimator,
+    waveformSearcher: WaveformSearcher,
+    zeroCrossDetector: ZeroCrossDetector
+  ) {
+    this.audioManager = audioManager;
+    this.gainController = gainController;
+    this.frequencyEstimator = frequencyEstimator;
+    this.waveformSearcher = waveformSearcher;
+    this.zeroCrossDetector = zeroCrossDetector;
+    this.basePathResolver = new BasePathResolver();
+    this.wasmLoader = new WasmModuleLoader();
+  }
+  
+  /**
+   * Initialize the WASM module
+   * Must be called before processFrame
+   */
+  async initialize(): Promise<void> {
+    if (this.wasmLoader.isReady()) {
+      return;
+    }
+    
+    try {
+      // Determine base path and load WASM module
+      const basePath = this.basePathResolver.getBasePath();
+      await this.wasmLoader.loadWasmModule(basePath);
+      
+      // Sync initial configuration to WASM
+      this.syncConfigToWasm();
+    } catch (error) {
+      console.error('Failed to initialize WASM module:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Sync TypeScript configuration to WASM processor
+   */
+  private syncConfigToWasm(): void {
+    const wasmProcessor = this.wasmLoader.getProcessor();
+    if (!wasmProcessor) return;
+    
+    wasmProcessor.setAutoGain(this.gainController.getAutoGainEnabled());
+    wasmProcessor.setNoiseGate(this.gainController.getNoiseGateEnabled());
+    wasmProcessor.setNoiseGateThreshold(this.gainController.getNoiseGateThreshold());
+    wasmProcessor.setFrequencyEstimationMethod(this.frequencyEstimator.getFrequencyEstimationMethod());
+    wasmProcessor.setBufferSizeMultiplier(this.frequencyEstimator.getBufferSizeMultiplier());
+    wasmProcessor.setZeroCrossMode(this.zeroCrossDetector.getZeroCrossMode());
+  }
+  
+  /**
+   * Sync WASM results back to TypeScript objects
+   * 
+   * Note: This method accesses private members using type assertions.
+   * This is a temporary solution to maintain compatibility with existing code
+   * that uses getters like getEstimatedFrequency(), getCurrentGain(), etc.
+   * 
+   * TODO: Consider adding public setter methods to these classes or
+   * redesigning the synchronization interface for better type safety.
+   */
+  private syncResultsFromWasm(renderData: WaveformRenderData): void {
+    // Update frequency estimator's estimated frequency
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.frequencyEstimator as any).estimatedFrequency = renderData.estimatedFrequency;
+    
+    // Update gain controller's current gain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.gainController as any).currentGain = renderData.gain;
+    
+    // Update waveform searcher's state
+    if (renderData.previousWaveform) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this.waveformSearcher as any).previousWaveform = renderData.previousWaveform;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.waveformSearcher as any).lastSimilarity = renderData.similarity;
+  }
+
+  /**
+   * Process current frame and generate complete render data using WASM
+   */
+  processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
+    const wasmProcessor = this.wasmLoader.getProcessor();
+    if (!this.wasmLoader.isReady() || !wasmProcessor) {
+      console.warn('WASM processor not initialized');
+      return null;
+    }
+    
+    // Check if audio is ready
+    if (!this.audioManager.isReady()) {
+      return null;
+    }
+
+    // Get waveform data
+    const dataArray = this.audioManager.getTimeDomainData();
+    if (!dataArray) {
+      return null;
+    }
+    
+    const sampleRate = this.audioManager.getSampleRate();
+    const fftSize = this.audioManager.getFFTSize();
+    
+    // Get frequency data if needed
+    const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
+    let frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
+    
+    // If frequency data is needed but not available (e.g., BufferSource mode),
+    // compute it from time-domain data using WASM
+    if (needsFrequencyData && !frequencyData && dataArray) {
+      const computedFreqData = wasmProcessor.computeFrequencyData(dataArray, fftSize);
+      if (computedFreqData) {
+        frequencyData = new Uint8Array(computedFreqData);
+      }
+    }
+    
+    // Sync configuration before processing
+    this.syncConfigToWasm();
+    
+    // Call WASM processor
+    const wasmResult = wasmProcessor.processFrame(
+      dataArray,
+      frequencyData,
+      sampleRate,
+      fftSize,
+      fftDisplayEnabled
+    );
+    
+    if (!wasmResult) {
+      return null;
+    }
+    
+    // Convert WASM result to TypeScript WaveformRenderData
+    const renderData: WaveformRenderData = {
+      waveformData: new Float32Array(wasmResult.waveform_data),
+      displayStartIndex: wasmResult.displayStartIndex,
+      displayEndIndex: wasmResult.displayEndIndex,
+      gain: wasmResult.gain,
+      estimatedFrequency: wasmResult.estimatedFrequency,
+      frequencyPlotHistory: wasmResult.frequencyPlotHistory ? Array.from(wasmResult.frequencyPlotHistory) : [],
+      sampleRate: wasmResult.sampleRate,
+      fftSize: wasmResult.fftSize,
+      frequencyData: wasmResult.frequencyData ? new Uint8Array(wasmResult.frequencyData) : undefined,
+      isSignalAboveNoiseGate: wasmResult.isSignalAboveNoiseGate,
+      maxFrequency: wasmResult.maxFrequency,
+      previousWaveform: wasmResult.previousWaveform ? new Float32Array(wasmResult.previousWaveform) : null,
+      similarity: wasmResult.similarity,
+      similarityPlotHistory: wasmResult.similarityPlotHistory ? Array.from(wasmResult.similarityPlotHistory) : [],
+      usedSimilaritySearch: wasmResult.usedSimilaritySearch,
+      phaseZeroIndex: wasmResult.phaseZeroIndex,
+      phaseTwoPiIndex: wasmResult.phaseTwoPiIndex,
+      phaseMinusQuarterPiIndex: wasmResult.phaseMinusQuarterPiIndex,
+      phaseTwoPiPlusQuarterPiIndex: wasmResult.phaseTwoPiPlusQuarterPiIndex,
+      halfFreqPeakStrengthPercent: wasmResult.halfFreqPeakStrengthPercent,
+      candidate1Harmonics: wasmResult.candidate1Harmonics ? Array.from(wasmResult.candidate1Harmonics) : undefined,
+      candidate2Harmonics: wasmResult.candidate2Harmonics ? Array.from(wasmResult.candidate2Harmonics) : undefined,
+      selectionReason: wasmResult.selectionReason,
+      cycleSimilarities8div: wasmResult.cycleSimilarities8div ? Array.from(wasmResult.cycleSimilarities8div) : undefined,
+      cycleSimilarities4div: wasmResult.cycleSimilarities4div ? Array.from(wasmResult.cycleSimilarities4div) : undefined,
+      cycleSimilarities2div: wasmResult.cycleSimilarities2div ? Array.from(wasmResult.cycleSimilarities2div) : undefined,
+    };
+    
+    // Calculate and update phase marker offset history (issue #236)
+    this.updatePhaseOffsetHistory(renderData);
+    
+    // Add offset history to render data
+    renderData.phaseZeroOffsetHistory = [...this.phaseZeroOffsetHistory];
+    renderData.phaseTwoPiOffsetHistory = [...this.phaseTwoPiOffsetHistory];
+    
+    // Sync results back to TypeScript objects so getters work correctly
+    this.syncResultsFromWasm(renderData);
+    
+    return renderData;
+  }
+  
+  /**
+   * Calculate relative offset percentages for phase markers and update history
+   * Issue #254: Added diagnostic logging to identify source of offset spikes
+   * @param renderData - Render data containing phase indices
+   */
+  private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
+    // Check if we have valid display indices
+    if (renderData.displayStartIndex === undefined || 
+        renderData.displayEndIndex === undefined) {
+      return;
+    }
+    
+    const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
+    if (displayLength <= 0) {
+      return;
+    }
+    
+    // Diagnostic tracking for issue #254
+    // Focus: Verify that offsets within 4-cycle window stay within 1% per frame (spec requirement)
+    let shouldLog = false;
+    const diagnosticInfo: any = {
+      frame: Date.now(),
+      fourCycleWindow: {
+        lengthSamples: displayLength,  // Length of 4-cycle display window
+      },
+    };
+    
+    // Update phase zero offset history if available
+    if (renderData.phaseZeroIndex !== undefined) {
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "start" marker within 4-cycle coordinate system
+      const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
+      const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+      
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
+      diagnosticInfo.phaseZero = {
+        startOffsetPercent: phaseZeroPercent,  // Position within 4-cycle window (0-100%)
+      };
+      
+      if (this.previousPhaseZeroIndex !== undefined) {
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseZeroPercent - previousPercent);
+          diagnosticInfo.phaseZero.offsetChange = percentChange;
+          diagnosticInfo.phaseZero.previousOffsetPercent = previousPercent;
+          
+          if (percentChange > 1.0) {
+            shouldLog = true;
+            diagnosticInfo.phaseZero.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+          }
+        }
+      }
+      
+      this.phaseZeroOffsetHistory.push(phaseZeroPercent);
+      if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+        this.phaseZeroOffsetHistory.shift();
+      }
+      
+      this.previousPhaseZeroIndex = renderData.phaseZeroIndex;
+    }
+    
+    // Update phase 2π offset history if available
+    if (renderData.phaseTwoPiIndex !== undefined) {
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "end" marker within 4-cycle coordinate system
+      const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
+      const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+      
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
+      diagnosticInfo.phaseTwoPi = {
+        endOffsetPercent: phaseTwoPiPercent,  // Position within 4-cycle window (0-100%)
+      };
+      
+      if (this.previousPhaseTwoPiIndex !== undefined) {
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
+          diagnosticInfo.phaseTwoPi.offsetChange = percentChange;
+          diagnosticInfo.phaseTwoPi.previousOffsetPercent = previousPercent;
+          
+          if (percentChange > 1.0) {
+            shouldLog = true;
+            diagnosticInfo.phaseTwoPi.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+          }
+        }
+      }
+      
+      this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
+      if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
+        this.phaseTwoPiOffsetHistory.shift();
+      }
+      
+      this.previousPhaseTwoPiIndex = renderData.phaseTwoPiIndex;
+    }
+    
+    // Log if spec violation detected
+    if (shouldLog) {
+      console.warn('[1% Spec Violation Detected - Issue #254]', diagnosticInfo);
+      console.warn('→ Offset within 4-cycle window moved by more than 1% in one frame');
+    }
+  }
+  
+  /**
+   * Reset the WASM processor state
+   */
+  reset(): void {
+    const wasmProcessor = this.wasmLoader.getProcessor();
+    if (wasmProcessor) {
+      wasmProcessor.reset();
+    }
+    // Clear phase offset history (issue #236, #254)
+    this.phaseZeroOffsetHistory = [];
+    this.phaseTwoPiOffsetHistory = [];
+    // Clear diagnostic tracking (issue #254)
+    this.previousPhaseZeroIndex = undefined;
+    this.previousPhaseTwoPiIndex = undefined;
+  }
+}
 
 {% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-29764f2 Merge pull request #261 from cat2151/copilot/move-demo-link-to-footer
-4faffa4 Rebuild dist files after whitespace fix
-12bf077 Remove trailing space after pipe character in footer
-927c60b Rebuild dist files after index.html changes
-e2989c5 Move demo link to footer with subtle styling
-1c085a7 Initial plan
-5ba6a94 Merge pull request #259 from cat2151/copilot/update-graph-from-bar-to-line
-a3c43a0 Fix legend overlap: add semi-transparent background and reduce spacing
-94ac74e Improve documentation and comments for clarity
-d6e30ff Address code review feedback: extract constants and improve clarity
+0f3b465 Add issue note for #269 [auto]
+04a2069 Merge pull request #268 from cat2151/copilot/fix-demo-library-performance
+9fdb560 Clean up code review feedback: simplify BufferSource handling and improve comments
+05a3f57 Fix #267: Refactor startFromBuffer to use AnalyserNode (same architecture as startFromFile)
+a5388c0 Fix test: Set frequency estimation method before initializing oscilloscope
+7a56dfb Address PR feedback: Set zero-crossing as TypeScript default and improve test assertions
+feab6ef Fix issue #267: Change demo-library default to zero-crossing for optimal BufferSource performance
+8ad6f18 Add performance diagnostics for issue #267 - identified slow computeFrequencyData in BufferSource mode
+554c830 Initial investigation of issue #267 - performance bottleneck in demo-library
+590bb8e Initial plan
 
 ### 変更されたファイル:
-.github/CHECK_LARGE_FILES.md
-.github/check-large-files.toml
-.github/scripts/check_large_files.py
 .github/workflows/check-large-files.yml
-README.ja.md
-README.md
-REFACTORING_ISSUE_251.md
+dist/AudioManager.d.ts
+dist/AudioManager.d.ts.map
+dist/BasePathResolver.d.ts
+dist/BufferSource.d.ts
+dist/ComparisonPanelRenderer.d.ts
 dist/CycleSimilarityRenderer.d.ts
-dist/CycleSimilarityRenderer.d.ts.map
-dist/assets/demo-DsYptmO3.js
-dist/assets/demo-DsYptmO3.js.map
-dist/assets/main-DUIA4vI1.js
-dist/assets/main-DUIA4vI1.js.map
-dist/assets/modulepreload-polyfill-B5Qt9EMX.js
-dist/assets/modulepreload-polyfill-B5Qt9EMX.js.map
+dist/DOMElementManager.d.ts
+dist/DisplayUpdater.d.ts
+dist/FrameBufferHistory.d.ts
+dist/FrequencyEstimator.d.ts
+dist/FrequencyEstimator.d.ts.map
+dist/GainController.d.ts
+dist/Oscilloscope.d.ts
+dist/OverlayLayout.d.ts
+dist/PianoKeyboardRenderer.d.ts
+dist/UIEventHandlers.d.ts
+dist/WasmModuleLoader.d.ts
+dist/WaveformDataProcessor.d.ts
+dist/WaveformDataProcessor.d.ts.map
+dist/WaveformRenderData.d.ts
+dist/WaveformRenderer.d.ts
+dist/WaveformSearcher.d.ts
+dist/ZeroCrossDetector.d.ts
 dist/cat-oscilloscope.cjs
 dist/cat-oscilloscope.cjs.map
 dist/cat-oscilloscope.mjs
 dist/cat-oscilloscope.mjs.map
-dist/demo-simple.html
-dist/index.html
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-index.html
-issue-notes/257.md
-package-lock.json
-signal-processor-wasm/src/frequency_estimation/autocorrelation.rs
-signal-processor-wasm/src/frequency_estimation/cqt.rs
-signal-processor-wasm/src/frequency_estimation/dsp_utils.rs
-signal-processor-wasm/src/frequency_estimation/fft.rs
-signal-processor-wasm/src/frequency_estimation/harmonic_analysis.rs
+dist/comparison-renderers/OffsetOverlayRenderer.d.ts
+dist/comparison-renderers/PositionMarkerRenderer.d.ts
+dist/comparison-renderers/SimilarityPlotRenderer.d.ts
+dist/comparison-renderers/WaveformPanelRenderer.d.ts
+dist/comparison-renderers/index.d.ts
+dist/index.d.ts
+dist/renderers/BaseOverlayRenderer.d.ts
+dist/renderers/FFTOverlayRenderer.d.ts
+dist/renderers/FrequencyPlotRenderer.d.ts
+dist/renderers/GridRenderer.d.ts
+dist/renderers/HarmonicAnalysisRenderer.d.ts
+dist/renderers/PhaseMarkerRenderer.d.ts
+dist/renderers/WaveformLineRenderer.d.ts
+dist/renderers/index.d.ts
+dist/utils.d.ts
+example-library-usage.html
+issue-notes/265.md
+issue-notes/267.md
+issue-notes/269.md
 signal-processor-wasm/src/frequency_estimation/mod.rs
-signal-processor-wasm/src/frequency_estimation/smoothing.rs
-signal-processor-wasm/src/frequency_estimation/stft.rs
-signal-processor-wasm/src/frequency_estimation/zero_crossing.rs
-signal-processor-wasm/src/frequency_estimator.rs
+signal-processor-wasm/src/frequency_estimation/tests.rs
 signal-processor-wasm/src/lib.rs
-src/CycleSimilarityRenderer.ts
+signal-processor-wasm/src/waveform_render_data.rs
+signal-processor-wasm/src/zero_cross_detector.rs
+signal-processor-wasm/src/zero_cross_detector/detection_modes.rs
+signal-processor-wasm/src/zero_cross_detector/mod.rs
+signal-processor-wasm/src/zero_cross_detector/types.rs
+signal-processor-wasm/src/zero_cross_detector/utils.rs
+src/AudioManager.ts
+src/FrequencyEstimator.ts
+src/__tests__/performance-issue267.test.ts
 
 
 ---
-Generated at: 2026-02-06 07:12:18 JST
+Generated at: 2026-02-07 07:09:20 JST
