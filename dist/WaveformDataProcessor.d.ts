@@ -31,6 +31,8 @@ export declare class WaveformDataProcessor {
     private readonly MAX_OFFSET_HISTORY;
     private previousPhaseZeroIndex;
     private previousPhaseTwoPiIndex;
+    private enableDetailedTimingLogs;
+    private readonly TIMING_LOG_THRESHOLD_MS;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
@@ -54,8 +56,15 @@ export declare class WaveformDataProcessor {
     private syncResultsFromWasm;
     /**
      * Process current frame and generate complete render data using WASM
+     * @param fftDisplayEnabled - Whether FFT display is enabled
+     * @param enableDetailedLogs - Whether to enable detailed timing logs (optional, defaults to instance setting)
      */
-    processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null;
+    processFrame(fftDisplayEnabled: boolean, enableDetailedLogs?: boolean): WaveformRenderData | null;
+    /**
+     * Enable or disable detailed timing logs for performance diagnostics
+     * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
+     */
+    setDetailedTimingLogs(enabled: boolean): void;
     /**
      * Calculate relative offset percentages for phase markers and update history
      * Issue #254: Added diagnostic logging to identify source of offset spikes

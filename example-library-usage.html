@@ -111,6 +111,10 @@
       <input type="checkbox" id="debugOverlays" checked>
       Debug Overlays (黄色枠の情報)
     </label>
+    <label>
+      <input type="checkbox" id="detailedTimingLogs">
+      Detailed Timing Logs (診断用)
+    </label>
     <br>
     <label>
       周波数推定方法:
@@ -189,6 +193,7 @@ await oscilloscope.stop();</code></pre>
     const noiseGateCheckbox = document.getElementById('noiseGate');
     const fftDisplayCheckbox = document.getElementById('fftDisplay');
     const debugOverlaysCheckbox = document.getElementById('debugOverlays');
+    const detailedTimingLogsCheckbox = document.getElementById('detailedTimingLogs');
     const freqMethodSelect = document.getElementById('freqMethod');
     const statusElement = document.getElementById('status');
     const frequencyElement = document.getElementById('frequency');
@@ -199,6 +204,7 @@ await oscilloscope.stop();</code></pre>
     oscilloscope.setNoiseGate(noiseGateCheckbox.checked);
     oscilloscope.setFFTDisplay(fftDisplayCheckbox.checked);
     oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
+    oscilloscope.setDetailedTimingLogs(detailedTimingLogsCheckbox.checked);
     oscilloscope.setFrequencyEstimationMethod(freqMethodSelect.value);
 
     // 周波数とゲイン表示の更新
@@ -360,6 +366,10 @@ await oscilloscope.stop();</code></pre>
 
     debugOverlaysCheckbox.addEventListener('change', () => {
       oscilloscope.setDebugOverlaysEnabled(debugOverlaysCheckbox.checked);
+    });
+
+    detailedTimingLogsCheckbox.addEventListener('change', () => {
+      oscilloscope.setDetailedTimingLogs(detailedTimingLogsCheckbox.checked);
     });
 
     freqMethodSelect.addEventListener('change', () => {
