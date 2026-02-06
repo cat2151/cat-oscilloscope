@@ -73,9 +73,11 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     
     const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
     
-    console.log('🔬 Performance Test: Starting BufferSource mode');
+    console.log('🔬 Performance Test: Starting BufferSource mode with Zero-Crossing');
     const startInit = performance.now();
     await oscilloscope.startFromBuffer(bufferSource);
+    // Explicitly set zero-crossing method to test the fix for issue #267
+    oscilloscope.setFrequencyEstimationMethod('zero-crossing');
     const endInit = performance.now();
     console.log(`⏱️ Initialization time: ${(endInit - startInit).toFixed(2)}ms`);
 
@@ -119,13 +121,13 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     console.log(`   Max: ${maxTime.toFixed(2)}ms`);
     console.log(`   Target: 16ms (60fps)`);
 
-    // Main assertion: average frame time should be well under 100ms
-    // Issue #267 reports 500ms frames, which is clearly broken
-    // We expect ~16ms for good performance, but allow up to 100ms as a safety margin
-    expect(avgTime).toBeLessThan(100);
+    // With zero-crossing, we should achieve much better performance than the reported 500ms issue
+    // PR description claims <5ms, but we allow 20ms to account for test environment overhead
+    // This is still 25x faster than the original 500ms problem
+    expect(avgTime).toBeLessThan(20);
     
-    // Individual frames should also not exceed 100ms
-    expect(maxTime).toBeLessThan(100);
+    // Individual frames should also meet the stricter threshold
+    expect(maxTime).toBeLessThan(20);
 
     // Log warning if performance is degraded but still under threshold
     if (avgTime > 16) {

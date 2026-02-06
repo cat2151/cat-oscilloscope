@@ -1,6 +1,6 @@
-var N = Object.defineProperty;
-var z = (m, e, t) => e in m ? N(m, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : m[e] = t;
-var s = (m, e, t) => z(m, typeof e != "symbol" ? e + "" : e, t);
+var D = Object.defineProperty;
+var N = (m, e, t) => e in m ? D(m, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : m[e] = t;
+var s = (m, e, t) => N(m, typeof e != "symbol" ? e + "" : e, t);
 function q(m) {
   return Math.pow(10, m / 20);
 }
@@ -285,7 +285,9 @@ class U {
 }
 class X {
   constructor() {
-    s(this, "frequencyEstimationMethod", "fft");
+    // Default to zero-crossing for optimal BufferSource mode performance (Issue #267)
+    // Main demo (index.html) explicitly sets FFT which works well with AnalyserNode hardware acceleration
+    s(this, "frequencyEstimationMethod", "zero-crossing");
     s(this, "estimatedFrequency", 0);
     s(this, "MIN_FREQUENCY_HZ", 20);
     // Minimum detectable frequency (Hz)
@@ -2028,7 +2030,7 @@ class ye {
     this.ctx.fillStyle = "#1a1a1a", this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
-class D {
+class z {
   /**
    * Create a BufferSource from Float32Array
    * @param buffer - Audio data as Float32Array (values typically in range -1.0 to 1.0)
@@ -2063,7 +2065,7 @@ class D {
         `Invalid channel index ${i}. AudioBuffer has ${e.numberOfChannels} channel(s).`
       );
     const r = e.getChannelData(i);
-    return new D(r, e.sampleRate, {
+    return new z(r, e.sampleRate, {
       chunkSize: t == null ? void 0 : t.chunkSize,
       loop: t == null ? void 0 : t.loop
     });
@@ -2157,7 +2159,7 @@ class D {
 }
 export {
   Z as AudioManager,
-  D as BufferSource,
+  z as BufferSource,
   ce as ComparisonPanelRenderer,
   W as CycleSimilarityRenderer,
   Q as DEFAULT_OVERLAYS_LAYOUT,
