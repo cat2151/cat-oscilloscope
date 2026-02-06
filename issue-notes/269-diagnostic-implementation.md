@@ -3,14 +3,24 @@
 ## 概要
 PR 267を取り込んだ後もdemo-libraryの1フレーム処理時間が400ms以上かかっている問題を診断するため、詳細なタイミング計測ログを追加しました。
 
+**重要な変更（PR #270 レビューコメントに基づく）:**
+- デフォルトでは詳細ログは無効（パフォーマンス影響を回避）
+- `setDetailedTimingLogs(true)` で有効化可能
+- 無効時でも、処理時間が16.67ms（60fps目標）を超えた場合は自動的にログ出力
+
 ## 目的
 - build漏れ、deploy漏れかどうかの切り分け
 - フレーム処理内の各処理ステップの時間を個別に計測
 - 実際のボトルネックを特定
+- 通常時はログ出力を抑制してパフォーマンス影響を最小化
 
 ## 実装内容
 
 ### 1. Oscilloscope.ts の変更
+
+**追加した機能:**
+- 詳細タイミングログのON/OFFフラグ（デフォルト: OFF）
+- 閾値ベースの自動ログ出力（処理時間が16.67msを超えた場合）
 
 `render()` メソッドに以下のタイミング計測を追加:
 
@@ -20,7 +30,7 @@ private render(): void {
   const t0 = performance.now();
   
   // データ処理フェーズ
-  const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
+  const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled(), this.enableDetailedTimingLogs);
   const t1 = performance.now();
   
   if (renderData) {
@@ -28,14 +38,23 @@ private render(): void {
     this.renderFrame(renderData);
     const t2 = performance.now();
     
-    // ログ出力
-    const dataProcessingTime = t1 - t0;
-    const renderingTime = t2 - t1;
+    // ログ出力（有効化されているか、または性能が閾値を超えた場合のみ）
     const totalTime = t2 - t0;
-    console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
+    if (this.enableDetailedTimingLogs || totalTime > this.TARGET_FRAME_TIME) {
+      console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
+    }
   }
   // ...
 }
+```
+
+**新しいAPI:**
+```typescript
+// 詳細ログを有効化
+oscilloscope.setDetailedTimingLogs(true);
+
+// 詳細ログの状態を取得
+const enabled = oscilloscope.getDetailedTimingLogsEnabled();
 ```
 
 **出力形式:**
@@ -44,6 +63,11 @@ private render(): void {
 ```
 
 ### 2. WaveformDataProcessor.ts の変更
+
+**追加した機能:**
+- 詳細タイミングログのON/OFFフラグ（デフォルト: OFF）
+- 閾値ベースの自動ログ出力（処理時間が16.67msを超えた場合）
+- タイミング計測の精度向上（getMetadataステップを分離）
 
 `processFrame()` メソッドに詳細なタイミング計測を追加:
 
@@ -95,15 +119,25 @@ processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
 
 **出力形式:**
 ```
-[WaveformDataProcessor] init:XXms | getTimeDomain:XXms | getFreq:XXms | computeFFT:XXms | syncCfg:XXms | WASM:XXms | convert:XXms | post:XXms | total:XXms
+[WaveformDataProcessor] init:XXms | getTimeDomain:XXms | getMeta:XXms | getFreq:XXms | computeFFT:XXms | syncCfg:XXms | WASM:XXms | convert:XXms | post:XXms | total:XXms
 ```
 
 **各計測項目の説明:**
 - `init`: WASM processor取得と準備（t1 - t0）
 - `getTimeDomain`: 時間領域データ取得（t2 - t1）
-- `getFreq`: 周波数データ取得（t3 - t2）
-- `computeFFT`: WASM FFT計算（t4 - t3）
-- `syncCfg`: 設定同期（t5 - t4）
+- `getMeta`: サンプルレート・FFTサイズ取得（t3 - t2）※PR #270で分離
+- `getFreq`: 周波数データ取得（t4 - t3）
+- `computeFFT`: WASM FFT計算（t5 - t4）
+- `syncCfg`: 設定同期（t6 - t5）
+- `WASM`: WASMプロセッサ処理（t7 - t6）
+- `convert`: 結果変換（t9 - t8）
+- `post`: 後処理（t10 - t9）
+- `total`: 全体時間（t10 - t0）
+
+**ログ制御:**
+- デフォルト: 無効（パフォーマンス影響を回避）
+- 有効化: `setDetailedTimingLogs(true)` を呼び出す
+- 自動ログ: 処理時間が16.67ms（60fps目標）を超えた場合は自動的に出力
 - `WASM`: WASMプロセッサ処理（t6 - t5）
 - `convert`: 結果変換（t8 - t7）
 - `post`: 後処理（t9 - t8）
@@ -122,11 +156,25 @@ npm run dev
 # ブラウザで http://localhost:3000/example-library-usage.html にアクセス
 ```
 
-ブラウザのコンソールを開き、「Demo: Sine Wave (BufferSource)」ボタンをクリックすると、以下のようなログが出力されます:
+**詳細ログを有効化する方法:**
+
+1. **UIから有効化:**
+   - ページ上の「Detailed Timing Logs (診断用)」チェックボックスをONにする
+
+2. **コードから有効化:**
+   ```javascript
+   oscilloscope.setDetailedTimingLogs(true);
+   ```
+
+**デフォルトの動作（チェックボックスOFF）:**
+- 通常時はログ出力なし（パフォーマンス影響を回避）
+- フレーム処理時間が16.67ms（60fps目標）を超えた場合のみ自動的にログ出力
+
+ブラウザのコンソールを開き、「Detailed Timing Logs」をONにしてから「Demo: Sine Wave (BufferSource)」ボタンをクリックすると、以下のようなログが出力されます:
 
 ```
-[WaveformDataProcessor] init:0.12ms | getTimeDomain:0.34ms | getFreq:0.23ms | computeFFT:0.00ms | syncCfg:0.15ms | WASM:2.45ms | convert:0.67ms | post:0.34ms | total:4.30ms
-[Frame Timing] Total: 4.82ms | Data Processing: 4.30ms | Rendering: 0.52ms
+[WaveformDataProcessor] init:0.12ms | getTimeDomain:0.34ms | getMeta:0.08ms | getFreq:0.23ms | computeFFT:0.00ms | syncCfg:0.15ms | WASM:2.45ms | convert:0.67ms | post:0.34ms | total:4.38ms
+[Frame Timing] Total: 4.82ms | Data Processing: 4.38ms | Rendering: 0.44ms
 ```
 
 ### 2. テストで確認する場合
@@ -141,7 +189,8 @@ npx vitest run performance-issue267.test.ts
 ## 診断手順
 
 1. **ログが出力されるか確認**
-   - 新しいログフォーマットが出力されれば、build漏れ・deploy漏れではないことが確認できる
+   - 詳細ログを有効化すると新しいログフォーマットが出力される
+   - ログフォーマットが変わっていれば、build漏れ・deploy漏れではないことが確認できる
    
 2. **ボトルネックの特定**
    - `WASM`: 2-5msが正常、400ms以上なら異常

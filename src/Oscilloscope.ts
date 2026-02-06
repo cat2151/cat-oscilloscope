@@ -45,6 +45,7 @@ export class Oscilloscope {
   private readonly MAX_FRAME_TIMES = 100;
   private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
   private readonly FPS_LOG_INTERVAL_FRAMES = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
+  private enableDetailedTimingLogs = false; // Default: disabled to avoid performance impact
 
   /**
    * Create a new Oscilloscope instance
@@ -178,7 +179,7 @@ export class Oscilloscope {
       
       // === DATA GENERATION PHASE ===
       // Process frame and generate all data needed for rendering using WASM processor
-      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
+      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled(), this.enableDetailedTimingLogs);
       const t1 = performance.now();
       
       if (renderData) {
@@ -187,12 +188,15 @@ export class Oscilloscope {
         this.renderFrame(renderData);
         const t2 = performance.now();
         
-        // Log detailed timing breakdown
+        // Log detailed timing breakdown only if enabled or performance is poor
         const dataProcessingTime = t1 - t0;
         const renderingTime = t2 - t1;
         const totalTime = t2 - t0;
         
-        console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
+        // Log if explicitly enabled or if performance exceeds target (diagnostic threshold)
+        if (this.enableDetailedTimingLogs || totalTime > this.TARGET_FRAME_TIME) {
+          console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
+        }
       }
     }
 
@@ -473,6 +477,26 @@ export class Oscilloscope {
   
   setPauseDrawing(paused: boolean): void {
     this.isPaused = paused;
+  }
+
+  /**
+   * Enable or disable detailed timing logs for performance diagnostics
+   * When enabled, logs detailed breakdown of frame processing time
+   * When disabled (default), only logs when performance exceeds target threshold
+   * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
+   */
+  setDetailedTimingLogs(enabled: boolean): void {
+    this.enableDetailedTimingLogs = enabled;
+    // Also pass to data processor
+    this.dataProcessor.setDetailedTimingLogs(enabled);
+  }
+
+  /**
+   * Get whether detailed timing logs are enabled
+   * @returns true if detailed timing logs are enabled
+   */
+  getDetailedTimingLogsEnabled(): boolean {
+    return this.enableDetailedTimingLogs;
   }
 
   getPauseDrawing(): boolean {

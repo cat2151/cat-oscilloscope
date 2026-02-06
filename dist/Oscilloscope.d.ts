@@ -32,6 +32,7 @@ export declare class Oscilloscope {
     private readonly MAX_FRAME_TIMES;
     private readonly TARGET_FRAME_TIME;
     private readonly FPS_LOG_INTERVAL_FRAMES;
+    private enableDetailedTimingLogs;
     /**
      * Create a new Oscilloscope instance
      * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
@@ -121,6 +122,18 @@ export declare class Oscilloscope {
     setZeroCrossMode(mode: 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero'): void;
     getZeroCrossMode(): 'standard' | 'peak-backtrack-history' | 'bidirectional-nearest' | 'gradient-based' | 'adaptive-step' | 'hysteresis' | 'closest-to-zero';
     setPauseDrawing(paused: boolean): void;
+    /**
+     * Enable or disable detailed timing logs for performance diagnostics
+     * When enabled, logs detailed breakdown of frame processing time
+     * When disabled (default), only logs when performance exceeds target threshold
+     * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
+     */
+    setDetailedTimingLogs(enabled: boolean): void;
+    /**
+     * Get whether detailed timing logs are enabled
+     * @returns true if detailed timing logs are enabled
+     */
+    getDetailedTimingLogsEnabled(): boolean;
     getPauseDrawing(): boolean;
     /**
      * Enable or disable phase marker range display mode
