@@ -261,29 +261,28 @@ export class WaveformDataProcessor {
     
     // Update phase zero offset history if available
     if (renderData.phaseZeroIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
+      // Calculate relative offset as percentage (0-100) within the display window
+      // This represents where the "start" marker (phase 0) is positioned in the 4-cycle display
       const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
       const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
       
       // Diagnostic tracking
       diagnosticInfo.phaseZero = {
-        absoluteIndex: renderData.phaseZeroIndex,
-        offsetPercent: phaseZeroPercent,
+        sampleIndex: renderData.phaseZeroIndex,
+        startOffsetPercent: phaseZeroPercent,  // Position within 4-cycle display window (0-100%)
       };
       
       if (this.previousPhaseZeroIndex !== undefined) {
-        const markerDelta = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
-        const markerDeltaPercent = (markerDelta / displayLength) * 100;
-        diagnosticInfo.phaseZero.markerDelta = markerDelta;
-        diagnosticInfo.phaseZero.markerDeltaPercent = markerDeltaPercent;
+        const markerMovement = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
+        diagnosticInfo.phaseZero.markerMovement = markerMovement;  // Sample movement between frames
         
-        // Detect spikes: if absolute offset percent changes by >5% between frames
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
         const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseZeroPercent - previousPercent);
-          diagnosticInfo.phaseZero.percentChange = percentChange;
+          diagnosticInfo.phaseZero.offsetChange = percentChange;
           
-          if (percentChange > 5) {
+          if (percentChange > 1.0) {
             shouldLog = true;
             diagnosticInfo.phaseZero.SPIKE_DETECTED = true;
           }
@@ -300,29 +299,28 @@ export class WaveformDataProcessor {
     
     // Update phase 2π offset history if available
     if (renderData.phaseTwoPiIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
+      // Calculate relative offset as percentage (0-100) within the display window
+      // This represents where the "end" marker (phase 2π) is positioned in the 4-cycle display
       const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
       const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
       
       // Diagnostic tracking
       diagnosticInfo.phaseTwoPi = {
-        absoluteIndex: renderData.phaseTwoPiIndex,
-        offsetPercent: phaseTwoPiPercent,
+        sampleIndex: renderData.phaseTwoPiIndex,
+        endOffsetPercent: phaseTwoPiPercent,  // Position within 4-cycle display window (0-100%)
       };
       
       if (this.previousPhaseTwoPiIndex !== undefined) {
-        const markerDelta = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
-        const markerDeltaPercent = (markerDelta / displayLength) * 100;
-        diagnosticInfo.phaseTwoPi.markerDelta = markerDelta;
-        diagnosticInfo.phaseTwoPi.markerDeltaPercent = markerDeltaPercent;
+        const markerMovement = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
+        diagnosticInfo.phaseTwoPi.markerMovement = markerMovement;  // Sample movement between frames
         
-        // Detect spikes
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
         const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
-          diagnosticInfo.phaseTwoPi.percentChange = percentChange;
+          diagnosticInfo.phaseTwoPi.offsetChange = percentChange;
           
-          if (percentChange > 5) {
+          if (percentChange > 1.0) {
             shouldLog = true;
             diagnosticInfo.phaseTwoPi.SPIKE_DETECTED = true;
           }
