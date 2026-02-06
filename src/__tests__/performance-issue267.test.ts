@@ -75,9 +75,9 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     
     console.log('🔬 Performance Test: Starting BufferSource mode with Zero-Crossing');
     const startInit = performance.now();
-    await oscilloscope.startFromBuffer(bufferSource);
-    // Explicitly set zero-crossing method to test the fix for issue #267
+    // Explicitly set zero-crossing method before starting to test the fix for issue #267
     oscilloscope.setFrequencyEstimationMethod('zero-crossing');
+    await oscilloscope.startFromBuffer(bufferSource);
     const endInit = performance.now();
     console.log(`⏱️ Initialization time: ${(endInit - startInit).toFixed(2)}ms`);
 
