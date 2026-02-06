@@ -178,21 +178,19 @@ export class Oscilloscope {
       
       // === DATA GENERATION PHASE ===
       // Process frame and generate all data needed for rendering using WASM processor
-      const t1 = performance.now();
       const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
-      const t2 = performance.now();
+      const t1 = performance.now();
       
       if (renderData) {
         // === RENDERING PHASE ===
         // All rendering logic uses only the generated data
-        const t3 = performance.now();
         this.renderFrame(renderData);
-        const t4 = performance.now();
+        const t2 = performance.now();
         
         // Log detailed timing breakdown
-        const dataProcessingTime = t2 - t1;
-        const renderingTime = t4 - t3;
-        const totalTime = t4 - t0;
+        const dataProcessingTime = t1 - t0;
+        const renderingTime = t2 - t1;
+        const totalTime = t2 - t0;
         
         console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
       }
