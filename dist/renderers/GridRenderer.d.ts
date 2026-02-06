@@ -29,4 +29,3 @@ export declare class GridRenderer {
      */
     private drawGridLabels;
 }
-//# sourceMappingURL=GridRenderer.d.ts.map

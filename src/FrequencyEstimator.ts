@@ -11,6 +11,7 @@
  * - Holding frequency plot history (updated by WASM processor)
  */
 export class FrequencyEstimator {
+  // Default to FFT as both file and buffer modes now use AnalyserNode
   private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'fft';
   private estimatedFrequency = 0;
   private readonly MIN_FREQUENCY_HZ = 20; // Minimum detectable frequency (Hz)

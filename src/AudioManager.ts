@@ -109,7 +109,7 @@ export class AudioManager {
 
   /**
    * Start visualization from a static buffer without audio playback
-   * Useful for visualizing pre-recorded audio data or processing results
+   * Uses the same Web Audio API architecture as startFromFile for consistent performance
    * @param bufferSource - BufferSource instance containing audio data
    */
   async startFromBuffer(bufferSource: BufferSource): Promise<void> {
@@ -119,21 +119,44 @@ export class AudioManager {
         await this.audioContext.close();
       }
 
-      // Buffer mode does not use AudioContext - it provides data directly
-      this.audioContext = null;
+      // Set up Web Audio API (same as startFromFile)
+      this.audioContext = new AudioContext();
       
-      // Store the buffer source
-      this.bufferSource = bufferSource;
+      // Get the audio data from BufferSource
+      // Ensure clean state before reading all data
+      bufferSource.reset();
+      const chunkSize = 4096;
+      bufferSource.setChunkSize(chunkSize);
       
-      // Set chunk size to match our FFT size
-      this.bufferSource.setChunkSize(4096);
+      // Create an AudioBuffer from the Float32Array data
+      const sampleRate = bufferSource.getSampleRate();
+      const dataLength = bufferSource.getLength();
+      const audioBuffer = this.audioContext.createBuffer(1, dataLength, sampleRate);
       
-      // Initialize data arrays manually (no analyser node needed for buffer mode)
-      this.dataArray = new Float32Array(4096);
-      this.frequencyData = new Uint8Array(2048); // Half of FFT size
+      // Copy data to AudioBuffer by reading all chunks
+      const channelData = audioBuffer.getChannelData(0);
+      let position = 0;
+      while (position < dataLength) {
+        const chunk = bufferSource.getNextChunk();
+        if (!chunk) break;
+        channelData.set(chunk, position);
+        position += chunk.length;
+      }
       
-      // Note: We don't create an analyser node in buffer mode
-      // The data will be provided directly from the BufferSource
+      // Initialize analyser and data arrays (same as startFromFile)
+      this.initializeAnalyser();
+      
+      // Create buffer source for looping (same as startFromFile)
+      this.audioBufferSource = this.audioContext.createBufferSource();
+      this.audioBufferSource.buffer = audioBuffer;
+      this.audioBufferSource.loop = true;
+      
+      // Connect nodes: source -> analyser (no connection to destination = no audio playback)
+      // This gives us the same AnalyserNode FFT as startFromFile
+      this.audioBufferSource.connect(this.analyser!);
+      
+      // Start processing (no audio output since not connected to destination)
+      this.audioBufferSource.start(0);
     } catch (error) {
       console.error('Error starting from buffer:', error);
       throw error;
@@ -161,10 +184,6 @@ export class AudioManager {
       this.mediaStream.getTracks().forEach(track => track.stop());
       this.mediaStream = null;
     }
-    if (this.bufferSource) {
-      this.bufferSource.reset();
-      this.bufferSource = null;
-    }
     if (this.audioContext) {
       try {
         await this.audioContext.close();
@@ -184,18 +203,7 @@ export class AudioManager {
    * Also updates the frame buffer history for extended FFT
    */
   getTimeDomainData(): Float32Array | null {
-    // Buffer mode: get data directly from BufferSource
-    if (this.bufferSource && this.dataArray) {
-      const chunk = this.bufferSource.getNextChunk();
-      if (chunk) {
-        this.dataArray.set(chunk);
-        this.frameBufferHistory.updateHistory(this.dataArray);
-        return this.dataArray;
-      }
-      return null;
-    }
-    
-    // Normal mode: get data from analyser node
+    // Both file and buffer modes now use analyser node
     if (!this.analyser || !this.dataArray) {
       return null;
     }
@@ -219,19 +227,10 @@ export class AudioManager {
 
   /**
    * Get frequency-domain data (FFT)
-   * In buffer mode, FFT is computed from time-domain data
+   * Both file and buffer modes now use AnalyserNode
    */
   getFrequencyData(): Uint8Array | null {
-    // Buffer mode: FFT is not currently supported
-    // Note: FFT could be implemented in the future by computing it from time-domain data
-    // using the same WASM-based FFT that's used for frequency estimation.
-    // This would require integrating with the WaveformDataProcessor's FFT capabilities.
-    // For now, buffer mode focuses on time-domain visualization.
-    if (this.bufferSource && this.dataArray && this.frequencyData) {
-      return null;
-    }
-    
-    // Normal mode: get data from analyser node
+    // Both file and buffer modes now use analyser node
     if (!this.analyser || !this.frequencyData) {
       return null;
     }
@@ -244,9 +243,6 @@ export class AudioManager {
    * Get sample rate
    */
   getSampleRate(): number {
-    if (this.bufferSource) {
-      return this.bufferSource.getSampleRate();
-    }
     return this.audioContext?.sampleRate || 0;
   }
 

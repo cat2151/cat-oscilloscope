@@ -106,4 +106,3 @@ export declare class WaveformRenderer {
      */
     getOverlaysLayout(): OverlaysLayoutConfig;
 }
-//# sourceMappingURL=WaveformRenderer.d.ts.map
