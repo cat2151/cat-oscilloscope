@@ -38,8 +38,6 @@ export class WaveformDataProcessor {
   // Diagnostic tracking for issue #254 analysis
   private previousPhaseZeroIndex: number | undefined = undefined;
   private previousPhaseTwoPiIndex: number | undefined = undefined;
-  private previousDisplayStartIndex: number | undefined = undefined;
-  private previousDisplayEndIndex: number | undefined = undefined;
 
   constructor(
     audioManager: AudioManager,
@@ -236,55 +234,39 @@ export class WaveformDataProcessor {
     }
     
     // Diagnostic tracking for issue #254
+    // Focus: Verify that offsets within 4-cycle window stay within 1% per frame (spec requirement)
     let shouldLog = false;
     const diagnosticInfo: any = {
       frame: Date.now(),
-      displayWindow: {
-        start: renderData.displayStartIndex,
-        end: renderData.displayEndIndex,
-        length: displayLength,
+      fourCycleWindow: {
+        lengthSamples: displayLength,  // Length of 4-cycle display window
       },
     };
     
-    // Track display window changes
-    if (this.previousDisplayStartIndex !== undefined && this.previousDisplayEndIndex !== undefined) {
-      const displayStartDelta = renderData.displayStartIndex - this.previousDisplayStartIndex;
-      const displayEndDelta = renderData.displayEndIndex - this.previousDisplayEndIndex;
-      const displayLengthChange = displayLength - (this.previousDisplayEndIndex - this.previousDisplayStartIndex);
-      
-      diagnosticInfo.displayWindowChange = {
-        startDelta: displayStartDelta,
-        endDelta: displayEndDelta,
-        lengthChange: displayLengthChange,
-      };
-    }
-    
     // Update phase zero offset history if available
     if (renderData.phaseZeroIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100) within the display window
-      // This represents where the "start" marker (phase 0) is positioned in the 4-cycle display
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "start" marker within 4-cycle coordinate system
       const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
       const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
       
-      // Diagnostic tracking
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
       diagnosticInfo.phaseZero = {
-        sampleIndex: renderData.phaseZeroIndex,
-        startOffsetPercent: phaseZeroPercent,  // Position within 4-cycle display window (0-100%)
+        startOffsetPercent: phaseZeroPercent,  // Position within 4-cycle window (0-100%)
       };
       
       if (this.previousPhaseZeroIndex !== undefined) {
-        const markerMovement = renderData.phaseZeroIndex - this.previousPhaseZeroIndex;
-        diagnosticInfo.phaseZero.markerMovement = markerMovement;  // Sample movement between frames
-        
         // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
         const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseZeroPercent - previousPercent);
           diagnosticInfo.phaseZero.offsetChange = percentChange;
+          diagnosticInfo.phaseZero.previousOffsetPercent = previousPercent;
           
           if (percentChange > 1.0) {
             shouldLog = true;
-            diagnosticInfo.phaseZero.SPIKE_DETECTED = true;
+            diagnosticInfo.phaseZero.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
           }
         }
       }
@@ -299,30 +281,28 @@ export class WaveformDataProcessor {
     
     // Update phase 2π offset history if available
     if (renderData.phaseTwoPiIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100) within the display window
-      // This represents where the "end" marker (phase 2π) is positioned in the 4-cycle display
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "end" marker within 4-cycle coordinate system
       const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
       const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
       
-      // Diagnostic tracking
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
       diagnosticInfo.phaseTwoPi = {
-        sampleIndex: renderData.phaseTwoPiIndex,
-        endOffsetPercent: phaseTwoPiPercent,  // Position within 4-cycle display window (0-100%)
+        endOffsetPercent: phaseTwoPiPercent,  // Position within 4-cycle window (0-100%)
       };
       
       if (this.previousPhaseTwoPiIndex !== undefined) {
-        const markerMovement = renderData.phaseTwoPiIndex - this.previousPhaseTwoPiIndex;
-        diagnosticInfo.phaseTwoPi.markerMovement = markerMovement;  // Sample movement between frames
-        
         // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
         const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
           diagnosticInfo.phaseTwoPi.offsetChange = percentChange;
+          diagnosticInfo.phaseTwoPi.previousOffsetPercent = previousPercent;
           
           if (percentChange > 1.0) {
             shouldLog = true;
-            diagnosticInfo.phaseTwoPi.SPIKE_DETECTED = true;
+            diagnosticInfo.phaseTwoPi.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
           }
         }
       }
@@ -335,13 +315,10 @@ export class WaveformDataProcessor {
       this.previousPhaseTwoPiIndex = renderData.phaseTwoPiIndex;
     }
     
-    // Store display window state for next frame
-    this.previousDisplayStartIndex = renderData.displayStartIndex;
-    this.previousDisplayEndIndex = renderData.displayEndIndex;
-    
-    // Log if spike detected
+    // Log if spec violation detected
     if (shouldLog) {
-      console.warn('[Offset Spike Detected - Issue #254]', diagnosticInfo);
+      console.warn('[1% Spec Violation Detected - Issue #254]', diagnosticInfo);
+      console.warn('→ Offset within 4-cycle window moved by more than 1% in one frame');
     }
   }
   
@@ -359,7 +336,5 @@ export class WaveformDataProcessor {
     // Clear diagnostic tracking (issue #254)
     this.previousPhaseZeroIndex = undefined;
     this.previousPhaseTwoPiIndex = undefined;
-    this.previousDisplayStartIndex = undefined;
-    this.previousDisplayEndIndex = undefined;
   }
 }
