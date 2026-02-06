@@ -76,3 +76,4 @@ export declare class BufferSource {
      */
     isAtEnd(): boolean;
 }
+//# sourceMappingURL=BufferSource.d.ts.map

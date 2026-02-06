@@ -24,3 +24,4 @@ export declare class BasePathResolver {
      */
     private getBasePathFromScripts;
 }
+//# sourceMappingURL=BasePathResolver.d.ts.map

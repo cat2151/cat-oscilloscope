@@ -34,6 +34,10 @@ export class WaveformDataProcessor {
   private phaseZeroOffsetHistory: number[] = [];
   private phaseTwoPiOffsetHistory: number[] = [];
   private readonly MAX_OFFSET_HISTORY = 100; // Keep last 100 frames of offset data
+  
+  // Diagnostic tracking for issue #254 analysis
+  private previousPhaseZeroIndex: number | undefined = undefined;
+  private previousPhaseTwoPiIndex: number | undefined = undefined;
 
   constructor(
     audioManager: AudioManager,
@@ -214,6 +218,7 @@ export class WaveformDataProcessor {
   
   /**
    * Calculate relative offset percentages for phase markers and update history
+   * Issue #254: Added diagnostic logging to identify source of offset spikes
    * @param renderData - Render data containing phase indices
    */
   private updatePhaseOffsetHistory(renderData: WaveformRenderData): void {
@@ -228,28 +233,92 @@ export class WaveformDataProcessor {
       return;
     }
     
+    // Diagnostic tracking for issue #254
+    // Focus: Verify that offsets within 4-cycle window stay within 1% per frame (spec requirement)
+    let shouldLog = false;
+    const diagnosticInfo: any = {
+      frame: Date.now(),
+      fourCycleWindow: {
+        lengthSamples: displayLength,  // Length of 4-cycle display window
+      },
+    };
+    
     // Update phase zero offset history if available
     if (renderData.phaseZeroIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "start" marker within 4-cycle coordinate system
       const phaseZeroRelative = renderData.phaseZeroIndex - renderData.displayStartIndex;
       const phaseZeroPercent = (phaseZeroRelative / displayLength) * 100;
+      
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
+      diagnosticInfo.phaseZero = {
+        startOffsetPercent: phaseZeroPercent,  // Position within 4-cycle window (0-100%)
+      };
+      
+      if (this.previousPhaseZeroIndex !== undefined) {
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseZeroPercent - previousPercent);
+          diagnosticInfo.phaseZero.offsetChange = percentChange;
+          diagnosticInfo.phaseZero.previousOffsetPercent = previousPercent;
+          
+          if (percentChange > 1.0) {
+            shouldLog = true;
+            diagnosticInfo.phaseZero.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+          }
+        }
+      }
       
       this.phaseZeroOffsetHistory.push(phaseZeroPercent);
       if (this.phaseZeroOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
         this.phaseZeroOffsetHistory.shift();
       }
+      
+      this.previousPhaseZeroIndex = renderData.phaseZeroIndex;
     }
     
     // Update phase 2π offset history if available
     if (renderData.phaseTwoPiIndex !== undefined) {
-      // Calculate relative offset as percentage (0-100)
+      // Calculate relative offset as percentage (0-100) within the 4-cycle window
+      // This is the KEY metric: position of "end" marker within 4-cycle coordinate system
       const phaseTwoPiRelative = renderData.phaseTwoPiIndex - renderData.displayStartIndex;
       const phaseTwoPiPercent = (phaseTwoPiRelative / displayLength) * 100;
+      
+      // Diagnostic tracking - ONLY 4-cycle coordinate system metrics
+      diagnosticInfo.phaseTwoPi = {
+        endOffsetPercent: phaseTwoPiPercent,  // Position within 4-cycle window (0-100%)
+      };
+      
+      if (this.previousPhaseTwoPiIndex !== undefined) {
+        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
+        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
+        if (previousPercent !== undefined) {
+          const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
+          diagnosticInfo.phaseTwoPi.offsetChange = percentChange;
+          diagnosticInfo.phaseTwoPi.previousOffsetPercent = previousPercent;
+          
+          if (percentChange > 1.0) {
+            shouldLog = true;
+            diagnosticInfo.phaseTwoPi.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+          }
+        }
+      }
       
       this.phaseTwoPiOffsetHistory.push(phaseTwoPiPercent);
       if (this.phaseTwoPiOffsetHistory.length > this.MAX_OFFSET_HISTORY) {
         this.phaseTwoPiOffsetHistory.shift();
       }
+      
+      this.previousPhaseTwoPiIndex = renderData.phaseTwoPiIndex;
+    }
+    
+    // Log if spec violation detected
+    if (shouldLog) {
+      console.warn('[1% Spec Violation Detected - Issue #254]', diagnosticInfo);
+      console.warn('→ Offset within 4-cycle window moved by more than 1% in one frame');
     }
   }
   
@@ -261,8 +330,11 @@ export class WaveformDataProcessor {
     if (wasmProcessor) {
       wasmProcessor.reset();
     }
-    // Clear phase offset history (issue #236)
+    // Clear phase offset history (issue #236, #254)
     this.phaseZeroOffsetHistory = [];
     this.phaseTwoPiOffsetHistory = [];
+    // Clear diagnostic tracking (issue #254)
+    this.previousPhaseZeroIndex = undefined;
+    this.previousPhaseTwoPiIndex = undefined;
   }
 }

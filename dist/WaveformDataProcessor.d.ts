@@ -29,6 +29,10 @@ export declare class WaveformDataProcessor {
     private phaseZeroOffsetHistory;
     private phaseTwoPiOffsetHistory;
     private readonly MAX_OFFSET_HISTORY;
+    private previousPhaseZeroIndex;
+    private previousPhaseTwoPiIndex;
+    private previousDisplayStartIndex;
+    private previousDisplayEndIndex;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
     /**
      * Initialize the WASM module
@@ -56,6 +60,7 @@ export declare class WaveformDataProcessor {
     processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null;
     /**
      * Calculate relative offset percentages for phase markers and update history
+     * Issue #254: Added diagnostic logging to identify source of offset spikes
      * @param renderData - Render data containing phase indices
      */
     private updatePhaseOffsetHistory;
@@ -64,3 +69,4 @@ export declare class WaveformDataProcessor {
      */
     reset(): void;
 }
+//# sourceMappingURL=WaveformDataProcessor.d.ts.map

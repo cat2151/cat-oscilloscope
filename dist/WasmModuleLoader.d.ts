@@ -35,3 +35,4 @@ export declare class WasmModuleLoader {
      */
     isReady(): boolean;
 }
+//# sourceMappingURL=WasmModuleLoader.d.ts.map
