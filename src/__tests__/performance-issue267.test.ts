@@ -52,7 +52,7 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     frameBufferCanvas.getContext = (() => mockContext) as any;
   });
 
-  it('should process frames within 16ms target for BufferSource mode', async () => {
+  it('should process frames with same performance as file mode (both use AnalyserNode)', async () => {
     const oscilloscope = new Oscilloscope(
       canvas,
       previousWaveformCanvas,
@@ -73,10 +73,8 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     
     const bufferSource = new BufferSource(audioData, sampleRate, { loop: true });
     
-    console.log('🔬 Performance Test: Starting BufferSource mode with Zero-Crossing');
+    console.log('🔬 Performance Test: BufferSource now uses AnalyserNode (same as file mode)');
     const startInit = performance.now();
-    // Explicitly set zero-crossing method before starting to test the fix for issue #267
-    oscilloscope.setFrequencyEstimationMethod('zero-crossing');
     await oscilloscope.startFromBuffer(bufferSource);
     const endInit = performance.now();
     console.log(`⏱️ Initialization time: ${(endInit - startInit).toFixed(2)}ms`);
@@ -121,12 +119,11 @@ describe('Performance Issue #267 - demo-library processing time', () => {
     console.log(`   Max: ${maxTime.toFixed(2)}ms`);
     console.log(`   Target: 16ms (60fps)`);
 
-    // With zero-crossing, we should achieve much better performance than the reported 500ms issue
-    // PR description claims <5ms, but we allow 20ms to account for test environment overhead
-    // This is still 25x faster than the original 500ms problem
+    // With AnalyserNode FFT (same as file mode), performance should match the 16ms target
+    // Allow 20ms to account for test environment overhead
     expect(avgTime).toBeLessThan(20);
     
-    // Individual frames should also meet the stricter threshold
+    // Individual frames should also meet the threshold
     expect(maxTime).toBeLessThan(20);
 
     // Log warning if performance is degraded but still under threshold

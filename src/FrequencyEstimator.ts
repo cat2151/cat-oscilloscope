@@ -11,9 +11,8 @@
  * - Holding frequency plot history (updated by WASM processor)
  */
 export class FrequencyEstimator {
-  // Default to zero-crossing for optimal BufferSource mode performance (Issue #267)
-  // Main demo (index.html) explicitly sets FFT which works well with AnalyserNode hardware acceleration
-  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'zero-crossing';
+  // Default to FFT as both file and buffer modes now use AnalyserNode
+  private frequencyEstimationMethod: 'zero-crossing' | 'autocorrelation' | 'fft' | 'stft' | 'cqt' = 'fft';
   private estimatedFrequency = 0;
   private readonly MIN_FREQUENCY_HZ = 20; // Minimum detectable frequency (Hz)
   private readonly MAX_FREQUENCY_HZ = 5000; // Maximum detectable frequency (Hz)

@@ -31,7 +31,7 @@ export declare class AudioManager {
     startFromFile(file: File): Promise<void>;
     /**
      * Start visualization from a static buffer without audio playback
-     * Useful for visualizing pre-recorded audio data or processing results
+     * Uses the same Web Audio API architecture as startFromFile for consistent performance
      * @param bufferSource - BufferSource instance containing audio data
      */
     startFromBuffer(bufferSource: BufferSource): Promise<void>;
@@ -52,7 +52,7 @@ export declare class AudioManager {
     getExtendedTimeDomainData(multiplier: 1 | 4 | 16): Float32Array | null;
     /**
      * Get frequency-domain data (FFT)
-     * In buffer mode, FFT is computed from time-domain data
+     * Both file and buffer modes now use AnalyserNode
      */
     getFrequencyData(): Uint8Array | null;
     /**
