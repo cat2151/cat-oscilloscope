@@ -124,6 +124,9 @@ export class WaveformDataProcessor {
    * Process current frame and generate complete render data using WASM
    */
   processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
+    // Issue #269: Add detailed timing measurements for performance diagnosis
+    const t0 = performance.now();
+    
     const wasmProcessor = this.wasmLoader.getProcessor();
     if (!this.wasmLoader.isReady() || !wasmProcessor) {
       console.warn('WASM processor not initialized');
@@ -135,6 +138,7 @@ export class WaveformDataProcessor {
       return null;
     }
 
+    const t1 = performance.now();
     // Get waveform data
     const dataArray = this.audioManager.getTimeDomainData();
     if (!dataArray) {
@@ -143,10 +147,12 @@ export class WaveformDataProcessor {
     
     const sampleRate = this.audioManager.getSampleRate();
     const fftSize = this.audioManager.getFFTSize();
+    const t2 = performance.now();
     
     // Get frequency data if needed
     const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
     let frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
+    const t3 = performance.now();
     
     // If frequency data is needed but not available (e.g., BufferSource mode),
     // compute it from time-domain data using WASM
@@ -156,9 +162,11 @@ export class WaveformDataProcessor {
         frequencyData = new Uint8Array(computedFreqData);
       }
     }
+    const t4 = performance.now();
     
     // Sync configuration before processing
     this.syncConfigToWasm();
+    const t5 = performance.now();
     
     // Call WASM processor
     const wasmResult = wasmProcessor.processFrame(
@@ -168,12 +176,14 @@ export class WaveformDataProcessor {
       fftSize,
       fftDisplayEnabled
     );
+    const t6 = performance.now();
     
     if (!wasmResult) {
       return null;
     }
     
     // Convert WASM result to TypeScript WaveformRenderData
+    const t7 = performance.now();
     const renderData: WaveformRenderData = {
       waveformData: new Float32Array(wasmResult.waveform_data),
       displayStartIndex: wasmResult.displayStartIndex,
@@ -202,6 +212,7 @@ export class WaveformDataProcessor {
       cycleSimilarities4div: wasmResult.cycleSimilarities4div ? Array.from(wasmResult.cycleSimilarities4div) : undefined,
       cycleSimilarities2div: wasmResult.cycleSimilarities2div ? Array.from(wasmResult.cycleSimilarities2div) : undefined,
     };
+    const t8 = performance.now();
     
     // Calculate and update phase marker offset history (issue #236)
     this.updatePhaseOffsetHistory(renderData);
@@ -212,6 +223,21 @@ export class WaveformDataProcessor {
     
     // Sync results back to TypeScript objects so getters work correctly
     this.syncResultsFromWasm(renderData);
+    const t9 = performance.now();
+    
+    // Log detailed timing breakdown (issue #269)
+    const timings = {
+      init: (t1 - t0).toFixed(2),
+      getTimeDomain: (t2 - t1).toFixed(2),
+      getFreqData: (t3 - t2).toFixed(2),
+      computeFFT: (t4 - t3).toFixed(2),
+      syncConfig: (t5 - t4).toFixed(2),
+      wasmProcess: (t6 - t5).toFixed(2),
+      convertResult: (t8 - t7).toFixed(2),
+      postProcess: (t9 - t8).toFixed(2),
+      total: (t9 - t0).toFixed(2)
+    };
+    console.log(`[WaveformDataProcessor] init:${timings.init}ms | getTimeDomain:${timings.getTimeDomain}ms | getFreq:${timings.getFreqData}ms | computeFFT:${timings.computeFFT}ms | syncCfg:${timings.syncConfig}ms | WASM:${timings.wasmProcess}ms | convert:${timings.convertResult}ms | post:${timings.postProcess}ms | total:${timings.total}ms`);
     
     return renderData;
   }

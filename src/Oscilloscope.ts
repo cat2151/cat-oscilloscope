@@ -173,14 +173,28 @@ export class Oscilloscope {
 
     // If paused, skip processing and drawing but continue the animation loop
     if (!this.isPaused) {
+      // Detailed timing measurements for issue #269 diagnosis
+      const t0 = performance.now();
+      
       // === DATA GENERATION PHASE ===
       // Process frame and generate all data needed for rendering using WASM processor
+      const t1 = performance.now();
       const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled());
+      const t2 = performance.now();
       
       if (renderData) {
         // === RENDERING PHASE ===
         // All rendering logic uses only the generated data
+        const t3 = performance.now();
         this.renderFrame(renderData);
+        const t4 = performance.now();
+        
+        // Log detailed timing breakdown
+        const dataProcessingTime = t2 - t1;
+        const renderingTime = t4 - t3;
+        const totalTime = t4 - t0;
+        
+        console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
       }
     }
 
