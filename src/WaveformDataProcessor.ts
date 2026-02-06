@@ -124,11 +124,6 @@ export class WaveformDataProcessor {
    * Process current frame and generate complete render data using WASM
    */
   processFrame(fftDisplayEnabled: boolean): WaveformRenderData | null {
-    // Performance measurement for issue #267 diagnostics
-    const perfStart = performance.now();
-    let perfCheckpoint = perfStart;
-    const perfLog: { [key: string]: number } = {};
-
     const wasmProcessor = this.wasmLoader.getProcessor();
     if (!this.wasmLoader.isReady() || !wasmProcessor) {
       console.warn('WASM processor not initialized');
@@ -145,8 +140,6 @@ export class WaveformDataProcessor {
     if (!dataArray) {
       return null;
     }
-    perfLog.getTimeDomainData = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     const sampleRate = this.audioManager.getSampleRate();
     const fftSize = this.audioManager.getFFTSize();
@@ -154,8 +147,6 @@ export class WaveformDataProcessor {
     // Get frequency data if needed
     const needsFrequencyData = this.frequencyEstimator.getFrequencyEstimationMethod() === 'fft' || fftDisplayEnabled;
     let frequencyData = needsFrequencyData ? this.audioManager.getFrequencyData() : null;
-    perfLog.getFrequencyData = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     // If frequency data is needed but not available (e.g., BufferSource mode),
     // compute it from time-domain data using WASM
@@ -165,13 +156,9 @@ export class WaveformDataProcessor {
         frequencyData = new Uint8Array(computedFreqData);
       }
     }
-    perfLog.computeFrequencyData = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     // Sync configuration before processing
     this.syncConfigToWasm();
-    perfLog.syncConfigToWasm = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     // Call WASM processor
     const wasmResult = wasmProcessor.processFrame(
@@ -181,8 +168,6 @@ export class WaveformDataProcessor {
       fftSize,
       fftDisplayEnabled
     );
-    perfLog.wasmProcessFrame = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     if (!wasmResult) {
       return null;
@@ -217,8 +202,6 @@ export class WaveformDataProcessor {
       cycleSimilarities4div: wasmResult.cycleSimilarities4div ? Array.from(wasmResult.cycleSimilarities4div) : undefined,
       cycleSimilarities2div: wasmResult.cycleSimilarities2div ? Array.from(wasmResult.cycleSimilarities2div) : undefined,
     };
-    perfLog.convertWasmResult = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     // Calculate and update phase marker offset history (issue #236)
     this.updatePhaseOffsetHistory(renderData);
@@ -226,20 +209,9 @@ export class WaveformDataProcessor {
     // Add offset history to render data
     renderData.phaseZeroOffsetHistory = [...this.phaseZeroOffsetHistory];
     renderData.phaseTwoPiOffsetHistory = [...this.phaseTwoPiOffsetHistory];
-    perfLog.updatePhaseHistory = performance.now() - perfCheckpoint;
-    perfCheckpoint = performance.now();
     
     // Sync results back to TypeScript objects so getters work correctly
     this.syncResultsFromWasm(renderData);
-    perfLog.syncResultsFromWasm = performance.now() - perfCheckpoint;
-    
-    const perfTotal = performance.now() - perfStart;
-    perfLog.total = perfTotal;
-
-    // Log performance if total exceeds threshold (issue #267 diagnostic)
-    if (perfTotal > 5) {
-      console.log('[Performance #267] Frame processing time breakdown:', perfLog);
-    }
     
     return renderData;
   }
