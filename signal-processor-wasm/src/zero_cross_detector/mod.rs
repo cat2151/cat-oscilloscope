@@ -245,54 +245,79 @@ impl ZeroCrossDetector {
         // Calculate 1% tolerance for movement constraint
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
 
-        // Extract ALL zero-cross candidates from the entire 4-cycle segment
-        let candidates = find_all_zero_crosses(segment);
+        // Find the nearest zero-cross candidate in a single pass (avoiding Vec allocation)
+        let mut nearest_candidate: Option<usize> = None;
+        let mut min_distance = usize::MAX;
+
+        for i in 0..segment.len().saturating_sub(1) {
+            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                let distance = if i >= history_rel {
+                    i - history_rel
+                } else {
+                    history_rel - i
+                };
+
+                if distance < min_distance {
+                    min_distance = distance;
+                    nearest_candidate = Some(i);
+                }
+            }
+        }
 
         // If no candidates exist, don't move (keep history)
-        if candidates.is_empty() {
+        let nearest = match nearest_candidate {
+            Some(n) => n,
+            None => return Some(history_rel),
+        };
+
+        // Determine direction to move toward the nearest candidate
+        if nearest == history_rel {
+            // Already at a zero-cross, no movement needed
             return Some(history_rel);
         }
 
-        // Find the nearest candidate to the current history position
-        let nearest_candidate = candidates.iter()
-            .min_by_key(|&&candidate| {
-                if candidate >= history_rel {
-                    candidate - history_rel
-                } else {
-                    history_rel - candidate
-                }
-            })
-            .copied();
-
-        if let Some(nearest) = nearest_candidate {
-            // Determine direction to move toward the nearest candidate
-            if nearest == history_rel {
-                // Already at a zero-cross, no movement needed
-                return Some(history_rel);
-            }
-
-            // Calculate the new position, constrained to move at most 1% per frame
-            let new_rel = if nearest > history_rel {
-                // Move right (toward future)
-                let distance = nearest - history_rel;
-                let step = distance.min(tolerance);
-                history_rel + step
-            } else {
-                // Move left (toward past)
-                let distance = history_rel - nearest;
-                let step = distance.min(tolerance);
-                history_rel.saturating_sub(step)
-            };
-
-            // Update history with new absolute position
-            let new_abs = segment_start_abs + new_rel;
-            self.absolute_phase_offset = Some(new_abs);
-
-            Some(new_rel)
+        // Calculate the new position, constrained to move at most 1% per frame
+        let new_rel = if nearest > history_rel {
+            // Move right (toward future)
+            let distance = nearest - history_rel;
+            let step = distance.min(tolerance);
+            history_rel + step
         } else {
-            // Should not reach here, but keep history as fallback
-            Some(history_rel)
+            // Move left (toward past)
+            let distance = history_rel - nearest;
+            let step = distance.min(tolerance);
+            history_rel.saturating_sub(step)
+        };
+
+        // Update history with new absolute position (continuous)
+        let new_abs = segment_start_abs + new_rel;
+        self.absolute_phase_offset = Some(new_abs);
+
+        // Snap the returned value to the nearest zero-cross candidate
+        // to ensure the returned position is always at a valid zero-cross
+        let mut snapped_rel = nearest;
+        let mut snapped_distance = if nearest >= new_rel {
+            nearest - new_rel
+        } else {
+            new_rel - nearest
+        };
+
+        for i in 0..segment.len().saturating_sub(1) {
+            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                let distance = if i >= new_rel {
+                    i - new_rel
+                } else {
+                    new_rel - i
+                };
+
+                if distance < snapped_distance {
+                    snapped_distance = distance;
+                    snapped_rel = i;
+                }
+            }
         }
+
+        Some(snapped_rel)
     }
     
     /// Calculate display range based on zero-crossing or peak detection

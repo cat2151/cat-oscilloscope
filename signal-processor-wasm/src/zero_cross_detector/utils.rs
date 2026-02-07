@@ -89,17 +89,3 @@ pub fn initialize_history(data: &[f32], estimated_cycle_length: f32) -> Option<u
     // Fallback: find first zero-cross
     find_zero_cross(data, 0)
 }
-
-/// Find all zero-cross candidates in the segment
-/// Returns a vector of indices where zero-crossings occur
-pub fn find_all_zero_crosses(data: &[f32]) -> Vec<usize> {
-    let mut candidates = Vec::new();
-
-    for i in 0..data.len().saturating_sub(1) {
-        if data[i] <= 0.0 && data[i + 1] > 0.0 {
-            candidates.push(i);
-        }
-    }
-
-    candidates
-}
