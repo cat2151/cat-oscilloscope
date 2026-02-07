@@ -139,9 +139,14 @@ export class AudioManager {
       while (position < dataLength) {
         const chunk = bufferSource.getNextChunk();
         if (!chunk) break;
-        const samplesToWrite = Math.min(chunk.length, dataLength - position);
-        channelData.set(chunk.subarray(0, samplesToWrite), position);
-        position += samplesToWrite;
+        const remaining = dataLength - position;
+        if (chunk.length <= remaining) {
+          channelData.set(chunk, position);
+          position += chunk.length;
+        } else {
+          channelData.set(chunk.subarray(0, remaining), position);
+          position += remaining;
+        }
       }
       
       // Initialize analyser and data arrays (same as startFromFile)
