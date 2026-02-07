@@ -1,28 +1,28 @@
-/// Compute FFT frequency data from time-domain data for BufferSource mode
+/// Compute frequency-domain (FFT-equivalent) data from time-domain data for BufferSource mode using DFT (O(n^2))
 /// Returns frequency magnitude data as Vec<u8> (0-255 range) compatible with Web Audio API's AnalyserNode
 pub fn compute_frequency_data(
     time_domain_data: &[f32],
     fft_size: usize,
 ) -> Option<Vec<u8>> {
-    // Validate input
-    if time_domain_data.is_empty() || fft_size == 0 || fft_size > time_domain_data.len() {
+    // Validate input (fft_size >= 2 required for Hann window and DFT bin computation)
+    if time_domain_data.is_empty() || fft_size < 2 || fft_size > time_domain_data.len() {
         return None;
     }
     
-    // Ensure fft_size is a power of 2 (standard for FFT)
+    // Recommend power-of-two sizes for Web Audio AnalyserNode compatibility
     if !fft_size.is_power_of_two() {
-        web_sys::console::warn_1(&format!("FFT size {} is not a power of 2, results may be inaccurate", fft_size).into());
+        web_sys::console::warn_1(&format!(
+            "FFT size {} is not a power of 2; Web Audio AnalyserNode.fftSize uses power-of-two values",
+            fft_size
+        ).into());
     }
     
     // Use the first fft_size samples
     let data = &time_domain_data[0..fft_size];
     
-    // Apply Hann window to reduce spectral leakage
-    let mut windowed_data = vec![0.0f32; fft_size];
-    for i in 0..fft_size {
-        let window_value = 0.5 * (1.0 - ((2.0 * std::f32::consts::PI * i as f32) / (fft_size as f32 - 1.0)).cos());
-        windowed_data[i] = data[i] * window_value;
-    }
+    // Apply Hann window to reduce spectral leakage (reuse existing helper)
+    let window = crate::frequency_estimation::dsp_utils::create_hann_window(fft_size);
+    let windowed_data: Vec<f32> = data.iter().zip(window.iter()).map(|(&d, &w)| d * w).collect();
     
     // Compute DFT (we only need the first half for real input)
     let num_bins = fft_size / 2;

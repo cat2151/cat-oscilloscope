@@ -438,7 +438,7 @@ impl WasmDataProcessor {
         None
     }
     
-    /// Compute FFT frequency data from time-domain data for BufferSource mode
+    /// Compute frequency-domain data from time-domain data for BufferSource mode using DFT
     /// Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
     #[wasm_bindgen(js_name = computeFrequencyData)]
     pub fn compute_frequency_data(
