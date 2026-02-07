@@ -309,8 +309,20 @@ export class WaveformDataProcessor {
         return { index, percent: currentPercent };
       }
       const clampedPercent = prevPercent + Math.sign(change) * MAX_CHANGE_PERCENT;
-      const clampedIndex = Math.round(renderData.displayStartIndex + (clampedPercent / 100) * displayLength);
-      return { index: clampedIndex, percent: clampedPercent };
+      const rawIndex = renderData.displayStartIndex + (clampedPercent / 100) * displayLength;
+      let clampedIndex: number;
+      if (change > 0) {
+        // Moving forward: floor so we do not exceed the +MAX_CHANGE_PERCENT bound
+        clampedIndex = Math.floor(rawIndex);
+      } else if (change < 0) {
+        // Moving backward: ceil so we do not exceed the -MAX_CHANGE_PERCENT bound
+        clampedIndex = Math.ceil(rawIndex);
+      } else {
+        clampedIndex = Math.round(rawIndex);
+      }
+      const actualPercent =
+        ((clampedIndex - renderData.displayStartIndex) / displayLength) * 100;
+      return { index: clampedIndex, percent: actualPercent };
     };
 
     // Clamp all 4 phase markers independently

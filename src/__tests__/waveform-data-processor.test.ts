@@ -202,5 +202,49 @@ describe('WaveformDataProcessor', () => {
       callClamp(processor, data);
       expect(data.phaseZeroIndex).toBe(100);
     });
+
+    it('should use floor/ceil rounding to never exceed 1% bound', () => {
+      // Use non-100-multiple displayLength where 1% is not an integer (1% of 750 = 7.5)
+      const data1 = makeRenderData({
+        displayStartIndex: 0,
+        displayEndIndex: 750,
+        phaseZeroIndex: 375, // 50%
+      });
+      callClamp(processor, data1);
+
+      // Forward jump: clampedPercent=51%, rawIndex=382.5 → floor(382.5)=382
+      const data2 = makeRenderData({
+        displayStartIndex: 0,
+        displayEndIndex: 750,
+        phaseZeroIndex: 600,
+      });
+      callClamp(processor, data2);
+      expect(data2.phaseZeroIndex).toBe(382); // floor, not round(382.5)=383
+      // Verify actual percent does not exceed 1%
+      const actualChange = (data2.phaseZeroIndex! / 750) * 100 - 50;
+      expect(actualChange).toBeLessThanOrEqual(1.0);
+    });
+
+    it('should use ceil rounding for negative direction to stay within -1%', () => {
+      // 1% of 750 = 7.5
+      const data1 = makeRenderData({
+        displayStartIndex: 0,
+        displayEndIndex: 750,
+        phaseZeroIndex: 375, // 50%
+      });
+      callClamp(processor, data1);
+
+      // Backward jump: clampedPercent=49%, rawIndex=367.5 → ceil(367.5)=368
+      const data2 = makeRenderData({
+        displayStartIndex: 0,
+        displayEndIndex: 750,
+        phaseZeroIndex: 100,
+      });
+      callClamp(processor, data2);
+      expect(data2.phaseZeroIndex).toBe(368); // ceil, not round(367.5)=368 (same here, but semantically correct)
+      // Verify actual percent does not exceed -1%
+      const actualChange = (data2.phaseZeroIndex! / 750) * 100 - 50;
+      expect(actualChange).toBeGreaterThanOrEqual(-1.0);
+    });
   });
 });
