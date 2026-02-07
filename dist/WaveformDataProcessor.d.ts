@@ -31,6 +31,10 @@ export declare class WaveformDataProcessor {
     private readonly MAX_OFFSET_HISTORY;
     private previousPhaseZeroIndex;
     private previousPhaseTwoPiIndex;
+    private prevPhaseZeroPercent;
+    private prevPhaseTwoPiPercent;
+    private prevPhaseMinusQuarterPiPercent;
+    private prevPhaseTwoPiPlusQuarterPiPercent;
     private enableDetailedTimingLogs;
     private readonly TIMING_LOG_THRESHOLD_MS;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
@@ -65,6 +69,13 @@ export declare class WaveformDataProcessor {
      * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
      */
     setDetailedTimingLogs(enabled: boolean): void;
+    /**
+     * Clamp phase marker positions to enforce 1% per frame movement spec (issue #275)
+     * Each marker can move at most 1% of ONE CYCLE per frame (not 1% of the 4-cycle window).
+     * Positions are tracked as percentages of the display window for consistency.
+     * @param renderData - Render data containing phase indices (mutated in place)
+     */
+    private clampPhaseMarkers;
     /**
      * Calculate relative offset percentages for phase markers and update history
      * Issue #254: Added diagnostic logging to identify source of offset spikes
