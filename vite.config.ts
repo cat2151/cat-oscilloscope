@@ -10,6 +10,13 @@ export default defineConfig({
   server: {
     port: 3000
   },
+  resolve: isLibraryMode ? {} : {
+    alias: {
+      // demo-simple.js が `import from 'cat-oscilloscope'` で
+      // install from github と同じパターンで利用できるようにする
+      'cat-oscilloscope': resolve(__dirname, 'src/index.ts')
+    }
+  },
   plugins: isLibraryMode ? [
     dts({
       include: ['src/**/*.ts'],
