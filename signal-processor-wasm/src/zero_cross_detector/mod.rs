@@ -226,9 +226,10 @@ impl ZeroCrossDetector {
             return Some(zero_cross_rel);
         }
         
-        // We have history - use it with proper coordinate conversion
+        // We have history - use new algorithm (Issue #289)
+        // Extract all zero-cross candidates from 4-cycle buffer, then move toward nearest candidate
         let history_abs = self.absolute_phase_offset.unwrap();
-        
+
         // Convert absolute history to segment-relative
         // Check if history is within the current segment
         if history_abs < segment_start_abs || history_abs >= segment_start_abs + segment.len() {
@@ -238,70 +239,59 @@ impl ZeroCrossDetector {
             self.absolute_phase_offset = Some(zero_cross_abs);
             return Some(zero_cross_rel);
         }
-        
+
         let history_rel = history_abs - segment_start_abs;
-        
-        // Apply mode-specific search with 1% tolerance
+
+        // Calculate 1% tolerance for movement constraint
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
-        
-        match self.zero_cross_mode {
-            ZeroCrossMode::PeakBacktrackWithHistory => {
-                // Strict 1% constraint - search only within tolerance
-                // Check if history position is still a zero-cross
-                if history_rel < segment.len() - 1 && segment[history_rel] <= 0.0 && segment[history_rel + 1] > 0.0 {
-                    return Some(history_rel);
-                }
-                
-                // Search within tolerance range
-                let search_start = history_rel.saturating_sub(tolerance);
-                let search_end = (history_rel + tolerance).min(segment.len());
-                
-                for i in search_start..search_end.saturating_sub(1) {
-                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                        let zero_cross_abs = segment_start_abs + i;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(i);
-                    }
-                }
-                
-                // No zero-cross in tolerance - keep history (strict mode)
-                Some(history_rel)
-            }
-            _ => {
-                // Other modes: extended search with gradual movement
-                // First try within 1% tolerance
-                let search_start = history_rel.saturating_sub(tolerance);
-                let search_end = (history_rel + tolerance).min(segment.len());
-                
-                for i in search_start..search_end.saturating_sub(1) {
-                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                        let zero_cross_abs = segment_start_abs + i;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(i);
-                    }
-                }
-                
-                // Extended search (3% for Standard, gradual for others)
-                let extended_tolerance = if self.zero_cross_mode == ZeroCrossMode::Standard {
-                    (estimated_cycle_length * Self::STANDARD_MODE_EXTENDED_TOLERANCE_RATIO) as usize
+
+        // Extract ALL zero-cross candidates from the entire 4-cycle segment
+        let candidates = find_all_zero_crosses(segment);
+
+        // If no candidates exist, don't move (keep history)
+        if candidates.is_empty() {
+            return Some(history_rel);
+        }
+
+        // Find the nearest candidate to the current history position
+        let nearest_candidate = candidates.iter()
+            .min_by_key(|&&candidate| {
+                if candidate >= history_rel {
+                    candidate - history_rel
                 } else {
-                    tolerance * Self::EXTENDED_TOLERANCE_MULTIPLIER
-                };
-                
-                let extended_start = history_rel.saturating_sub(extended_tolerance);
-                let extended_end = (history_rel + extended_tolerance).min(segment.len());
-                
-                if let Some(zero_cross_rel) = find_zero_cross(segment, extended_start) {
-                    if zero_cross_rel < extended_end {
-                        let zero_cross_abs = segment_start_abs + zero_cross_rel;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(zero_cross_rel);
-                    }
+                    history_rel - candidate
                 }
-                
-                // Fall back to history
-                Some(history_rel)
+            })
+            .copied();
+
+        if let Some(nearest) = nearest_candidate {
+            // Determine direction to move toward the nearest candidate
+            if nearest == history_rel {
+                // Already at a zero-cross, no movement needed
+                return Some(history_rel);
             }
+
+            // Calculate the new position, constrained to move at most 1% per frame
+            let new_rel = if nearest > history_rel {
+                // Move right (toward future)
+                let distance = nearest - history_rel;
+                let step = distance.min(tolerance);
+                history_rel + step
+            } else {
+                // Move left (toward past)
+                let distance = history_rel - nearest;
+                let step = distance.min(tolerance);
+                history_rel.saturating_sub(step)
+            };
+
+            // Update history with new absolute position
+            let new_abs = segment_start_abs + new_rel;
+            self.absolute_phase_offset = Some(new_abs);
+
+            Some(new_rel)
+        } else {
+            // Should not reach here, but keep history as fallback
+            Some(history_rel)
         }
     }
     
