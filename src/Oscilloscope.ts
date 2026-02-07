@@ -320,7 +320,11 @@ export class Oscilloscope {
       renderData.similarity,
       renderData.similarityPlotHistory,
       renderData.phaseZeroOffsetHistory,
-      renderData.phaseTwoPiOffsetHistory
+      renderData.phaseTwoPiOffsetHistory,
+      renderData.phaseZeroIndex,
+      renderData.phaseTwoPiIndex,
+      renderData.phaseMinusQuarterPiIndex,
+      renderData.phaseTwoPiPlusQuarterPiIndex
     );
     
     // Update cycle similarity graphs if renderer is available
