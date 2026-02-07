@@ -169,7 +169,7 @@ describe('startFromBuffer integration', () => {
       const bufferSource = new BufferSource(buffer, 44100, { loop: true });
 
       // This should NOT throw RangeError: offset is out of bounds
-      await expect(audioManager.startFromBuffer(bufferSource)).resolves.not.toThrow();
+      await expect(audioManager.startFromBuffer(bufferSource)).resolves.toBeUndefined();
     });
   });
 
