@@ -71,7 +71,8 @@ export declare class WaveformDataProcessor {
     setDetailedTimingLogs(enabled: boolean): void;
     /**
      * Clamp phase marker positions to enforce 1% per frame movement spec (issue #275)
-     * Each marker's position within the display window can move at most 1% per frame.
+     * Each marker can move at most 1% of ONE CYCLE per frame (not 1% of the 4-cycle window).
+     * Positions are tracked as percentages of the display window for consistency.
      * @param renderData - Render data containing phase indices (mutated in place)
      */
     private clampPhaseMarkers;

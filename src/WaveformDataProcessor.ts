@@ -276,7 +276,8 @@ export class WaveformDataProcessor {
   
   /**
    * Clamp phase marker positions to enforce 1% per frame movement spec (issue #275)
-   * Each marker's position within the display window can move at most 1% per frame.
+   * Each marker can move at most 1% of ONE CYCLE per frame (not 1% of the 4-cycle window).
+   * Positions are tracked as percentages of the display window for consistency.
    * @param renderData - Render data containing phase indices (mutated in place)
    */
   private clampPhaseMarkers(renderData: WaveformRenderData): void {
@@ -290,7 +291,11 @@ export class WaveformDataProcessor {
       return;
     }
 
-    const MAX_CHANGE_PERCENT = 1.0;
+    // The display window contains CYCLES_TO_DISPLAY (4) cycles.
+    // The spec says: max movement = 1% of ONE cycle per frame.
+    // In display-window-percent terms: 1% of one cycle = 1% * (1/4) of display = 0.25%
+    const CYCLES_TO_DISPLAY = 4;
+    const MAX_CHANGE_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display window = 1% of one cycle
 
     // Helper: clamp a single marker and return updated percent
     const clampMarker = (
@@ -312,10 +317,10 @@ export class WaveformDataProcessor {
       const rawIndex = renderData.displayStartIndex + (clampedPercent / 100) * displayLength;
       let clampedIndex: number;
       if (change > 0) {
-        // Moving forward: floor so we do not exceed the +MAX_CHANGE_PERCENT bound
+        // Moving forward: floor so we do not exceed the bound
         clampedIndex = Math.floor(rawIndex);
       } else if (change < 0) {
-        // Moving backward: ceil so we do not exceed the -MAX_CHANGE_PERCENT bound
+        // Moving backward: ceil so we do not exceed the bound
         clampedIndex = Math.ceil(rawIndex);
       } else {
         clampedIndex = Math.round(rawIndex);
@@ -360,8 +365,12 @@ export class WaveformDataProcessor {
       return;
     }
     
+    // Spec: max 1% of ONE cycle per frame. Display = 4 cycles, so threshold = 0.25% of display.
+    const CYCLES_TO_DISPLAY = 4;
+    const VIOLATION_THRESHOLD_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display = 1% of one cycle
+    
     // Diagnostic tracking for issue #254
-    // Focus: Verify that offsets within 4-cycle window stay within 1% per frame (spec requirement)
+    // Focus: Verify that offsets within 4-cycle window stay within 1% of one cycle per frame
     let shouldLog = false;
     const diagnosticInfo: any = {
       frame: Date.now(),
@@ -383,17 +392,16 @@ export class WaveformDataProcessor {
       };
       
       if (this.previousPhaseZeroIndex !== undefined) {
-        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
-        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        // Detect spikes: 1% of one cycle = 0.25% of display window
         const previousPercent = this.phaseZeroOffsetHistory[this.phaseZeroOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseZeroPercent - previousPercent);
           diagnosticInfo.phaseZero.offsetChange = percentChange;
           diagnosticInfo.phaseZero.previousOffsetPercent = previousPercent;
           
-          if (percentChange > 1.0) {
+          if (percentChange > VIOLATION_THRESHOLD_PERCENT) {
             shouldLog = true;
-            diagnosticInfo.phaseZero.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+            diagnosticInfo.phaseZero.SPEC_VIOLATION = true;  // Exceeds 1% of one cycle per frame
           }
         }
       }
@@ -419,17 +427,16 @@ export class WaveformDataProcessor {
       };
       
       if (this.previousPhaseTwoPiIndex !== undefined) {
-        // Detect spikes: if offset percent changes by >1% between frames (spec says 1% per frame max)
-        // This is the CORE check: does the offset within 4-cycle window move by more than 1%?
+        // Detect spikes: 1% of one cycle = 0.25% of display window
         const previousPercent = this.phaseTwoPiOffsetHistory[this.phaseTwoPiOffsetHistory.length - 1];
         if (previousPercent !== undefined) {
           const percentChange = Math.abs(phaseTwoPiPercent - previousPercent);
           diagnosticInfo.phaseTwoPi.offsetChange = percentChange;
           diagnosticInfo.phaseTwoPi.previousOffsetPercent = previousPercent;
           
-          if (percentChange > 1.0) {
+          if (percentChange > VIOLATION_THRESHOLD_PERCENT) {
             shouldLog = true;
-            diagnosticInfo.phaseTwoPi.SPEC_VIOLATION = true;  // This violates the 1% per frame spec
+            diagnosticInfo.phaseTwoPi.SPEC_VIOLATION = true;  // Exceeds 1% of one cycle per frame
           }
         }
       }
@@ -445,7 +452,7 @@ export class WaveformDataProcessor {
     // Log if spec violation detected
     if (shouldLog) {
       console.warn('[1% Spec Violation Detected - Issue #254]', diagnosticInfo);
-      console.warn('→ Offset within 4-cycle window moved by more than 1% in one frame');
+      console.warn('→ Phase marker moved by more than 1% of one cycle in one frame');
     }
   }
   
