@@ -1,14 +1,15 @@
 /// FrequencyEstimator module - Coordinates various frequency estimation methods
 /// Follows the Single Responsibility Principle by delegating to specialized modules
+///
+/// Rust internal default method: autocorrelation (see non_default_methods/)
+/// UI default is FFT (fft.rs + harmonic_analysis.rs) and will overwrite this internal default via configuration.
+/// Non-default methods: see non_default_methods/ (may be deprecated in the future)
 
-mod autocorrelation;
-mod cqt;
 pub(crate) mod dsp_utils;
 mod fft;
 mod harmonic_analysis;
+mod non_default_methods;
 mod smoothing;
-mod stft;
-mod zero_crossing;
 
 #[cfg(test)]
 mod tests;
@@ -62,7 +63,7 @@ impl FrequencyEstimator {
         is_signal_above_noise_gate: bool,
     ) -> f32 {
         let raw_frequency = match self.frequency_estimation_method.as_str() {
-            "zero-crossing" => zero_crossing::estimate_frequency_zero_crossing(
+            "zero-crossing" => non_default_methods::zero_crossing::estimate_frequency_zero_crossing(
                 data,
                 sample_rate,
                 Self::MIN_FREQUENCY_HZ,
@@ -91,7 +92,7 @@ impl FrequencyEstimator {
                     0.0
                 }
             }
-            "stft" => stft::estimate_frequency_stft(
+            "stft" => non_default_methods::stft::estimate_frequency_stft(
                 data,
                 sample_rate,
                 is_signal_above_noise_gate,
@@ -100,7 +101,7 @@ impl FrequencyEstimator {
                 Self::MAX_FREQUENCY_HZ,
                 Self::FFT_MAGNITUDE_THRESHOLD,
             ),
-            "cqt" => cqt::estimate_frequency_cqt(
+            "cqt" => non_default_methods::cqt::estimate_frequency_cqt(
                 data,
                 sample_rate,
                 is_signal_above_noise_gate,
@@ -108,7 +109,7 @@ impl FrequencyEstimator {
                 Self::MAX_FREQUENCY_HZ,
                 Self::FFT_MAGNITUDE_THRESHOLD,
             ),
-            _ => autocorrelation::estimate_frequency_autocorrelation(
+            _ => non_default_methods::autocorrelation::estimate_frequency_autocorrelation(
                 data,
                 sample_rate,
                 Self::MIN_FREQUENCY_HZ,

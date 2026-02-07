@@ -1,11 +1,19 @@
+/// ZeroCrossDetector module - Handles zero-crossing detection and phase 0 positioning
+///
+/// Default (Standard) mode: Hysteresis, core implementation lives in this module
+///   - main logic in `find_stable_zero_cross` and the Standard branch of `find_phase_zero_in_segment`
+/// Non-default modes: implemented in non_default_modes.rs (these modes may be deprecated in the future)
+
 mod types;
 mod utils;
-mod detection_modes;
+mod default_mode;
+mod non_default_modes;
 
 pub use types::{DisplayRange, ZeroCrossMode};
 
 use utils::*;
-use detection_modes::*;
+use default_mode::*;
+use non_default_modes::*;
 
 /// ZeroCrossDetector handles zero-crossing detection and display range calculation
 pub struct ZeroCrossDetector {
