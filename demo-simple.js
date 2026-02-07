@@ -1,14 +1,9 @@
-// CDN経由でライブラリをインポート
+// ローカルソースからインポート（ビルド時にバンドルされます）
 // NOTE:
-//   このデモでは最新版を手軽に試せるよう、jsDelivr の `@main` を利用しています。
-//   本番環境で利用する場合は、CDN キャッシュの不整合を避けるため、必ずバージョンタグ
-//   もしくはコミットハッシュを指定してください（例）:
+//   外部プロジェクトでCDN経由で利用する場合は、以下のようにバージョンタグを指定してください:
 //   import { Oscilloscope, BufferSource } from
 //     'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v1.0.0/dist/cat-oscilloscope.mjs';
-//
-// ローカル開発時は、次の行のコメントを外して、上記CDNのimportをコメントアウトしてください:
-// import { Oscilloscope, BufferSource } from '/src/index.ts';
-import { Oscilloscope, BufferSource } from 'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
+import { Oscilloscope, BufferSource } from './src/index.ts';
 
 // Canvas要素とUI要素を取得
 const canvas = document.getElementById('oscilloscope');
