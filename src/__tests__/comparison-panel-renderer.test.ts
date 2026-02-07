@@ -237,6 +237,25 @@ describe('ComparisonPanelRenderer', () => {
       const fullBuffer = new Float32Array(200).fill(0.3);
       const similarity = 0.9;
 
+      // Capture strokeStyle and lineWidth at each stroke() call
+      const buffCtx = bufferCanvas.getContext('2d') as any;
+      const strokeCalls: { color: string; lineWidth: number }[] = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(buffCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
+        configurable: true,
+      });
+      Object.defineProperty(buffCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
+      });
+      buffCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth });
+      });
+
       renderer.updatePanels(
         null,
         currentWaveform,
@@ -252,39 +271,24 @@ describe('ComparisonPanelRenderer', () => {
         160   // phaseTwoPiPlusQuarterPiIndex
       );
 
-      const buffCtx = bufferCanvas.getContext('2d') as any;
-
-      // Phase markers should draw vertical lines with orange (#ff8800) and red (#ff0000)
-      const strokeStyleHistory: string[] = [];
-      Object.defineProperty(buffCtx, 'strokeStyle', {
-        set(val: string) { strokeStyleHistory.push(val); },
-        get() { return strokeStyleHistory[strokeStyleHistory.length - 1] || ''; },
-        configurable: true,
-      });
-
-      // Re-run with the property spy in place
-      strokeStyleHistory.length = 0;
-      buffCtx.moveTo.mockClear();
-      buffCtx.lineTo.mockClear();
-      buffCtx.stroke.mockClear();
-
-      renderer.updatePanels(
-        null,
-        currentWaveform,
-        20, 180,
-        fullBuffer,
-        similarity,
-        [],
-        [],
-        [],
-        60, 140, 40, 160
+      // Phase markers use lineWidth=1 with colors #ff8800 or #ff0000
+      const phaseMarkerStrokes = strokeCalls.filter(
+        c => c.lineWidth === 1 && (c.color === '#ff8800' || c.color === '#ff0000')
       );
 
-      // Vertical lines should have been drawn (moveTo/lineTo pairs for phase markers)
-      expect(buffCtx.stroke).toHaveBeenCalled();
-      // At least 4 phase marker lines should be drawn (orange×2 + red×2)
-      // Plus position markers (2) and waveform drawing
-      expect(buffCtx.moveTo.mock.calls.length).toBeGreaterThanOrEqual(6);
+      // Exactly 4 phase marker lines: 2 orange + 2 red
+      expect(phaseMarkerStrokes).toHaveLength(4);
+
+      // Orange (#ff8800) drawn first (2 lines), then red (#ff0000) (2 lines)
+      const orangeStrokes = phaseMarkerStrokes.filter(c => c.color === '#ff8800');
+      const redStrokes = phaseMarkerStrokes.filter(c => c.color === '#ff0000');
+      expect(orangeStrokes).toHaveLength(2);
+      expect(redStrokes).toHaveLength(2);
+
+      // Verify order: orange lines come before red lines
+      const firstOrangeIdx = phaseMarkerStrokes.findIndex(c => c.color === '#ff8800');
+      const lastRedIdx = phaseMarkerStrokes.length - 1 - [...phaseMarkerStrokes].reverse().findIndex(c => c.color === '#ff0000');
+      expect(firstOrangeIdx).toBeLessThan(lastRedIdx);
     });
   });
 
