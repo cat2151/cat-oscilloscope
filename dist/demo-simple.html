@@ -139,7 +139,7 @@
     <h3>📘 このデモについて</h3>
     <p>
       このページは、cat-oscilloscopeをnpmライブラリとして使用する方法を示す<strong>最小限の実装例</strong>です。
-      CDN（jsDelivr）経由でライブラリを読み込み、BufferSourceを使って波形データを可視化しています。
+      GitHubリポジトリからインストールしたライブラリを使って、BufferSourceで波形データを可視化しています。
     </p>
     <div class="note">
       <strong>💡 ポイント：</strong> このデモは<code>BufferSource</code>を使用しており、
@@ -195,9 +195,9 @@
   <div class="info-panel">
     <h3>💻 実装コード</h3>
     <p>このデモのコアとなる実装は以下の通りです：</p>
-    <pre><code>// CDN経由でライブラリをインポート
-import { Oscilloscope, BufferSource } from 
-  'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
+    <pre><code>// install from github でライブラリをインポート
+// npm install git+https://github.com/cat2151/cat-oscilloscope.git
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 // Oscilloscopeインスタンスを作成
 const canvas = document.getElementById('oscilloscope');
@@ -250,14 +250,9 @@ console.log(\`推定周波数: \${estimatedFreq} Hz\`);</code></pre>
 
   <div class="info-panel">
     <h3>📦 インストール方法</h3>
-    <p><strong>CDN経由（最も簡単）：</strong></p>
-    <pre><code>&lt;script type="module"&gt;
-  import { Oscilloscope, BufferSource } from 
-    'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@main/dist/cat-oscilloscope.mjs';
-&lt;/script&gt;</code></pre>
-    
-    <p><strong>npm経由：</strong></p>
+    <p><strong>GitHubリポジトリからインストール（推奨）：</strong></p>
     <pre><code>npm install git+https://github.com/cat2151/cat-oscilloscope.git</code></pre>
+    <pre><code>import { Oscilloscope, BufferSource } from 'cat-oscilloscope';</code></pre>
     
     <div class="note">
       <strong>⚠️ 注意：</strong> npm経由でインストールする場合は、WASMファイルのセットアップが必要です。

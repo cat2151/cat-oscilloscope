@@ -1,9 +1,8 @@
-// ローカルソースからインポート（ビルド時にバンドルされます）
-// NOTE:
-//   外部プロジェクトでCDN経由で利用する場合は、以下のようにバージョンタグを指定してください:
-//   import { Oscilloscope, BufferSource } from
-//     'https://cdn.jsdelivr.net/gh/cat2151/cat-oscilloscope@v1.0.0/dist/cat-oscilloscope.mjs';
-import { Oscilloscope, BufferSource } from './src/index.ts';
+// ライブラリとしてインポート（install from github と同じパターン）
+// 外部プロジェクトでの利用方法:
+//   npm install git+https://github.com/cat2151/cat-oscilloscope.git
+//   import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
+import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 // Canvas要素とUI要素を取得
 const canvas = document.getElementById('oscilloscope');
