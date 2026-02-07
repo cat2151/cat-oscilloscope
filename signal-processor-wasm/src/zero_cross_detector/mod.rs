@@ -1,7 +1,8 @@
 /// ZeroCrossDetector module - Handles zero-crossing detection and phase 0 positioning
 ///
-/// Default mode: Hysteresis (see default_mode.rs)
-/// Non-default modes: see non_default_modes.rs (may be deprecated in the future)
+/// Default (Standard) mode: Hysteresis, core implementation lives in this module
+///   - main logic in `find_stable_zero_cross` and the Standard branch of `find_phase_zero_in_segment`
+/// Non-default modes: implemented in non_default_modes.rs (these modes may be deprecated in the future)
 
 mod types;
 mod utils;

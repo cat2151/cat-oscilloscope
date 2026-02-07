@@ -1,7 +1,8 @@
 /// FrequencyEstimator module - Coordinates various frequency estimation methods
 /// Follows the Single Responsibility Principle by delegating to specialized modules
 ///
-/// Default method: FFT (fft.rs + harmonic_analysis.rs)
+/// Rust internal default method: autocorrelation (see non_default_methods/)
+/// UI default is FFT (fft.rs + harmonic_analysis.rs) and will overwrite this internal default via configuration.
 /// Non-default methods: see non_default_methods/ (may be deprecated in the future)
 
 pub(crate) mod dsp_utils;
