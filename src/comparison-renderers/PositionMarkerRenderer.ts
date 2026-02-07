@@ -40,4 +40,47 @@ export class PositionMarkerRenderer {
     ctx.fillText('S', startX + 2, 12);
     ctx.fillText('E', endX + 2, 12);
   }
+
+  /**
+   * Draw phase marker vertical lines on the buffer canvas
+   * Red lines for phaseZero and phaseTwoPi, orange lines for phaseMinusQuarterPi and phaseTwoPiPlusQuarterPi
+   */
+  drawPhaseMarkers(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    totalLength: number,
+    phaseZeroIndex?: number,
+    phaseTwoPiIndex?: number,
+    phaseMinusQuarterPiIndex?: number,
+    phaseTwoPiPlusQuarterPiIndex?: number
+  ): void {
+    if (totalLength <= 0) return;
+
+    const drawLine = (index: number, color: string) => {
+      const x = (index / totalLength) * width;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    };
+
+    // Draw orange lines first (so red lines appear on top)
+    if (phaseMinusQuarterPiIndex !== undefined) {
+      drawLine(phaseMinusQuarterPiIndex, '#ff8800');
+    }
+    if (phaseTwoPiPlusQuarterPiIndex !== undefined) {
+      drawLine(phaseTwoPiPlusQuarterPiIndex, '#ff8800');
+    }
+
+    // Draw red lines
+    if (phaseZeroIndex !== undefined) {
+      drawLine(phaseZeroIndex, '#ff0000');
+    }
+    if (phaseTwoPiIndex !== undefined) {
+      drawLine(phaseTwoPiIndex, '#ff0000');
+    }
+  }
 }

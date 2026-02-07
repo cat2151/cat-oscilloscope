@@ -85,6 +85,10 @@ export class ComparisonPanelRenderer {
    * @param similarityHistory - Array of similarity values over time for history plot
    * @param phaseZeroOffsetHistory - Array of relative offset percentages for phase zero marker (issue #236)
    * @param phaseTwoPiOffsetHistory - Array of relative offset percentages for phase 2π marker (issue #236)
+   * @param phaseZeroIndex - Sample index for phase 0 (red line) in the full buffer (issue #279)
+   * @param phaseTwoPiIndex - Sample index for phase 2π (red line) in the full buffer (issue #279)
+   * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line) in the full buffer (issue #279)
+   * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line) in the full buffer (issue #279)
    */
   updatePanels(
     previousWaveform: Float32Array | null,
@@ -95,7 +99,11 @@ export class ComparisonPanelRenderer {
     similarity: number,
     similarityHistory: number[] = [],
     phaseZeroOffsetHistory: number[] = [],
-    phaseTwoPiOffsetHistory: number[] = []
+    phaseTwoPiOffsetHistory: number[] = [],
+    phaseZeroIndex?: number,
+    phaseTwoPiIndex?: number,
+    phaseMinusQuarterPiIndex?: number,
+    phaseTwoPiPlusQuarterPiIndex?: number
   ): void {
     // Clear all canvases
     this.clearAllCanvases();
@@ -169,6 +177,16 @@ export class ComparisonPanelRenderer {
       currentStart,
       currentEnd,
       fullBuffer.length
+    );
+    this.positionMarkerRenderer.drawPhaseMarkers(
+      this.bufferCtx,
+      this.bufferCanvas.width,
+      this.bufferCanvas.height,
+      fullBuffer.length,
+      phaseZeroIndex,
+      phaseTwoPiIndex,
+      phaseMinusQuarterPiIndex,
+      phaseTwoPiPlusQuarterPiIndex
     );
   }
 

@@ -231,6 +231,61 @@ describe('ComparisonPanelRenderer', () => {
       expect(hasStartLabel).toBe(true);
       expect(hasEndLabel).toBe(true);
     });
+
+    it('should draw phase marker vertical lines on buffer canvas (issue #279)', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const similarity = 0.9;
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        20, 180,
+        fullBuffer,
+        similarity,
+        [],
+        [],
+        [],
+        60,   // phaseZeroIndex
+        140,  // phaseTwoPiIndex
+        40,   // phaseMinusQuarterPiIndex
+        160   // phaseTwoPiPlusQuarterPiIndex
+      );
+
+      const buffCtx = bufferCanvas.getContext('2d') as any;
+
+      // Phase markers should draw vertical lines with orange (#ff8800) and red (#ff0000)
+      const strokeStyleHistory: string[] = [];
+      Object.defineProperty(buffCtx, 'strokeStyle', {
+        set(val: string) { strokeStyleHistory.push(val); },
+        get() { return strokeStyleHistory[strokeStyleHistory.length - 1] || ''; },
+        configurable: true,
+      });
+
+      // Re-run with the property spy in place
+      strokeStyleHistory.length = 0;
+      buffCtx.moveTo.mockClear();
+      buffCtx.lineTo.mockClear();
+      buffCtx.stroke.mockClear();
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        20, 180,
+        fullBuffer,
+        similarity,
+        [],
+        [],
+        [],
+        60, 140, 40, 160
+      );
+
+      // Vertical lines should have been drawn (moveTo/lineTo pairs for phase markers)
+      expect(buffCtx.stroke).toHaveBeenCalled();
+      // At least 4 phase marker lines should be drawn (orange×2 + red×2)
+      // Plus position markers (2) and waveform drawing
+      expect(buffCtx.moveTo.mock.calls.length).toBeGreaterThanOrEqual(6);
+    });
   });
 
   describe('clear', () => {
