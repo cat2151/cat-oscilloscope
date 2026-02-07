@@ -33,7 +33,7 @@ export declare class WaveformPanelRenderer {
      * @param width - Canvas width
      * @param height - Canvas height
      * @param displayStartIndex - Start index of the displayed region in the full buffer
-     * @param displayEndIndex - End index of the displayed region in the full buffer
+     * @param displayEndIndex - End index (exclusive) of the displayed region in the full buffer
      * @param phaseZeroIndex - Sample index for phase 0 in the full buffer (red line)
      * @param phaseTwoPiIndex - Sample index for phase 2π in the full buffer (red line)
      * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 in the full buffer (orange line)
