@@ -39,6 +39,12 @@ export class WaveformDataProcessor {
   private previousPhaseZeroIndex: number | undefined = undefined;
   private previousPhaseTwoPiIndex: number | undefined = undefined;
 
+  // Previous frame percent positions for 1% clamping enforcement (issue #275)
+  private prevPhaseZeroPercent: number | undefined = undefined;
+  private prevPhaseTwoPiPercent: number | undefined = undefined;
+  private prevPhaseMinusQuarterPiPercent: number | undefined = undefined;
+  private prevPhaseTwoPiPlusQuarterPiPercent: number | undefined = undefined;
+
   // Performance diagnostics for issue #269
   private enableDetailedTimingLogs = false; // Default: disabled to avoid performance impact
   private readonly TIMING_LOG_THRESHOLD_MS = 16.67; // Log when processing exceeds 60fps target
@@ -222,6 +228,9 @@ export class WaveformDataProcessor {
     };
     const t9 = performance.now();
     
+    // Clamp phase markers to enforce 1% per frame movement spec (issue #275)
+    this.clampPhaseMarkers(renderData);
+
     // Calculate and update phase marker offset history (issue #236)
     this.updatePhaseOffsetHistory(renderData);
     
@@ -265,6 +274,63 @@ export class WaveformDataProcessor {
     this.enableDetailedTimingLogs = enabled;
   }
   
+  /**
+   * Clamp phase marker positions to enforce 1% per frame movement spec (issue #275)
+   * Each marker's position within the display window can move at most 1% per frame.
+   * @param renderData - Render data containing phase indices (mutated in place)
+   */
+  private clampPhaseMarkers(renderData: WaveformRenderData): void {
+    if (renderData.displayStartIndex === undefined ||
+        renderData.displayEndIndex === undefined) {
+      return;
+    }
+
+    const displayLength = renderData.displayEndIndex - renderData.displayStartIndex;
+    if (displayLength <= 0) {
+      return;
+    }
+
+    const MAX_CHANGE_PERCENT = 1.0;
+
+    // Helper: clamp a single marker and return updated percent
+    const clampMarker = (
+      index: number | undefined,
+      prevPercent: number | undefined
+    ): { index: number | undefined; percent: number | undefined } => {
+      if (index === undefined) {
+        return { index: undefined, percent: undefined };
+      }
+      const currentPercent = ((index - renderData.displayStartIndex) / displayLength) * 100;
+      if (prevPercent === undefined) {
+        return { index, percent: currentPercent };
+      }
+      const change = currentPercent - prevPercent;
+      if (Math.abs(change) <= MAX_CHANGE_PERCENT) {
+        return { index, percent: currentPercent };
+      }
+      const clampedPercent = prevPercent + Math.sign(change) * MAX_CHANGE_PERCENT;
+      const clampedIndex = Math.round(renderData.displayStartIndex + (clampedPercent / 100) * displayLength);
+      return { index: clampedIndex, percent: clampedPercent };
+    };
+
+    // Clamp all 4 phase markers independently
+    const r0 = clampMarker(renderData.phaseZeroIndex, this.prevPhaseZeroPercent);
+    renderData.phaseZeroIndex = r0.index;
+    this.prevPhaseZeroPercent = r0.percent;
+
+    const r2pi = clampMarker(renderData.phaseTwoPiIndex, this.prevPhaseTwoPiPercent);
+    renderData.phaseTwoPiIndex = r2pi.index;
+    this.prevPhaseTwoPiPercent = r2pi.percent;
+
+    const rMinus = clampMarker(renderData.phaseMinusQuarterPiIndex, this.prevPhaseMinusQuarterPiPercent);
+    renderData.phaseMinusQuarterPiIndex = rMinus.index;
+    this.prevPhaseMinusQuarterPiPercent = rMinus.percent;
+
+    const rPlus = clampMarker(renderData.phaseTwoPiPlusQuarterPiIndex, this.prevPhaseTwoPiPlusQuarterPiPercent);
+    renderData.phaseTwoPiPlusQuarterPiIndex = rPlus.index;
+    this.prevPhaseTwoPiPlusQuarterPiPercent = rPlus.percent;
+  }
+
   /**
    * Calculate relative offset percentages for phase markers and update history
    * Issue #254: Added diagnostic logging to identify source of offset spikes
@@ -385,5 +451,10 @@ export class WaveformDataProcessor {
     // Clear diagnostic tracking (issue #254)
     this.previousPhaseZeroIndex = undefined;
     this.previousPhaseTwoPiIndex = undefined;
+    // Clear clamping state (issue #275)
+    this.prevPhaseZeroPercent = undefined;
+    this.prevPhaseTwoPiPercent = undefined;
+    this.prevPhaseMinusQuarterPiPercent = undefined;
+    this.prevPhaseTwoPiPlusQuarterPiPercent = undefined;
   }
 }
