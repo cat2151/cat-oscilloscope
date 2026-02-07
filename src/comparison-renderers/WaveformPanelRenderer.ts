@@ -110,4 +110,64 @@ export class WaveformPanelRenderer {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
   }
+
+  /**
+   * Draw phase marker vertical lines
+   * Red lines for phaseZero and phaseTwoPi, orange lines for phaseMinusQuarterPi and phaseTwoPiPlusQuarterPi
+   * @param ctx - Canvas context
+   * @param width - Canvas width
+   * @param height - Canvas height
+   * @param displayStartIndex - Start index of the displayed region in the full buffer
+   * @param displayEndIndex - End index (exclusive) of the displayed region in the full buffer
+   * @param phaseZeroIndex - Sample index for phase 0 in the full buffer (red line)
+   * @param phaseTwoPiIndex - Sample index for phase 2π in the full buffer (red line)
+   * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 in the full buffer (orange line)
+   * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 in the full buffer (orange line)
+   */
+  drawPhaseMarkers(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    displayStartIndex: number,
+    displayEndIndex: number,
+    phaseZeroIndex?: number,
+    phaseTwoPiIndex?: number,
+    phaseMinusQuarterPiIndex?: number,
+    phaseTwoPiPlusQuarterPiIndex?: number
+  ): void {
+    const displayLength = displayEndIndex - displayStartIndex;
+    if (displayLength <= 0) return;
+
+    const drawLine = (index: number, color: string, lineWidth: number) => {
+      // Convert sample index to canvas x coordinate relative to displayed region
+      const relativeIndex = index - displayStartIndex;
+      if (relativeIndex < 0 || relativeIndex >= displayLength) {
+        return; // Index is outside the displayed region
+      }
+
+      const x = (relativeIndex / displayLength) * width;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    };
+
+    // Draw orange lines first (so red lines appear on top)
+    if (phaseMinusQuarterPiIndex !== undefined) {
+      drawLine(phaseMinusQuarterPiIndex, '#ff8800', 2);
+    }
+    if (phaseTwoPiPlusQuarterPiIndex !== undefined) {
+      drawLine(phaseTwoPiPlusQuarterPiIndex, '#ff8800', 2);
+    }
+
+    // Draw red lines
+    if (phaseZeroIndex !== undefined) {
+      drawLine(phaseZeroIndex, '#ff0000', 2);
+    }
+    if (phaseTwoPiIndex !== undefined) {
+      drawLine(phaseTwoPiIndex, '#ff0000', 2);
+    }
+  }
 }

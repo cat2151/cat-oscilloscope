@@ -290,6 +290,114 @@ describe('ComparisonPanelRenderer', () => {
       const lastRedIdx = phaseMarkerStrokes.length - 1 - [...phaseMarkerStrokes].reverse().findIndex(c => c.color === '#ff0000');
       expect(firstOrangeIdx).toBeLessThan(lastRedIdx);
     });
+
+    it('should draw phase marker vertical lines on current waveform canvas (issue #279, #286)', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const similarity = 0.9;
+
+      // Capture strokeStyle and lineWidth at each stroke() call on current canvas
+      const currCtx = currentCanvas.getContext('2d') as any;
+      const strokeCalls: { color: string; lineWidth: number }[] = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
+        configurable: true,
+      });
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
+      });
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth });
+      });
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        20, 180,  // currentStart, currentEnd (displayed region)
+        fullBuffer,
+        similarity,
+        [],
+        [],
+        [],
+        60,   // phaseZeroIndex (inside displayed region: 20-180)
+        140,  // phaseTwoPiIndex (inside displayed region: 20-180)
+        40,   // phaseMinusQuarterPiIndex (inside displayed region: 20-180)
+        160   // phaseTwoPiPlusQuarterPiIndex (inside displayed region: 20-180)
+      );
+
+      // Phase markers on current canvas use lineWidth=2 with colors #ff8800 or #ff0000
+      const phaseMarkerStrokes = strokeCalls.filter(
+        c => c.lineWidth === 2 && (c.color === '#ff8800' || c.color === '#ff0000')
+      );
+
+      // Exactly 4 phase marker lines: 2 orange + 2 red
+      expect(phaseMarkerStrokes).toHaveLength(4);
+
+      // Orange (#ff8800) drawn first (2 lines), then red (#ff0000) (2 lines)
+      const orangeStrokes = phaseMarkerStrokes.filter(c => c.color === '#ff8800');
+      const redStrokes = phaseMarkerStrokes.filter(c => c.color === '#ff0000');
+      expect(orangeStrokes).toHaveLength(2);
+      expect(redStrokes).toHaveLength(2);
+
+      // Verify order: orange lines come before red lines
+      const firstOrangeIdx = phaseMarkerStrokes.findIndex(c => c.color === '#ff8800');
+      const lastRedIdx = phaseMarkerStrokes.length - 1 - [...phaseMarkerStrokes].reverse().findIndex(c => c.color === '#ff0000');
+      expect(firstOrangeIdx).toBeLessThan(lastRedIdx);
+    });
+
+    it('should not draw phase markers outside displayed region on current canvas', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const similarity = 0.9;
+
+      // Capture strokeStyle at each stroke() call on current canvas
+      const currCtx = currentCanvas.getContext('2d') as any;
+      const strokeCalls: { color: string; lineWidth: number }[] = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
+        configurable: true,
+      });
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
+      });
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth });
+      });
+
+      // Phase markers outside the displayed region (100-150)
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        100, 150,  // currentStart, currentEnd (displayed region)
+        fullBuffer,
+        similarity,
+        [],
+        [],
+        [],
+        10,   // phaseZeroIndex (OUTSIDE displayed region: 100-150)
+        180,  // phaseTwoPiIndex (OUTSIDE displayed region: 100-150)
+        20,   // phaseMinusQuarterPiIndex (OUTSIDE displayed region: 100-150)
+        190   // phaseTwoPiPlusQuarterPiIndex (OUTSIDE displayed region: 100-150)
+      );
+
+      // Phase markers on current canvas use lineWidth=2 with colors #ff8800 or #ff0000
+      const phaseMarkerStrokes = strokeCalls.filter(
+        c => c.lineWidth === 2 && (c.color === '#ff8800' || c.color === '#ff0000')
+      );
+
+      // No phase markers should be drawn since all are outside the displayed region
+      expect(phaseMarkerStrokes).toHaveLength(0);
+    });
   });
 
   describe('clear', () => {

@@ -139,7 +139,20 @@ export class ComparisonPanelRenderer {
     if (previousWaveform) {
       this.similarityPlotRenderer.drawSimilarityText(this.currentCtx, this.currentCanvas.width, similarity);
     }
-    
+
+    // Draw phase markers on current waveform (issue #279, #286)
+    this.waveformRenderer.drawPhaseMarkers(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      currentStart,
+      currentEnd,
+      phaseZeroIndex,
+      phaseTwoPiIndex,
+      phaseMinusQuarterPiIndex,
+      phaseTwoPiPlusQuarterPiIndex
+    );
+
     // Draw offset overlay graphs on current waveform (issue #236)
     this.offsetOverlayRenderer.drawOffsetOverlayGraphs(
       this.currentCtx,
