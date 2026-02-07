@@ -26,4 +26,18 @@ export declare class WaveformPanelRenderer {
      * Clear a canvas
      */
     clearCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): void;
+    /**
+     * Draw phase marker vertical lines
+     * Red lines for phaseZero and phaseTwoPi, orange lines for phaseMinusQuarterPi and phaseTwoPiPlusQuarterPi
+     * @param ctx - Canvas context
+     * @param width - Canvas width
+     * @param height - Canvas height
+     * @param displayStartIndex - Start index of the displayed region in the full buffer
+     * @param displayEndIndex - End index of the displayed region in the full buffer
+     * @param phaseZeroIndex - Sample index for phase 0 in the full buffer (red line)
+     * @param phaseTwoPiIndex - Sample index for phase 2π in the full buffer (red line)
+     * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 in the full buffer (orange line)
+     * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 in the full buffer (orange line)
+     */
+    drawPhaseMarkers(ctx: CanvasRenderingContext2D, width: number, height: number, displayStartIndex: number, displayEndIndex: number, phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number): void;
 }
