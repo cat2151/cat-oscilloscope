@@ -332,5 +332,40 @@ describe('BufferSource', () => {
       const chunk2 = source.getNextChunk();
       expect(chunk2).toBeNull();
     });
+
+    it('should not overflow when copying looping chunks into fixed-size target (regression: #277)', () => {
+      // Simulates AudioManager.startFromBuffer copy pattern:
+      // loop:true + length % chunkSize != 0 (e.g., 44100 % 4096 = 3140)
+      const dataLength = 44100;
+      const chunkSize = 4096;
+      const buffer = new Float32Array(dataLength);
+      for (let i = 0; i < dataLength; i++) {
+        buffer[i] = Math.sin(2 * Math.PI * 440 * i / 44100);
+      }
+      const source = new BufferSource(buffer, 44100, { loop: true, chunkSize });
+
+      // Replicate the copy loop from AudioManager.startFromBuffer
+      const target = new Float32Array(dataLength);
+      let position = 0;
+      while (position < dataLength) {
+        const chunk = source.getNextChunk();
+        if (!chunk) break;
+        const remaining = dataLength - position;
+        if (chunk.length <= remaining) {
+          target.set(chunk, position);
+          position += chunk.length;
+        } else {
+          target.set(chunk.subarray(0, remaining), position);
+          position += remaining;
+        }
+      }
+
+      // All samples should be copied without RangeError
+      expect(position).toBe(dataLength);
+      // First sample should match
+      expect(target[0]).toBeCloseTo(buffer[0], 5);
+      // Last sample should match
+      expect(target[dataLength - 1]).toBeCloseTo(buffer[dataLength - 1], 5);
+    });
   });
 });

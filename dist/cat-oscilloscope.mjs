@@ -175,7 +175,8 @@ class Z {
       for (; n < r; ) {
         const h = e.getNextChunk();
         if (!h) break;
-        o.set(h, n), n += h.length;
+        const f = r - n;
+        h.length <= f ? (o.set(h, n), n += h.length) : (o.set(h.subarray(0, f), n), n += f);
       }
       this.initializeAnalyser(), this.audioBufferSource = this.audioContext.createBufferSource(), this.audioBufferSource.buffer = a, this.audioBufferSource.loop = !0, this.audioBufferSource.connect(this.analyser), this.audioBufferSource.start(0);
     } catch (t) {
