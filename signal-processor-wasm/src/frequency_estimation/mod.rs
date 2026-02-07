@@ -3,7 +3,7 @@
 
 mod autocorrelation;
 mod cqt;
-mod dsp_utils;
+pub(crate) mod dsp_utils;
 mod fft;
 mod harmonic_analysis;
 mod smoothing;
