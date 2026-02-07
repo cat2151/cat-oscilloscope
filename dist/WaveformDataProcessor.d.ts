@@ -1,0 +1,89 @@
+import { WaveformRenderData } from './WaveformRenderData';
+import { AudioManager } from './AudioManager';
+import { GainController } from './GainController';
+import { FrequencyEstimator } from './FrequencyEstimator';
+import { WaveformSearcher } from './WaveformSearcher';
+import { ZeroCrossDetector } from './ZeroCrossDetector';
+/**
+ * WaveformDataProcessor - Coordinates waveform data processing using Rust WASM implementation
+ *
+ * This class has been refactored to follow the Single Responsibility Principle.
+ * Its sole responsibility is now coordinating between JavaScript configuration
+ * and the Rust/WASM processor for data processing.
+ *
+ * Responsibilities delegated to specialized classes:
+ * - BasePathResolver: Determines the base path for loading WASM files
+ * - WasmModuleLoader: Handles WASM module loading and initialization
+ *
+ * All actual data processing algorithms (frequency estimation, gain control,
+ * zero-cross detection, waveform search) are implemented in Rust WASM.
+ */
+export declare class WaveformDataProcessor {
+    private audioManager;
+    private gainController;
+    private frequencyEstimator;
+    private waveformSearcher;
+    private zeroCrossDetector;
+    private basePathResolver;
+    private wasmLoader;
+    private phaseZeroOffsetHistory;
+    private phaseTwoPiOffsetHistory;
+    private readonly MAX_OFFSET_HISTORY;
+    private previousPhaseZeroIndex;
+    private previousPhaseTwoPiIndex;
+    private prevPhaseZeroPercent;
+    private prevPhaseTwoPiPercent;
+    private prevPhaseMinusQuarterPiPercent;
+    private prevPhaseTwoPiPlusQuarterPiPercent;
+    private enableDetailedTimingLogs;
+    private readonly TIMING_LOG_THRESHOLD_MS;
+    constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
+    /**
+     * Initialize the WASM module
+     * Must be called before processFrame
+     */
+    initialize(): Promise<void>;
+    /**
+     * Sync TypeScript configuration to WASM processor
+     */
+    private syncConfigToWasm;
+    /**
+     * Sync WASM results back to TypeScript objects
+     *
+     * Note: This method accesses private members using type assertions.
+     * This is a temporary solution to maintain compatibility with existing code
+     * that uses getters like getEstimatedFrequency(), getCurrentGain(), etc.
+     *
+     * TODO: Consider adding public setter methods to these classes or
+     * redesigning the synchronization interface for better type safety.
+     */
+    private syncResultsFromWasm;
+    /**
+     * Process current frame and generate complete render data using WASM
+     * @param fftDisplayEnabled - Whether FFT display is enabled
+     * @param enableDetailedLogs - Whether to enable detailed timing logs (optional, defaults to instance setting)
+     */
+    processFrame(fftDisplayEnabled: boolean, enableDetailedLogs?: boolean): WaveformRenderData | null;
+    /**
+     * Enable or disable detailed timing logs for performance diagnostics
+     * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
+     */
+    setDetailedTimingLogs(enabled: boolean): void;
+    /**
+     * Clamp phase marker positions to enforce 1% per frame movement spec (issue #275)
+     * Each marker can move at most 1% of ONE CYCLE per frame (not 1% of the 4-cycle window).
+     * Positions are tracked as percentages of the display window for consistency.
+     * @param renderData - Render data containing phase indices (mutated in place)
+     */
+    private clampPhaseMarkers;
+    /**
+     * Calculate relative offset percentages for phase markers and update history
+     * Issue #254: Added diagnostic logging to identify source of offset spikes
+     * @param renderData - Render data containing phase indices
+     */
+    private updatePhaseOffsetHistory;
+    /**
+     * Reset the WASM processor state
+     */
+    reset(): void;
+}

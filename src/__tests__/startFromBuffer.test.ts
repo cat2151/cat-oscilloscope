@@ -55,10 +55,11 @@ describe('startFromBuffer integration', () => {
 
   beforeEach(() => {
     originalAudioContext = (globalThis as any).AudioContext;
-    const { mockAudioContext } = createMockAudioContext();
     // Must use function (not arrow) so it can be used as a constructor with `new`
+    // Fresh mock is created per test via createMockAudioContext() in beforeEach
+    const { mockAudioContext } = createMockAudioContext();
     (globalThis as any).AudioContext = vi.fn(function(this: any) {
-      Object.assign(this, mockAudioContext);
+      Object.assign(this, { ...mockAudioContext });
       return this;
     });
   });
@@ -131,6 +132,7 @@ describe('startFromBuffer integration', () => {
 
       // In current architecture, buffer mode uses AudioContext + AnalyserNode
       expect((audioManager as any).audioContext).not.toBeNull();
+      expect((globalThis as any).AudioContext).toHaveBeenCalled();
     });
 
     it('should set chunk size to 4096', async () => {

@@ -55,6 +55,7 @@
           resultDiv.setAttribute('data-status', 'pass');
         }
       } catch (error) {
+        errors.push(error.message);
         resultDiv.textContent = 'FAIL: ' + error.message;
         resultDiv.setAttribute('data-status', 'fail');
       }
