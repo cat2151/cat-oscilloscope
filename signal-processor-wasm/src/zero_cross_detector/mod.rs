@@ -229,80 +229,48 @@ impl ZeroCrossDetector {
         // We have history - use it with proper coordinate conversion
         let history_abs = self.absolute_phase_offset.unwrap();
         
-        // Convert absolute history to segment-relative
-        // Check if history is within the current segment
-        if history_abs < segment_start_abs || history_abs >= segment_start_abs + segment.len() {
-            // History is outside current segment - perform fresh detection
-            let zero_cross_rel = find_zero_cross(segment, 0)?;
-            let zero_cross_abs = segment_start_abs + zero_cross_rel;
-            self.absolute_phase_offset = Some(zero_cross_abs);
-            return Some(zero_cross_rel);
-        }
+        // Clamp history into the current segment to use as reference
+        let history_rel = if history_abs < segment_start_abs {
+            0
+        } else if history_abs >= segment_start_abs + segment.len() {
+            segment.len().saturating_sub(1)
+        } else {
+            history_abs - segment_start_abs
+        };
         
-        let history_rel = history_abs - segment_start_abs;
-        
-        // Apply mode-specific search with 1% tolerance
+        // Search the entire 4-cycle segment for the nearest zero-cross candidate
+        // then move at most 1% of one cycle toward it
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
-        
-        match self.zero_cross_mode {
-            ZeroCrossMode::PeakBacktrackWithHistory => {
-                // Strict 1% constraint - search only within tolerance
-                // Check if history position is still a zero-cross
-                if history_rel < segment.len() - 1 && segment[history_rel] <= 0.0 && segment[history_rel + 1] > 0.0 {
-                    return Some(history_rel);
+        let mut nearest_candidate: Option<usize> = None;
+        let mut best_distance: Option<usize> = None;
+        let mut search_start = 0usize;
+        while let Some(idx) = find_zero_cross(segment, search_start) {
+            let distance = history_rel.abs_diff(idx);
+            if best_distance.map_or(true, |d| distance < d) {
+                best_distance = Some(distance);
+                nearest_candidate = Some(idx);
+                if distance == 0 {
+                    break;
                 }
-                
-                // Search within tolerance range
-                let search_start = history_rel.saturating_sub(tolerance);
-                let search_end = (history_rel + tolerance).min(segment.len());
-                
-                for i in search_start..search_end.saturating_sub(1) {
-                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                        let zero_cross_abs = segment_start_abs + i;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(i);
-                    }
-                }
-                
-                // No zero-cross in tolerance - keep history (strict mode)
-                Some(history_rel)
             }
-            _ => {
-                // Other modes: extended search with gradual movement
-                // First try within 1% tolerance
-                let search_start = history_rel.saturating_sub(tolerance);
-                let search_end = (history_rel + tolerance).min(segment.len());
-                
-                for i in search_start..search_end.saturating_sub(1) {
-                    if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                        let zero_cross_abs = segment_start_abs + i;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(i);
-                    }
-                }
-                
-                // Extended search (3% for Standard, gradual for others)
-                let extended_tolerance = if self.zero_cross_mode == ZeroCrossMode::Standard {
-                    (estimated_cycle_length * Self::STANDARD_MODE_EXTENDED_TOLERANCE_RATIO) as usize
-                } else {
-                    tolerance * Self::EXTENDED_TOLERANCE_MULTIPLIER
-                };
-                
-                let extended_start = history_rel.saturating_sub(extended_tolerance);
-                let extended_end = (history_rel + extended_tolerance).min(segment.len());
-                
-                if let Some(zero_cross_rel) = find_zero_cross(segment, extended_start) {
-                    if zero_cross_rel < extended_end {
-                        let zero_cross_abs = segment_start_abs + zero_cross_rel;
-                        self.absolute_phase_offset = Some(zero_cross_abs);
-                        return Some(zero_cross_rel);
-                    }
-                }
-                
-                // Fall back to history
-                Some(history_rel)
-            }
+            search_start = idx + 1;
         }
+        
+        if let Some(target_rel) = nearest_candidate {
+            let delta = target_rel as isize - history_rel as isize;
+            let max_step = tolerance as isize;
+            let step = delta.clamp(-max_step, max_step);
+            let new_rel = (history_rel as isize + step)
+                .clamp(0, (segment.len().saturating_sub(1)) as isize) as usize;
+            let new_abs = segment_start_abs + new_rel;
+            self.absolute_phase_offset = Some(new_abs);
+            return Some(new_rel);
+        }
+        
+        // If no zero-cross exists in the segment, keep the clamped history position
+        let clamped_abs = segment_start_abs + history_rel.min(segment.len().saturating_sub(1));
+        self.absolute_phase_offset = Some(clamped_abs);
+        Some(clamped_abs - segment_start_abs)
     }
     
     /// Calculate display range based on zero-crossing or peak detection
@@ -417,5 +385,48 @@ impl ZeroCrossDetector {
                 second_zero_cross: second_zero,
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    #[wasm_bindgen_test]
+    fn moves_one_percent_toward_nearest_candidate_across_full_window() {
+        let mut detector = ZeroCrossDetector::new();
+        let segment_start = 1_000usize;
+        detector.absolute_phase_offset = Some(segment_start + 10);
+
+        let cycle_length = 100.0;
+        let mut segment = vec![-1.0; 402]; // 4 cycles (400 samples) plus padding for zero-cross pair
+        segment[300] = -0.5;
+        segment[301] = 0.5;
+
+        let result = detector.find_phase_zero_in_segment(&segment, segment_start, cycle_length);
+
+        assert_eq!(result, Some(11)); // move from 10 toward 300 by at most 1 sample (1% of one cycle)
+        assert_eq!(detector.get_absolute_phase_offset(), Some(segment_start + 11));
+    }
+
+    #[wasm_bindgen_test]
+    fn chooses_nearest_candidate_when_history_is_outside_segment() {
+        let mut detector = ZeroCrossDetector::new();
+        let segment_start = 500usize;
+        detector.absolute_phase_offset = Some(segment_start.saturating_sub(200));
+
+        let cycle_length = 120.0;
+        let mut segment = vec![1.0; 482]; // 4 * 120 samples + padding
+        for v in segment.iter_mut().take(241) {
+            *v = -1.0;
+        }
+        segment[240] = -0.2;
+        segment[241] = 0.2;
+
+        let result = detector.find_phase_zero_in_segment(&segment, segment_start, cycle_length);
+
+        assert_eq!(result, Some(1)); // reference clamps to start, moves 1 sample toward nearest zero-cross
+        assert_eq!(detector.get_absolute_phase_offset(), Some(segment_start + 1));
     }
 }
