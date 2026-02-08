@@ -244,6 +244,14 @@ impl ZeroCrossDetector {
                                 constrained_rel = zero_in_center;
                             }
                         }
+
+                        // BUGFIX for Issue #299: Even if we can't find a zero-cross within the constrained range,
+                        // we must still clamp the position to prevent markers from appearing in cycle 0 or cycle 3+
+                        if constrained_rel < min_allowed {
+                            constrained_rel = min_allowed;
+                        } else if constrained_rel >= max_allowed_exclusive {
+                            constrained_rel = max_allowed_exclusive.saturating_sub(1);
+                        }
                     }
                 }
             }
@@ -285,6 +293,14 @@ impl ZeroCrossDetector {
                             if zero_in_center < max_allowed_exclusive {
                                 constrained_rel = zero_in_center;
                             }
+                        }
+
+                        // BUGFIX for Issue #299: Even if we can't find a zero-cross within the constrained range,
+                        // we must still clamp the position to prevent markers from appearing in cycle 0 or cycle 3+
+                        if constrained_rel < min_allowed {
+                            constrained_rel = min_allowed;
+                        } else if constrained_rel >= max_allowed_exclusive {
+                            constrained_rel = max_allowed_exclusive.saturating_sub(1);
                         }
                     }
                 }
