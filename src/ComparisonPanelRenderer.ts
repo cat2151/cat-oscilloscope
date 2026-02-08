@@ -122,8 +122,23 @@ export class ComparisonPanelRenderer {
       );
     }
 
-    // Draw current waveform with similarity score
+    // Draw current waveform canvas: center line, previous waveform (background), current waveform (foreground)
     this.waveformRenderer.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
+
+    // Draw previous waveform on current canvas first (as background, in dimmer color)
+    if (previousWaveform) {
+      this.waveformRenderer.drawWaveform(
+        this.currentCtx,
+        this.currentCanvas.width,
+        this.currentCanvas.height,
+        previousWaveform,
+        0,
+        previousWaveform.length,
+        '#666600' // Dimmer yellow-green color for previous waveform
+      );
+    }
+
+    // Draw current waveform on top (foreground)
     const currentLength = currentEnd - currentStart;
     if (currentLength > 0) {
       this.waveformRenderer.drawWaveform(
@@ -140,7 +155,16 @@ export class ComparisonPanelRenderer {
       this.similarityPlotRenderer.drawSimilarityText(this.currentCtx, this.currentCanvas.width, similarity);
     }
 
-    // Draw phase markers on current waveform (issue #279, #286)
+    // Draw offset overlay graphs on current waveform (issue #236)
+    this.offsetOverlayRenderer.drawOffsetOverlayGraphs(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      phaseZeroOffsetHistory,
+      phaseTwoPiOffsetHistory
+    );
+
+    // Draw phase markers on current waveform (issue #279, #286) - drawn last to ensure visibility
     this.waveformRenderer.drawPhaseMarkers(
       this.currentCtx,
       this.currentCanvas.width,
@@ -151,15 +175,6 @@ export class ComparisonPanelRenderer {
       phaseTwoPiIndex,
       phaseMinusQuarterPiIndex,
       phaseTwoPiPlusQuarterPiIndex
-    );
-
-    // Draw offset overlay graphs on current waveform (issue #236)
-    this.offsetOverlayRenderer.drawOffsetOverlayGraphs(
-      this.currentCtx,
-      this.currentCanvas.width,
-      this.currentCanvas.height,
-      phaseZeroOffsetHistory,
-      phaseTwoPiOffsetHistory
     );
 
     // Draw similarity plot
