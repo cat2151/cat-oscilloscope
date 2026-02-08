@@ -41,7 +41,6 @@ export class WaveformDataProcessor {
 
   // Previous frame percent positions for 1% clamping enforcement (issue #275)
   private prevPhaseZeroPercent: number | undefined = undefined;
-  private prevPhaseTwoPiPercent: number | undefined = undefined;
   private prevPhaseMinusQuarterPiPercent: number | undefined = undefined;
   private prevPhaseTwoPiPlusQuarterPiPercent: number | undefined = undefined;
 
@@ -296,6 +295,7 @@ export class WaveformDataProcessor {
     // In display-window-percent terms: 1% of one cycle = 1% * (1/4) of display = 0.25%
     const CYCLES_TO_DISPLAY = 4;
     const MAX_CHANGE_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display window = 1% of one cycle
+    const cycleLengthSamples = Math.floor(displayLength / CYCLES_TO_DISPLAY);
 
     // Helper: clamp a single marker and return updated percent
     const clampMarker = (
@@ -330,14 +330,18 @@ export class WaveformDataProcessor {
       return { index: clampedIndex, percent: actualPercent };
     };
 
-    // Clamp all 4 phase markers independently
+    // Clamp start marker, derive end marker (+1 cycle), clamp the two orange markers independently
     const r0 = clampMarker(renderData.phaseZeroIndex, this.prevPhaseZeroPercent);
     renderData.phaseZeroIndex = r0.index;
     this.prevPhaseZeroPercent = r0.percent;
 
-    const r2pi = clampMarker(renderData.phaseTwoPiIndex, this.prevPhaseTwoPiPercent);
-    renderData.phaseTwoPiIndex = r2pi.index;
-    this.prevPhaseTwoPiPercent = r2pi.percent;
+    // phaseTwoPiIndex must be exactly one cycle after phaseZeroIndex (no independent search)
+    if (r0.index !== undefined && cycleLengthSamples > 0) {
+      const derivedTwoPi = r0.index + cycleLengthSamples;
+      renderData.phaseTwoPiIndex = derivedTwoPi;
+    } else {
+      renderData.phaseTwoPiIndex = undefined;
+    }
 
     const rMinus = clampMarker(renderData.phaseMinusQuarterPiIndex, this.prevPhaseMinusQuarterPiPercent);
     renderData.phaseMinusQuarterPiIndex = rMinus.index;
@@ -472,7 +476,6 @@ export class WaveformDataProcessor {
     this.previousPhaseTwoPiIndex = undefined;
     // Clear clamping state (issue #275)
     this.prevPhaseZeroPercent = undefined;
-    this.prevPhaseTwoPiPercent = undefined;
     this.prevPhaseMinusQuarterPiPercent = undefined;
     this.prevPhaseTwoPiPlusQuarterPiPercent = undefined;
   }
