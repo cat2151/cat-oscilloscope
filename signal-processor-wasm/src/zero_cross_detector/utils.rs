@@ -79,13 +79,13 @@ pub fn initialize_history(data: &[f32], estimated_cycle_length: f32) -> Option<u
     } else {
         data.len() / 2
     };
-    
+
     if let Some(peak_idx) = find_peak(data, 0, Some(search_end.min(data.len()))) {
         if let Some(zero_cross_idx) = find_zero_crossing_backward(data, peak_idx) {
             return Some(zero_cross_idx);
         }
     }
-    
+
     // Fallback: find first zero-cross
     find_zero_cross(data, 0)
 }
