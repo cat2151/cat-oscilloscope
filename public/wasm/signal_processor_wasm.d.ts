@@ -8,7 +8,7 @@ export class WasmDataProcessor {
     free(): void;
     [Symbol.dispose](): void;
     /**
-     * Compute FFT frequency data from time-domain data for BufferSource mode
+     * Compute frequency-domain data from time-domain data for BufferSource mode using DFT
      * Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
      */
     computeFrequencyData(time_domain_data: Float32Array, fft_size: number): Uint8Array | undefined;
@@ -74,7 +74,6 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
-    readonly __wbg_waveformrenderdata_free: (a: number, b: number) => void;
     readonly wasmdataprocessor_computeFrequencyData: (a: number, b: number, c: number, d: number) => [number, number];
     readonly wasmdataprocessor_new: () => number;
     readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
@@ -86,6 +85,7 @@ export interface InitOutput {
     readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
     readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
     readonly wasmdataprocessor_setZeroCrossMode: (a: number, b: number, c: number) => void;
+    readonly __wbg_waveformrenderdata_free: (a: number, b: number) => void;
     readonly waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
     readonly waveformrenderdata_candidate1WeightedScore: (a: number) => number;
     readonly waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];

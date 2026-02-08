@@ -330,13 +330,7 @@ impl WasmDataProcessor {
         
         // Convert to frame buffer position (absolute index in full data buffer)
         let phase_zero = segment_buffer_position + phase_zero_segment_relative;
-        
-        // Log debug information
-        web_sys::console::log_1(&format!(
-            "Phase Debug: segment_relative={}, history={:?}, tolerance={}, absolute_position={}, segment_buffer_position={}",
-            phase_zero_segment_relative, history_before, tolerance, phase_zero, segment_buffer_position
-        ).into());
-        
+
         // Phase 2π is one cycle after phase 0
         let phase_2pi_idx = phase_zero + cycle_length as usize;
         

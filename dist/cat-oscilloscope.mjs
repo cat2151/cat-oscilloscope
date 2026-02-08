@@ -1214,7 +1214,16 @@ class ce {
       0,
       e.length,
       "#ffaa00"
-    )), this.waveformRenderer.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height), s - i > 0 && this.waveformRenderer.drawWaveform(
+    )), this.waveformRenderer.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height), e && this.waveformRenderer.drawWaveform(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      e,
+      0,
+      e.length,
+      "#666600"
+      // Dimmer yellow-green color for previous waveform
+    ), s - i > 0 && this.waveformRenderer.drawWaveform(
       this.currentCtx,
       this.currentCanvas.width,
       this.currentCanvas.height,
@@ -1222,7 +1231,13 @@ class ce {
       i,
       s,
       "#00ff00"
-    ), e && this.similarityPlotRenderer.drawSimilarityText(this.currentCtx, this.currentCanvas.width, o), this.waveformRenderer.drawPhaseMarkers(
+    ), e && this.similarityPlotRenderer.drawSimilarityText(this.currentCtx, this.currentCanvas.width, o), this.offsetOverlayRenderer.drawOffsetOverlayGraphs(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      h,
+      f
+    ), this.waveformRenderer.drawPhaseMarkers(
       this.currentCtx,
       this.currentCanvas.width,
       this.currentCanvas.height,
@@ -1232,12 +1247,6 @@ class ce {
       u,
       m,
       c
-    ), this.offsetOverlayRenderer.drawOffsetOverlayGraphs(
-      this.currentCtx,
-      this.currentCanvas.width,
-      this.currentCanvas.height,
-      h,
-      f
     ), n.length > 0 && this.similarityPlotRenderer.drawSimilarityPlot(
       this.similarityCtx,
       this.similarityCanvas.width,
