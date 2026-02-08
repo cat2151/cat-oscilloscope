@@ -293,31 +293,20 @@ impl ZeroCrossDetector {
         let new_abs = segment_start_abs + new_rel;
         self.absolute_phase_offset = Some(new_abs);
 
-        // Snap the returned value to the nearest zero-cross candidate
-        // to ensure the returned position is always at a valid zero-cross
-        let mut snapped_rel = nearest;
-        let mut snapped_distance = if nearest >= new_rel {
-            nearest - new_rel
-        } else {
-            new_rel - nearest
-        };
-
-        for i in 0..segment.len().saturating_sub(1) {
-            if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                let distance = if i >= new_rel {
-                    i - new_rel
-                } else {
-                    new_rel - i
-                };
-
-                if distance < snapped_distance {
-                    snapped_distance = distance;
-                    snapped_rel = i;
-                }
-            }
-        }
-
-        Some(snapped_rel)
+        // Return the gradually moved position directly (NOT snapped to zero-cross)
+        //
+        // DESIGN DECISION: Prioritize smooth 1% movement over exact zero-cross position
+        //
+        // Rationale:
+        // - Zero-cross candidates can jump wildly between frames (due to noise, etc.)
+        // - If we snap to the nearest zero-cross, the red line will jump visually
+        // - Jumpy movement provides poor visual experience for users
+        // - Therefore, we accept that the marker may not be at an exact zero-cross
+        // - The 1% gradual movement constraint is prioritized for smooth visual experience
+        //
+        // This means the red line position represents "moving toward the nearest zero-cross"
+        // rather than "exactly at a zero-cross", which is acceptable for visual stability.
+        Some(new_rel)
     }
     
     /// Calculate display range based on zero-crossing or peak detection
