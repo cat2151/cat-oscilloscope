@@ -32,7 +32,6 @@ export declare class WaveformDataProcessor {
     private previousPhaseZeroIndex;
     private previousPhaseTwoPiIndex;
     private prevPhaseZeroPercent;
-    private prevPhaseTwoPiPercent;
     private prevPhaseMinusQuarterPiPercent;
     private prevPhaseTwoPiPlusQuarterPiPercent;
     private enableDetailedTimingLogs;

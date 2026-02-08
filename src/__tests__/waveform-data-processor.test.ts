@@ -141,7 +141,7 @@ describe('WaveformDataProcessor', () => {
       expect(data2.phaseZeroIndex).toBe(1990);
     });
 
-    it('should clamp all four markers independently', () => {
+    it('should clamp markers and derive phaseTwoPiIndex from phaseZeroIndex', () => {
       // Frame 1: establish baselines
       const data1 = makeRenderData({
         phaseZeroIndex: 800,
@@ -160,15 +160,12 @@ describe('WaveformDataProcessor', () => {
       });
       callClamp(processor, data2);
 
-      // Each should be clamped to ≤10 samples movement (1% of one cycle)
-      expect(data2.phaseZeroIndex! - 800).toBeLessThanOrEqual(10);
-      expect(data2.phaseZeroIndex! - 800).toBeGreaterThan(0);
-      expect(data2.phaseTwoPiIndex! - 1600).toBeLessThanOrEqual(10);
-      expect(data2.phaseTwoPiIndex! - 1600).toBeGreaterThan(0);
-      expect(600 - data2.phaseMinusQuarterPiIndex!).toBeLessThanOrEqual(10);
-      expect(600 - data2.phaseMinusQuarterPiIndex!).toBeGreaterThan(0);
-      expect(data2.phaseTwoPiPlusQuarterPiIndex! - 1800).toBeLessThanOrEqual(10);
-      expect(data2.phaseTwoPiPlusQuarterPiIndex! - 1800).toBeGreaterThan(0);
+      // phaseZeroIndex is clamped to 1% of one cycle, and phaseTwoPiIndex follows exactly one cycle after it
+      expect(data2.phaseZeroIndex).toBe(810);
+      expect(data2.phaseTwoPiIndex).toBe(1810);
+      // Other markers remain independently clamped
+      expect(data2.phaseMinusQuarterPiIndex).toBe(590);
+      expect(data2.phaseTwoPiPlusQuarterPiIndex).toBe(1810);
     });
 
     it('should gradually converge to target over multiple frames', () => {
@@ -192,7 +189,8 @@ describe('WaveformDataProcessor', () => {
       const data1 = makeRenderData({ phaseZeroIndex: 2000, phaseTwoPiIndex: undefined });
       callClamp(processor, data1);
       expect(data1.phaseZeroIndex).toBe(2000);
-      expect(data1.phaseTwoPiIndex).toBeUndefined();
+      // Even if phaseTwoPiIndex is missing, it should derive from phaseZeroIndex (+1 cycle)
+      expect(data1.phaseTwoPiIndex).toBe(3000);
     });
 
     it('should reset clamping state on reset()', () => {
