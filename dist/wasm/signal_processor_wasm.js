@@ -15,7 +15,7 @@ export class WasmDataProcessor {
         wasm.__wbg_wasmdataprocessor_free(ptr, 0);
     }
     /**
-     * Compute FFT frequency data from time-domain data for BufferSource mode
+     * Compute frequency-domain data from time-domain data for BufferSource mode using DFT
      * Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
      * @param {Float32Array} time_domain_data
      * @param {number} fft_size

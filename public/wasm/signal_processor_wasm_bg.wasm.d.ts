@@ -2,7 +2,6 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
-export const __wbg_waveformrenderdata_free: (a: number, b: number) => void;
 export const wasmdataprocessor_computeFrequencyData: (a: number, b: number, c: number, d: number) => [number, number];
 export const wasmdataprocessor_new: () => number;
 export const wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
@@ -14,6 +13,7 @@ export const wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
 export const wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
 export const wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
 export const wasmdataprocessor_setZeroCrossMode: (a: number, b: number, c: number) => void;
+export const __wbg_waveformrenderdata_free: (a: number, b: number) => void;
 export const waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
 export const waveformrenderdata_candidate1WeightedScore: (a: number) => number;
 export const waveformrenderdata_candidate2Harmonics: (a: number) => [number, number];
