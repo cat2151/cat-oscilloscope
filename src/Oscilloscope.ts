@@ -168,6 +168,7 @@ export class Oscilloscope {
       this.cycleSimilarityRenderer.clear();
     }
     this.dataProcessor.reset();
+    this.timingDiagnostics.reset();
   }
 
   private render(): void {

@@ -5,6 +5,7 @@
 export declare class FrameTimingDiagnostics {
     private lastFrameTime;
     private frameProcessingTimes;
+    private frameCount;
     private readonly MAX_FRAME_TIMES;
     private readonly TARGET_FRAME_TIME;
     private readonly FPS_LOG_INTERVAL_FRAMES;

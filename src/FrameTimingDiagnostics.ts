@@ -5,6 +5,7 @@
 export class FrameTimingDiagnostics {
   private lastFrameTime = 0;
   private frameProcessingTimes: number[] = [];
+  private frameCount = 0;
   private readonly MAX_FRAME_TIMES = 100;
   private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
   private readonly FPS_LOG_INTERVAL_FRAMES = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
@@ -48,9 +49,11 @@ export class FrameTimingDiagnostics {
       const frameInterval = startTime - this.lastFrameTime;
       const currentFps = 1000 / frameInterval;
 
-      if (this.frameProcessingTimes.length === this.FPS_LOG_INTERVAL_FRAMES) {
+      this.frameCount++;
+      if (this.frameCount >= this.FPS_LOG_INTERVAL_FRAMES) {
         const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
         console.log(`FPS: ${currentFps.toFixed(1)}, Avg frame time: ${avgProcessingTime.toFixed(2)}ms`);
+        this.frameCount = 0;
       }
     }
     this.lastFrameTime = startTime;
@@ -76,5 +79,6 @@ export class FrameTimingDiagnostics {
   reset(): void {
     this.lastFrameTime = 0;
     this.frameProcessingTimes = [];
+    this.frameCount = 0;
   }
 }
