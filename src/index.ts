@@ -16,6 +16,8 @@ export { WaveformSearcher } from './WaveformSearcher';
 export { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 export { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 export { PianoKeyboardRenderer } from './PianoKeyboardRenderer';
+export { FrameTimingDiagnostics } from './FrameTimingDiagnostics';
+export { RenderCoordinator } from './RenderCoordinator';
 
 // Frame buffer history - for advanced AudioManager usage
 export { FrameBufferHistory } from './FrameBufferHistory';

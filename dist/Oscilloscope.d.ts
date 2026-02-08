@@ -12,6 +12,8 @@ import { OverlaysLayoutConfig } from './OverlayLayout';
  * - ComparisonPanelRenderer: Comparison panel rendering
  * - CycleSimilarityRenderer: Cycle similarity graph rendering
  * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
+ * - FrameTimingDiagnostics: Frame timing and FPS tracking
+ * - RenderCoordinator: Rendering coordination across multiple renderers
  */
 export declare class Oscilloscope {
     private audioManager;
@@ -23,16 +25,12 @@ export declare class Oscilloscope {
     private comparisonRenderer;
     private cycleSimilarityRenderer;
     private dataProcessor;
+    private timingDiagnostics;
+    private renderCoordinator;
     private animationId;
     private isRunning;
     private isPaused;
     private phaseMarkerRangeEnabled;
-    private lastFrameTime;
-    private frameProcessingTimes;
-    private readonly MAX_FRAME_TIMES;
-    private readonly TARGET_FRAME_TIME;
-    private readonly FPS_LOG_INTERVAL_FRAMES;
-    private enableDetailedTimingLogs;
     /**
      * Create a new Oscilloscope instance
      * @param canvas - Main oscilloscope display canvas (recommended: 800x350px)
@@ -56,11 +54,6 @@ export declare class Oscilloscope {
     startFromBuffer(bufferSource: BufferSource): Promise<void>;
     stop(): Promise<void>;
     private render;
-    /**
-     * Render a single frame using pre-processed data
-     * This method contains only rendering logic - no data processing
-     */
-    private renderFrame;
     getIsRunning(): boolean;
     setAutoGain(enabled: boolean): void;
     getAutoGainEnabled(): boolean;
