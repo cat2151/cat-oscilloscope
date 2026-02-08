@@ -292,7 +292,7 @@ This project performs the following automated checks to maintain code quality:
 -   **Large File Detection**: Checks source file line counts daily in a batch and automatically creates an issue if any file exceeds 500 lines.
     -   Configuration file: `.github/check-large-files.toml`
     -   Execution script: `.github/scripts/check_large_files.py`
-    -   Workflow: `.github/workflows/check-large-files.yml`
+    -   Workflow: `.github/workflows/call-check-large-files.yml`
     -   Automatically executed daily at 09:00 JST (manual execution also possible).
 
 This mechanism allows for early detection before files become too large, enabling consideration for refactoring at appropriate times.

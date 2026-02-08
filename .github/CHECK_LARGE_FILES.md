@@ -103,7 +103,7 @@ exclude_files = [
 - 閾値を超えるファイルを検出
 - GitHub Actions用の出力ファイルを生成
 
-### 3. GitHub Actions ワークフロー (`.github/workflows/check-large-files.yml`)
+### 3. GitHub Actions ワークフロー (`.github/workflows/call-check-large-files.yml`)
 
 日次で自動実行されるワークフローです：
 
