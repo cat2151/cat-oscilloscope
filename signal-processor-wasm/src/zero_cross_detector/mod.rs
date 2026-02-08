@@ -207,7 +207,7 @@ impl ZeroCrossDetector {
                     } else {
                         segment.len() / 2
                     };
-                    
+
                     if let Some(peak_idx) = find_peak(segment, 0, Some(search_end.min(segment.len()))) {
                         find_zero_crossing_backward(segment, peak_idx)
                     } else {
@@ -219,11 +219,29 @@ impl ZeroCrossDetector {
                     find_zero_cross(segment, 0)
                 }
             }?;
-            
+
+            // Issue #296: Constrain initial position to central 2 cycles (cycles 1-3 of 4-cycle segment)
+            let mut constrained_rel = zero_cross_rel;
+            if estimated_cycle_length > f32::EPSILON {
+                let cycle_length_usize = estimated_cycle_length as usize;
+                let min_allowed = cycle_length_usize; // Start of cycle 1
+                let max_allowed = cycle_length_usize * 3; // End of cycle 3
+
+                // If initial detection is outside the allowed range, search within the central 2 cycles
+                if constrained_rel < min_allowed || constrained_rel > max_allowed {
+                    // Search for zero-cross starting from cycle 1
+                    if let Some(zero_in_center) = find_zero_cross(segment, min_allowed) {
+                        if zero_in_center <= max_allowed {
+                            constrained_rel = zero_in_center;
+                        }
+                    }
+                }
+            }
+
             // Convert to absolute and store
-            let zero_cross_abs = segment_start_abs + zero_cross_rel;
+            let zero_cross_abs = segment_start_abs + constrained_rel;
             self.absolute_phase_offset = Some(zero_cross_abs);
-            return Some(zero_cross_rel);
+            return Some(constrained_rel);
         }
         
         // We have history - use new algorithm (Issue #289)
@@ -235,9 +253,28 @@ impl ZeroCrossDetector {
         if history_abs < segment_start_abs || history_abs >= segment_start_abs + segment.len() {
             // History is outside current segment - perform fresh detection
             let zero_cross_rel = find_zero_cross(segment, 0)?;
-            let zero_cross_abs = segment_start_abs + zero_cross_rel;
+
+            // Issue #296: Constrain fresh detection to central 2 cycles (cycles 1-3 of 4-cycle segment)
+            let mut constrained_rel = zero_cross_rel;
+            if estimated_cycle_length > f32::EPSILON {
+                let cycle_length_usize = estimated_cycle_length as usize;
+                let min_allowed = cycle_length_usize; // Start of cycle 1
+                let max_allowed = cycle_length_usize * 3; // End of cycle 3
+
+                // If detection is outside the allowed range, search within the central 2 cycles
+                if constrained_rel < min_allowed || constrained_rel > max_allowed {
+                    // Search for zero-cross starting from cycle 1
+                    if let Some(zero_in_center) = find_zero_cross(segment, min_allowed) {
+                        if zero_in_center <= max_allowed {
+                            constrained_rel = zero_in_center;
+                        }
+                    }
+                }
+            }
+
+            let zero_cross_abs = segment_start_abs + constrained_rel;
             self.absolute_phase_offset = Some(zero_cross_abs);
-            return Some(zero_cross_rel);
+            return Some(constrained_rel);
         }
 
         let history_rel = history_abs - segment_start_abs;
@@ -245,11 +282,20 @@ impl ZeroCrossDetector {
         // Calculate 1% tolerance for movement constraint
         let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
 
+        // Issue #296: Calculate allowed range for central 2 cycles (cycles 1-3 of 4-cycle segment)
+        let cycle_length_usize = estimated_cycle_length as usize;
+        let min_allowed = cycle_length_usize; // Start of cycle 1
+        let max_allowed = cycle_length_usize * 3; // End of cycle 3
+
         // Find the nearest zero-cross candidate in a single pass (avoiding Vec allocation)
+        // Only search within the central 2 cycles to prevent markers from disappearing at edges
         let mut nearest_candidate: Option<usize> = None;
         let mut min_distance = usize::MAX;
 
-        for i in 0..segment.len().saturating_sub(1) {
+        let search_start = min_allowed.min(segment.len().saturating_sub(1));
+        let search_end = max_allowed.min(segment.len().saturating_sub(1));
+
+        for i in search_start..search_end {
             if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
                 let distance = if i >= history_rel {
                     i - history_rel
@@ -277,7 +323,7 @@ impl ZeroCrossDetector {
         }
 
         // Calculate the new position, constrained to move at most 1% per frame
-        let new_rel = if nearest > history_rel {
+        let mut new_rel = if nearest > history_rel {
             // Move right (toward future)
             let distance = nearest - history_rel;
             let step = distance.min(tolerance);
@@ -288,6 +334,19 @@ impl ZeroCrossDetector {
             let step = distance.min(tolerance);
             history_rel.saturating_sub(step)
         };
+
+        // Issue #296: Constrain phase marker to central 2 cycles (cycles 1-3 of 4-cycle segment)
+        // This prevents markers from disappearing at the left edge by using first and last cycles as safety margins
+        let cycle_length_usize = estimated_cycle_length as usize;
+        let min_allowed = cycle_length_usize; // Start of cycle 1
+        let max_allowed = cycle_length_usize * 3; // End of cycle 3
+
+        // Clamp new_rel to the allowed range
+        if new_rel < min_allowed {
+            new_rel = min_allowed;
+        } else if new_rel > max_allowed && max_allowed < segment.len() {
+            new_rel = max_allowed;
+        }
 
         // Update history with new absolute position (continuous)
         let new_abs = segment_start_abs + new_rel;
