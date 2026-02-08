@@ -247,11 +247,12 @@ impl ZeroCrossDetector {
 
                         // BUGFIX for Issue #299: Even if we can't find a zero-cross within the constrained range,
                         // we must still clamp the position to prevent markers from appearing in cycle 0 or cycle 3+
-                        if constrained_rel < min_allowed {
-                            constrained_rel = min_allowed;
-                        } else if constrained_rel >= max_allowed_exclusive {
-                            constrained_rel = max_allowed_exclusive.saturating_sub(1);
-                        }
+                        constrained_rel = clamp_to_allowed_range(
+                            constrained_rel,
+                            min_allowed,
+                            max_allowed_exclusive,
+                            segment.len()
+                        );
                     }
                 }
             }
@@ -297,11 +298,12 @@ impl ZeroCrossDetector {
 
                         // BUGFIX for Issue #299: Even if we can't find a zero-cross within the constrained range,
                         // we must still clamp the position to prevent markers from appearing in cycle 0 or cycle 3+
-                        if constrained_rel < min_allowed {
-                            constrained_rel = min_allowed;
-                        } else if constrained_rel >= max_allowed_exclusive {
-                            constrained_rel = max_allowed_exclusive.saturating_sub(1);
-                        }
+                        constrained_rel = clamp_to_allowed_range(
+                            constrained_rel,
+                            min_allowed,
+                            max_allowed_exclusive,
+                            segment.len()
+                        );
                     }
                 }
             }
@@ -363,14 +365,12 @@ impl ZeroCrossDetector {
             None => {
                 // Issue #296: Clamp history_rel to allowed range before returning
                 // Ensure result is within [0, segment.len()) and [min_allowed, max_allowed_exclusive)
-                let mut clamped = history_rel;
-                if clamped < min_allowed {
-                    clamped = min_allowed;
-                } else if clamped >= max_allowed_exclusive {
-                    clamped = max_allowed_exclusive.saturating_sub(1);
-                }
-                // Final bounds check
-                clamped = clamped.min(segment.len().saturating_sub(1));
+                let clamped = clamp_to_allowed_range(
+                    history_rel,
+                    min_allowed,
+                    max_allowed_exclusive,
+                    segment.len()
+                );
                 let new_abs = segment_start_abs + clamped;
                 self.absolute_phase_offset = Some(new_abs);
                 return Some(clamped);
@@ -381,14 +381,12 @@ impl ZeroCrossDetector {
         if nearest == history_rel {
             // Already at a zero-cross, no movement needed
             // Issue #296: But still clamp to allowed range
-            let mut clamped = history_rel;
-            if clamped < min_allowed {
-                clamped = min_allowed;
-            } else if clamped >= max_allowed_exclusive {
-                clamped = max_allowed_exclusive.saturating_sub(1);
-            }
-            // Final bounds check
-            clamped = clamped.min(segment.len().saturating_sub(1));
+            let clamped = clamp_to_allowed_range(
+                history_rel,
+                min_allowed,
+                max_allowed_exclusive,
+                segment.len()
+            );
             let new_abs = segment_start_abs + clamped;
             self.absolute_phase_offset = Some(new_abs);
             return Some(clamped);
@@ -408,13 +406,12 @@ impl ZeroCrossDetector {
         };
 
         // Issue #296: Clamp new_rel to the allowed range (central 2 cycles)
-        if new_rel < min_allowed {
-            new_rel = min_allowed;
-        } else if new_rel >= max_allowed_exclusive {
-            new_rel = max_allowed_exclusive.saturating_sub(1);
-        }
-        // Final bounds check
-        new_rel = new_rel.min(segment.len().saturating_sub(1));
+        new_rel = clamp_to_allowed_range(
+            new_rel,
+            min_allowed,
+            max_allowed_exclusive,
+            segment.len()
+        );
 
         // Update history with new absolute position (continuous)
         let new_abs = segment_start_abs + new_rel;
@@ -548,5 +545,179 @@ impl ZeroCrossDetector {
                 second_zero_cross: second_zero,
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Create a test waveform with known zero-crosses at specific positions
+    /// Returns a 4-cycle sine wave with cycle_length samples per cycle
+    fn create_test_waveform(cycle_length: usize) -> Vec<f32> {
+        let total_samples = cycle_length * 4;
+        let mut waveform = Vec::with_capacity(total_samples);
+
+        for i in 0..total_samples {
+            let phase = (i as f32) / (cycle_length as f32) * 2.0 * std::f32::consts::PI;
+            waveform.push(phase.sin());
+        }
+
+        waveform
+    }
+
+    /// Create a waveform with NO zero-crosses in the constraint range [L, 3L)
+    /// This is a pathological case that triggers Issue #299
+    fn create_waveform_no_zero_crosses_in_constraint_range(cycle_length: usize) -> Vec<f32> {
+        let total_samples = cycle_length * 4;
+        let mut waveform = vec![0.0; total_samples];
+
+        // Add zero-cross only in cycle 0 (before constraint range)
+        waveform[cycle_length / 2 - 1] = -0.1;
+        waveform[cycle_length / 2] = 0.1;
+
+        // All other samples are positive (no zero-crosses in cycles 1-3)
+        for i in cycle_length..total_samples {
+            waveform[i] = 0.5;
+        }
+
+        waveform
+    }
+
+    #[test]
+    fn test_find_phase_zero_initial_detection_within_constraint_range() {
+        // Test that initial detection respects constraint range [L, 3L)
+        let cycle_length = 100;
+        let waveform = create_test_waveform(cycle_length);
+
+        let mut detector = ZeroCrossDetector::new();
+        let result = detector.find_phase_zero_in_segment(
+            &waveform,
+            0,
+            cycle_length as f32,
+        );
+
+        assert!(result.is_some());
+        let phase_zero = result.unwrap();
+
+        // Should be in [100, 300) - cycles 1-2
+        assert!(
+            phase_zero >= cycle_length && phase_zero < cycle_length * 3,
+            "Phase zero {} should be in [{}, {})",
+            phase_zero,
+            cycle_length,
+            cycle_length * 3
+        );
+    }
+
+    #[test]
+    fn test_find_phase_zero_no_zero_crosses_in_constraint_range_issue_299() {
+        // Regression test for Issue #299: when no zero-crosses exist in [L, 3L),
+        // the position MUST still be clamped to this range
+        let cycle_length = 100;
+        let waveform = create_waveform_no_zero_crosses_in_constraint_range(cycle_length);
+
+        let mut detector = ZeroCrossDetector::new();
+        let result = detector.find_phase_zero_in_segment(
+            &waveform,
+            0,
+            cycle_length as f32,
+        );
+
+        assert!(result.is_some());
+        let phase_zero = result.unwrap();
+
+        // CRITICAL: Even though no zero-cross exists in [100, 300),
+        // the result MUST be clamped to this range (Issue #299 fix)
+        assert!(
+            phase_zero >= cycle_length && phase_zero < cycle_length * 3,
+            "Phase zero {} MUST be clamped to [{}, {}) even when no zero-crosses exist there",
+            phase_zero,
+            cycle_length,
+            cycle_length * 3
+        );
+    }
+
+    #[test]
+    fn test_find_phase_zero_history_outside_segment_no_zero_crosses_in_range() {
+        // Test the second location where the bug existed:
+        // when history is outside segment and fresh detection finds zero-cross outside [L, 3L)
+        let cycle_length = 100;
+        let waveform = create_waveform_no_zero_crosses_in_constraint_range(cycle_length);
+
+        let mut detector = ZeroCrossDetector::new();
+
+        // First call initializes history
+        detector.find_phase_zero_in_segment(&waveform, 0, cycle_length as f32);
+
+        // Second call with segment_start_abs far away, triggering "history outside segment" path
+        let result = detector.find_phase_zero_in_segment(
+            &waveform,
+            10000, // Far away from previous segment
+            cycle_length as f32,
+        );
+
+        assert!(result.is_some());
+        let phase_zero = result.unwrap();
+
+        // MUST be clamped to [L, 3L) even on fresh detection
+        assert!(
+            phase_zero >= cycle_length && phase_zero < cycle_length * 3,
+            "Phase zero {} MUST be clamped to [{}, {}) on fresh detection",
+            phase_zero,
+            cycle_length,
+            cycle_length * 3
+        );
+    }
+
+    #[test]
+    fn test_find_phase_zero_different_cycle_lengths() {
+        // Test constraint works for various cycle lengths
+        let test_cycle_lengths = vec![50, 100, 200, 441];
+
+        for cycle_length in test_cycle_lengths {
+            let waveform = create_waveform_no_zero_crosses_in_constraint_range(cycle_length);
+            let mut detector = ZeroCrossDetector::new();
+
+            let result = detector.find_phase_zero_in_segment(
+                &waveform,
+                0,
+                cycle_length as f32,
+            );
+
+            assert!(result.is_some());
+            let phase_zero = result.unwrap();
+
+            assert!(
+                phase_zero >= cycle_length && phase_zero < cycle_length * 3,
+                "Cycle length {}: phase zero {} not in [{}, {})",
+                cycle_length,
+                phase_zero,
+                cycle_length,
+                cycle_length * 3
+            );
+        }
+    }
+
+    #[test]
+    fn test_find_phase_zero_edge_case_short_segment() {
+        // Test that constraint handles short segments at buffer end
+        let cycle_length = 100;
+        let short_segment_len = 250; // Less than 3 cycles
+        let waveform: Vec<f32> = (0..short_segment_len)
+            .map(|i| (i as f32 / cycle_length as f32 * 2.0 * std::f32::consts::PI).sin())
+            .collect();
+
+        let mut detector = ZeroCrossDetector::new();
+        let result = detector.find_phase_zero_in_segment(
+            &waveform,
+            0,
+            cycle_length as f32,
+        );
+
+        // Should not panic and should return a valid position
+        assert!(result.is_some());
+        let phase_zero = result.unwrap();
+        assert!(phase_zero < waveform.len());
     }
 }

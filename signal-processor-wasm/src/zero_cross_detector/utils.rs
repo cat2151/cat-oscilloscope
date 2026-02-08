@@ -89,3 +89,74 @@ pub fn initialize_history(data: &[f32], estimated_cycle_length: f32) -> Option<u
     // Fallback: find first zero-cross
     find_zero_cross(data, 0)
 }
+
+/// Clamp a position to the allowed range [min_allowed, max_allowed_exclusive) and segment bounds
+///
+/// This helper function ensures that a position is within both:
+/// 1. The allowed constraint range [min_allowed, max_allowed_exclusive) - half-open interval
+/// 2. The segment bounds [0, segment_len)
+///
+/// # Arguments
+/// * `position` - The position to clamp
+/// * `min_allowed` - Inclusive lower bound of the allowed range
+/// * `max_allowed_exclusive` - Exclusive upper bound of the allowed range
+/// * `segment_len` - Length of the segment for final bounds checking
+///
+/// # Returns
+/// The clamped position guaranteed to be in [min_allowed, max_allowed_exclusive) ∩ [0, segment_len)
+pub fn clamp_to_allowed_range(
+    position: usize,
+    min_allowed: usize,
+    max_allowed_exclusive: usize,
+    segment_len: usize,
+) -> usize {
+    let mut clamped = position;
+
+    // Clamp to allowed range
+    if clamped < min_allowed {
+        clamped = min_allowed;
+    } else if clamped >= max_allowed_exclusive {
+        clamped = max_allowed_exclusive.saturating_sub(1);
+    }
+
+    // Final bounds check against segment length
+    clamped.min(segment_len.saturating_sub(1))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_clamp_to_allowed_range_within_bounds() {
+        // Position within allowed range should remain unchanged
+        assert_eq!(clamp_to_allowed_range(150, 100, 300, 400), 150);
+        assert_eq!(clamp_to_allowed_range(100, 100, 300, 400), 100); // At min
+        assert_eq!(clamp_to_allowed_range(299, 100, 300, 400), 299); // Just before max
+    }
+
+    #[test]
+    fn test_clamp_to_allowed_range_below_min() {
+        // Position below min_allowed should be clamped to min_allowed
+        assert_eq!(clamp_to_allowed_range(50, 100, 300, 400), 100);
+        assert_eq!(clamp_to_allowed_range(0, 100, 300, 400), 100);
+    }
+
+    #[test]
+    fn test_clamp_to_allowed_range_above_max() {
+        // Position at or above max_allowed_exclusive should be clamped to max - 1
+        assert_eq!(clamp_to_allowed_range(300, 100, 300, 400), 299);
+        assert_eq!(clamp_to_allowed_range(350, 100, 300, 400), 299);
+        assert_eq!(clamp_to_allowed_range(400, 100, 300, 400), 299);
+    }
+
+    #[test]
+    fn test_clamp_to_allowed_range_segment_bounds() {
+        // When position is within allowed range but segment is shorter,
+        // it should be clamped by segment bounds
+        assert_eq!(clamp_to_allowed_range(150, 100, 300, 200), 150); // Position 150 is valid within segment[0..200)
+
+        // When position and constraint both exceed segment bounds
+        assert_eq!(clamp_to_allowed_range(350, 100, 300, 200), 199); // Both clamps applied
+    }
+}
