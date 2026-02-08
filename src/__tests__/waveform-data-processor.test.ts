@@ -156,7 +156,7 @@ describe('WaveformDataProcessor', () => {
         phaseZeroIndex: 1000,   // +200 samples
         phaseTwoPiIndex: 1800,  // +200 samples
         phaseMinusQuarterPiIndex: 400,   // -200 samples
-        phaseTwoPiPlusQuarterPiIndex: 2000, // +200 samples
+        phaseTwoPiPlusQuarterPiIndex: 1600, // -200 samples (should clamp independently)
       });
       callClamp(processor, data2);
 
@@ -165,7 +165,7 @@ describe('WaveformDataProcessor', () => {
       expect(data2.phaseTwoPiIndex).toBe(1810);
       // Other markers remain independently clamped
       expect(data2.phaseMinusQuarterPiIndex).toBe(590);
-      expect(data2.phaseTwoPiPlusQuarterPiIndex).toBe(1810);
+      expect(data2.phaseTwoPiPlusQuarterPiIndex).toBe(1790);
     });
 
     it('should gradually converge to target over multiple frames', () => {
