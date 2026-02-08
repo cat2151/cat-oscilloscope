@@ -310,16 +310,36 @@ impl ZeroCrossDetector {
             }
         }
 
-        // If no candidates exist, don't move (keep history)
+        // If no candidates exist, don't move (keep history, but clamp to allowed range)
         let nearest = match nearest_candidate {
             Some(n) => n,
-            None => return Some(history_rel),
+            None => {
+                // Issue #296: Clamp history_rel to allowed range before returning
+                let mut clamped = history_rel;
+                if clamped < min_allowed {
+                    clamped = min_allowed;
+                } else if clamped > max_allowed && max_allowed < segment.len() {
+                    clamped = max_allowed;
+                }
+                let new_abs = segment_start_abs + clamped;
+                self.absolute_phase_offset = Some(new_abs);
+                return Some(clamped);
+            }
         };
 
         // Determine direction to move toward the nearest candidate
         if nearest == history_rel {
             // Already at a zero-cross, no movement needed
-            return Some(history_rel);
+            // Issue #296: But still clamp to allowed range
+            let mut clamped = history_rel;
+            if clamped < min_allowed {
+                clamped = min_allowed;
+            } else if clamped > max_allowed && max_allowed < segment.len() {
+                clamped = max_allowed;
+            }
+            let new_abs = segment_start_abs + clamped;
+            self.absolute_phase_offset = Some(new_abs);
+            return Some(clamped);
         }
 
         // Calculate the new position, constrained to move at most 1% per frame
@@ -335,13 +355,7 @@ impl ZeroCrossDetector {
             history_rel.saturating_sub(step)
         };
 
-        // Issue #296: Constrain phase marker to central 2 cycles (cycles 1-3 of 4-cycle segment)
-        // This prevents markers from disappearing at the left edge by using first and last cycles as safety margins
-        let cycle_length_usize = estimated_cycle_length as usize;
-        let min_allowed = cycle_length_usize; // Start of cycle 1
-        let max_allowed = cycle_length_usize * 3; // End of cycle 3
-
-        // Clamp new_rel to the allowed range
+        // Issue #296: Clamp new_rel to the allowed range (central 2 cycles)
         if new_rel < min_allowed {
             new_rel = min_allowed;
         } else if new_rel > max_allowed && max_allowed < segment.len() {
