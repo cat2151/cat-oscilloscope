@@ -198,10 +198,10 @@ Last updated: 2026-02-08
 - .github/check-large-files.toml
 - .github/copilot-instructions.md
 - .github/scripts/check_large_files.py
+- .github/workflows/call-check-large-files.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-translate-readme.yml
-- .github/workflows/check-large-files.yml
 - .github/workflows/deploy.yml
 - .gitignore
 - ARCHITECTURE.md

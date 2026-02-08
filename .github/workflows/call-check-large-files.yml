@@ -6,6 +6,10 @@ on:
     - cron: '0 18 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   call-check-large-files:
     uses: cat2151/github-actions/.github/workflows/check-large-files.yml@main
