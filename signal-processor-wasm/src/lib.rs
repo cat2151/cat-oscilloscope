@@ -325,7 +325,7 @@ impl WasmDataProcessor {
             cycle_length,
         ) {
             Some(idx) => idx,
-            None => return (None, None, None, None, history_before, history_before, Some(tolerance)),
+            None => return (None, None, None, None, None, history_before, Some(tolerance)),
         };
         
         // Convert to frame buffer position (absolute index in full data buffer)
