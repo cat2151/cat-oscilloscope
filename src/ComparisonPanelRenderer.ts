@@ -124,6 +124,21 @@ export class ComparisonPanelRenderer {
 
     // Draw current waveform with similarity score
     this.waveformRenderer.drawCenterLine(this.currentCtx, this.currentCanvas.width, this.currentCanvas.height);
+
+    // Draw previous waveform on current canvas first (as background, in dimmer color)
+    if (previousWaveform) {
+      this.waveformRenderer.drawWaveform(
+        this.currentCtx,
+        this.currentCanvas.width,
+        this.currentCanvas.height,
+        previousWaveform,
+        0,
+        previousWaveform.length,
+        '#666600' // Dimmer yellow-green color for previous waveform
+      );
+    }
+
+    // Draw current waveform on top
     const currentLength = currentEnd - currentStart;
     if (currentLength > 0) {
       this.waveformRenderer.drawWaveform(
