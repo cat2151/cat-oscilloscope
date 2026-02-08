@@ -7,9 +7,10 @@ import { WaveformSearcher } from './WaveformSearcher';
 import { ComparisonPanelRenderer } from './ComparisonPanelRenderer';
 import { CycleSimilarityRenderer } from './CycleSimilarityRenderer';
 import { WaveformDataProcessor } from './WaveformDataProcessor';
-import { WaveformRenderData } from './WaveformRenderData';
 import { BufferSource } from './BufferSource';
 import { OverlaysLayoutConfig } from './OverlayLayout';
+import { FrameTimingDiagnostics } from './FrameTimingDiagnostics';
+import { RenderCoordinator } from './RenderCoordinator';
 
 /**
  * Oscilloscope class - Main coordinator for the oscilloscope functionality
@@ -23,6 +24,8 @@ import { OverlaysLayoutConfig } from './OverlayLayout';
  * - ComparisonPanelRenderer: Comparison panel rendering
  * - CycleSimilarityRenderer: Cycle similarity graph rendering
  * - WaveformDataProcessor: Data generation and processing (Rust WASM implementation)
+ * - FrameTimingDiagnostics: Frame timing and FPS tracking
+ * - RenderCoordinator: Rendering coordination across multiple renderers
  */
 export class Oscilloscope {
   private audioManager: AudioManager;
@@ -34,18 +37,12 @@ export class Oscilloscope {
   private comparisonRenderer: ComparisonPanelRenderer;
   private cycleSimilarityRenderer: CycleSimilarityRenderer | null = null;
   private dataProcessor: WaveformDataProcessor;
+  private timingDiagnostics: FrameTimingDiagnostics;
+  private renderCoordinator: RenderCoordinator;
   private animationId: number | null = null;
   private isRunning = false;
   private isPaused = false;
   private phaseMarkerRangeEnabled = true; // Default: on
-
-  // Frame processing diagnostics
-  private lastFrameTime = 0;
-  private frameProcessingTimes: number[] = [];
-  private readonly MAX_FRAME_TIMES = 100;
-  private readonly TARGET_FRAME_TIME = 16.67; // 60fps target
-  private readonly FPS_LOG_INTERVAL_FRAMES = 60; // Log FPS every 60 frames (approx. 1 second at 60fps)
-  private enableDetailedTimingLogs = false; // Default: disabled to avoid performance impact
 
   /**
    * Create a new Oscilloscope instance
@@ -82,7 +79,7 @@ export class Oscilloscope {
       similarityPlotCanvas,
       frameBufferCanvas
     );
-    
+
     // Initialize cycle similarity renderer if canvases are provided
     if (cycleSimilarity8divCanvas && cycleSimilarity4divCanvas && cycleSimilarity2divCanvas) {
       this.cycleSimilarityRenderer = new CycleSimilarityRenderer(
@@ -91,13 +88,21 @@ export class Oscilloscope {
         cycleSimilarity2divCanvas
       );
     }
-    
+
     this.dataProcessor = new WaveformDataProcessor(
       this.audioManager,
       this.gainController,
       this.frequencyEstimator,
       this.waveformSearcher,
       this.zeroCrossDetector
+    );
+
+    this.timingDiagnostics = new FrameTimingDiagnostics();
+    this.renderCoordinator = new RenderCoordinator(
+      this.renderer,
+      this.comparisonRenderer,
+      this.cycleSimilarityRenderer,
+      this.frequencyEstimator
     );
   }
 
@@ -163,6 +168,7 @@ export class Oscilloscope {
       this.cycleSimilarityRenderer.clear();
     }
     this.dataProcessor.reset();
+    this.timingDiagnostics.reset();
   }
 
   private render(): void {
@@ -176,165 +182,31 @@ export class Oscilloscope {
     if (!this.isPaused) {
       // Detailed timing measurements for issue #269 diagnosis
       const t0 = performance.now();
-      
+
       // === DATA GENERATION PHASE ===
       // Process frame and generate all data needed for rendering using WASM processor
-      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled(), this.enableDetailedTimingLogs);
+      const renderData = this.dataProcessor.processFrame(this.renderer.getFFTDisplayEnabled(), this.timingDiagnostics.getDetailedTimingLogsEnabled());
       const t1 = performance.now();
-      
+
       if (renderData) {
         // === RENDERING PHASE ===
         // All rendering logic uses only the generated data
-        this.renderFrame(renderData);
+        this.renderCoordinator.renderFrame(renderData, this.phaseMarkerRangeEnabled);
         const t2 = performance.now();
-        
-        // Log detailed timing breakdown only if enabled or performance is poor
+
+        // Log detailed timing breakdown
         const dataProcessingTime = t1 - t0;
         const renderingTime = t2 - t1;
-        const totalTime = t2 - t0;
-        
-        // Log if explicitly enabled or if performance exceeds target (diagnostic threshold)
-        if (this.enableDetailedTimingLogs || totalTime > this.TARGET_FRAME_TIME) {
-          console.log(`[Frame Timing] Total: ${totalTime.toFixed(2)}ms | Data Processing: ${dataProcessingTime.toFixed(2)}ms | Rendering: ${renderingTime.toFixed(2)}ms`);
-        }
+        this.timingDiagnostics.logDetailedTiming(dataProcessingTime, renderingTime);
       }
     }
 
-    // Measure frame processing time
+    // Record frame timing
     const endTime = performance.now();
-    const processingTime = endTime - startTime;
-    this.frameProcessingTimes.push(processingTime);
-    if (this.frameProcessingTimes.length > this.MAX_FRAME_TIMES) {
-      this.frameProcessingTimes.shift();
-    }
-
-    // Warn if frame processing exceeds target (60fps)
-    if (processingTime > this.TARGET_FRAME_TIME) {
-      console.warn(`Frame processing time: ${processingTime.toFixed(2)}ms (target: <${this.TARGET_FRAME_TIME}ms)`);
-    }
-
-    // Calculate and log FPS periodically (every FPS_LOG_INTERVAL_FRAMES frames)
-    if (this.lastFrameTime > 0) {
-      const frameInterval = startTime - this.lastFrameTime;
-      const currentFps = 1000 / frameInterval;
-      
-      if (this.frameProcessingTimes.length === this.FPS_LOG_INTERVAL_FRAMES) {
-        const avgProcessingTime = this.frameProcessingTimes.reduce((a, b) => a + b, 0) / this.frameProcessingTimes.length;
-        console.log(`FPS: ${currentFps.toFixed(1)}, Avg frame time: ${avgProcessingTime.toFixed(2)}ms`);
-      }
-    }
-    this.lastFrameTime = startTime;
+    this.timingDiagnostics.recordFrameTime(startTime, endTime);
 
     // Continue rendering
     this.animationId = requestAnimationFrame(() => this.render());
-  }
-
-  /**
-   * Render a single frame using pre-processed data
-   * This method contains only rendering logic - no data processing
-   */
-  private renderFrame(renderData: WaveformRenderData): void {
-    // Determine display range based on phase marker range mode
-    let displayStartIndex = renderData.displayStartIndex;
-    let displayEndIndex = renderData.displayEndIndex;
-    
-    if (this.phaseMarkerRangeEnabled && 
-        renderData.phaseMinusQuarterPiIndex !== undefined && 
-        renderData.phaseTwoPiPlusQuarterPiIndex !== undefined &&
-        renderData.phaseMinusQuarterPiIndex <= renderData.phaseTwoPiPlusQuarterPiIndex) {
-      // Use phase marker range (orange to orange)
-      displayStartIndex = renderData.phaseMinusQuarterPiIndex;
-      displayEndIndex = renderData.phaseTwoPiPlusQuarterPiIndex;
-    }
-    
-    // Clear canvas and draw grid with measurement labels
-    const displaySamples = displayEndIndex - displayStartIndex;
-    this.renderer.clearAndDrawGrid(
-      renderData.sampleRate,
-      displaySamples,
-      renderData.gain
-    );
-
-    // Draw waveform with calculated gain
-    this.renderer.drawWaveform(
-      renderData.waveformData,
-      displayStartIndex,
-      displayEndIndex,
-      renderData.gain
-    );
-
-    // Draw phase markers
-    this.renderer.drawPhaseMarkers(
-      renderData.phaseZeroIndex,
-      renderData.phaseTwoPiIndex,
-      renderData.phaseMinusQuarterPiIndex,
-      renderData.phaseTwoPiPlusQuarterPiIndex,
-      displayStartIndex,
-      displayEndIndex,
-      {
-        phaseZeroSegmentRelative: renderData.phaseZeroSegmentRelative,
-        phaseZeroHistory: renderData.phaseZeroHistory,
-        phaseZeroTolerance: renderData.phaseZeroTolerance,
-        zeroCrossModeName: renderData.zeroCrossModeName,
-      }
-    );
-
-    // Draw FFT spectrum overlay if enabled and signal is above noise gate
-    if (renderData.frequencyData && this.renderer.getFFTDisplayEnabled() && renderData.isSignalAboveNoiseGate) {
-      this.renderer.drawFFTOverlay(
-        renderData.frequencyData,
-        renderData.estimatedFrequency,
-        renderData.sampleRate,
-        renderData.fftSize,
-        renderData.maxFrequency
-      );
-      
-      // Draw harmonic analysis overlay (only when FFT method is used and data is available)
-      this.renderer.drawHarmonicAnalysis(
-        renderData.halfFreqPeakStrengthPercent,
-        renderData.candidate1Harmonics,
-        renderData.candidate2Harmonics,
-        renderData.candidate1WeightedScore,
-        renderData.candidate2WeightedScore,
-        renderData.selectionReason,
-        renderData.estimatedFrequency
-      );
-    }
-
-    // 右上に周波数プロットを描画
-    this.renderer.drawFrequencyPlot(
-      renderData.frequencyPlotHistory,
-      this.frequencyEstimator.getMinFrequency(),
-      this.frequencyEstimator.getMaxFrequency()
-    );
-
-    // Update comparison panels with similarity history
-    // Use original 4-cycle range from WASM (renderData.displayStartIndex/displayEndIndex)
-    // instead of the phase-marker-narrowed range (displayStartIndex/displayEndIndex)
-    this.comparisonRenderer.updatePanels(
-      renderData.previousWaveform,
-      renderData.waveformData,
-      renderData.displayStartIndex,
-      renderData.displayEndIndex,
-      renderData.waveformData,
-      renderData.similarity,
-      renderData.similarityPlotHistory,
-      renderData.phaseZeroOffsetHistory,
-      renderData.phaseTwoPiOffsetHistory,
-      renderData.phaseZeroIndex,
-      renderData.phaseTwoPiIndex,
-      renderData.phaseMinusQuarterPiIndex,
-      renderData.phaseTwoPiPlusQuarterPiIndex
-    );
-    
-    // Update cycle similarity graphs if renderer is available
-    if (this.cycleSimilarityRenderer) {
-      this.cycleSimilarityRenderer.updateGraphs(
-        renderData.cycleSimilarities8div,
-        renderData.cycleSimilarities4div,
-        renderData.cycleSimilarities2div
-      );
-    }
   }
 
   // Getters and setters - delegate to appropriate modules
@@ -490,7 +362,7 @@ export class Oscilloscope {
    * @param enabled - true to enable detailed timing logs, false to use threshold-based logging
    */
   setDetailedTimingLogs(enabled: boolean): void {
-    this.enableDetailedTimingLogs = enabled;
+    this.timingDiagnostics.setDetailedTimingLogs(enabled);
     // Also pass to data processor
     this.dataProcessor.setDetailedTimingLogs(enabled);
   }
@@ -500,7 +372,7 @@ export class Oscilloscope {
    * @returns true if detailed timing logs are enabled
    */
   getDetailedTimingLogsEnabled(): boolean {
-    return this.enableDetailedTimingLogs;
+    return this.timingDiagnostics.getDetailedTimingLogsEnabled();
   }
 
   getPauseDrawing(): boolean {
