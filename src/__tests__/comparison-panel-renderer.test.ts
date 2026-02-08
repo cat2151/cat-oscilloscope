@@ -398,6 +398,56 @@ describe('ComparisonPanelRenderer', () => {
       // No phase markers should be drawn since all are outside the displayed region
       expect(phaseMarkerStrokes).toHaveLength(0);
     });
+
+    it('should draw previous waveform (#666600) before current waveform (#00ff00) on current canvas (issue #288)', () => {
+      const previousWaveform = new Float32Array(100).fill(0.5);
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const similarity = 0.9;
+
+      // Capture strokeStyle and lineWidth at each stroke() call on current canvas
+      const currCtx = currentCanvas.getContext('2d') as any;
+      const strokeCalls: { color: string; lineWidth: number }[] = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
+        configurable: true,
+      });
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
+      });
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth });
+      });
+
+      renderer.updatePanels(
+        previousWaveform,
+        currentWaveform,
+        0, 100,  // currentStart, currentEnd (displayed region)
+        fullBuffer,
+        similarity
+      );
+
+      // Filter waveform strokes (lineWidth=1.5) for previous (#666600) and current (#00ff00)
+      const waveformStrokes = strokeCalls.filter(c => c.lineWidth === 1.5);
+      const previousWaveformStrokes = waveformStrokes.filter(c => c.color === '#666600');
+      const currentWaveformStrokes = waveformStrokes.filter(c => c.color === '#00ff00');
+
+      // Verify both waveforms are drawn
+      expect(previousWaveformStrokes.length).toBeGreaterThan(0);
+      expect(currentWaveformStrokes.length).toBeGreaterThan(0);
+
+      // Verify order: previous waveform (#666600) comes before current waveform (#00ff00)
+      const firstPreviousIdx = strokeCalls.findIndex(c => c.lineWidth === 1.5 && c.color === '#666600');
+      const firstCurrentIdx = strokeCalls.findIndex(c => c.lineWidth === 1.5 && c.color === '#00ff00');
+      expect(firstPreviousIdx).toBeGreaterThan(-1);
+      expect(firstCurrentIdx).toBeGreaterThan(-1);
+      expect(firstPreviousIdx).toBeLessThan(firstCurrentIdx);
+    });
   });
 
   describe('clear', () => {
