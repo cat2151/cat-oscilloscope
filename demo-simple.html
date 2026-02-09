@@ -237,18 +237,17 @@ import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 // Oscilloscopeインスタンスを作成
 const canvas = document.getElementById('oscilloscope');
-
-// 他のビュー用のhidden canvasを作成
-const hiddenCanvas = document.createElement('canvas');
-hiddenCanvas.width = 250;
-hiddenCanvas.height = 120;
+const previousWaveformCanvas = document.getElementById('previousWaveformCanvas');
+const currentWaveformCanvas = document.getElementById('currentWaveformCanvas');
+const similarityPlotCanvas = document.getElementById('similarityPlotCanvas');
+const frameBufferCanvas = document.getElementById('frameBufferCanvas');
 
 const oscilloscope = new Oscilloscope(
   canvas,
-  hiddenCanvas,  // previousWaveformCanvas
-  hiddenCanvas,  // currentWaveformCanvas
-  hiddenCanvas,  // similarityPlotCanvas
-  hiddenCanvas   // frameBufferCanvas
+  previousWaveformCanvas,  // previousWaveformCanvas
+  currentWaveformCanvas,   // currentWaveformCanvas
+  similarityPlotCanvas,    // similarityPlotCanvas
+  frameBufferCanvas        // frameBufferCanvas
 );
 
 // 440Hz サイン波データを生成

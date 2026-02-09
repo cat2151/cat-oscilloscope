@@ -246,3 +246,55 @@ pub(crate) fn find_phase_zero_in_segment(
     // rather than "exactly at a zero-cross", which is acceptable for visual stability.
     Some(new_rel)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reuses_history_when_cycle_invalid_and_history_inside_segment() {
+        let segment = [0.0f32; 10];
+        let mut history = Some(5usize);
+        let result = find_phase_zero_in_segment(
+            &segment,
+            0,
+            0.0, // invalid cycle length
+            ZeroCrossMode::Standard,
+            &mut history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result, Some(5));
+        assert_eq!(history, Some(5));
+    }
+
+    #[test]
+    fn returns_none_when_cycle_invalid_and_history_not_in_segment() {
+        let segment = [0.0f32; 8];
+        let mut history = Some(20usize);
+        let result = find_phase_zero_in_segment(
+            &segment,
+            0,
+            f32::EPSILON / 2.0, // still treated as invalid
+            ZeroCrossMode::Standard,
+            &mut history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result, None);
+        assert_eq!(history, Some(20));
+
+        let mut no_history: Option<usize> = None;
+        let result_none = find_phase_zero_in_segment(
+            &segment,
+            0,
+            0.0,
+            ZeroCrossMode::Standard,
+            &mut no_history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result_none, None);
+        assert_eq!(no_history, None);
+    }
+}

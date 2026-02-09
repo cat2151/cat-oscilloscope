@@ -4,12 +4,20 @@
 //   import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
-// Canvas要素とUI要素を取得
-const canvas = document.getElementById('oscilloscope');
-const previousWaveformCanvas = document.getElementById('previousWaveformCanvas');
-const currentWaveformCanvas = document.getElementById('currentWaveformCanvas');
-const similarityPlotCanvas = document.getElementById('similarityPlotCanvas');
-const frameBufferCanvas = document.getElementById('frameBufferCanvas');
+// Canvas要素とUI要素を取得し、存在チェック
+function getCanvasById(id) {
+  const el = document.getElementById(id);
+  if (!(el instanceof HTMLCanvasElement)) {
+    throw new Error(`Element with id '${id}' must be a HTMLCanvasElement.`);
+  }
+  return el;
+}
+
+const canvas = getCanvasById('oscilloscope');
+const previousWaveformCanvas = getCanvasById('previousWaveformCanvas');
+const currentWaveformCanvas = getCanvasById('currentWaveformCanvas');
+const similarityPlotCanvas = getCanvasById('similarityPlotCanvas');
+const frameBufferCanvas = getCanvasById('frameBufferCanvas');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const statusElement = document.getElementById('status');
