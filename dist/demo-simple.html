@@ -122,9 +122,34 @@
     .wave-selector input[type="radio"] {
       margin-right: 5px;
     }
+    .debug-panels {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 24px 0;
+    }
+    .debug-panel {
+      margin-bottom: 16px;
+    }
+    .debug-panel:last-child {
+      margin-bottom: 0;
+    }
+    .debug-panel canvas {
+      display: block;
+      margin: 8px auto 0;
+      background: #000;
+      border: 1px solid #444;
+    }
+    .panel-title {
+      text-align: center;
+      color: #00ff00;
+      font-weight: bold;
+      font-size: 14px;
+    }
   </style>
-  <script type="module" crossorigin src="/cat-oscilloscope/assets/demo-B8LH4eBp.js"></script>
-  <link rel="modulepreload" crossorigin href="/cat-oscilloscope/assets/Oscilloscope-0AkMdwqr.js">
+  <script type="module" crossorigin src="/cat-oscilloscope/assets/demo-9JbpkLFd.js"></script>
+  <link rel="modulepreload" crossorigin href="/cat-oscilloscope/assets/Oscilloscope-BiPi-aIi.js">
 </head>
 <body>
   <div style="text-align: center; margin-bottom: 15px; padding-top: 10px;">
@@ -148,6 +173,19 @@
   </div>
 
   <canvas id="oscilloscope" width="800" height="400"></canvas>
+
+  <div class="debug-panels">
+    <div class="debug-panel">
+      <div class="panel-title">4周期表示（今回の波形）</div>
+      <canvas id="currentWaveformCanvas" width="500" height="140"></canvas>
+    </div>
+    <div class="debug-panel">
+      <div class="panel-title">フレームバッファ</div>
+      <canvas id="frameBufferCanvas" width="800" height="140"></canvas>
+    </div>
+    <canvas id="previousWaveformCanvas" width="250" height="120" style="display: none;"></canvas>
+    <canvas id="similarityPlotCanvas" width="250" height="120" style="display: none;"></canvas>
+  </div>
   
   <div class="wave-selector">
     <strong>波形選択：</strong>
@@ -201,18 +239,17 @@ import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
 // Oscilloscopeインスタンスを作成
 const canvas = document.getElementById('oscilloscope');
-
-// 他のビュー用のhidden canvasを作成
-const hiddenCanvas = document.createElement('canvas');
-hiddenCanvas.width = 250;
-hiddenCanvas.height = 120;
+const previousWaveformCanvas = document.getElementById('previousWaveformCanvas');
+const currentWaveformCanvas = document.getElementById('currentWaveformCanvas');
+const similarityPlotCanvas = document.getElementById('similarityPlotCanvas');
+const frameBufferCanvas = document.getElementById('frameBufferCanvas');
 
 const oscilloscope = new Oscilloscope(
   canvas,
-  hiddenCanvas,  // previousWaveformCanvas
-  hiddenCanvas,  // currentWaveformCanvas
-  hiddenCanvas,  // similarityPlotCanvas
-  hiddenCanvas   // frameBufferCanvas
+  previousWaveformCanvas,  // previousWaveformCanvas
+  currentWaveformCanvas,   // currentWaveformCanvas
+  similarityPlotCanvas,    // similarityPlotCanvas
+  frameBufferCanvas        // frameBufferCanvas
 );
 
 // 440Hz サイン波データを生成

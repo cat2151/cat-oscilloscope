@@ -42,7 +42,6 @@ export class WaveformDataProcessor {
   // Previous frame percent positions for 1% clamping enforcement (issue #275)
   private prevPhaseZeroPercent: number | undefined = undefined;
   private prevPhaseMinusQuarterPiPercent: number | undefined = undefined;
-  private prevPhaseTwoPiPlusQuarterPiPercent: number | undefined = undefined;
 
   // Performance diagnostics for issue #269
   private enableDetailedTimingLogs = false; // Default: disabled to avoid performance impact
@@ -300,6 +299,7 @@ export class WaveformDataProcessor {
     const CYCLES_TO_DISPLAY = 4;
     const MAX_CHANGE_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display window = 1% of one cycle
     const cycleLengthSamples = Math.floor(displayLength / CYCLES_TO_DISPLAY);
+    const quarterCycleSamples = Math.floor(cycleLengthSamples / 4);
 
     // Helper: clamp a single marker and return updated percent
     const clampMarker = (
@@ -334,7 +334,7 @@ export class WaveformDataProcessor {
       return { index: clampedIndex, percent: actualPercent };
     };
 
-    // Clamp start marker, derive end marker (+1 cycle), clamp the two orange markers independently
+    // Clamp start markers; derive red end from red start and orange end from orange start offset
     const r0 = clampMarker(renderData.phaseZeroIndex, this.prevPhaseZeroPercent);
     renderData.phaseZeroIndex = r0.index;
     this.prevPhaseZeroPercent = r0.percent;
@@ -351,9 +351,12 @@ export class WaveformDataProcessor {
     renderData.phaseMinusQuarterPiIndex = rMinus.index;
     this.prevPhaseMinusQuarterPiPercent = rMinus.percent;
 
-    const rPlus = clampMarker(renderData.phaseTwoPiPlusQuarterPiIndex, this.prevPhaseTwoPiPlusQuarterPiPercent);
-    renderData.phaseTwoPiPlusQuarterPiIndex = rPlus.index;
-    this.prevPhaseTwoPiPlusQuarterPiPercent = rPlus.percent;
+    if (rMinus.index !== undefined && cycleLengthSamples > 0) {
+      const derivedTwoPiPlusQuarter = rMinus.index + cycleLengthSamples + quarterCycleSamples;
+      renderData.phaseTwoPiPlusQuarterPiIndex = derivedTwoPiPlusQuarter;
+    } else {
+      renderData.phaseTwoPiPlusQuarterPiIndex = undefined;
+    }
   }
 
   /**
@@ -481,6 +484,5 @@ export class WaveformDataProcessor {
     // Clear clamping state (issue #275)
     this.prevPhaseZeroPercent = undefined;
     this.prevPhaseMinusQuarterPiPercent = undefined;
-    this.prevPhaseTwoPiPlusQuarterPiPercent = undefined;
   }
 }
