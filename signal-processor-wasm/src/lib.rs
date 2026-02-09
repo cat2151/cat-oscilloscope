@@ -456,12 +456,13 @@ impl WasmDataProcessor {
                 continue;
             }
 
-            let rel_start = candidate_abs - segment_start;
-            let rel_end = if i + 1 < candidates.len() {
-                candidates[i + 1].min(clamped_end).saturating_sub(segment_start)
-            } else {
-                segment.len()
+            let next_abs = match candidates.get(i + 1).copied() {
+                Some(next) if next > candidate_abs && next <= clamped_end => next,
+                _ => continue,
             };
+
+            let rel_start = candidate_abs - segment_start;
+            let rel_end = next_abs - segment_start;
 
             if rel_start >= rel_end {
                 continue;

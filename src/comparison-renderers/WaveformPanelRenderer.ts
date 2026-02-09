@@ -116,12 +116,13 @@ export class WaveformPanelRenderer {
     highlightedCandidate?: number
   ): void {
     const displayLength = displayEndIndex - displayStartIndex;
-    if (!candidates || candidates.length === 0 || displayLength <= 0) {
+    if (candidates.length === 0 || displayLength <= 0) {
       return;
     }
 
     const centerY = height / 2;
     const radius = 4;
+    const now = performance.now();
 
     ctx.save();
     for (const candidate of candidates) {
@@ -132,7 +133,7 @@ export class WaveformPanelRenderer {
 
       const x = (relativeIndex / displayLength) * width;
       const isHighlighted = highlightedCandidate !== undefined && candidate === highlightedCandidate;
-      const blinkOn = isHighlighted && Math.floor(performance.now() / 400) % 2 === 0;
+      const blinkOn = isHighlighted && Math.floor(now / 400) % 2 === 0;
       const color = isHighlighted ? (blinkOn ? '#ffff00' : '#0066ff') : '#ffff00';
 
       ctx.beginPath();
@@ -141,6 +142,7 @@ export class WaveformPanelRenderer {
       ctx.lineWidth = 2;
       ctx.arc(x, centerY, radius, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
     }
     ctx.restore();
   }

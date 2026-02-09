@@ -1027,16 +1027,16 @@ class ae {
    */
   drawZeroCrossCandidates(e, t, i, s, a, o, n) {
     const h = o - a;
-    if (!s || s.length === 0 || h <= 0)
+    if (s.length === 0 || h <= 0)
       return;
-    const f = i / 2, d = 4;
+    const f = i / 2, d = 4, u = performance.now();
     e.save();
-    for (const u of s) {
-      const m = u - a;
-      if (m < 0 || m >= h)
+    for (const m of s) {
+      const c = m - a;
+      if (c < 0 || c >= h)
         continue;
-      const c = m / h * t, g = n !== void 0 && u === n, v = g && Math.floor(performance.now() / 400) % 2 === 0, l = g ? v ? "#ffff00" : "#0066ff" : "#ffff00";
-      e.beginPath(), e.fillStyle = l, e.strokeStyle = l, e.lineWidth = 2, e.arc(c, f, d, 0, Math.PI * 2), e.fill();
+      const g = c / h * t, v = n !== void 0 && m === n, l = v && Math.floor(u / 400) % 2 === 0, x = v ? l ? "#ffff00" : "#0066ff" : "#ffff00";
+      e.beginPath(), e.fillStyle = x, e.strokeStyle = x, e.lineWidth = 2, e.arc(g, f, d, 0, Math.PI * 2), e.fill(), e.stroke();
     }
     e.restore();
   }
