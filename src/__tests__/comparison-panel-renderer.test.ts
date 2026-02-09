@@ -40,6 +40,8 @@ describe('ComparisonPanelRenderer', () => {
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
       fillText: vi.fn(),
       measureText: vi.fn(() => ({ width: 100 })),
       save: vi.fn(),
@@ -59,6 +61,8 @@ describe('ComparisonPanelRenderer', () => {
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
       fillText: vi.fn(),
       measureText: vi.fn(() => ({ width: 100 })),
       save: vi.fn(),
@@ -78,6 +82,8 @@ describe('ComparisonPanelRenderer', () => {
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
       fillText: vi.fn(),
       measureText: vi.fn(() => ({ width: 100 })),
       save: vi.fn(),
@@ -97,6 +103,8 @@ describe('ComparisonPanelRenderer', () => {
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
       fillText: vi.fn(),
       measureText: vi.fn(() => ({ width: 100 })),
       save: vi.fn(),
@@ -397,6 +405,68 @@ describe('ComparisonPanelRenderer', () => {
 
       // No phase markers should be drawn since all are outside the displayed region
       expect(phaseMarkerStrokes).toHaveLength(0);
+    });
+
+    it('should draw zero-cross candidates and blink highlighted candidate in blue/yellow', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const candidates = [20, 60, 120];
+      const highlightedCandidate = 60;
+      const currCtx = currentCanvas.getContext('2d') as any;
+
+      const fillStyles: string[] = [];
+      let currentFillStyle = '';
+      Object.defineProperty(currCtx, 'fillStyle', {
+        set(val: string) { currentFillStyle = val; },
+        get() { return currentFillStyle; },
+        configurable: true,
+      });
+      currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
+
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        0, 200,
+        fullBuffer,
+        0,
+        [],
+        [],
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        candidates,
+        highlightedCandidate
+      );
+
+      expect(currCtx.arc).toHaveBeenCalledTimes(candidates.length);
+      expect(fillStyles).toContain('#ffff00');
+
+      fillStyles.length = 0;
+      nowSpy.mockReturnValue(500);
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        0, 200,
+        fullBuffer,
+        0,
+        [],
+        [],
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        candidates,
+        highlightedCandidate
+      );
+
+      expect(fillStyles).toContain('#0066ff');
+      nowSpy.mockRestore();
     });
 
     it('should draw previous waveform (#666600) before current waveform (#00ff00) on current canvas (issue #288)', () => {

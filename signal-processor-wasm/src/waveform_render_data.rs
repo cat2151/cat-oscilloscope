@@ -38,6 +38,8 @@ pub struct WaveformRenderData {
     pub(crate) phase_two_pi_index: Option<usize>,
     pub(crate) phase_minus_quarter_pi_index: Option<usize>,
     pub(crate) phase_two_pi_plus_quarter_pi_index: Option<usize>,
+    pub(crate) zero_cross_candidates: Vec<usize>,             // All zero-cross candidates within displayed range
+    pub(crate) highlighted_zero_cross_candidate: Option<usize>, // Candidate preceding max positive peak between consecutive zero-crosses
     
     // Harmonic analysis for debugging (only populated when FFT method is used)
     pub(crate) half_freq_peak_strength_percent: Option<f32>,  // Strength of peak at 1/2 estimated frequency (%)
@@ -155,6 +157,16 @@ impl WaveformRenderData {
     #[wasm_bindgen(getter, js_name = phaseTwoPiPlusQuarterPiIndex)]
     pub fn phase_two_pi_plus_quarter_pi_index(&self) -> Option<usize> {
         self.phase_two_pi_plus_quarter_pi_index
+    }
+    
+    #[wasm_bindgen(getter, js_name = zeroCrossCandidates)]
+    pub fn zero_cross_candidates(&self) -> Vec<usize> {
+        self.zero_cross_candidates.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = highlightedZeroCrossCandidate)]
+    pub fn highlighted_zero_cross_candidate(&self) -> Option<usize> {
+        self.highlighted_zero_cross_candidate
     }
     
     #[wasm_bindgen(getter, js_name = halfFreqPeakStrengthPercent)]

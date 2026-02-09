@@ -89,6 +89,8 @@ export class ComparisonPanelRenderer {
    * @param phaseTwoPiIndex - Sample index for phase 2π (red line) in the full buffer (issue #279)
    * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line) in the full buffer (issue #279)
    * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line) in the full buffer (issue #279)
+   * @param zeroCrossCandidates - Zero-cross candidates within the displayed current waveform
+   * @param highlightedZeroCrossCandidate - Candidate preceding the interval with the max positive peak (blinks)
    */
   updatePanels(
     previousWaveform: Float32Array | null,
@@ -96,14 +98,16 @@ export class ComparisonPanelRenderer {
     currentStart: number,
     currentEnd: number,
     fullBuffer: Float32Array,
-    similarity: number,
-    similarityHistory: number[] = [],
-    phaseZeroOffsetHistory: number[] = [],
-    phaseTwoPiOffsetHistory: number[] = [],
-    phaseZeroIndex?: number,
-    phaseTwoPiIndex?: number,
-    phaseMinusQuarterPiIndex?: number,
-    phaseTwoPiPlusQuarterPiIndex?: number
+   similarity: number,
+   similarityHistory: number[] = [],
+   phaseZeroOffsetHistory: number[] = [],
+   phaseTwoPiOffsetHistory: number[] = [],
+   phaseZeroIndex?: number,
+   phaseTwoPiIndex?: number,
+   phaseMinusQuarterPiIndex?: number,
+    phaseTwoPiPlusQuarterPiIndex?: number,
+    zeroCrossCandidates: number[] = [],
+    highlightedZeroCrossCandidate?: number
   ): void {
     // Clear all canvases
     this.clearAllCanvases();
@@ -162,6 +166,17 @@ export class ComparisonPanelRenderer {
       this.currentCanvas.height,
       phaseZeroOffsetHistory,
       phaseTwoPiOffsetHistory
+    );
+
+    // Draw zero-cross candidates on current waveform
+    this.waveformRenderer.drawZeroCrossCandidates(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      zeroCrossCandidates,
+      currentStart,
+      currentEnd,
+      highlightedZeroCrossCandidate
     );
 
     // Draw phase markers on current waveform (issue #279, #286) - drawn last to ensure visibility

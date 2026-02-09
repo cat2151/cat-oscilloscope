@@ -104,6 +104,48 @@ export class WaveformPanelRenderer {
   }
 
   /**
+   * Draw zero-cross candidates as circles on the center line
+   */
+  drawZeroCrossCandidates(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    candidates: number[],
+    displayStartIndex: number,
+    displayEndIndex: number,
+    highlightedCandidate?: number
+  ): void {
+    const displayLength = displayEndIndex - displayStartIndex;
+    if (!candidates || candidates.length === 0 || displayLength <= 0) {
+      return;
+    }
+
+    const centerY = height / 2;
+    const radius = 4;
+
+    ctx.save();
+    for (const candidate of candidates) {
+      const relativeIndex = candidate - displayStartIndex;
+      if (relativeIndex < 0 || relativeIndex >= displayLength) {
+        continue;
+      }
+
+      const x = (relativeIndex / displayLength) * width;
+      const isHighlighted = highlightedCandidate !== undefined && candidate === highlightedCandidate;
+      const blinkOn = isHighlighted && Math.floor(performance.now() / 400) % 2 === 0;
+      const color = isHighlighted ? (blinkOn ? '#ffff00' : '#0066ff') : '#ffff00';
+
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.arc(x, centerY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /**
    * Clear a canvas
    */
   clearCanvas(ctx: CanvasRenderingContext2D, width: number, height: number): void {

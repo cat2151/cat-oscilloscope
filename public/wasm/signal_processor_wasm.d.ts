@@ -50,6 +50,7 @@ export class WaveformRenderData {
     readonly frequencyPlotHistory: Float32Array;
     readonly gain: number;
     readonly halfFreqPeakStrengthPercent: number | undefined;
+    readonly highlightedZeroCrossCandidate: number | undefined;
     readonly isSignalAboveNoiseGate: boolean;
     readonly maxFrequency: number;
     readonly phaseMinusQuarterPiIndex: number | undefined;
@@ -66,6 +67,7 @@ export class WaveformRenderData {
     readonly similarityPlotHistory: Float32Array;
     readonly usedSimilaritySearch: boolean;
     readonly waveform_data: Float32Array;
+    readonly zeroCrossCandidates: Uint32Array;
     readonly zeroCrossModeName: string | undefined;
 }
 
@@ -73,18 +75,6 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
-    readonly wasmdataprocessor_computeFrequencyData: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly wasmdataprocessor_new: () => number;
-    readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
-    readonly wasmdataprocessor_reset: (a: number) => void;
-    readonly wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
-    readonly wasmdataprocessor_setBufferSizeMultiplier: (a: number, b: number) => void;
-    readonly wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;
-    readonly wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
-    readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
-    readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
-    readonly wasmdataprocessor_setZeroCrossMode: (a: number, b: number, c: number) => void;
     readonly __wbg_waveformrenderdata_free: (a: number, b: number) => void;
     readonly waveformrenderdata_candidate1Harmonics: (a: number) => [number, number];
     readonly waveformrenderdata_candidate1WeightedScore: (a: number) => number;
@@ -101,6 +91,7 @@ export interface InitOutput {
     readonly waveformrenderdata_frequencyPlotHistory: (a: number) => [number, number];
     readonly waveformrenderdata_gain: (a: number) => number;
     readonly waveformrenderdata_halfFreqPeakStrengthPercent: (a: number) => number;
+    readonly waveformrenderdata_highlightedZeroCrossCandidate: (a: number) => number;
     readonly waveformrenderdata_isSignalAboveNoiseGate: (a: number) => number;
     readonly waveformrenderdata_maxFrequency: (a: number) => number;
     readonly waveformrenderdata_phaseMinusQuarterPiIndex: (a: number) => number;
@@ -117,7 +108,20 @@ export interface InitOutput {
     readonly waveformrenderdata_similarityPlotHistory: (a: number) => [number, number];
     readonly waveformrenderdata_usedSimilaritySearch: (a: number) => number;
     readonly waveformrenderdata_waveform_data: (a: number) => [number, number];
+    readonly waveformrenderdata_zeroCrossCandidates: (a: number) => [number, number];
     readonly waveformrenderdata_zeroCrossModeName: (a: number) => [number, number];
+    readonly __wbg_wasmdataprocessor_free: (a: number, b: number) => void;
+    readonly wasmdataprocessor_computeFrequencyData: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly wasmdataprocessor_new: () => number;
+    readonly wasmdataprocessor_processFrame: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
+    readonly wasmdataprocessor_reset: (a: number) => void;
+    readonly wasmdataprocessor_setAutoGain: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setBufferSizeMultiplier: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setFrequencyEstimationMethod: (a: number, b: number, c: number) => void;
+    readonly wasmdataprocessor_setNoiseGate: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setNoiseGateThreshold: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setUsePeakMode: (a: number, b: number) => void;
+    readonly wasmdataprocessor_setZeroCrossMode: (a: number, b: number, c: number) => void;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;

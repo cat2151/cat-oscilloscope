@@ -39,8 +39,10 @@ export declare class ComparisonPanelRenderer {
      * @param phaseTwoPiIndex - Sample index for phase 2π (red line) in the full buffer (issue #279)
      * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line) in the full buffer (issue #279)
      * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line) in the full buffer (issue #279)
+     * @param zeroCrossCandidates - Zero-cross candidates within the displayed current waveform
+     * @param highlightedZeroCrossCandidate - Candidate preceding the interval with the max positive peak (blinks)
      */
-    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array, currentStart: number, currentEnd: number, fullBuffer: Float32Array, similarity: number, similarityHistory?: number[], phaseZeroOffsetHistory?: number[], phaseTwoPiOffsetHistory?: number[], phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number): void;
+    updatePanels(previousWaveform: Float32Array | null, currentWaveform: Float32Array, currentStart: number, currentEnd: number, fullBuffer: Float32Array, similarity: number, similarityHistory?: number[], phaseZeroOffsetHistory?: number[], phaseTwoPiOffsetHistory?: number[], phaseZeroIndex?: number, phaseTwoPiIndex?: number, phaseMinusQuarterPiIndex?: number, phaseTwoPiPlusQuarterPiIndex?: number, zeroCrossCandidates?: number[], highlightedZeroCrossCandidate?: number): void;
     /**
      * Clear all panels (e.g., when stopped)
      */
