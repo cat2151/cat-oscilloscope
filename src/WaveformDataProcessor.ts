@@ -42,7 +42,6 @@ export class WaveformDataProcessor {
   // Previous frame percent positions for 1% clamping enforcement (issue #275)
   private prevPhaseZeroPercent: number | undefined = undefined;
   private prevPhaseMinusQuarterPiPercent: number | undefined = undefined;
-  private prevPhaseTwoPiPlusQuarterPiPercent: number | undefined = undefined;
 
   // Performance diagnostics for issue #269
   private enableDetailedTimingLogs = false; // Default: disabled to avoid performance impact
@@ -300,6 +299,7 @@ export class WaveformDataProcessor {
     const CYCLES_TO_DISPLAY = 4;
     const MAX_CHANGE_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display window = 1% of one cycle
     const cycleLengthSamples = Math.floor(displayLength / CYCLES_TO_DISPLAY);
+    const eighthCycleSamples = Math.floor(cycleLengthSamples / 8);
 
     // Helper: clamp a single marker and return updated percent
     const clampMarker = (
@@ -351,9 +351,12 @@ export class WaveformDataProcessor {
     renderData.phaseMinusQuarterPiIndex = rMinus.index;
     this.prevPhaseMinusQuarterPiPercent = rMinus.percent;
 
-    const rPlus = clampMarker(renderData.phaseTwoPiPlusQuarterPiIndex, this.prevPhaseTwoPiPlusQuarterPiPercent);
-    renderData.phaseTwoPiPlusQuarterPiIndex = rPlus.index;
-    this.prevPhaseTwoPiPlusQuarterPiPercent = rPlus.percent;
+    if (rMinus.index !== undefined && cycleLengthSamples > 0) {
+      const derivedTwoPiPlusQuarter = rMinus.index + cycleLengthSamples + 2 * eighthCycleSamples;
+      renderData.phaseTwoPiPlusQuarterPiIndex = derivedTwoPiPlusQuarter;
+    } else {
+      renderData.phaseTwoPiPlusQuarterPiIndex = undefined;
+    }
   }
 
   /**
@@ -481,6 +484,5 @@ export class WaveformDataProcessor {
     // Clear clamping state (issue #275)
     this.prevPhaseZeroPercent = undefined;
     this.prevPhaseMinusQuarterPiPercent = undefined;
-    this.prevPhaseTwoPiPlusQuarterPiPercent = undefined;
   }
 }

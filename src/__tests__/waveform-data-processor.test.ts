@@ -141,7 +141,7 @@ describe('WaveformDataProcessor', () => {
       expect(data2.phaseZeroIndex).toBe(1990);
     });
 
-    it('should clamp markers and derive phaseTwoPiIndex from phaseZeroIndex', () => {
+    it('should clamp start markers, derive red end from red start, and derive orange end from orange start offset', () => {
       // Frame 1: establish baselines
       const data1 = makeRenderData({
         phaseZeroIndex: 800,
@@ -156,16 +156,16 @@ describe('WaveformDataProcessor', () => {
         phaseZeroIndex: 1000,   // +200 samples
         phaseTwoPiIndex: 1800,  // +200 samples
         phaseMinusQuarterPiIndex: 400,   // -200 samples
-        phaseTwoPiPlusQuarterPiIndex: 1600, // -200 samples (should clamp independently)
+        phaseTwoPiPlusQuarterPiIndex: 1600, // -200 samples (end is derived from start, not clamped)
       });
       callClamp(processor, data2);
 
       // phaseZeroIndex is clamped to 1% of one cycle, and phaseTwoPiIndex follows exactly one cycle after it
       expect(data2.phaseZeroIndex).toBe(810);
       expect(data2.phaseTwoPiIndex).toBe(1810);
-      // Other markers remain independently clamped
+      // Orange end follows orange start with fixed offset (no 1% clamping on end)
       expect(data2.phaseMinusQuarterPiIndex).toBe(590);
-      expect(data2.phaseTwoPiPlusQuarterPiIndex).toBe(1790);
+      expect(data2.phaseTwoPiPlusQuarterPiIndex).toBe(1840);
     });
 
     it('should gradually converge to target over multiple frames', () => {

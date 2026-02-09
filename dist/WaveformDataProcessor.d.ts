@@ -33,7 +33,6 @@ export declare class WaveformDataProcessor {
     private previousPhaseTwoPiIndex;
     private prevPhaseZeroPercent;
     private prevPhaseMinusQuarterPiPercent;
-    private prevPhaseTwoPiPlusQuarterPiPercent;
     private enableDetailedTimingLogs;
     private readonly TIMING_LOG_THRESHOLD_MS;
     constructor(audioManager: AudioManager, gainController: GainController, frequencyEstimator: FrequencyEstimator, waveformSearcher: WaveformSearcher, zeroCrossDetector: ZeroCrossDetector);
