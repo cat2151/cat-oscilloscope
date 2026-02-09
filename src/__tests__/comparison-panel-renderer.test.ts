@@ -421,6 +421,10 @@ describe('ComparisonPanelRenderer', () => {
         get() { return currentFillStyle; },
         configurable: true,
       });
+      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y, fill: currentFillStyle });
+      });
       currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
 
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
@@ -482,6 +486,10 @@ describe('ComparisonPanelRenderer', () => {
         get() { return currentFillStyle; },
         configurable: true,
       });
+      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y, fill: currentFillStyle });
+      });
       currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
 
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
@@ -503,6 +511,8 @@ describe('ComparisonPanelRenderer', () => {
       );
 
       expect(fillStyles).toContain('#ff0000');
+      const expectedX = (80 / 200) * currentCanvas.width; // relative index 80 in [0,200) mapped to width
+      expect(arcCalls.find(c => c.fill === '#ff0000')?.x).toBeCloseTo(expectedX);
       nowSpy.mockRestore();
     });
 
