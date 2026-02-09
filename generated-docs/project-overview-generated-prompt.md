@@ -1,4 +1,4 @@
-Last updated: 2026-02-09
+Last updated: 2026-02-10
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -440,12 +440,12 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📘 ZeroCrossDetector.d.ts
   📄 ZeroCrossDetector.d.ts.map
   📁 assets/
-    📜 Oscilloscope-0AkMdwqr.js
-    📄 Oscilloscope-0AkMdwqr.js.map
-    📜 demo-B8LH4eBp.js
-    📄 demo-B8LH4eBp.js.map
-    📜 main-DNW0ajie.js
-    📄 main-DNW0ajie.js.map
+    📜 Oscilloscope-BiPi-aIi.js
+    📄 Oscilloscope-BiPi-aIi.js.map
+    📜 demo-9JbpkLFd.js
+    📄 demo-9JbpkLFd.js.map
+    📜 main-pCt8i_lw.js
+    📄 main-pCt8i_lw.js.map
   📄 cat-oscilloscope.cjs
   📄 cat-oscilloscope.cjs.map
   📄 cat-oscilloscope.mjs
@@ -599,6 +599,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📖 296.md
   📖 299.md
   📖 301.md
+  📖 305.md
+  📖 307.md
+  📖 311.md
   📖 57.md
   📖 59.md
   📖 62.md
@@ -661,6 +664,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       📄 default_mode.rs
       📄 mod.rs
       📄 non_default_modes.rs
+      📄 phase_zero.rs
       📄 types.rs
       📄 utils.rs
 📁 src/
@@ -734,12 +738,12 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 📘 vite.config.ts
 
 ## ファイル詳細分析
-**demo-simple.html** (264行, 7004バイト)
+**demo-simple.html** (301行, 8295バイト)
   - 関数: なし
   - インポート: なし
 
-**demo-simple.js** (159行, 4590バイト)
-  - 関数: startUpdates, stopUpdates, generateWaveform, startOscilloscope, if, switch, for, catch
+**demo-simple.js** (166行, 4945バイト)
+  - 関数: getCanvasById, startUpdates, stopUpdates, generateWaveform, startOscilloscope, if, switch, for, catch
   - インポート: cat-oscilloscope, cat-oscilloscope
 
 **dist/AudioManager.d.ts** (75行, 2146バイト)
@@ -754,7 +758,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/ComparisonPanelRenderer.d.ts** (49行, 2897バイト)
+**dist/ComparisonPanelRenderer.d.ts** (51行, 3180バイト)
   - 関数: なし
   - インポート: なし
 
@@ -810,11 +814,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/WaveformDataProcessor.d.ts** (89行, 3910バイト)
+**dist/WaveformDataProcessor.d.ts** (88行, 3862バイト)
   - 関数: なし
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
-**dist/WaveformRenderData.d.ts** (78行, 3948バイト)
+**dist/WaveformRenderData.d.ts** (82行, 4191バイト)
   - 関数: なし
   - インポート: なし
 
@@ -830,15 +834,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/assets/Oscilloscope-0AkMdwqr.js** (8行, 49901バイト)
-  - 関数: t, i, z, N, D, B, O, f, u, n, function, for, if, constructor, updateHistory, getExtendedBuffer, clear, initializeAnalyser, start, catch, startFromFile, startFromBuffer, stop, getTimeDomainData, getExtendedTimeDomainData, getFrequencyData, getSampleRate, getFFTSize, getFrequencyBinCount, isReady, setAutoGain, getAutoGainEnabled, setNoiseGate, getNoiseGateEnabled, setNoiseGateThreshold, getNoiseGateThreshold, getCurrentGain, clearHistory, setFrequencyEstimationMethod, getFrequencyEstimationMethod, setBufferSizeMultiplier, getBufferSizeMultiplier, getEstimatedFrequency, getMinFrequency, getMaxFrequency, getFrequencyPlotHistory, updateDimensions, calculateOverlayDimensions, drawGrid, drawGridLabels, drawWaveform, drawFFTOverlay, drawHarmonicAnalysis, drawFrequencyPlot, setDebugOverlaysEnabled, drawPhaseMarkers, clearAndDrawGrid, updateRendererDimensions, setFFTDisplay, getFFTDisplayEnabled, setHarmonicAnalysisEnabled, getHarmonicAnalysisEnabled, getDebugOverlaysEnabled, setOverlaysLayout, getOverlaysLayout, setUsePeakMode, getUsePeakMode, setZeroCrossMode, getZeroCrossMode, reset, getLastSimilarity, hasPreviousWaveform, getPreviousWaveform, findPeakAmplitude, drawCenterLine, clearCanvas, drawSimilarityPlot, drawSimilarityText, drawPositionMarkers, drawOffsetOverlayGraphs, clearAllCanvases, updatePanels, drawSimilarityGraph, updateGraphs, getBasePath, getBasePathFromScripts, loadWasmModule, getProcessor, initialize, syncConfigToWasm, syncResultsFromWasm, processFrame, setDetailedTimingLogs, clampPhaseMarkers, updatePhaseOffsetHistory, getDetailedTimingLogsEnabled, recordFrameTime, logDetailedTiming, renderFrame, render, getIsRunning, getSimilarityScore, isSimilaritySearchActive, setPauseDrawing, getPauseDrawing, setPhaseMarkerRangeEnabled, getPhaseMarkerRangeEnabled
+**dist/assets/Oscilloscope-BiPi-aIi.js** (8行, 50982バイト)
+  - 関数: t, i, z, N, D, B, O, f, u, x, n, function, for, if, constructor, updateHistory, getExtendedBuffer, clear, initializeAnalyser, start, catch, startFromFile, startFromBuffer, stop, getTimeDomainData, getExtendedTimeDomainData, getFrequencyData, getSampleRate, getFFTSize, getFrequencyBinCount, isReady, setAutoGain, getAutoGainEnabled, setNoiseGate, getNoiseGateEnabled, setNoiseGateThreshold, getNoiseGateThreshold, getCurrentGain, clearHistory, setFrequencyEstimationMethod, getFrequencyEstimationMethod, setBufferSizeMultiplier, getBufferSizeMultiplier, getEstimatedFrequency, getMinFrequency, getMaxFrequency, getFrequencyPlotHistory, updateDimensions, calculateOverlayDimensions, drawGrid, drawGridLabels, drawWaveform, drawFFTOverlay, drawHarmonicAnalysis, drawFrequencyPlot, setDebugOverlaysEnabled, drawPhaseMarkers, clearAndDrawGrid, updateRendererDimensions, setFFTDisplay, getFFTDisplayEnabled, setHarmonicAnalysisEnabled, getHarmonicAnalysisEnabled, getDebugOverlaysEnabled, setOverlaysLayout, getOverlaysLayout, setUsePeakMode, getUsePeakMode, setZeroCrossMode, getZeroCrossMode, reset, getLastSimilarity, hasPreviousWaveform, getPreviousWaveform, findPeakAmplitude, drawCenterLine, drawZeroCrossCandidates, clearCanvas, drawSimilarityPlot, drawSimilarityText, drawPositionMarkers, drawOffsetOverlayGraphs, clearAllCanvases, updatePanels, drawSimilarityGraph, updateGraphs, getBasePath, getBasePathFromScripts, loadWasmModule, getProcessor, initialize, syncConfigToWasm, syncResultsFromWasm, processFrame, setDetailedTimingLogs, clampPhaseMarkers, updatePhaseOffsetHistory, getDetailedTimingLogsEnabled, recordFrameTime, logDetailedTiming, renderFrame, render, getIsRunning, getSimilarityScore, isSimilaritySearchActive, setPauseDrawing, getPauseDrawing, setPhaseMarkerRangeEnabled, getPhaseMarkerRangeEnabled
   - インポート: ${r}
 
-**dist/assets/demo-B8LH4eBp.js** (3行, 4077バイト)
-  - 関数: z, v, C, f, constructor, fromAudioBuffer, getNextChunk, if, reset, seek, getPosition, getLength, getSampleRate, setChunkSize, getChunkSize, setLooping, isLoop, isAtEnd, switch, catch
+**dist/assets/demo-9JbpkLFd.js** (3行, 4267バイト)
+  - 関数: c, I, x, M, d, constructor, fromAudioBuffer, getNextChunk, if, reset, seek, getPosition, getLength, getSampleRate, setChunkSize, getChunkSize, setLooping, isLoop, isAtEnd, switch, catch
   - インポート: なし
 
-**dist/assets/main-DNW0ajie.js** (3行, 15998バイト)
+**dist/assets/main-pCt8i_lw.js** (3行, 15998バイト)
   - 関数: constructor, frequencyToNoteInfo, calculateKeyboardRange, countWhiteKeys, for, calculateCenteringOffset, render, clear, getElement, validateElements, start, stop, update, updateFrequencyDisplay, if, updateGainDisplay, updateSimilarityDisplay, clearDisplays, setupEventHandlers, initializeUIState, setupCheckboxHandlers, setupSliderHandlers, setupSelectHandlers, setupButtonHandlers, setupFileInputHandler, handleStartStopButton, catch, handleFileInput, sliderValueToThreshold, formatThresholdDisplay, updateCycleSimilarityPanelDisplay
   - インポート: なし
 
@@ -854,7 +858,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/comparison-renderers/WaveformPanelRenderer.d.ts** (44行, 2364バイト)
+**dist/comparison-renderers/WaveformPanelRenderer.d.ts** (48行, 2672バイト)
   - 関数: なし
   - インポート: なし
 
@@ -862,7 +866,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/demo-simple.html** (265行, 7139バイト)
+**dist/demo-simple.html** (302行, 8430バイト)
   - 関数: なし
   - インポート: なし
 
@@ -910,15 +914,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: dbToAmplitude, amplitudeToDb, frequencyToNote, trimSilence
   - インポート: なし
 
-**dist/wasm/signal_processor_wasm.d.ts** (149行, 7943バイト)
+**dist/wasm/signal_processor_wasm.d.ts** (153行, 8226バイト)
   - 関数: initSync, __wbg_init
   - インポート: なし
 
-**dist/wasm/signal_processor_wasm.js** (651行, 20995バイト)
-  - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, computeFrequencyData, if, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossModeName, function, for, catch, switch
+**dist/wasm/signal_processor_wasm.js** (681行, 21993バイト)
+  - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint32ArrayMemory0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, computeFrequencyData, if, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, highlightedZeroCrossCandidate, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossCandidates, zeroCrossModeName, function, for, catch, switch
   - インポート: なし
 
-**dist/wasm/signal_processor_wasm_bg.wasm.d.ts** (54行, 4042バイト)
+**dist/wasm/signal_processor_wasm_bg.wasm.d.ts** (56行, 4214バイト)
   - 関数: なし
   - インポート: なし
 
@@ -930,15 +934,15 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**public/wasm/signal_processor_wasm.d.ts** (149行, 7943バイト)
+**public/wasm/signal_processor_wasm.d.ts** (153行, 8226バイト)
   - 関数: initSync, __wbg_init
   - インポート: なし
 
-**public/wasm/signal_processor_wasm.js** (651行, 20995バイト)
-  - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, computeFrequencyData, if, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossModeName, function, for, catch, switch
+**public/wasm/signal_processor_wasm.js** (681行, 21993バイト)
+  - 関数: __wbg_get_imports, getArrayF32FromWasm0, getArrayU32FromWasm0, getArrayU8FromWasm0, getFloat32ArrayMemory0, getStringFromWasm0, getUint32ArrayMemory0, getUint8ArrayMemory0, isLikeNone, passArray8ToWasm0, passArrayF32ToWasm0, passStringToWasm0, decodeText, __wbg_finalize_init, __wbg_load, expectedResponseType, initSync, __wbg_init, __destroy_into_raw, free, computeFrequencyData, if, constructor, processFrame, reset, setAutoGain, setBufferSizeMultiplier, setFrequencyEstimationMethod, setNoiseGate, setNoiseGateThreshold, setUsePeakMode, setZeroCrossMode, __wrap, candidate1Harmonics, candidate1WeightedScore, candidate2Harmonics, candidate2WeightedScore, cycleSimilarities2div, cycleSimilarities4div, cycleSimilarities8div, displayEndIndex, displayStartIndex, estimatedFrequency, fftSize, frequencyData, frequencyPlotHistory, gain, halfFreqPeakStrengthPercent, highlightedZeroCrossCandidate, isSignalAboveNoiseGate, maxFrequency, phaseMinusQuarterPiIndex, phaseTwoPiIndex, phaseTwoPiPlusQuarterPiIndex, phaseZeroHistory, phaseZeroIndex, phaseZeroSegmentRelative, phaseZeroTolerance, previousWaveform, sampleRate, selectionReason, similarity, similarityPlotHistory, usedSimilaritySearch, waveform_data, zeroCrossCandidates, zeroCrossModeName, function, for, catch, switch
   - インポート: なし
 
-**public/wasm/signal_processor_wasm_bg.wasm.d.ts** (54行, 4042バイト)
+**public/wasm/signal_processor_wasm_bg.wasm.d.ts** (56行, 4214バイト)
   - 関数: なし
   - インポート: なし
 
@@ -958,7 +962,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: constructor, if
   - インポート: なし
 
-**src/ComparisonPanelRenderer.ts** (228行, 8244バイト)
+**src/ComparisonPanelRenderer.ts** (263行, 9763バイト)
   - 関数: constructor, if
   - インポート: なし
 
@@ -1002,7 +1006,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: constructor, if, for
   - インポート: ./utils
 
-**src/RenderCoordinator.ts** (129行, 4721バイト)
+**src/RenderCoordinator.ts** (131行, 4813バイト)
   - 関数: constructor, if
   - インポート: ./WaveformRenderer, ./ComparisonPanelRenderer, ./CycleSimilarityRenderer
 
@@ -1014,11 +1018,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: cleanup, handleLoad, if, loadWasmModule
   - インポート: ${wasmPath}
 
-**src/WaveformDataProcessor.ts** (483行, 21019バイト)
+**src/WaveformDataProcessor.ts** (489行, 21231バイト)
   - 関数: constructor, catch, if, initialize
   - インポート: ./WaveformRenderData, ./AudioManager, ./GainController
 
-**src/WaveformRenderData.ts** (123行, 4641バイト)
+**src/WaveformRenderData.ts** (129行, 4878バイト)
   - 関数: なし
   - インポート: なし
 
@@ -1042,7 +1046,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: vitest, ../FrequencyEstimator, ../GainController
 
-**src/__tests__/comparison-panel-renderer.test.ts** (577行, 22114バイト)
+**src/__tests__/comparison-panel-renderer.test.ts** (775行, 28611バイト)
   - 関数: defineProperty, get, for
   - インポート: vitest, ../ComparisonPanelRenderer
 
@@ -1094,7 +1098,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: createAudioBuffer, constructor, for, if
   - インポート: vitest, ../utils
 
-**src/__tests__/waveform-data-processor.test.ts** (264行, 10077バイト)
+**src/__tests__/waveform-data-processor.test.ts** (262行, 10043バイト)
   - 関数: makeRenderData, callClamp, for
   - インポート: vitest, ../WaveformDataProcessor, ../AudioManager
 
@@ -1122,7 +1126,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: if, for
   - インポート: なし
 
-**src/comparison-renderers/WaveformPanelRenderer.ts** (174行, 5822バイト)
+**src/comparison-renderers/WaveformPanelRenderer.ts** (248行, 8070バイト)
   - 関数: drawLine, for, if
   - インポート: なし
 
@@ -1188,9 +1192,10 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
 
 ## 関数呼び出し階層
 - initSync (dist/wasm/signal_processor_wasm.d.ts)
-  - t ()
+  - t (dist/assets/Oscilloscope-BiPi-aIi.js)
     - if (demo-simple.js)
-      - startUpdates (demo-simple.js)
+      - getCanvasById (demo-simple.js)
+      - startUpdates ()
       - stopUpdates ()
       - generateWaveform ()
       - startOscilloscope ()
@@ -1201,7 +1206,9 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - getCurrentGain ()
       - getEstimatedFrequency ()
       - setDebugOverlaysEnabled ()
+      - d ()
       - catch (demo-simple.js)
+      - c (dist/assets/demo-9JbpkLFd.js)
       - takeScreenshot (scripts/screenshot-local.js)
       - close ()
       - updateHistory ()
@@ -1243,6 +1250,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - getFrequencyPlotHistory ()
       - resolveValue (dist/OverlayLayout.d.ts)
       - N ()
+      - x ()
       - setAutoGain ()
       - setNoiseGate ()
       - setNoiseGateThreshold ()
@@ -1293,6 +1301,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - drawWaveform ()
       - findPeakAmplitude ()
       - drawCenterLine ()
+      - drawZeroCrossCandidates ()
       - clearCanvas ()
       - calculateOverlayDimensions ()
       - drawFFTOverlay ()
@@ -1309,11 +1318,11 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       - setHarmonicAnalysisEnabled ()
     - i ()
     - z ()
-      - constructor (undefined)
     - D ()
     - B ()
     - O ()
     - u ()
+    - constructor (undefined)
 - __wbg_get_imports (dist/wasm/signal_processor_wasm.js)
 - while (src/AudioManager.ts)
 - handleLoad (src/WasmModuleLoader.ts)
@@ -1365,4 +1374,4 @@ example-library-usage.html
 
 
 ---
-Generated at: 2026-02-09 07:11:10 JST
+Generated at: 2026-02-10 07:17:43 JST

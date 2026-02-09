@@ -1,4 +1,4 @@
-Last updated: 2026-02-09
+Last updated: 2026-02-10
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -263,12 +263,12 @@ Last updated: 2026-02-09
 - dist/WaveformSearcher.d.ts.map
 - dist/ZeroCrossDetector.d.ts
 - dist/ZeroCrossDetector.d.ts.map
-- dist/assets/Oscilloscope-0AkMdwqr.js
-- dist/assets/Oscilloscope-0AkMdwqr.js.map
-- dist/assets/demo-B8LH4eBp.js
-- dist/assets/demo-B8LH4eBp.js.map
-- dist/assets/main-DNW0ajie.js
-- dist/assets/main-DNW0ajie.js.map
+- dist/assets/Oscilloscope-BiPi-aIi.js
+- dist/assets/Oscilloscope-BiPi-aIi.js.map
+- dist/assets/demo-9JbpkLFd.js
+- dist/assets/demo-9JbpkLFd.js.map
+- dist/assets/main-pCt8i_lw.js
+- dist/assets/main-pCt8i_lw.js.map
 - dist/cat-oscilloscope.cjs
 - dist/cat-oscilloscope.cjs.map
 - dist/cat-oscilloscope.mjs
@@ -418,6 +418,9 @@ Last updated: 2026-02-09
 - issue-notes/296.md
 - issue-notes/299.md
 - issue-notes/301.md
+- issue-notes/305.md
+- issue-notes/307.md
+- issue-notes/311.md
 - issue-notes/57.md
 - issue-notes/59.md
 - issue-notes/62.md
@@ -472,6 +475,7 @@ Last updated: 2026-02-09
 - signal-processor-wasm/src/zero_cross_detector/default_mode.rs
 - signal-processor-wasm/src/zero_cross_detector/mod.rs
 - signal-processor-wasm/src/zero_cross_detector/non_default_modes.rs
+- signal-processor-wasm/src/zero_cross_detector/phase_zero.rs
 - signal-processor-wasm/src/zero_cross_detector/types.rs
 - signal-processor-wasm/src/zero_cross_detector/utils.rs
 - src/AudioManager.ts
@@ -540,14 +544,14 @@ Last updated: 2026-02-09
 - vite.config.ts
 
 ## 現在のオープンIssues
-## [Issue #303](../issue-notes/303.md): 大きなファイルの検出: 1個のファイルが500行を超えています
+## [Issue #315](../issue-notes/315.md): 大きなファイルの検出: 1個のファイルが500行を超えています
 以下のファイルが500行を超えています。リファクタリングを検討してください。
 
 ## 検出されたファイル
 
 | ファイル | 行数 | 超過行数 |
 |---------|------|----------|
-| `signal-processor-wasm/src/zero_cross_detector/mod.rs` | 536 | +36 |
+| `signal-processor-wasm/src/lib.rs` | 560 | +60 |
 
 ## 推奨事項
 
@@ -558,890 +562,708 @@ Last updated: 2026-02-09
 ---
 *このissueは自動生成されました*...
 ラベル: refactoring, code-quality, automated
---- issue-notes/303.md の内容 ---
+--- issue-notes/315.md の内容 ---
 
 ```markdown
 
 ```
 
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/3.md
+### .github/actions-tmp/issue-notes/15.md
 ```md
 {% raw %}
-# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
-[issues #3](https://github.com/cat2151/github-actions/issues/3)
+# issue project_summary scripts cjs を分解し、できるだけ1ファイル200行未満にし、agentによるメンテをしやすくする #15
+[issues #15](https://github.com/cat2151/github-actions/issues/15)
 
-- 前提
-  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
-  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
-
-- prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlはまだ共通ワークフロー化されず、
-呼び出し元からコピーされたままの状態です。
-このymlファイル名のまま、
-中身を共通ワークフロー化してください。
-呼び出し元ymlは別途書きますので気にしないでください。
-まずplanしてください
-```
-
-- plan 生成結果
-```
-共通ワークフロー化のためのplanは以下の通りです。
-
-1. 目的
-現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
-2. 主な変更点
-on: トリガーを workflow_call に変更（直接イベントで起動しない）。
-必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
-github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
-既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
-3. 具体的な修正内容
-on: issues: → on: workflow_call: に変更。
-inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
-スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
-github-script ステップも同様にinputsを参照。
-必要に応じて secrets も workflow_call で受け取れるようにする。
-4. ファイル名・配置
-ファイル名はそのまま issue-note.yml。
-配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
-5. 呼び出し元への影響
-呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
-このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
-```
-
-- userがplanレビューし、OKを出した
-- agentに生成結果ymlをレビューさせた、OKとなった
-  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
--  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
-```
-原因の分析：
-
-呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
-共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
-しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
-エラーの本質的な原因：
-
-actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
-script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
-そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
-正しい書き方：
-
-actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
-例（修正版）：
-
-このように、inputs の値を env で渡し、script 内では process.env で参照してください。
-
-まとめ：
-
-actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
-env: で値を渡し、process.env で参照するのが正しい
-修正が必要です。修正版のワークフローが必要な場合はお知らせください。
-```
-
-- test green
+# 状況
+- agentに、最初の小さな一歩のAgent実行プロンプトを実行させた
+- 結果、以下を得た：
+    - project_summary_cjs_analysis.md
+- どうする？
+    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
+- 結果
+    - 生成させたpromptをレビューした
+    - promptを修正した
+    - agentに投げた
+    - 結果、GitUtils.cjsを切り出しできた
+    - それをリファクタリングミスがないかチェックさせた
+    - agentによるチェック結果は合格だった
+- どうする？
+    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
+- 結果
+    - 生成させたpromptをレビューした
+        - promptの対象ファイルから project_summary_cjs_analysis.md が漏れていることがわかったので修正した
+    - promptを修正した
+    - agentに投げた
+    - 結果、FileSystemUtils.cjsを切り出しできた
+    - それをリファクタリングミスがないかチェックさせた
+    - agentによるチェック結果は合格だった
+- どうする？
+    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
+- 結果
+    - 生成させたpromptをレビューした
+    - 今回は低品質、NG、と判断した
+    - 判断基準は、project_summary_cjs_analysis.md と乖離してしまっている点。今回はハルシネーションを含んだplanである、と判断した
+    - 人力でpromptを書き、planさせ、plan結果をレビューし、agentに投げた
+    - 結果、CodeAnalyzer.cjsとProjectAnalyzer.cjsを切り出しできた
+- どうする？
+    - 次の一手をagentに生成させてみる（翌日の日次バッチで自動生成させる）
+    - 備考、課題、Geminiに生成させているdocumentは2つある。かなり位置づけが違うものである。
+        - projectのソースファイル分析。
+        - projectのissues分析。
+        - この2つについて、class, cjs, yml まで分割をするかを、あとで検討する。
+        - おそらく、class分割どまりとし、ソースファイル分析結果をissues分析の参考資料としてGeminiのcontextに与える改善をする、がよい、と想定しておく。
+- 課題、エラーで落ちた。昨日は落ちてない。
+    - 原因、昨日のagentのリファクタリング時に、ハルシネーションで、
+        - codeが破壊されていた
+        - run メソッドが削除されていた
+        - 一つ前のrevisionにはrun メソッドがあった
+        - ほかにもcode破壊があったのかは不明、調査省略、明日の日次バッチをtestと調査として利用するつもり
+- どうする？
+    - 単純に一つ前のrevisionからrun メソッドを復活させ、明日の日次バッチをtestと調査として利用する
+- 再発防止策は？
+    - ノーアイデア。昨日それなりにagentにチェックをさせたはずだが根本的な大きなミスが発生していた。
+    - 構文チェックは通っていたが、問題を検知できなかった。
+    - チェックが機能していない、あるいは機能として不足している。
+    - 分析。変更量が大きかったぶんミスのリスクが増えていた。
+    - 対策案。もっと小さく一歩ずつ変更させる。
+    - 対策案。リファクタリング時、いきなりメソッド削除をさせない。
+        - まず全cjsの全メソッドのlistをさせる。
+        - のち、削除対象の重複メソッドのlistをさせる。
+        - そして削除planをさせる。
+        - のち、削除させる。
+        - さらに削除後のメソッドlistをさせる。
+        - そして削除しすぎていないかを削除前後のlist比較でチェックさせる。
+        - これでrunまで削除してしまうのを防止できるかもしれない。
+        - これは人力からみると、おかしな話である。人力なら1つずつ移動をするだけであり、ミスのしようがない。
+        - LLMの典型的なハルシネーション問題の一つである、と認識する
+- 結果は？
+    - test green
+    - run メソッドの人力復活は成功した
+    - 日次バッチで生成した次の一手のpromptを投げた
+    - リファクタリング成功した。ProjectSummaryGenerator を切り出した
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - 先に、2つのdocument生成を、1つずつ生成できるよう疎結合にリファクタリング、をしたほうがよさそう
+    - agentにそれを投げた
+    - 成功した、と判断する
+    - 課題、`BaseSummaryGenerator.cjs` は、baseの機能と、`ProjectOverviewGenerator.cjs`専用の機能とが混ざっている。
+        - baseに集約すべきは、`ProjectSummaryCoordinator.cjs`と`ProjectOverviewGenerator.cjs`とが必ずどちらも使う機能、である、と考える。
+        - 対策、明日以降それをagentに投げる
+    - `project_summary_cjs_analysis.md` は削除とする。役目が完了した、と判断する。リファクタリング前のソース構造の分析documentであり、今は存在しているとわかりづらくなる。シンプル優先のため削除とする。
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - test green
+    - `BaseSummaryGenerator.cjs` を切り出したのは成功した、と判断する
+    - `BaseSummaryGenerator.cjs` を2分割するため、agentにplanさせた
+    - レビューした
+    - agentに2分割させた
+    - レビューした。OKと判断する
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - test green
+    - `BaseSummaryGenerator.cjs` を2分割は成功した、と判断する
+    - issue track機能構造をリファクタリングし、以下にする
+        - development status generator : baseを継承する
+        - issue tracker : 汎用関数群
+    - agentに実施させた
+    - レビューした。OKと判断する
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - test green
+    - DevelopmentStatusGeneratorとissue trackerのリファクタリングは成功した、と判断する
+    - ProjectOverview生成機能のリファクタリングをする
+    - agentに実施させた
+    - レビューした。OKと判断する
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - test green
+    - ProjectOverview生成機能のリファクタリングは成功した、と判断する
+    - 課題、overviewと、developmentStatusとが混在し、dirが読みづらい。
+    - 対策、shared/、overview/、development/、の3つのdirに切り分ける
+    - agentに分析、planさせ、レビューし、planさせ、実施させた
+    - レビューした。OKと判断する
+- どうする？
+    - 次の一手をagentに生成させてみる（agentに投げるpromptを、翌日の日次バッチで自動生成させる）
+- 結果
+    - test green
+    - shared/、overview/、development/、の3つのdirに切り分けるリファクタリングは成功した、と判断する
+    - agentに、agentがメンテしやすいか？の観点からレビューさせた
+    - 詳細は割愛
+        - `> 最優先で取り組むべきは 設定管理の一元化 と エラーハンドリングの統一 です。これにより、Agentにとって予測可能で理解しやすいコードベースになります。`
+        - それは別issueで、設定変更をマストでやるので、OKと判断する
+- これでagentによるメンテは十分しやすくなった、と判断する
 - closeとする
 
 {% endraw %}
 ```
 
-### signal-processor-wasm/src/frequency_estimation/mod.rs
+### signal-processor-wasm/src/lib.rs
 ```rs
 {% raw %}
-/// FrequencyEstimator module - Coordinates various frequency estimation methods
-/// Follows the Single Responsibility Principle by delegating to specialized modules
-///
-/// Rust internal default method: autocorrelation (see non_default_methods/)
-/// UI default is FFT (fft.rs + harmonic_analysis.rs) and will overwrite this internal default via configuration.
-/// Non-default methods: see non_default_methods/ (may be deprecated in the future)
+use wasm_bindgen::prelude::*;
 
-pub(crate) mod dsp_utils;
-mod fft;
-mod harmonic_analysis;
-mod non_default_methods;
-mod smoothing;
+mod frequency_estimation;
+mod zero_cross_detector;
+mod waveform_searcher;
+mod gain_controller;
+mod bpf;
+mod waveform_render_data;
+mod dft;
 
-#[cfg(test)]
-mod tests;
+use frequency_estimation::FrequencyEstimator;
+use zero_cross_detector::ZeroCrossDetector;
+use waveform_searcher::{WaveformSearcher, CYCLES_TO_STORE};
+use gain_controller::GainController;
 
-/// FrequencyEstimator handles frequency detection using various algorithms
-pub struct FrequencyEstimator {
-    frequency_estimation_method: String,
-    estimated_frequency: f32,
-    frequency_history: Vec<f32>,
-    frequency_plot_history: Vec<f32>,
-    buffer_size_multiplier: u32,
-    
-    // Harmonic analysis data for debugging (populated during FFT estimation)
-    half_freq_peak_strength_percent: Option<f32>,
-    candidate1_harmonics: Option<Vec<f32>>,
-    candidate2_harmonics: Option<Vec<f32>>,
-    candidate1_weighted_score: Option<f32>,
-    candidate2_weighted_score: Option<f32>,
-    selection_reason: Option<String>,
+pub use waveform_render_data::WaveformRenderData;
+
+/// WasmDataProcessor - WASM implementation of WaveformDataProcessor
+#[wasm_bindgen]
+pub struct WasmDataProcessor {
+    gain_controller: GainController,
+    frequency_estimator: FrequencyEstimator,
+    zero_cross_detector: ZeroCrossDetector,
+    waveform_searcher: WaveformSearcher,
 }
 
-impl FrequencyEstimator {
-    const MIN_FREQUENCY_HZ: f32 = 20.0;
-    const MAX_FREQUENCY_HZ: f32 = 5000.0;
-    const FFT_MAGNITUDE_THRESHOLD: u8 = 10;
-    const FREQUENCY_PLOT_HISTORY_SIZE: usize = 100;
-    
+#[wasm_bindgen]
+impl WasmDataProcessor {
+    #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        FrequencyEstimator {
-            frequency_estimation_method: "autocorrelation".to_string(),
-            estimated_frequency: 0.0,
-            frequency_history: Vec::new(),
-            frequency_plot_history: Vec::new(),
-            buffer_size_multiplier: 16,
-            half_freq_peak_strength_percent: None,
-            candidate1_harmonics: None,
-            candidate2_harmonics: None,
-            candidate1_weighted_score: None,
-            candidate2_weighted_score: None,
-            selection_reason: None,
+        WasmDataProcessor {
+            gain_controller: GainController::new(),
+            frequency_estimator: FrequencyEstimator::new(),
+            zero_cross_detector: ZeroCrossDetector::new(),
+            waveform_searcher: WaveformSearcher::new(),
         }
     }
     
-    /// Estimate frequency using the configured method
-    pub fn estimate_frequency(
+    /// Process a frame and return WaveformRenderData
+    #[wasm_bindgen(js_name = processFrame)]
+    pub fn process_frame(
         &mut self,
-        data: &[f32],
-        frequency_data: Option<&[u8]>,
+        waveform_data: &[f32],
+        frequency_data: Option<Vec<u8>>,
         sample_rate: f32,
         fft_size: usize,
-        is_signal_above_noise_gate: bool,
-    ) -> f32 {
-        let raw_frequency = match self.frequency_estimation_method.as_str() {
-            "zero-crossing" => non_default_methods::zero_crossing::estimate_frequency_zero_crossing(
-                data,
-                sample_rate,
-                Self::MIN_FREQUENCY_HZ,
-                Self::MAX_FREQUENCY_HZ,
-            ),
-            "fft" => {
-                if let Some(freq_data) = frequency_data {
-                    let result = fft::estimate_frequency_fft(
-                        freq_data,
-                        sample_rate,
-                        fft_size,
-                        is_signal_above_noise_gate,
-                        &self.frequency_history,
-                    );
-                    
-                    // Store FFT debug information
-                    self.half_freq_peak_strength_percent = result.half_freq_peak_strength_percent;
-                    self.candidate1_harmonics = result.candidate1_harmonics;
-                    self.candidate2_harmonics = result.candidate2_harmonics;
-                    self.candidate1_weighted_score = result.candidate1_weighted_score;
-                    self.candidate2_weighted_score = result.candidate2_weighted_score;
-                    self.selection_reason = result.selection_reason;
-                    
-                    result.frequency
-                } else {
-                    0.0
-                }
-            }
-            "stft" => non_default_methods::stft::estimate_frequency_stft(
-                data,
-                sample_rate,
-                is_signal_above_noise_gate,
-                self.buffer_size_multiplier,
-                Self::MIN_FREQUENCY_HZ,
-                Self::MAX_FREQUENCY_HZ,
-                Self::FFT_MAGNITUDE_THRESHOLD,
-            ),
-            "cqt" => non_default_methods::cqt::estimate_frequency_cqt(
-                data,
-                sample_rate,
-                is_signal_above_noise_gate,
-                Self::MIN_FREQUENCY_HZ,
-                Self::MAX_FREQUENCY_HZ,
-                Self::FFT_MAGNITUDE_THRESHOLD,
-            ),
-            _ => non_default_methods::autocorrelation::estimate_frequency_autocorrelation(
-                data,
-                sample_rate,
-                Self::MIN_FREQUENCY_HZ,
-                Self::MAX_FREQUENCY_HZ,
-            ), // default: autocorrelation
-        };
-        
-        // Apply frequency smoothing
-        self.estimated_frequency = smoothing::smooth_frequency(raw_frequency, &mut self.frequency_history);
-        
-        // Add to plot history
-        self.frequency_plot_history.push(self.estimated_frequency);
-        if self.frequency_plot_history.len() > Self::FREQUENCY_PLOT_HISTORY_SIZE {
-            self.frequency_plot_history.remove(0);
+        fft_display_enabled: bool,
+    ) -> Option<WaveformRenderData> {
+        if waveform_data.is_empty() {
+            web_sys::console::log_1(&"No data: Waveform data is empty".into());
+            return None;
         }
         
-        self.estimated_frequency
-    }
-    
-    // Getters and setters
-    pub fn get_frequency_estimation_method(&self) -> &str {
-        &self.frequency_estimation_method
-    }
-    
-    pub fn set_frequency_estimation_method(&mut self, method: &str) {
-        if self.frequency_estimation_method != method {
-            self.frequency_estimation_method = method.to_string();
-            // Clear only frequency histories when method changes
-            // (preserving harmonic analysis data which may still be useful)
-            self.frequency_history.clear();
-            self.frequency_plot_history.clear();
-        }
-    }
-    
-    pub fn get_max_frequency(&self) -> f32 {
-        Self::MAX_FREQUENCY_HZ
-    }
-    
-    pub fn get_min_frequency(&self) -> f32 {
-        Self::MIN_FREQUENCY_HZ
-    }
-    
-    pub fn get_frequency_plot_history(&self) -> Vec<f32> {
-        self.frequency_plot_history.clone()
-    }
-    
-    pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
-        // Validate multiplier is one of the allowed values (1, 4, or 16)
-        // If invalid, keep the current value and log an error
-        if multiplier == 1 || multiplier == 4 || multiplier == 16 {
-            self.buffer_size_multiplier = multiplier;
-        } else {
-            #[cfg(target_arch = "wasm32")]
-            {
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = console)]
-                    fn error(s: &str);
-                }
-                error(&format!(
-                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
-                    multiplier,
-                    self.buffer_size_multiplier
-                ));
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                eprintln!(
-                    "Invalid buffer size multiplier {} received; keeping current value {}. Valid values are 1, 4, or 16.",
-                    multiplier,
-                    self.buffer_size_multiplier
-                );
-            }
-        }
-    }
-    
-    pub fn get_buffer_size_multiplier(&self) -> u32 {
-        self.buffer_size_multiplier
-    }
-    
-    pub fn get_half_freq_peak_strength_percent(&self) -> Option<f32> {
-        self.half_freq_peak_strength_percent
-    }
-    
-    pub fn get_candidate1_harmonics(&self) -> Option<Vec<f32>> {
-        self.candidate1_harmonics.clone()
-    }
-    
-    pub fn get_candidate2_harmonics(&self) -> Option<Vec<f32>> {
-        self.candidate2_harmonics.clone()
-    }
-    
-    pub fn get_candidate1_weighted_score(&self) -> Option<f32> {
-        self.candidate1_weighted_score
-    }
-    
-    pub fn get_candidate2_weighted_score(&self) -> Option<f32> {
-        self.candidate2_weighted_score
-    }
-    
-    pub fn get_selection_reason(&self) -> Option<String> {
-        self.selection_reason.clone()
-    }
-    
-    pub fn clear_history(&mut self) {
-        self.frequency_history.clear();
-        self.frequency_plot_history.clear();
-        self.estimated_frequency = 0.0;
-        // Clear harmonic analysis data as well
-        self.half_freq_peak_strength_percent = None;
-        self.candidate1_harmonics = None;
-        self.candidate2_harmonics = None;
-        self.candidate1_weighted_score = None;
-        self.candidate2_weighted_score = None;
-        self.selection_reason = None;
-    }
-}
-
-{% endraw %}
-```
-
-### signal-processor-wasm/src/frequency_estimation/non_default_methods/mod.rs
-```rs
-{% raw %}
-/// Non-default frequency estimation methods
-/// These methods are activated when the user changes the Frequency Estimation dropdown
-/// from the default (FFT). They may be deprecated in the future.
-///
-/// Default method: FFT (see ../fft.rs)
-/// Non-default methods (this module):
-///   - zero-crossing: Simple zero-crossing counting
-///   - autocorrelation: Time-domain autocorrelation
-///   - stft: Short-Time Fourier Transform
-///   - cqt: Constant-Q Transform
-
-pub mod zero_crossing;
-pub mod autocorrelation;
-pub mod stft;
-pub mod cqt;
-
-{% endraw %}
-```
-
-### signal-processor-wasm/src/zero_cross_detector/mod.rs
-```rs
-{% raw %}
-/// ZeroCrossDetector module - Handles zero-crossing detection and phase 0 positioning
-///
-/// Default (Standard) mode: Hysteresis, core implementation lives in this module
-///   - main logic in `find_stable_zero_cross` and the Standard branch of `find_phase_zero_in_segment`
-/// Non-default modes: implemented in non_default_modes.rs (these modes may be deprecated in the future)
-
-mod types;
-mod utils;
-mod default_mode;
-mod non_default_modes;
-
-pub use types::{DisplayRange, ZeroCrossMode};
-
-use utils::*;
-use default_mode::*;
-use non_default_modes::*;
-
-/// ZeroCrossDetector handles zero-crossing detection and display range calculation
-pub struct ZeroCrossDetector {
-    previous_zero_cross_index: Option<usize>,
-    previous_peak_index: Option<usize>,
-    use_peak_mode: bool,
-    zero_cross_mode: ZeroCrossMode,
-    // COORDINATE SPACE: segment-relative (0..segment.len())
-    // History for segment-relative position tracking (for PeakBacktrackWithHistory and other modes)
-    // Stores the offset within the 4-cycle segment, NOT frame buffer absolute position
-    // This ensures the 1% constraint works correctly even when segment position changes each frame
-    segment_phase_offset: Option<usize>,
-    // COORDINATE SPACE: absolute (frame buffer position)
-    // History for absolute position tracking (used by find_phase_zero_in_segment)
-    // Stores the absolute position in the full buffer to track across segment position changes
-    absolute_phase_offset: Option<usize>,
-}
-
-impl ZeroCrossDetector {
-    const ZERO_CROSS_SEARCH_TOLERANCE_CYCLES: f32 = 0.5;
-    /// Tolerance for history-based search (1/100 of one cycle = 1%)
-    const HISTORY_SEARCH_TOLERANCE_RATIO: f32 = 0.01;
-    /// Hysteresis threshold ratio (distance threshold for mode switching)
-    const HYSTERESIS_THRESHOLD_RATIO: f32 = 2.0;
-    /// Maximum search range multiplier for finding zero-crosses
-    const MAX_SEARCH_RANGE_MULTIPLIER: f32 = 5.0;
-    /// Number of cycles to display (must match CYCLES_TO_STORE in waveform_searcher)
-    const CYCLES_TO_DISPLAY: usize = 4;
-    /// Peak search range multiplier for initial detection
-    const PEAK_SEARCH_MULTIPLIER: f32 = 1.5;
-    /// Extended tolerance ratio for Standard mode (3% of cycle length)
-    const STANDARD_MODE_EXTENDED_TOLERANCE_RATIO: f32 = 0.03;
-    /// Extended tolerance multiplier for other modes (3x normal tolerance)
-    const EXTENDED_TOLERANCE_MULTIPLIER: usize = 3;
-    
-    pub fn new() -> Self {
-        ZeroCrossDetector {
-            previous_zero_cross_index: None,
-            previous_peak_index: None,
-            use_peak_mode: false,
-            zero_cross_mode: ZeroCrossMode::Hysteresis,
-            segment_phase_offset: None,
-            absolute_phase_offset: None,
-        }
-    }
-    
-    /// Set whether to use peak mode instead of zero-crossing mode
-    pub fn set_use_peak_mode(&mut self, enabled: bool) {
-        self.use_peak_mode = enabled;
-    }
-    
-    /// Set zero-cross detection mode
-    pub fn set_zero_cross_mode(&mut self, mode: ZeroCrossMode) {
-        self.zero_cross_mode = mode;
-        // Clear history when mode changes
-        self.segment_phase_offset = None;
-        self.absolute_phase_offset = None;
-    }
-    
-    /// Get current zero-cross detection mode
-    pub fn get_zero_cross_mode(&self) -> ZeroCrossMode {
-        self.zero_cross_mode
-    }
-    
-    /// Get current zero-cross detection mode as string (for debugging)
-    pub fn get_zero_cross_mode_name(&self) -> String {
-        match self.zero_cross_mode {
-            ZeroCrossMode::Standard => "Standard".to_string(),
-            ZeroCrossMode::PeakBacktrackWithHistory => "Peak+History (1% stable)".to_string(),
-            ZeroCrossMode::BidirectionalNearest => "Bidirectional Nearest".to_string(),
-            ZeroCrossMode::GradientBased => "Gradient Based".to_string(),
-            ZeroCrossMode::AdaptiveStep => "Adaptive Step".to_string(),
-            ZeroCrossMode::Hysteresis => "Hysteresis".to_string(),
-            ZeroCrossMode::ClosestToZero => "Closest to Zero".to_string(),
-        }
-    }
-    
-    /// Get current history value for debugging
-    /// Returns segment-relative offset (0..segment.len())
-    pub fn get_segment_phase_offset(&self) -> Option<usize> {
-        self.segment_phase_offset
-    }
-    
-    /// Get current absolute phase offset for debugging
-    /// Returns absolute position in the full buffer
-    pub fn get_absolute_phase_offset(&self) -> Option<usize> {
-        self.absolute_phase_offset
-    }
-    
-    /// Reset detector state
-    pub fn reset(&mut self) {
-        self.previous_zero_cross_index = None;
-        self.previous_peak_index = None;
-        self.segment_phase_offset = None;
-        self.absolute_phase_offset = None;
-    }
-    
-    /// Find a stable peak position with temporal continuity
-    fn find_stable_peak(&mut self, data: &[f32], estimated_cycle_length: f32) -> Option<usize> {
-        if let Some(prev_peak) = self.previous_peak_index {
-            if estimated_cycle_length > 0.0 {
-                let tolerance = (estimated_cycle_length * Self::ZERO_CROSS_SEARCH_TOLERANCE_CYCLES) as usize;
-                let search_start = prev_peak.saturating_sub(tolerance);
-                let search_end = (prev_peak + tolerance).min(data.len());
-                
-                if search_start < data.len() && search_start < search_end {
-                    if let Some(peak) = find_peak(data, search_start, Some(search_end)) {
-                        self.previous_peak_index = Some(peak);
-                        return Some(peak);
-                    }
-                }
-            }
-        }
+        // Convert to mutable Vec for noise gate processing
+        let mut data = waveform_data.to_vec();
         
-        // Fallback: find first peak
-        if let Some(peak) = find_peak(data, 0, None) {
-            self.previous_peak_index = Some(peak);
-            Some(peak)
+        // Apply noise gate
+        self.gain_controller.apply_noise_gate(&mut data);
+        
+        // Check if signal passed noise gate
+        let is_signal_above_noise_gate = self.gain_controller.is_signal_above_noise_gate(&data);
+        
+        // Determine if we need frequency data
+        let needs_frequency_data = 
+            self.frequency_estimator.get_frequency_estimation_method() == "fft" || fft_display_enabled;
+        let freq_data = if needs_frequency_data {
+            frequency_data
         } else {
             None
-        }
-    }
-    
-    /// Find a stable zero-cross position with temporal continuity
-    fn find_stable_zero_cross(&mut self, data: &[f32], estimated_cycle_length: f32) -> Option<usize> {
-        if let Some(prev_zero) = self.previous_zero_cross_index {
-            if estimated_cycle_length > 0.0 {
-                let tolerance = (estimated_cycle_length * Self::ZERO_CROSS_SEARCH_TOLERANCE_CYCLES) as usize;
-                let search_start = prev_zero.saturating_sub(tolerance);
-                
-                if search_start < data.len() {
-                    if let Some(zero_cross) = find_zero_cross(data, search_start) {
-                        let distance = if zero_cross >= prev_zero {
-                            zero_cross - prev_zero
-                        } else {
-                            prev_zero - zero_cross
-                        };
-                        
-                        if distance <= tolerance {
-                            self.previous_zero_cross_index = Some(zero_cross);
-                            return Some(zero_cross);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Fallback: find first zero-cross
-        if let Some(zero_cross) = find_zero_cross(data, 0) {
-            self.previous_zero_cross_index = Some(zero_cross);
-            Some(zero_cross)
-        } else {
-            None
-        }
-    }
-    
-    /// Find phase zero position within a segment, maintaining history in absolute coordinates
-    /// This method is designed for Process B (phase marker positioning) where the segment
-    /// position can change between frames due to similarity search.
-    /// 
-    /// # Arguments
-    /// * `segment` - The 4-cycle segment slice
-    /// * `segment_start_abs` - Absolute position of the segment start in the full buffer
-    /// * `estimated_cycle_length` - Length of one cycle in samples
-    /// 
-    /// # Returns
-    /// The segment-relative index of phase 0, or None if not found
-    /// 
-    /// # Coordinate Spaces
-    /// - Input `segment`: relative (0..segment.len())
-    /// - Input `segment_start_abs`: absolute (full buffer position)
-    /// - Internal history: absolute (full buffer position)
-    /// - Return value: relative (0..segment.len())
-    pub fn find_phase_zero_in_segment(
-        &mut self,
-        segment: &[f32],
-        segment_start_abs: usize,
-        estimated_cycle_length: f32,
-    ) -> Option<usize> {
-        // If we don't have history or invalid cycle length, perform initial detection
-        if self.absolute_phase_offset.is_none() || estimated_cycle_length < f32::EPSILON {
-            // Initial detection based on current mode
-            let zero_cross_rel = match self.zero_cross_mode {
-                ZeroCrossMode::Standard => {
-                    find_zero_cross(segment, 0)
-                }
-                ZeroCrossMode::PeakBacktrackWithHistory => {
-                    // Find peak and backtrack
-                    let search_end = if estimated_cycle_length > 0.0 {
-                        (estimated_cycle_length * Self::PEAK_SEARCH_MULTIPLIER) as usize
-                    } else {
-                        segment.len() / 2
-                    };
-
-                    if let Some(peak_idx) = find_peak(segment, 0, Some(search_end.min(segment.len()))) {
-                        find_zero_crossing_backward(segment, peak_idx)
-                    } else {
-                        find_zero_cross(segment, 0)
-                    }
-                }
-                _ => {
-                    // For other modes, use standard zero-cross detection
-                    find_zero_cross(segment, 0)
-                }
-            }?;
-
-            // Issue #296: Constrain initial position to the central 2 cycles of the 4-cycle segment.
-            // The segment contains 4 cycles [0, 1, 2, 3] (0-based), each of length `cycle_length_usize`.
-            // The "central 2 cycles" are cycles 1 and 2, corresponding to the half-open index range [L, 3L).
-            // We use an inclusive lower bound and an exclusive upper bound: [min_allowed, max_allowed_exclusive).
-            let mut constrained_rel = zero_cross_rel;
-            if estimated_cycle_length > f32::EPSILON {
-                let cycle_length_usize = estimated_cycle_length as usize;
-                let min_allowed = cycle_length_usize; // Inclusive start of cycle 1
-                let max_allowed_exclusive = cycle_length_usize * 3; // Exclusive end (start of cycle 3)
-
-                // Clamp to segment bounds to handle short segments at buffer end
-                let min_allowed = min_allowed.min(segment.len().saturating_sub(1));
-                let max_allowed_exclusive = max_allowed_exclusive.min(segment.len());
-
-                // Ensure min <= max
-                if min_allowed < max_allowed_exclusive {
-                    // If initial detection is outside the allowed range, search within the central 2 cycles
-                    if constrained_rel < min_allowed || constrained_rel >= max_allowed_exclusive {
-                        // Search for zero-cross starting from cycle 1
-                        if let Some(zero_in_center) = find_zero_cross(segment, min_allowed) {
-                            if zero_in_center < max_allowed_exclusive {
-                                constrained_rel = zero_in_center;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Convert to absolute and store
-            let zero_cross_abs = segment_start_abs + constrained_rel;
-            self.absolute_phase_offset = Some(zero_cross_abs);
-            return Some(constrained_rel);
-        }
-        
-        // We have history - use new algorithm (Issue #289)
-        // Extract all zero-cross candidates from 4-cycle buffer, then move toward nearest candidate
-        let history_abs = self.absolute_phase_offset.unwrap();
-
-        // Convert absolute history to segment-relative
-        // Check if history is within the current segment
-        if history_abs < segment_start_abs || history_abs >= segment_start_abs + segment.len() {
-            // History is outside current segment - perform fresh detection
-            let zero_cross_rel = find_zero_cross(segment, 0)?;
-
-            // Issue #296: Constrain fresh detection to the central 2 cycles of the 4-cycle segment.
-            // Range: [cycle_length, cycle_length*3) - cycles 1 and 2 only
-            let mut constrained_rel = zero_cross_rel;
-            if estimated_cycle_length > f32::EPSILON {
-                let cycle_length_usize = estimated_cycle_length as usize;
-                let min_allowed = cycle_length_usize; // Inclusive start of cycle 1
-                let max_allowed_exclusive = cycle_length_usize * 3; // Exclusive end (start of cycle 3)
-
-                // Clamp to segment bounds to handle short segments at buffer end
-                let min_allowed = min_allowed.min(segment.len().saturating_sub(1));
-                let max_allowed_exclusive = max_allowed_exclusive.min(segment.len());
-
-                // Ensure min <= max
-                if min_allowed < max_allowed_exclusive {
-                    // If detection is outside the allowed range, search within the central 2 cycles
-                    if constrained_rel < min_allowed || constrained_rel >= max_allowed_exclusive {
-                        // Search for zero-cross starting from cycle 1
-                        if let Some(zero_in_center) = find_zero_cross(segment, min_allowed) {
-                            if zero_in_center < max_allowed_exclusive {
-                                constrained_rel = zero_in_center;
-                            }
-                        }
-                    }
-                }
-            }
-
-            let zero_cross_abs = segment_start_abs + constrained_rel;
-            self.absolute_phase_offset = Some(zero_cross_abs);
-            return Some(constrained_rel);
-        }
-
-        let history_rel = history_abs - segment_start_abs;
-
-        // Calculate 1% tolerance for movement constraint
-        let tolerance = ((estimated_cycle_length * Self::HISTORY_SEARCH_TOLERANCE_RATIO) as usize).max(1);
-
-        // Issue #296: Calculate allowed range for the central 2 cycles of the 4-cycle segment.
-        // The segment contains 4 cycles [0, 1, 2, 3] (0-based), each of length `cycle_length_usize`.
-        // The "central 2 cycles" are cycles 1 and 2, corresponding to the half-open index range [L, 3L).
-        let cycle_length_usize = estimated_cycle_length as usize;
-        let min_allowed = cycle_length_usize; // Inclusive start of cycle 1
-        let max_allowed_exclusive = cycle_length_usize * 3; // Exclusive end (start of cycle 3)
-
-        // Clamp to segment bounds to handle short segments at buffer end
-        let min_allowed = min_allowed.min(segment.len().saturating_sub(1));
-        let max_allowed_exclusive = max_allowed_exclusive.min(segment.len());
-
-        // If segment is too short for the constraint, just return history as-is
-        if min_allowed >= max_allowed_exclusive {
-            return Some(history_rel.min(segment.len().saturating_sub(1)));
-        }
-
-        // Find the nearest zero-cross candidate in a single pass (avoiding Vec allocation)
-        // Only search within the central 2 cycles to prevent markers from disappearing at edges
-        let mut nearest_candidate: Option<usize> = None;
-        let mut min_distance = usize::MAX;
-
-        // Search range includes positions that can be valid: [min_allowed, max_allowed_exclusive)
-        // Need to check segment[i] and segment[i+1], so stop before last element
-        let search_start = min_allowed;
-        let search_end = (max_allowed_exclusive.saturating_sub(1)).min(segment.len().saturating_sub(1));
-
-        for i in search_start..=search_end {
-            if i + 1 < segment.len() && segment[i] <= 0.0 && segment[i + 1] > 0.0 {
-                let distance = if i >= history_rel {
-                    i - history_rel
-                } else {
-                    history_rel - i
-                };
-
-                if distance < min_distance {
-                    min_distance = distance;
-                    nearest_candidate = Some(i);
-                }
-            }
-        }
-
-        // If no candidates exist, don't move (keep history, but clamp to allowed range)
-        let nearest = match nearest_candidate {
-            Some(n) => n,
-            None => {
-                // Issue #296: Clamp history_rel to allowed range before returning
-                // Ensure result is within [0, segment.len()) and [min_allowed, max_allowed_exclusive)
-                let mut clamped = history_rel;
-                if clamped < min_allowed {
-                    clamped = min_allowed;
-                } else if clamped >= max_allowed_exclusive {
-                    clamped = max_allowed_exclusive.saturating_sub(1);
-                }
-                // Final bounds check
-                clamped = clamped.min(segment.len().saturating_sub(1));
-                let new_abs = segment_start_abs + clamped;
-                self.absolute_phase_offset = Some(new_abs);
-                return Some(clamped);
-            }
         };
-
-        // Determine direction to move toward the nearest candidate
-        if nearest == history_rel {
-            // Already at a zero-cross, no movement needed
-            // Issue #296: But still clamp to allowed range
-            let mut clamped = history_rel;
-            if clamped < min_allowed {
-                clamped = min_allowed;
-            } else if clamped >= max_allowed_exclusive {
-                clamped = max_allowed_exclusive.saturating_sub(1);
-            }
-            // Final bounds check
-            clamped = clamped.min(segment.len().saturating_sub(1));
-            let new_abs = segment_start_abs + clamped;
-            self.absolute_phase_offset = Some(new_abs);
-            return Some(clamped);
-        }
-
-        // Calculate the new position, constrained to move at most 1% per frame
-        let mut new_rel = if nearest > history_rel {
-            // Move right (toward future)
-            let distance = nearest - history_rel;
-            let step = distance.min(tolerance);
-            history_rel + step
-        } else {
-            // Move left (toward past)
-            let distance = history_rel - nearest;
-            let step = distance.min(tolerance);
-            history_rel.saturating_sub(step)
-        };
-
-        // Issue #296: Clamp new_rel to the allowed range (central 2 cycles)
-        if new_rel < min_allowed {
-            new_rel = min_allowed;
-        } else if new_rel >= max_allowed_exclusive {
-            new_rel = max_allowed_exclusive.saturating_sub(1);
-        }
-        // Final bounds check
-        new_rel = new_rel.min(segment.len().saturating_sub(1));
-
-        // Update history with new absolute position (continuous)
-        let new_abs = segment_start_abs + new_rel;
-        self.absolute_phase_offset = Some(new_abs);
-
-        // Return the gradually moved position directly (NOT snapped to zero-cross)
-        //
-        // DESIGN DECISION: Prioritize smooth 1% movement over exact zero-cross position
-        //
-        // Rationale:
-        // - Zero-cross candidates can jump wildly between frames (due to noise, etc.)
-        // - If we snap to the nearest zero-cross, the red line will jump visually
-        // - Jumpy movement provides poor visual experience for users
-        // - Therefore, we accept that the marker may not be at an exact zero-cross
-        // - The 1% gradual movement constraint is prioritized for smooth visual experience
-        //
-        // This means the red line position represents "moving toward the nearest zero-cross"
-        // rather than "exactly at a zero-cross", which is acceptable for visual stability.
-        Some(new_rel)
-    }
-    
-    /// Calculate display range based on zero-crossing or peak detection
-    pub fn calculate_display_range(
-        &mut self,
-        data: &[f32],
-        estimated_frequency: f32,
-        sample_rate: f32,
-    ) -> Option<DisplayRange> {
-        let estimated_cycle_length = if estimated_frequency > 0.0 && sample_rate > 0.0 {
+        
+        // Estimate frequency
+        let estimated_frequency = self.frequency_estimator.estimate_frequency(
+            &data,
+            freq_data.as_deref(),
+            sample_rate,
+            fft_size,
+            is_signal_above_noise_gate,
+        );
+        
+        // Calculate cycle length
+        let cycle_length = if estimated_frequency > 0.0 && sample_rate > 0.0 {
             sample_rate / estimated_frequency
         } else {
             0.0
         };
         
-        if self.use_peak_mode {
-            // Peak mode
-            let first_peak = self.find_stable_peak(data, estimated_cycle_length)?;
-            let second_peak = if estimated_cycle_length > 0.0 {
-                find_next_peak(data, first_peak, estimated_cycle_length)
-            } else {
-                None
-            };
-            
-            // Display CYCLES_TO_DISPLAY (4) cycles worth of waveform
-            let end_index = if estimated_cycle_length > 0.0 {
-                let waveform_length = (estimated_cycle_length * Self::CYCLES_TO_DISPLAY as f32).floor() as usize;
-                (first_peak + waveform_length).min(data.len())
-            } else {
-                data.len()
-            };
-            
-            Some(DisplayRange {
-                start_index: first_peak,
-                end_index,
-                first_zero_cross: first_peak, // Alignment point (peak in peak mode)
-                second_zero_cross: second_peak, // Second alignment point (peak in peak mode)
-            })
+        // Try to find similar waveform
+        // COORDINATE SPACE: frame buffer positions
+        let mut selected_segment_buffer_position = 0;
+        let mut selected_segment_buffer_end = data.len();
+        let mut used_similarity_search = false;
+        
+        if self.waveform_searcher.has_previous_waveform() && cycle_length > 0.0 {
+            if let Some(search_result) = self.waveform_searcher.search_similar_waveform(&data, cycle_length) {
+                // Display N cycles worth (where N is CYCLES_TO_STORE)
+                let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+                selected_segment_buffer_position = search_result.start_index;
+                selected_segment_buffer_end = (selected_segment_buffer_position + waveform_length).min(data.len());
+                used_similarity_search = true;
+            }
+            // Note: Similarity history is always updated inside search_similar_waveform(),
+            // even when it returns None (validation failures or low similarity)
         } else {
-            // Zero-crossing mode - choose method based on zero_cross_mode
-            let first_zero = match self.zero_cross_mode {
-                ZeroCrossMode::Standard => {
-                    self.find_stable_zero_cross(data, estimated_cycle_length)?
-                }
-                ZeroCrossMode::PeakBacktrackWithHistory => {
-                    find_zero_cross_peak_backtrack_with_history(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                    )?
-                }
-                ZeroCrossMode::BidirectionalNearest => {
-                    find_zero_cross_bidirectional_nearest(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                        Self::MAX_SEARCH_RANGE_MULTIPLIER,
-                    )?
-                }
-                ZeroCrossMode::GradientBased => {
-                    find_zero_cross_gradient_based(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                    )?
-                }
-                ZeroCrossMode::AdaptiveStep => {
-                    find_zero_cross_adaptive_step(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                    )?
-                }
-                ZeroCrossMode::Hysteresis => {
-                    find_zero_cross_hysteresis(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                        Self::HYSTERESIS_THRESHOLD_RATIO,
-                        Self::MAX_SEARCH_RANGE_MULTIPLIER,
-                    )?
-                }
-                ZeroCrossMode::ClosestToZero => {
-                    find_zero_cross_closest_to_zero(
-                        data,
-                        estimated_cycle_length,
-                        &mut self.segment_phase_offset,
-                        Self::HISTORY_SEARCH_TOLERANCE_RATIO,
-                    )?
-                }
-            };
-            
-            let second_zero = find_next_zero_cross(data, first_zero);
-            
-            // Display CYCLES_TO_DISPLAY (4) cycles worth of waveform
-            let end_index = if estimated_cycle_length > 0.0 {
-                let waveform_length = (estimated_cycle_length * Self::CYCLES_TO_DISPLAY as f32).floor() as usize;
-                (first_zero + waveform_length).min(data.len())
-            } else {
-                data.len()
-            };
-            
-            Some(DisplayRange {
-                start_index: first_zero,
-                end_index,
-                first_zero_cross: first_zero,
-                second_zero_cross: second_zero,
-            })
+            // Cannot perform similarity search (no previous waveform or invalid cycle length)
+            // Record this in history to keep the graph updating
+            if self.waveform_searcher.has_previous_waveform() {
+                self.waveform_searcher.record_no_search();
+            }
         }
+        
+        // Fallback to zero-cross alignment if similarity search not used
+        if !used_similarity_search {
+            // Use zero-cross alignment
+            if let Some(display_range) = self.zero_cross_detector.calculate_display_range(
+                &data,
+                estimated_frequency,
+                sample_rate,
+            ) {
+                selected_segment_buffer_position = display_range.start_index;
+                selected_segment_buffer_end = display_range.end_index;
+            } else {
+                // Zero-cross detection failed, calculate 4 cycles from start based on frequency estimation
+                selected_segment_buffer_position = 0;
+                if cycle_length > 0.0 {
+                    let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+                    selected_segment_buffer_end = waveform_length.min(data.len());
+                } else {
+                    // No frequency estimation available, use entire buffer as last resort
+                    selected_segment_buffer_end = data.len();
+                }
+            }
+        }
+        
+        // Calculate auto gain
+        self.gain_controller.calculate_auto_gain(&data, selected_segment_buffer_position, selected_segment_buffer_end);
+        let gain = self.gain_controller.get_current_gain();
+        
+        // Store waveform for next frame (N cycles worth, where N is CYCLES_TO_STORE)
+        if cycle_length > 0.0 {
+            let waveform_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+            let end_index = (selected_segment_buffer_position + waveform_length).min(data.len());
+            self.waveform_searcher.store_waveform(&data, selected_segment_buffer_position, end_index);
+        }
+        
+        // Get waveform search data
+        let previous_waveform = self.waveform_searcher.get_previous_waveform();
+        let similarity = self.waveform_searcher.get_last_similarity();
+        let similarity_plot_history = self.waveform_searcher.get_similarity_history();
+        
+        // Calculate phase marker positions and collect debug information
+        // The display shows 4 cycles, we skip the first cycle and find phase markers in the middle region
+        let (phase_zero_index, phase_two_pi_index, phase_minus_quarter_pi_index, phase_two_pi_plus_quarter_pi_index,
+             phase_zero_segment_relative, phase_zero_history, phase_zero_tolerance) = 
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
+                self.calculate_phase_markers_with_debug(&data, selected_segment_buffer_position, cycle_length, estimated_frequency, sample_rate)
+            } else {
+                (None, None, None, None, None, None, None)
+            };
+        
+        // Get zero-cross mode name for debugging
+        let zero_cross_mode_name = Some(self.zero_cross_detector.get_zero_cross_mode_name());
+        
+        // Calculate cycle similarities for the current waveform
+        let (cycle_similarities_8div, cycle_similarities_4div, cycle_similarities_2div) = 
+            if cycle_length > 0.0 && selected_segment_buffer_position < selected_segment_buffer_end {
+                self.waveform_searcher.calculate_cycle_similarities(
+                    &data[selected_segment_buffer_position..selected_segment_buffer_end],
+                    cycle_length
+                )
+            } else {
+                (Vec::new(), Vec::new(), Vec::new())
+            };
+
+        // Collect zero-cross candidates within the displayed segment and determine highlighted candidate
+        let zero_cross_candidates = self.collect_zero_cross_candidates(
+            &data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+        );
+        let highlighted_zero_cross_candidate = self.select_candidate_with_max_positive_peak(
+            &data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+            &zero_cross_candidates,
+        );
+        
+        Some(WaveformRenderData {
+            waveform_data: data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+            gain,
+            estimated_frequency,
+            frequency_plot_history: self.frequency_estimator.get_frequency_plot_history(),
+            sample_rate,
+            fft_size,
+            frequency_data: freq_data,
+            is_signal_above_noise_gate,
+            max_frequency: self.frequency_estimator.get_max_frequency(),
+            previous_waveform,
+            similarity,
+            similarity_plot_history,
+            used_similarity_search,
+            phase_zero_index,
+            phase_two_pi_index,
+            phase_minus_quarter_pi_index,
+            phase_two_pi_plus_quarter_pi_index,
+            zero_cross_candidates,
+            highlighted_zero_cross_candidate,
+            half_freq_peak_strength_percent: self.frequency_estimator.get_half_freq_peak_strength_percent(),
+            candidate1_harmonics: self.frequency_estimator.get_candidate1_harmonics(),
+            candidate2_harmonics: self.frequency_estimator.get_candidate2_harmonics(),
+            candidate1_weighted_score: self.frequency_estimator.get_candidate1_weighted_score(),
+            candidate2_weighted_score: self.frequency_estimator.get_candidate2_weighted_score(),
+            selection_reason: self.frequency_estimator.get_selection_reason(),
+            cycle_similarities_8div,
+            cycle_similarities_4div,
+            cycle_similarities_2div,
+            phase_zero_segment_relative,
+            phase_zero_history,
+            phase_zero_tolerance,
+            zero_cross_mode_name,
+        })
+    }
+    
+    // Configuration methods
+    #[wasm_bindgen(js_name = setAutoGain)]
+    pub fn set_auto_gain(&mut self, enabled: bool) {
+        self.gain_controller.set_auto_gain(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setNoiseGate)]
+    pub fn set_noise_gate(&mut self, enabled: bool) {
+        self.gain_controller.set_noise_gate(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setNoiseGateThreshold)]
+    pub fn set_noise_gate_threshold(&mut self, threshold: f32) {
+        self.gain_controller.set_noise_gate_threshold(threshold);
+    }
+    
+    #[wasm_bindgen(js_name = setFrequencyEstimationMethod)]
+    pub fn set_frequency_estimation_method(&mut self, method: &str) {
+        self.frequency_estimator.set_frequency_estimation_method(method);
+    }
+    
+    #[wasm_bindgen(js_name = setBufferSizeMultiplier)]
+    pub fn set_buffer_size_multiplier(&mut self, multiplier: u32) {
+        self.frequency_estimator.set_buffer_size_multiplier(multiplier);
+    }
+    
+    #[wasm_bindgen(js_name = setUsePeakMode)]
+    pub fn set_use_peak_mode(&mut self, enabled: bool) {
+        self.zero_cross_detector.set_use_peak_mode(enabled);
+    }
+    
+    #[wasm_bindgen(js_name = setZeroCrossMode)]
+    pub fn set_zero_cross_mode(&mut self, mode: &str) {
+        use zero_cross_detector::ZeroCrossMode;
+        
+        let zero_cross_mode = match mode {
+            "standard" => ZeroCrossMode::Standard,
+            "peak-backtrack-history" => ZeroCrossMode::PeakBacktrackWithHistory,
+            "bidirectional-nearest" => ZeroCrossMode::BidirectionalNearest,
+            "gradient-based" => ZeroCrossMode::GradientBased,
+            "adaptive-step" => ZeroCrossMode::AdaptiveStep,
+            "hysteresis" => ZeroCrossMode::Hysteresis,
+            "closest-to-zero" => ZeroCrossMode::ClosestToZero,
+            _ => {
+                web_sys::console::warn_1(&format!("Unknown zero-cross mode: {}, using default (hysteresis)", mode).into());
+                ZeroCrossMode::Hysteresis
+            }
+        };
+        
+        self.zero_cross_detector.set_zero_cross_mode(zero_cross_mode);
+    }
+    
+    #[wasm_bindgen(js_name = reset)]
+    pub fn reset(&mut self) {
+        self.frequency_estimator.clear_history();
+        self.zero_cross_detector.reset();
+        self.waveform_searcher.reset();
+    }
+    
+    /// Calculate phase marker positions for the waveform
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4) as sample indices
+    /// 
+    /// Uses zero_cross_detector to find phase 0 position within the displayed 4-cycle segment,
+    /// respecting the dropdown selection (Hysteresis, Peak+History with 1% constraint, etc.)
+    fn calculate_phase_markers(
+        &mut self,
+        data: &[f32],
+        segment_buffer_position: usize,
+        cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        let (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi, _, _, _) = 
+            self.calculate_phase_markers_with_debug(data, segment_buffer_position, cycle_length, estimated_frequency, sample_rate);
+        (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi)
+    }
+    
+    /// Calculate phase marker positions with debug information
+    /// Returns (phase_0, phase_2pi, phase_-pi/4, phase_2pi+pi/4, segment_relative, history, tolerance)
+    fn calculate_phase_markers_with_debug(
+        &mut self,
+        data: &[f32],
+        segment_buffer_position: usize,
+        cycle_length: f32,
+        estimated_frequency: f32,
+        sample_rate: f32,
+    ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
+        // If we don't have a valid cycle length, can't calculate phase
+        if cycle_length <= 0.0 || !cycle_length.is_finite() {
+            return (None, None, None, None, None, None, None);
+        }
+        
+        // Extract the 4-cycle segment for zero-cross detection
+        let segment_length = (cycle_length * CYCLES_TO_STORE as f32).floor() as usize;
+        let segment_end = (segment_buffer_position + segment_length).min(data.len());
+        
+        if segment_buffer_position >= segment_end {
+            return (None, None, None, None, None, None, None);
+        }
+        
+        let segment = &data[segment_buffer_position..segment_end];
+        
+        // Capture history before calling find_phase_zero_in_segment
+        let history_before = self.zero_cross_detector.get_absolute_phase_offset();
+        
+        // Calculate 1% tolerance for debugging
+        let tolerance = ((cycle_length * 0.01) as usize).max(1);
+        
+        // Use zero_cross_detector to find phase 0 within the segment
+        // This respects the dropdown selection (Hysteresis, Peak+History 1%, etc.)
+        // The new method maintains history in absolute coordinates to handle segment position changes
+        let phase_zero_segment_relative = match self.zero_cross_detector.find_phase_zero_in_segment(
+            segment,
+            segment_buffer_position,
+            cycle_length,
+        ) {
+            Some(idx) => idx,
+            None => return (None, None, None, None, None, history_before, Some(tolerance)),
+        };
+        
+        // Convert to frame buffer position (absolute index in full data buffer)
+        let phase_zero = segment_buffer_position + phase_zero_segment_relative;
+
+        // Phase 2π is one cycle after phase 0
+        let phase_2pi_idx = phase_zero + cycle_length as usize;
+        
+        // Phase -π/4 is 1/8 cycle before phase 0 (π/4 = 1/8 of 2π)
+        let eighth_cycle = (cycle_length / 8.0) as usize;
+        
+        // Check if phase_zero is large enough to subtract eighth_cycle
+        let phase_minus_quarter_pi = if phase_zero >= eighth_cycle {
+            Some(phase_zero - eighth_cycle)
+        } else {
+            None
+        };
+        
+        // Phase 2π+π/4 is 1/8 cycle after phase 2π (π/4 = 1/8 of 2π)
+        let phase_2pi_plus_quarter_pi_idx = phase_2pi_idx + eighth_cycle;
+        
+        // Ensure indices are within the data bounds
+        let phase_2pi = if phase_2pi_idx < data.len() {
+            Some(phase_2pi_idx)
+        } else {
+            None
+        };
+        
+        let phase_2pi_plus_quarter_pi = if phase_2pi_plus_quarter_pi_idx < data.len() {
+            Some(phase_2pi_plus_quarter_pi_idx)
+        } else {
+            None
+        };
+        
+        (
+            Some(phase_zero),
+            phase_2pi,
+            phase_minus_quarter_pi,
+            phase_2pi_plus_quarter_pi,
+            Some(phase_zero_segment_relative),
+            history_before,
+            Some(tolerance),
+        )
+    }
+    
+    /// Collect zero-cross candidates (negative-to-positive crossings) within the displayed segment
+    fn collect_zero_cross_candidates(
+        &self,
+        data: &[f32],
+        segment_start: usize,
+        segment_end: usize,
+    ) -> Vec<usize> {
+        if segment_start >= segment_end || segment_start >= data.len() {
+            return Vec::new();
+        }
+
+        let clamped_end = segment_end.min(data.len());
+        let segment = &data[segment_start..clamped_end];
+        if segment.len() < 2 {
+            return Vec::new();
+        }
+
+        let mut candidates = Vec::new();
+        let mut search_pos = 0usize;
+
+        while search_pos + 1 < segment.len() {
+            let mut found: Option<usize> = None;
+            for i in search_pos..segment.len() - 1 {
+                if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                    found = Some(i);
+                    break;
+                }
+            }
+
+            if let Some(rel_idx) = found {
+                candidates.push(segment_start + rel_idx);
+                let next_search = rel_idx + 1;
+                if next_search + 1 >= segment.len() {
+                    break;
+                }
+                search_pos = next_search;
+            } else {
+                break;
+            }
+        }
+
+        candidates
+    }
+
+    /// Select the zero-cross candidate whose interval to the next candidate contains the maximum positive peak
+    fn select_candidate_with_max_positive_peak(
+        &self,
+        data: &[f32],
+        segment_start: usize,
+        segment_end: usize,
+        candidates: &[usize],
+    ) -> Option<usize> {
+        if candidates.is_empty() || segment_start >= segment_end || segment_start >= data.len() {
+            return None;
+        }
+
+        let clamped_end = segment_end.min(data.len());
+        let segment = &data[segment_start..clamped_end];
+        if segment.is_empty() {
+            return None;
+        }
+
+        let mut best_candidate: Option<usize> = None;
+        let mut best_peak = f32::MIN;
+
+        for (i, &candidate_abs) in candidates.iter().enumerate() {
+            if candidate_abs < segment_start || candidate_abs >= clamped_end {
+                continue;
+            }
+
+            let next_abs = match candidates.get(i + 1).copied() {
+                Some(next) if next > candidate_abs && next <= clamped_end => next,
+                _ => continue,
+            };
+
+            let rel_start = candidate_abs - segment_start;
+            let rel_end = next_abs - segment_start;
+
+            if rel_start >= rel_end {
+                continue;
+            }
+
+            let mut local_peak: Option<f32> = None;
+            for &value in &segment[rel_start..rel_end] {
+                if value > 0.0 {
+                    local_peak = Some(local_peak.map_or(value, |p| p.max(value)));
+                }
+            }
+
+            if let Some(peak) = local_peak {
+                if peak > best_peak {
+                    best_peak = peak;
+                    best_candidate = Some(candidate_abs);
+                }
+            }
+        }
+
+        best_candidate
+    }
+    
+    /// Find the peak (maximum positive amplitude) in the specified range
+    /// Returns None if no peak with positive amplitude (> 0.0) is found in the range
+    fn find_peak_in_range(
+        &self,
+        data: &[f32],
+        start_index: usize,
+        end_index: usize,
+    ) -> Option<usize> {
+        // Validate indices
+        if start_index >= data.len() || end_index <= start_index {
+            return None;
+        }
+        
+        let end = end_index.min(data.len());
+        
+        let mut peak_index = start_index;
+        let mut peak_value = data[start_index];
+        
+        for i in start_index + 1..end {
+            if data[i] > peak_value {
+                peak_value = data[i];
+                peak_index = i;
+            }
+        }
+        
+        // Ensure the peak is positive
+        if peak_value > 0.0 {
+            Some(peak_index)
+        } else {
+            None
+        }
+    }
+    
+    /// Find zero crossing by looking backward from peak
+    /// Zero crossing is defined as: before going back >= 0, after going back < 0
+    /// Returns the "before going back" position
+    fn find_zero_crossing_backward_from_peak(
+        &self,
+        data: &[f32],
+        peak_index: usize,
+    ) -> Option<usize> {
+        // Need at least one sample before peak to look backward
+        if peak_index == 0 {
+            return None;
+        }
+        
+        // Look backward from peak
+        // We start from peak_index - 1 and go backward to index 1
+        // (index 0 cannot be a zero crossing because there's no sample before it)
+        for i in (1..peak_index).rev() {
+            // Check if this is a zero crossing point
+            // data[i] >= 0.0 (before going back)
+            // data[i-1] < 0.0 (after going back one step)
+            if data[i] >= 0.0 && data[i - 1] < 0.0 {
+                return Some(i);  // Return the "before going back" position
+            }
+        }
+        
+        None
+    }
+    
+    /// Compute frequency-domain data from time-domain data for BufferSource mode using DFT
+    /// Returns frequency magnitude data as Uint8Array (0-255 range) compatible with Web Audio API's AnalyserNode
+    #[wasm_bindgen(js_name = computeFrequencyData)]
+    pub fn compute_frequency_data(
+        &self,
+        time_domain_data: &[f32],
+        fft_size: usize,
+    ) -> Option<Vec<u8>> {
+        dft::compute_frequency_data(time_domain_data, fft_size)
     }
 }
 
@@ -1450,58 +1272,66 @@ impl ZeroCrossDetector {
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-610ec53 Merge pull request #302 from cat2151/codex/fix-end-location-issue
-2070ae7 chore: update comments and tests per review
-8971571 fix: align phase end marker to start cycle
-3e018ab chore: record plan for phase marker fix
-b43381c Initial plan
-8c35f12 Add issue note for #301 [auto]
-c56fc62 Add issue note for #299 [auto]
-c95ad0e Merge pull request #298 from cat2151/claude/remove-debug-log-message
-8b650fd returnタプルの5番目の要素を修正: segment_relative時にNoneを返すよう修正 (issue #285)
-25e53ef デバッグ用console.logを削除: Phase Debug messageを削除 (issue #285)
+1aa394f Merge pull request #314 from cat2151/codex/fix-zero-cross-indicator-visibility
+7fecca5 perf: inline zero-cross filtering in render loop
+4ab5c0f fix: constrain zero-cross markers
+be1b6eb Initial plan
+d3b212f Merge pull request #312 from cat2151/codex/fix-phase-marker-end-offset
+38c8637 fix: clarify orange end derivation and tests
+b4accbf chore: refresh build artifacts
+7953519 fix: derive phase marker end from start offset
+5afc459 Add issue note for #311 [auto]
+dafd448 Initial plan
 
 ### 変更されたファイル:
-.github/CHECK_LARGE_FILES.md
-.github/workflows/call-check-large-files.yml
-.github/workflows/check-large-files.yml
-README.ja.md
-README.md
+demo-simple.html
+demo-simple.js
+dist/ComparisonPanelRenderer.d.ts
 dist/ComparisonPanelRenderer.d.ts.map
+dist/RenderCoordinator.d.ts.map
 dist/WaveformDataProcessor.d.ts
 dist/WaveformDataProcessor.d.ts.map
+dist/WaveformRenderData.d.ts
+dist/WaveformRenderData.d.ts.map
 dist/assets/Oscilloscope-0AkMdwqr.js
 dist/assets/Oscilloscope-0AkMdwqr.js.map
-dist/assets/Oscilloscope-Bzx1rOH_.js
-dist/assets/Oscilloscope-Bzx1rOH_.js.map
+dist/assets/Oscilloscope-BiPi-aIi.js
+dist/assets/Oscilloscope-BiPi-aIi.js.map
+dist/assets/demo-9JbpkLFd.js
+dist/assets/demo-9JbpkLFd.js.map
 dist/assets/demo-B8LH4eBp.js
 dist/assets/demo-B8LH4eBp.js.map
-dist/assets/main-DNW0ajie.js
-dist/assets/main-DNW0ajie.js.map
+dist/assets/main-pCt8i_lw.js
+dist/assets/main-pCt8i_lw.js.map
 dist/cat-oscilloscope.cjs
 dist/cat-oscilloscope.cjs.map
 dist/cat-oscilloscope.mjs
 dist/cat-oscilloscope.mjs.map
+dist/comparison-renderers/WaveformPanelRenderer.d.ts
+dist/comparison-renderers/WaveformPanelRenderer.d.ts.map
 dist/demo-simple.html
 dist/index.html
 dist/wasm/signal_processor_wasm.d.ts
 dist/wasm/signal_processor_wasm.js
 dist/wasm/signal_processor_wasm_bg.wasm
 dist/wasm/signal_processor_wasm_bg.wasm.d.ts
-generated-docs/development-status-generated-prompt.md
-generated-docs/project-overview-generated-prompt.md
-issue-notes/299.md
-issue-notes/301.md
+issue-notes/307.md
+issue-notes/311.md
 public/wasm/signal_processor_wasm.d.ts
 public/wasm/signal_processor_wasm.js
 public/wasm/signal_processor_wasm_bg.wasm
 public/wasm/signal_processor_wasm_bg.wasm.d.ts
 signal-processor-wasm/src/lib.rs
-signal-processor-wasm/src/zero_cross_detector/mod.rs
+signal-processor-wasm/src/waveform_render_data.rs
+signal-processor-wasm/src/zero_cross_detector/phase_zero.rs
+src/ComparisonPanelRenderer.ts
+src/RenderCoordinator.ts
 src/WaveformDataProcessor.ts
-src/__tests__/phase-marker-constraint-issue296.test.ts
+src/WaveformRenderData.ts
+src/__tests__/comparison-panel-renderer.test.ts
 src/__tests__/waveform-data-processor.test.ts
+src/comparison-renderers/WaveformPanelRenderer.ts
 
 
 ---
-Generated at: 2026-02-09 07:11:10 JST
+Generated at: 2026-02-10 07:17:43 JST
