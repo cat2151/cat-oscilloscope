@@ -114,7 +114,9 @@ export class WaveformPanelRenderer {
     displayStartIndex: number,
     displayEndIndex: number,
     highlightedCandidate?: number,
-    targetCandidate?: number
+    phaseZeroIndex?: number,
+    minCandidateIndex?: number,
+    maxCandidateIndex?: number
   ): void {
     const displayLength = displayEndIndex - displayStartIndex;
     if (candidates.length === 0 || displayLength <= 0) {
@@ -122,8 +124,12 @@ export class WaveformPanelRenderer {
     }
 
     const centerY = height / 2;
-    const radius = 4;
+    const baseRadius = 5;
+    const highlightedRadius = 7;
+    const targetRadius = 9;
     const now = performance.now();
+    let closestCandidateX: number | undefined;
+    let minDistanceToPhase = Number.POSITIVE_INFINITY;
 
     ctx.save();
     for (const candidate of candidates) {
@@ -132,32 +138,41 @@ export class WaveformPanelRenderer {
         continue;
       }
 
+      if (
+        minCandidateIndex !== undefined &&
+        maxCandidateIndex !== undefined &&
+        (candidate < minCandidateIndex || candidate >= maxCandidateIndex)
+      ) {
+        continue;
+      }
+
       const x = (relativeIndex / displayLength) * width;
       const isHighlighted = highlightedCandidate !== undefined && candidate === highlightedCandidate;
       const blinkOn = isHighlighted && Math.floor(now / 400) % 2 === 0;
       const color = isHighlighted ? (blinkOn ? '#ffff00' : '#0066ff') : '#ffff00';
+      const radius = isHighlighted ? highlightedRadius : baseRadius;
 
       ctx.beginPath();
-      ctx.fillStyle = color;
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.arc(x, centerY, radius, 0, Math.PI * 2);
-      ctx.fill();
       ctx.stroke();
+
+      if (phaseZeroIndex !== undefined) {
+        const distance = Math.abs(candidate - phaseZeroIndex);
+        if (distance < minDistanceToPhase) {
+          minDistanceToPhase = distance;
+          closestCandidateX = x;
+        }
+      }
     }
 
-    if (targetCandidate !== undefined) {
-      const relativeIndex = targetCandidate - displayStartIndex;
-      if (relativeIndex >= 0 && relativeIndex < displayLength) {
-        const x = (relativeIndex / displayLength) * width;
-        ctx.beginPath();
-        ctx.fillStyle = '#ff0000';
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 2;
-        ctx.arc(x, centerY, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      }
+    if (closestCandidateX !== undefined) {
+      ctx.beginPath();
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      ctx.arc(closestCandidateX, centerY, targetRadius, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.restore();
   }
