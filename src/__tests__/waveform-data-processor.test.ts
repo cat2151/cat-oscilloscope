@@ -145,18 +145,16 @@ describe('WaveformDataProcessor', () => {
       // Frame 1: establish baselines
       const data1 = makeRenderData({
         phaseZeroIndex: 800,
-        phaseTwoPiIndex: 1600,
         phaseMinusQuarterPiIndex: 600,
-        phaseTwoPiPlusQuarterPiIndex: 1800,
       });
       callClamp(processor, data1);
+      expect(data1.phaseTwoPiIndex).toBe(1800);
+      expect(data1.phaseTwoPiPlusQuarterPiIndex).toBe(1850);
 
       // Frame 2: all try to jump by large amounts (>1% of one cycle = >10 samples)
       const data2 = makeRenderData({
         phaseZeroIndex: 1000,   // +200 samples
-        phaseTwoPiIndex: 1800,  // +200 samples
         phaseMinusQuarterPiIndex: 400,   // -200 samples
-        phaseTwoPiPlusQuarterPiIndex: 1600, // -200 samples (end is derived from start, not clamped)
       });
       callClamp(processor, data2);
 

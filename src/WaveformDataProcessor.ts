@@ -299,7 +299,7 @@ export class WaveformDataProcessor {
     const CYCLES_TO_DISPLAY = 4;
     const MAX_CHANGE_PERCENT = 100.0 / CYCLES_TO_DISPLAY * 0.01; // 0.25% of display window = 1% of one cycle
     const cycleLengthSamples = Math.floor(displayLength / CYCLES_TO_DISPLAY);
-    const eighthCycleSamples = Math.floor(cycleLengthSamples / 8);
+    const quarterCycleSamples = Math.floor(cycleLengthSamples / 4);
 
     // Helper: clamp a single marker and return updated percent
     const clampMarker = (
@@ -352,7 +352,7 @@ export class WaveformDataProcessor {
     this.prevPhaseMinusQuarterPiPercent = rMinus.percent;
 
     if (rMinus.index !== undefined && cycleLengthSamples > 0) {
-      const derivedTwoPiPlusQuarter = rMinus.index + cycleLengthSamples + 2 * eighthCycleSamples;
+      const derivedTwoPiPlusQuarter = rMinus.index + cycleLengthSamples + quarterCycleSamples;
       renderData.phaseTwoPiPlusQuarterPiIndex = derivedTwoPiPlusQuarter;
     } else {
       renderData.phaseTwoPiPlusQuarterPiIndex = undefined;

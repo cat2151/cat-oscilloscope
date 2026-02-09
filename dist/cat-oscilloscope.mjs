@@ -1730,7 +1730,7 @@ class de {
     const t = e.displayEndIndex - e.displayStartIndex;
     if (t <= 0)
       return;
-    const i = 4, s = 100 / i * 0.01, o = Math.floor(t / i), a = Math.floor(o / 8), r = (f, u) => {
+    const i = 4, s = 100 / i * 0.01, o = Math.floor(t / i), a = Math.floor(o / 4), r = (f, u) => {
       if (f === void 0)
         return { index: void 0, percent: void 0 };
       const g = (f - e.displayStartIndex) / t * 100;
@@ -1752,7 +1752,7 @@ class de {
       e.phaseTwoPiIndex = void 0;
     const d = r(e.phaseMinusQuarterPiIndex, this.prevPhaseMinusQuarterPiPercent);
     if (e.phaseMinusQuarterPiIndex = d.index, this.prevPhaseMinusQuarterPiPercent = d.percent, d.index !== void 0 && o > 0) {
-      const f = d.index + o + 2 * a;
+      const f = d.index + o + a;
       e.phaseTwoPiPlusQuarterPiIndex = f;
     } else
       e.phaseTwoPiPlusQuarterPiIndex = void 0;
