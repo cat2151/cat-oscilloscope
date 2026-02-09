@@ -174,60 +174,29 @@ export class ComparisonPanelRenderer {
       phaseZeroIndex !== undefined && phaseTwoPiIndex !== undefined
         ? Math.abs(phaseTwoPiIndex - phaseZeroIndex)
         : displayLength / 4;
-
-    const filteredZeroCrossCandidates = (() => {
-      if (
-        phaseZeroIndex === undefined ||
-        !Number.isFinite(cycleLengthFromPhase) ||
-        cycleLengthFromPhase <= 0
-      ) {
-        return zeroCrossCandidates;
-      }
-
-      const halfCycle = cycleLengthFromPhase / 2;
-      const minIndex = Math.max(currentStart, Math.floor(phaseZeroIndex - halfCycle));
-      const maxIndex = Math.min(currentEnd, Math.ceil(phaseZeroIndex + halfCycle));
-      return zeroCrossCandidates.filter(
-        candidate => candidate >= minIndex && candidate < maxIndex
-      );
-    })();
-
-    // Find the candidate the red phase marker is moving toward (nearest to phaseZero within display)
-    const targetZeroCrossCandidate = (() => {
-      if (
-        phaseZeroIndex === undefined ||
-        phaseZeroIndex < currentStart ||
-        phaseZeroIndex >= currentEnd ||
-        filteredZeroCrossCandidates.length === 0
-      ) {
-        return undefined;
-      }
-
-      let closest: number | undefined;
-      let minDistance = Number.POSITIVE_INFINITY;
-      for (const candidate of filteredZeroCrossCandidates) {
-        if (candidate < currentStart || candidate >= currentEnd) {
-          continue;
-        }
-        const distance = Math.abs(candidate - phaseZeroIndex);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closest = candidate;
-        }
-      }
-      return closest;
-    })();
+    const hasValidCycle = Number.isFinite(cycleLengthFromPhase) && cycleLengthFromPhase > 0;
+    const halfCycle = hasValidCycle ? cycleLengthFromPhase / 2 : undefined;
+    const minCandidateIndex =
+      halfCycle !== undefined && phaseZeroIndex !== undefined
+        ? Math.max(currentStart, Math.floor(phaseZeroIndex - halfCycle))
+        : undefined;
+    const maxCandidateIndex =
+      halfCycle !== undefined && phaseZeroIndex !== undefined
+        ? Math.min(currentEnd, Math.ceil(phaseZeroIndex + halfCycle))
+        : undefined;
 
     // Draw zero-cross candidates on current waveform
     this.waveformRenderer.drawZeroCrossCandidates(
       this.currentCtx,
       this.currentCanvas.width,
       this.currentCanvas.height,
-      filteredZeroCrossCandidates,
+      zeroCrossCandidates,
       currentStart,
       currentEnd,
       highlightedZeroCrossCandidate,
-      targetZeroCrossCandidate
+      phaseZeroIndex,
+      minCandidateIndex,
+      maxCandidateIndex
     );
 
     // Draw phase markers on current waveform (issue #279, #286) - drawn last to ensure visibility
