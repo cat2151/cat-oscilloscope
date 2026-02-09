@@ -25,7 +25,7 @@ export declare class WaveformPanelRenderer {
     /**
      * Draw zero-cross candidates as circles on the center line
      */
-    drawZeroCrossCandidates(ctx: CanvasRenderingContext2D, width: number, height: number, candidates: number[], displayStartIndex: number, displayEndIndex: number, highlightedCandidate?: number): void;
+    drawZeroCrossCandidates(ctx: CanvasRenderingContext2D, width: number, height: number, candidates: number[], displayStartIndex: number, displayEndIndex: number, highlightedCandidate?: number, targetCandidate?: number): void;
     /**
      * Clear a canvas
      */

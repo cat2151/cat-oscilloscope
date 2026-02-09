@@ -421,6 +421,10 @@ describe('ComparisonPanelRenderer', () => {
         get() { return currentFillStyle; },
         configurable: true,
       });
+      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y, fill: currentFillStyle });
+      });
       currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
 
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
@@ -466,6 +470,49 @@ describe('ComparisonPanelRenderer', () => {
       );
 
       expect(fillStyles).toContain('#0066ff');
+      nowSpy.mockRestore();
+    });
+
+    it('should draw a red circle for the nearest candidate the phase marker is moving toward', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const candidates = [20, 80, 150];
+      const currCtx = currentCanvas.getContext('2d') as any;
+
+      const fillStyles: string[] = [];
+      let currentFillStyle = '';
+      Object.defineProperty(currCtx, 'fillStyle', {
+        set(val: string) { currentFillStyle = val; },
+        get() { return currentFillStyle; },
+        configurable: true,
+      });
+      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y, fill: currentFillStyle });
+      });
+      currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
+
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        0, 200,
+        fullBuffer,
+        0,
+        [],
+        [],
+        [],
+        90, // phaseZeroIndex (nearest candidate should be 80)
+        undefined,
+        undefined,
+        undefined,
+        candidates
+      );
+
+      expect(fillStyles).toContain('#ff0000');
+      const expectedX = (80 / 200) * currentCanvas.width; // relative index 80 in [0,200) mapped to width
+      expect(arcCalls.find(c => c.fill === '#ff0000')?.x).toBeCloseTo(expectedX);
       nowSpy.mockRestore();
     });
 

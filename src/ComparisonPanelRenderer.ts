@@ -168,6 +168,32 @@ export class ComparisonPanelRenderer {
       phaseTwoPiOffsetHistory
     );
 
+    // Find the candidate the red phase marker is moving toward (nearest to phaseZero within display)
+    const targetZeroCrossCandidate = (() => {
+      if (
+        phaseZeroIndex === undefined ||
+        phaseZeroIndex < currentStart ||
+        phaseZeroIndex >= currentEnd ||
+        zeroCrossCandidates.length === 0
+      ) {
+        return undefined;
+      }
+
+      let closest: number | undefined;
+      let minDistance = Number.POSITIVE_INFINITY;
+      for (const candidate of zeroCrossCandidates) {
+        if (candidate < currentStart || candidate >= currentEnd) {
+          continue;
+        }
+        const distance = Math.abs(candidate - phaseZeroIndex);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closest = candidate;
+        }
+      }
+      return closest;
+    })();
+
     // Draw zero-cross candidates on current waveform
     this.waveformRenderer.drawZeroCrossCandidates(
       this.currentCtx,
@@ -176,7 +202,8 @@ export class ComparisonPanelRenderer {
       zeroCrossCandidates,
       currentStart,
       currentEnd,
-      highlightedZeroCrossCandidate
+      highlightedZeroCrossCandidate,
+      targetZeroCrossCandidate
     );
 
     // Draw phase markers on current waveform (issue #279, #286) - drawn last to ensure visibility
