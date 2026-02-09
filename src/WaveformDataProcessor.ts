@@ -334,7 +334,7 @@ export class WaveformDataProcessor {
       return { index: clampedIndex, percent: actualPercent };
     };
 
-    // Clamp start marker, derive end marker (+1 cycle), clamp the two orange markers independently
+    // Clamp start markers; derive red end from red start and orange end from orange start offset
     const r0 = clampMarker(renderData.phaseZeroIndex, this.prevPhaseZeroPercent);
     renderData.phaseZeroIndex = r0.index;
     this.prevPhaseZeroPercent = r0.percent;
