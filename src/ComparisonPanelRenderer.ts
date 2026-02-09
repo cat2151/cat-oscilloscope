@@ -168,20 +168,44 @@ export class ComparisonPanelRenderer {
       phaseTwoPiOffsetHistory
     );
 
+    // Limit zero-cross candidates to ±0.5 cycle around the phase start marker
+    const displayLength = currentEnd - currentStart;
+    const cycleLengthFromPhase =
+      phaseZeroIndex !== undefined && phaseTwoPiIndex !== undefined
+        ? Math.abs(phaseTwoPiIndex - phaseZeroIndex)
+        : displayLength / 4;
+
+    const filteredZeroCrossCandidates = (() => {
+      if (
+        phaseZeroIndex === undefined ||
+        !Number.isFinite(cycleLengthFromPhase) ||
+        cycleLengthFromPhase <= 0
+      ) {
+        return zeroCrossCandidates;
+      }
+
+      const halfCycle = cycleLengthFromPhase / 2;
+      const minIndex = Math.max(currentStart, Math.floor(phaseZeroIndex - halfCycle));
+      const maxIndex = Math.min(currentEnd, Math.ceil(phaseZeroIndex + halfCycle));
+      return zeroCrossCandidates.filter(
+        candidate => candidate >= minIndex && candidate < maxIndex
+      );
+    })();
+
     // Find the candidate the red phase marker is moving toward (nearest to phaseZero within display)
     const targetZeroCrossCandidate = (() => {
       if (
         phaseZeroIndex === undefined ||
         phaseZeroIndex < currentStart ||
         phaseZeroIndex >= currentEnd ||
-        zeroCrossCandidates.length === 0
+        filteredZeroCrossCandidates.length === 0
       ) {
         return undefined;
       }
 
       let closest: number | undefined;
       let minDistance = Number.POSITIVE_INFINITY;
-      for (const candidate of zeroCrossCandidates) {
+      for (const candidate of filteredZeroCrossCandidates) {
         if (candidate < currentStart || candidate >= currentEnd) {
           continue;
         }
@@ -199,7 +223,7 @@ export class ComparisonPanelRenderer {
       this.currentCtx,
       this.currentCanvas.width,
       this.currentCanvas.height,
-      zeroCrossCandidates,
+      filteredZeroCrossCandidates,
       currentStart,
       currentEnd,
       highlightedZeroCrossCandidate,

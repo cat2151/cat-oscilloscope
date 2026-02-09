@@ -414,18 +414,28 @@ describe('ComparisonPanelRenderer', () => {
       const highlightedCandidate = 60;
       const currCtx = currentCanvas.getContext('2d') as any;
 
-      const fillStyles: string[] = [];
-      let currentFillStyle = '';
-      Object.defineProperty(currCtx, 'fillStyle', {
-        set(val: string) { currentFillStyle = val; },
-        get() { return currentFillStyle; },
+      const arcCalls: Array<{ x: number; y: number }> = [];
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y });
+      });
+
+      const strokeCalls: Array<{ color: string; lineWidth: number }> = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
         configurable: true,
       });
-      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
-      currCtx.arc = vi.fn((x: number, y: number) => {
-        arcCalls.push({ x, y, fill: currentFillStyle });
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
       });
-      currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth });
+      });
+      currCtx.fill = vi.fn();
 
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
 
@@ -447,9 +457,10 @@ describe('ComparisonPanelRenderer', () => {
       );
 
       expect(currCtx.arc).toHaveBeenCalledTimes(candidates.length);
-      expect(fillStyles).toContain('#ffff00');
+      expect(strokeCalls.map(c => c.color)).toContain('#ffff00');
+      expect(currCtx.fill).not.toHaveBeenCalled();
 
-      fillStyles.length = 0;
+      strokeCalls.length = 0;
       nowSpy.mockReturnValue(500);
 
       renderer.updatePanels(
@@ -469,7 +480,7 @@ describe('ComparisonPanelRenderer', () => {
         highlightedCandidate
       );
 
-      expect(fillStyles).toContain('#0066ff');
+      expect(strokeCalls.map(c => c.color)).toContain('#0066ff');
       nowSpy.mockRestore();
     });
 
@@ -479,18 +490,30 @@ describe('ComparisonPanelRenderer', () => {
       const candidates = [20, 80, 150];
       const currCtx = currentCanvas.getContext('2d') as any;
 
-      const fillStyles: string[] = [];
-      let currentFillStyle = '';
-      Object.defineProperty(currCtx, 'fillStyle', {
-        set(val: string) { currentFillStyle = val; },
-        get() { return currentFillStyle; },
+      const arcCalls: Array<{ x: number; y: number }> = [];
+      let lastArcIndex = -1;
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y });
+        lastArcIndex = arcCalls.length - 1;
+      });
+
+      const strokeCalls: Array<{ color: string; lineWidth: number; arcIndex: number }> = [];
+      let currentStrokeStyle = '';
+      let currentLineWidth = 0;
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
         configurable: true,
       });
-      const arcCalls: Array<{ x: number; y: number; fill: string }> = [];
-      currCtx.arc = vi.fn((x: number, y: number) => {
-        arcCalls.push({ x, y, fill: currentFillStyle });
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set(val: number) { currentLineWidth = val; },
+        get() { return currentLineWidth; },
+        configurable: true,
       });
-      currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, lineWidth: currentLineWidth, arcIndex: lastArcIndex });
+      });
+      currCtx.fill = vi.fn();
 
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
 
@@ -510,10 +533,68 @@ describe('ComparisonPanelRenderer', () => {
         candidates
       );
 
-      expect(fillStyles).toContain('#ff0000');
+      const redStroke = strokeCalls.find(c => c.color === '#ff0000');
+      expect(redStroke).toBeTruthy();
       const expectedX = (80 / 200) * currentCanvas.width; // relative index 80 in [0,200) mapped to width
-      expect(arcCalls.find(c => c.fill === '#ff0000')?.x).toBeCloseTo(expectedX);
+      const redArc = redStroke?.arcIndex !== undefined ? arcCalls[redStroke.arcIndex] : undefined;
+      expect(redArc?.x).toBeCloseTo(expectedX);
+      expect(currCtx.fill).not.toHaveBeenCalled();
       nowSpy.mockRestore();
+    });
+
+    it('should restrict zero-cross candidates to ±0.5 cycle around phase start', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const candidates = [10, 60, 130, 180];
+      const currCtx = currentCanvas.getContext('2d') as any;
+
+      const arcCalls: Array<{ x: number; y: number }> = [];
+      let lastArcIndex = -1;
+      currCtx.arc = vi.fn((x: number, y: number) => {
+        arcCalls.push({ x, y });
+        lastArcIndex = arcCalls.length - 1;
+      });
+
+      const strokeCalls: Array<{ color: string; arcIndex: number }> = [];
+      let currentStrokeStyle = '';
+      Object.defineProperty(currCtx, 'strokeStyle', {
+        set(val: string) { currentStrokeStyle = val; },
+        get() { return currentStrokeStyle; },
+        configurable: true,
+      });
+      currCtx.lineWidth = 0;
+      Object.defineProperty(currCtx, 'lineWidth', {
+        set() { /* no-op for test */ },
+        get() { return 2; },
+        configurable: true,
+      });
+      currCtx.stroke = vi.fn(() => {
+        strokeCalls.push({ color: currentStrokeStyle, arcIndex: lastArcIndex });
+      });
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        0, 200,
+        fullBuffer,
+        0,
+        [],
+        [],
+        [],
+        100, // phaseZeroIndex
+        180, // phaseTwoPiIndex -> cycle length 80 -> half-cycle 40 => range [60, 140]
+        undefined,
+        undefined,
+        candidates
+      );
+
+      // Only candidates within [60,140) should be drawn: 60 and 130 (plus the red target marker)
+      const yellowStrokeCount = strokeCalls.filter(c => c.color === '#ffff00').length;
+      expect(yellowStrokeCount).toBe(2);
+      const redStroke = strokeCalls.find(c => c.color === '#ff0000');
+      const redArc = redStroke?.arcIndex !== undefined ? arcCalls[redStroke.arcIndex] : undefined;
+      const expectedRedX = (130 / 200) * currentCanvas.width;
+      expect(redArc?.x).toBeCloseTo(expectedRedX);
     });
 
     it('should draw previous waveform (#666600) before current waveform (#00ff00) on current canvas (issue #288)', () => {

@@ -122,7 +122,9 @@ export class WaveformPanelRenderer {
     }
 
     const centerY = height / 2;
-    const radius = 4;
+    const baseRadius = 5;
+    const highlightedRadius = 7;
+    const targetRadius = 9;
     const now = performance.now();
 
     ctx.save();
@@ -136,13 +138,12 @@ export class WaveformPanelRenderer {
       const isHighlighted = highlightedCandidate !== undefined && candidate === highlightedCandidate;
       const blinkOn = isHighlighted && Math.floor(now / 400) % 2 === 0;
       const color = isHighlighted ? (blinkOn ? '#ffff00' : '#0066ff') : '#ffff00';
+      const radius = isHighlighted ? highlightedRadius : baseRadius;
 
       ctx.beginPath();
-      ctx.fillStyle = color;
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.arc(x, centerY, radius, 0, Math.PI * 2);
-      ctx.fill();
       ctx.stroke();
     }
 
@@ -151,11 +152,9 @@ export class WaveformPanelRenderer {
       if (relativeIndex >= 0 && relativeIndex < displayLength) {
         const x = (relativeIndex / displayLength) * width;
         ctx.beginPath();
-        ctx.fillStyle = '#ff0000';
         ctx.strokeStyle = '#ff0000';
         ctx.lineWidth = 2;
-        ctx.arc(x, centerY, radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(x, centerY, targetRadius, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
