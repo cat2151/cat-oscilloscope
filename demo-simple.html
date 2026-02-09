@@ -122,6 +122,31 @@
     .wave-selector input[type="radio"] {
       margin-right: 5px;
     }
+    .debug-panels {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 24px 0;
+    }
+    .debug-panel {
+      margin-bottom: 16px;
+    }
+    .debug-panel:last-child {
+      margin-bottom: 0;
+    }
+    .debug-panel canvas {
+      display: block;
+      margin: 8px auto 0;
+      background: #000;
+      border: 1px solid #444;
+    }
+    .panel-title {
+      text-align: center;
+      color: #00ff00;
+      font-weight: bold;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -146,6 +171,19 @@
   </div>
 
   <canvas id="oscilloscope" width="800" height="400"></canvas>
+
+  <div class="debug-panels">
+    <div class="debug-panel">
+      <div class="panel-title">4周期表示（今回の波形）</div>
+      <canvas id="currentWaveformCanvas" width="500" height="140"></canvas>
+    </div>
+    <div class="debug-panel">
+      <div class="panel-title">フレームバッファ</div>
+      <canvas id="frameBufferCanvas" width="800" height="140"></canvas>
+    </div>
+    <canvas id="previousWaveformCanvas" width="250" height="120" style="display: none;"></canvas>
+    <canvas id="similarityPlotCanvas" width="250" height="120" style="display: none;"></canvas>
+  </div>
   
   <div class="wave-selector">
     <strong>波形選択：</strong>

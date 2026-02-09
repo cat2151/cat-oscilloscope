@@ -10,8 +10,18 @@ pub(crate) fn find_phase_zero_in_segment(
     peak_search_multiplier: f32,
     history_search_tolerance_ratio: f32,
 ) -> Option<usize> {
-    // If we don't have history or invalid cycle length, perform initial detection
-    if absolute_phase_offset.is_none() || estimated_cycle_length < f32::EPSILON {
+    // If cycle length is invalid, keep existing history (if still within this segment) and wait for a valid estimate
+    if estimated_cycle_length < f32::EPSILON {
+        if let Some(history_abs) = *absolute_phase_offset {
+            if history_abs >= segment_start_abs && history_abs < segment_start_abs + segment.len() {
+                return Some(history_abs - segment_start_abs);
+            }
+        }
+        return None;
+    }
+
+    // If we don't have history, perform initial detection
+    if absolute_phase_offset.is_none() {
         // Initial detection based on current mode
         let zero_cross_rel = match zero_cross_mode {
             ZeroCrossMode::Standard => {
