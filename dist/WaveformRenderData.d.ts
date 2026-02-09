@@ -44,6 +44,10 @@ export interface WaveformRenderData {
     phaseMinusQuarterPiIndex?: number;
     /** Phase 2π+π/4: 1/8 cycle after phase 2π */
     phaseTwoPiPlusQuarterPiIndex?: number;
+    /** Zero-cross candidates (sample indices within waveformData) */
+    zeroCrossCandidates?: number[];
+    /** Candidate whose interval to the next candidate contains the maximum positive peak */
+    highlightedZeroCrossCandidate?: number;
     /** Strength of peak at 1/2 of estimated frequency as a percentage of estimated frequency peak */
     halfFreqPeakStrengthPercent?: number;
     /** Harmonics strength for candidate1 (estimated frequency) - magnitudes for 1x, 2x, 3x, 4x, 5x */

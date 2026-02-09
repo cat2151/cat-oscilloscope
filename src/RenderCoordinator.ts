@@ -113,7 +113,9 @@ export class RenderCoordinator {
       renderData.phaseZeroIndex,
       renderData.phaseTwoPiIndex,
       renderData.phaseMinusQuarterPiIndex,
-      renderData.phaseTwoPiPlusQuarterPiIndex
+      renderData.phaseTwoPiPlusQuarterPiIndex,
+      renderData.zeroCrossCandidates ?? [],
+      renderData.highlightedZeroCrossCandidate
     );
 
     // Update cycle similarity graphs if renderer is available

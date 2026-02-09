@@ -1,6 +1,6 @@
-var N = Object.defineProperty;
-var z = (y, e, t) => e in y ? N(y, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : y[e] = t;
-var r = (y, e, t) => z(y, typeof e != "symbol" ? e + "" : e, t);
+var z = Object.defineProperty;
+var N = (y, e, t) => e in y ? z(y, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : y[e] = t;
+var r = (y, e, t) => N(y, typeof e != "symbol" ? e + "" : e, t);
 function q(y) {
   return Math.pow(10, y / 20);
 }
@@ -506,15 +506,15 @@ class J extends k {
     ), T = v / x;
     this.ctx.fillStyle = "#00aaff";
     for (let p = 0; p < x; p++) {
-      const E = t[p] / 255 * l * this.FFT_OVERLAY_HEIGHT_RATIO, R = c + p * T, M = g + l - E;
-      this.ctx.fillRect(R, M, Math.max(T - 1, this.FFT_MIN_BAR_WIDTH), E);
+      const S = t[p] / 255 * l * this.FFT_OVERLAY_HEIGHT_RATIO, R = c + p * T, M = g + l - S;
+      this.ctx.fillRect(R, M, Math.max(T - 1, this.FFT_MIN_BAR_WIDTH), S);
     }
     if (i > 0 && i <= o) {
-      const p = i / h, S = c + p * T;
-      this.ctx.strokeStyle = "#ff00ff", this.ctx.lineWidth = 2, this.ctx.beginPath(), this.ctx.moveTo(S, g), this.ctx.lineTo(S, g + l), this.ctx.stroke(), this.ctx.fillStyle = "#ff00ff", this.ctx.font = "bold 12px Arial";
-      const E = `${i.toFixed(1)} Hz`, R = this.ctx.measureText(E).width;
-      let M = S + 3;
-      M + R > c + v - 5 && (M = S - R - 3), this.ctx.fillText(E, M, g + 15);
+      const p = i / h, E = c + p * T;
+      this.ctx.strokeStyle = "#ff00ff", this.ctx.lineWidth = 2, this.ctx.beginPath(), this.ctx.moveTo(E, g), this.ctx.lineTo(E, g + l), this.ctx.stroke(), this.ctx.fillStyle = "#ff00ff", this.ctx.font = "bold 12px Arial";
+      const S = `${i.toFixed(1)} Hz`, R = this.ctx.measureText(S).width;
+      let M = E + 3;
+      M + R > c + v - 5 && (M = E - R - 3), this.ctx.fillText(S, M, g + 15);
     }
     this.ctx.restore();
   }
@@ -548,7 +548,7 @@ class ee extends k {
     }
     if (t && n) {
       l += f, this.ctx.fillStyle = "#ff00ff", this.ctx.font = "11px monospace";
-      const x = t.map((p, S) => `${S + 1}x:${p.toFixed(2)}`).join(" "), T = s !== void 0 ? ` (重み付け: ${s.toFixed(1)})` : "";
+      const x = t.map((p, E) => `${E + 1}x:${p.toFixed(2)}`).join(" "), T = s !== void 0 ? ` (重み付け: ${s.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補1 (${n.toFixed(1)}Hz) 倍音: ${x}${T}`,
         m + 5,
@@ -557,7 +557,7 @@ class ee extends k {
     }
     if (i && n) {
       l += f, this.ctx.fillStyle = "#00aaff", this.ctx.font = "11px monospace";
-      const x = n / 2, T = i.map((S, E) => `${E + 1}x:${S.toFixed(2)}`).join(" "), p = a !== void 0 ? ` (重み付け: ${a.toFixed(1)})` : "";
+      const x = n / 2, T = i.map((E, S) => `${S + 1}x:${E.toFixed(2)}`).join(" "), p = a !== void 0 ? ` (重み付け: ${a.toFixed(1)})` : "";
       this.ctx.fillText(
         `候補2 (${x.toFixed(1)}Hz) 倍音: ${T}${p}`,
         m + 5,
@@ -568,9 +568,9 @@ class ee extends k {
       l += f, this.ctx.fillStyle = "#aaaaaa", this.ctx.font = "10px monospace";
       const x = g - 10, T = o.split(" ");
       let p = "";
-      for (const S of T) {
-        const E = p + (p ? " " : "") + S;
-        this.ctx.measureText(E).width > x && p ? (this.ctx.fillText(p, m + 5, l), l += f, p = S) : p = E;
+      for (const E of T) {
+        const S = p + (p ? " " : "") + E;
+        this.ctx.measureText(S).width > x && p ? (this.ctx.fillText(p, m + 5, l), l += f, p = E) : p = S;
       }
       p && this.ctx.fillText(p, m + 5, l);
     }
@@ -619,41 +619,41 @@ class te extends k {
     }
     this.ctx.stroke(), this.ctx.fillStyle = "#aaaaaa", this.ctx.font = "10px monospace", this.ctx.textAlign = "right", this.ctx.textBaseline = "middle";
     for (let w = 0; w <= 4; w++) {
-      const P = p - (p - T) * (w / 4), b = u + c / 4 * w, A = P >= 1e3 ? `${(P / 1e3).toFixed(1)}k` : `${P.toFixed(0)}`;
-      this.ctx.fillText(A, d - 5, b);
+      const P = p - (p - T) * (w / 4), b = u + c / 4 * w, F = P >= 1e3 ? `${(P / 1e3).toFixed(1)}k` : `${P.toFixed(0)}`;
+      this.ctx.fillText(F, d - 5, b);
     }
     this.ctx.fillStyle = "#88ccff", this.ctx.font = "9px monospace", this.ctx.textAlign = "right", this.ctx.textBaseline = "middle";
     for (let w = 0; w <= 4; w++) {
-      const P = p - (p - T) * (w / 4), b = u + c / 4 * w, A = O(P);
-      if (A) {
-        const D = A.cents >= 0 ? "+" : "";
-        this.ctx.fillText(`${D}${A.cents}¢`, d + m - 5, b);
+      const P = p - (p - T) * (w / 4), b = u + c / 4 * w, F = O(P);
+      if (F) {
+        const D = F.cents >= 0 ? "+" : "";
+        this.ctx.fillText(`${D}${F.cents}¢`, d + m - 5, b);
       }
     }
     this.ctx.strokeStyle = "#00ff00", this.ctx.lineWidth = 2, this.ctx.beginPath();
-    const S = m / Math.max(t.length - 1, 1), E = Math.max(1, Math.floor(t.length / 4)), R = (w) => {
+    const E = m / Math.max(t.length - 1, 1), S = Math.max(1, Math.floor(t.length / 4)), R = (w) => {
       const b = (Math.max(T, Math.min(p, w)) - T) / (p - T);
       return u + c - b * c;
     };
     let M = !1;
     for (let w = 0; w < t.length; w++) {
-      const P = t[w], b = d + w * S;
+      const P = t[w], b = d + w * E;
       if (P === 0) {
         M = !1;
         continue;
       }
-      const A = R(P);
-      M ? this.ctx.lineTo(b, A) : (this.ctx.moveTo(b, A), M = !0);
+      const F = R(P);
+      M ? this.ctx.lineTo(b, F) : (this.ctx.moveTo(b, F), M = !0);
     }
     this.ctx.stroke(), this.ctx.font = "9px monospace", this.ctx.textAlign = "center", this.ctx.textBaseline = "top";
     for (let w = 0; w < t.length; w++) {
-      const P = t[w], b = d + w * S;
+      const P = t[w], b = d + w * E;
       if (P !== 0) {
         const H = R(P);
         this.ctx.fillStyle = "#00ff00", this.ctx.beginPath(), this.ctx.arc(b, H, 2, 0, Math.PI * 2), this.ctx.fill();
       }
-      const A = w === t.length - 1;
-      if (w % E === 0 || A) {
+      const F = w === t.length - 1;
+      if (w % S === 0 || F) {
         this.ctx.fillStyle = "#aaaaaa";
         const H = w - t.length + 1;
         this.ctx.fillText(`${H}`, b, u + c + 2);
@@ -1023,6 +1023,24 @@ class ae {
     e.strokeStyle = "#444444", e.lineWidth = 1, e.beginPath(), e.moveTo(0, i / 2), e.lineTo(t, i / 2), e.stroke();
   }
   /**
+   * Draw zero-cross candidates as circles on the center line
+   */
+  drawZeroCrossCandidates(e, t, i, s, a, o, n) {
+    const h = o - a;
+    if (s.length === 0 || h <= 0)
+      return;
+    const f = i / 2, d = 4, u = performance.now();
+    e.save();
+    for (const m of s) {
+      const c = m - a;
+      if (c < 0 || c >= h)
+        continue;
+      const g = c / h * t, v = n !== void 0 && m === n, l = v && Math.floor(u / 400) % 2 === 0, x = v ? l ? "#ffff00" : "#0066ff" : "#ffff00";
+      e.beginPath(), e.fillStyle = x, e.strokeStyle = x, e.lineWidth = 2, e.arc(g, f, d, 0, Math.PI * 2), e.fill(), e.stroke();
+    }
+    e.restore();
+  }
+  /**
    * Clear a canvas
    */
   clearCanvas(e, t, i) {
@@ -1144,10 +1162,10 @@ class le {
     const d = 2, u = h + d, m = f + 12, c = o - d * 2, g = n - 12 - d, v = 0, l = 100, x = (T, p) => {
       if (T.length < 2) return;
       e.strokeStyle = p, e.lineWidth = 1.5, e.beginPath();
-      const S = c / Math.max(T.length - 1, 1);
-      for (let E = 0; E < T.length; E++) {
-        const R = T[E], M = u + E * S, w = (Math.max(v, Math.min(l, R)) - v) / (l - v), P = m + g - w * g;
-        E === 0 ? e.moveTo(M, P) : e.lineTo(M, P);
+      const E = c / Math.max(T.length - 1, 1);
+      for (let S = 0; S < T.length; S++) {
+        const R = T[S], M = u + S * E, w = (Math.max(v, Math.min(l, R)) - v) / (l - v), P = m + g - w * g;
+        S === 0 ? e.moveTo(M, P) : e.lineTo(M, P);
       }
       e.stroke();
     };
@@ -1204,8 +1222,10 @@ class ce {
    * @param phaseTwoPiIndex - Sample index for phase 2π (red line) in the full buffer (issue #279)
    * @param phaseMinusQuarterPiIndex - Sample index for phase -π/4 (orange line) in the full buffer (issue #279)
    * @param phaseTwoPiPlusQuarterPiIndex - Sample index for phase 2π+π/4 (orange line) in the full buffer (issue #279)
+   * @param zeroCrossCandidates - Zero-cross candidates within the displayed current waveform
+   * @param highlightedZeroCrossCandidate - Candidate preceding the interval with the max positive peak (blinks)
    */
-  updatePanels(e, t, i, s, a, o, n = [], h = [], f = [], d, u, m, c) {
+  updatePanels(e, t, i, s, a, o, n = [], h = [], f = [], d, u, m, c, g = [], v) {
     this.clearAllCanvases(), e && (this.waveformRenderer.drawCenterLine(this.previousCtx, this.previousCanvas.width, this.previousCanvas.height), this.waveformRenderer.drawWaveform(
       this.previousCtx,
       this.previousCanvas.width,
@@ -1237,6 +1257,14 @@ class ce {
       this.currentCanvas.height,
       h,
       f
+    ), this.waveformRenderer.drawZeroCrossCandidates(
+      this.currentCtx,
+      this.currentCanvas.width,
+      this.currentCanvas.height,
+      g,
+      i,
+      s,
+      v
     ), this.waveformRenderer.drawPhaseMarkers(
       this.currentCtx,
       this.currentCanvas.width,
@@ -1285,7 +1313,7 @@ class ce {
     this.clearAllCanvases();
   }
 }
-const F = class F {
+const A = class A {
   constructor(e, t, i) {
     r(this, "canvas8div");
     r(this, "canvas4div");
@@ -1348,14 +1376,14 @@ const F = class F {
     e.strokeStyle = "#666666", e.lineWidth = 1, e.beginPath(), e.moveTo(n, c), e.lineTo(n + f, c), e.stroke();
     const g = s[0].length;
     for (let l = 0; l < g; l++) {
-      const x = F.SEGMENT_COLORS[l % F.SEGMENT_COLORS.length];
+      const x = A.SEGMENT_COLORS[l % A.SEGMENT_COLORS.length];
       e.strokeStyle = x, e.lineWidth = 2, e.beginPath();
       const T = s.length > 1 ? f / (s.length - 1) : 0;
       let p = !1;
-      for (let S = 0; S < s.length; S++) {
-        const E = s[S];
-        if (E && E.length > l) {
-          const R = E[l], M = n + S * T, w = (Math.max(u, Math.min(m, R)) - u) / (m - u), P = h + d - w * d;
+      for (let E = 0; E < s.length; E++) {
+        const S = s[E];
+        if (S && S.length > l) {
+          const R = S[l], M = n + E * T, w = (Math.max(u, Math.min(m, R)) - u) / (m - u), P = h + d - w * d;
           p ? e.lineTo(M, P) : (e.moveTo(M, P), p = !0);
         }
       }
@@ -1363,11 +1391,11 @@ const F = class F {
     }
     const v = s[s.length - 1];
     if (v && v.length > 0) {
-      const x = v.length * 11 + 4, T = 65, p = n + f - T - 2, S = h + 2;
-      e.fillStyle = "rgba(0, 0, 0, 0.7)", e.fillRect(p, S, T, x), e.strokeStyle = "#555555", e.lineWidth = 1, e.strokeRect(p, S, T, x), e.font = "9px Arial", e.textAlign = "left", e.textBaseline = "top";
-      for (let E = 0; E < v.length; E++) {
-        const R = F.SEGMENT_COLORS[E % F.SEGMENT_COLORS.length], M = v[E], C = S + 2 + E * 11;
-        e.fillStyle = R, e.fillRect(p + 2, C, 8, 8), e.fillStyle = "#ffffff", e.fillText(`${E + 1}-${E + 2}: ${M.toFixed(2)}`, p + 12, C);
+      const x = v.length * 11 + 4, T = 65, p = n + f - T - 2, E = h + 2;
+      e.fillStyle = "rgba(0, 0, 0, 0.7)", e.fillRect(p, E, T, x), e.strokeStyle = "#555555", e.lineWidth = 1, e.strokeRect(p, E, T, x), e.font = "9px Arial", e.textAlign = "left", e.textBaseline = "top";
+      for (let S = 0; S < v.length; S++) {
+        const R = A.SEGMENT_COLORS[S % A.SEGMENT_COLORS.length], M = v[S], C = E + 2 + S * 11;
+        e.fillStyle = R, e.fillRect(p + 2, C, 8, 8), e.fillStyle = "#ffffff", e.fillText(`${S + 1}-${S + 2}: ${M.toFixed(2)}`, p + 12, C);
       }
     }
     e.fillStyle = "#aaaaaa", e.font = "10px Arial", e.textAlign = "center", e.fillText(o, n + f / 2, i - 3), e.restore();
@@ -1379,7 +1407,7 @@ const F = class F {
    * @param similarities2div 2 divisions (2 cycles each): 1 similarity value
    */
   updateGraphs(e, t, i) {
-    e && e.length > 0 && (this.history8div.push(e), this.history8div.length > F.HISTORY_SIZE && this.history8div.shift()), t && t.length > 0 && (this.history4div.push(t), this.history4div.length > F.HISTORY_SIZE && this.history4div.shift()), i && i.length > 0 && (this.history2div.push(i), this.history2div.length > F.HISTORY_SIZE && this.history2div.shift()), this.drawSimilarityGraph(
+    e && e.length > 0 && (this.history8div.push(e), this.history8div.length > A.HISTORY_SIZE && this.history8div.shift()), t && t.length > 0 && (this.history4div.push(t), this.history4div.length > A.HISTORY_SIZE && this.history4div.shift()), i && i.length > 0 && (this.history2div.push(i), this.history2div.length > A.HISTORY_SIZE && this.history2div.shift()), this.drawSimilarityGraph(
       this.ctx8div,
       this.canvas8div.width,
       this.canvas8div.height,
@@ -1409,8 +1437,8 @@ const F = class F {
     this.history8div = [], this.history4div = [], this.history2div = [], this.clearAllCanvases();
   }
 };
-r(F, "HISTORY_SIZE", 100), r(F, "SEGMENT_COLORS", ["#00ff00", "#88ff00", "#ffaa00", "#ff6600", "#ff0000", "#ff00ff", "#00ffff"]);
-let L = F;
+r(A, "HISTORY_SIZE", 100), r(A, "SEGMENT_COLORS", ["#00ff00", "#88ff00", "#ffaa00", "#ff6600", "#ff0000", "#ff00ff", "#00ffff"]);
+let L = A;
 const _ = class _ {
   constructor() {
     r(this, "cachedBasePath", null);
@@ -1634,6 +1662,8 @@ class fe {
       phaseTwoPiIndex: l.phaseTwoPiIndex,
       phaseMinusQuarterPiIndex: l.phaseMinusQuarterPiIndex,
       phaseTwoPiPlusQuarterPiIndex: l.phaseTwoPiPlusQuarterPiIndex,
+      zeroCrossCandidates: l.zeroCrossCandidates ? Array.from(l.zeroCrossCandidates) : [],
+      highlightedZeroCrossCandidate: l.highlightedZeroCrossCandidate,
       halfFreqPeakStrengthPercent: l.halfFreqPeakStrengthPercent,
       candidate1Harmonics: l.candidate1Harmonics ? Array.from(l.candidate1Harmonics) : void 0,
       candidate2Harmonics: l.candidate2Harmonics ? Array.from(l.candidate2Harmonics) : void 0,
@@ -1641,9 +1671,9 @@ class fe {
       cycleSimilarities8div: l.cycleSimilarities8div ? Array.from(l.cycleSimilarities8div) : void 0,
       cycleSimilarities4div: l.cycleSimilarities4div ? Array.from(l.cycleSimilarities4div) : void 0,
       cycleSimilarities2div: l.cycleSimilarities2div ? Array.from(l.cycleSimilarities2div) : void 0
-    }, S = performance.now();
+    }, E = performance.now();
     this.clampPhaseMarkers(p), this.updatePhaseOffsetHistory(p), p.phaseZeroOffsetHistory = [...this.phaseZeroOffsetHistory], p.phaseTwoPiOffsetHistory = [...this.phaseTwoPiOffsetHistory], this.syncResultsFromWasm(p);
-    const E = performance.now(), R = t !== void 0 ? t : this.enableDetailedTimingLogs, M = E - i;
+    const S = performance.now(), R = t !== void 0 ? t : this.enableDetailedTimingLogs, M = S - i;
     if (R || M > this.TIMING_LOG_THRESHOLD_MS) {
       const C = {
         init: (a - i).toFixed(2),
@@ -1653,8 +1683,8 @@ class fe {
         computeFFT: (g - c).toFixed(2),
         syncConfig: (v - g).toFixed(2),
         wasmProcess: (x - v).toFixed(2),
-        convertResult: (S - T).toFixed(2),
-        postProcess: (E - S).toFixed(2),
+        convertResult: (E - T).toFixed(2),
+        postProcess: (S - E).toFixed(2),
         total: M.toFixed(2)
       };
       console.log(`[WaveformDataProcessor] init:${C.init}ms | getTimeDomain:${C.getTimeDomain}ms | getMeta:${C.getMetadata}ms | getFreq:${C.getFreqData}ms | computeFFT:${C.computeFFT}ms | syncCfg:${C.syncConfig}ms | WASM:${C.wasmProcess}ms | convert:${C.convertResult}ms | post:${C.postProcess}ms | total:${C.total}ms`);
@@ -1889,7 +1919,9 @@ class me {
       e.phaseZeroIndex,
       e.phaseTwoPiIndex,
       e.phaseMinusQuarterPiIndex,
-      e.phaseTwoPiPlusQuarterPiIndex
+      e.phaseTwoPiPlusQuarterPiIndex,
+      e.zeroCrossCandidates ?? [],
+      e.highlightedZeroCrossCandidate
     ), this.cycleSimilarityRenderer && this.cycleSimilarityRenderer.updateGraphs(
       e.cycleSimilarities8div,
       e.cycleSimilarities4div,

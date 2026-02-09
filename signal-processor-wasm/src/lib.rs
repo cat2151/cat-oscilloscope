@@ -171,6 +171,19 @@ impl WasmDataProcessor {
             } else {
                 (Vec::new(), Vec::new(), Vec::new())
             };
+
+        // Collect zero-cross candidates within the displayed segment and determine highlighted candidate
+        let zero_cross_candidates = self.collect_zero_cross_candidates(
+            &data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+        );
+        let highlighted_zero_cross_candidate = self.select_candidate_with_max_positive_peak(
+            &data,
+            selected_segment_buffer_position,
+            selected_segment_buffer_end,
+            &zero_cross_candidates,
+        );
         
         Some(WaveformRenderData {
             waveform_data: data,
@@ -192,6 +205,8 @@ impl WasmDataProcessor {
             phase_two_pi_index,
             phase_minus_quarter_pi_index,
             phase_two_pi_plus_quarter_pi_index,
+            zero_cross_candidates,
+            highlighted_zero_cross_candidate,
             half_freq_peak_strength_percent: self.frequency_estimator.get_half_freq_peak_strength_percent(),
             candidate1_harmonics: self.frequency_estimator.get_candidate1_harmonics(),
             candidate2_harmonics: self.frequency_estimator.get_candidate2_harmonics(),
@@ -369,6 +384,106 @@ impl WasmDataProcessor {
             history_before,
             Some(tolerance),
         )
+    }
+    
+    /// Collect zero-cross candidates (negative-to-positive crossings) within the displayed segment
+    fn collect_zero_cross_candidates(
+        &self,
+        data: &[f32],
+        segment_start: usize,
+        segment_end: usize,
+    ) -> Vec<usize> {
+        if segment_start >= segment_end || segment_start >= data.len() {
+            return Vec::new();
+        }
+
+        let clamped_end = segment_end.min(data.len());
+        let segment = &data[segment_start..clamped_end];
+        if segment.len() < 2 {
+            return Vec::new();
+        }
+
+        let mut candidates = Vec::new();
+        let mut search_pos = 0usize;
+
+        while search_pos + 1 < segment.len() {
+            let mut found: Option<usize> = None;
+            for i in search_pos..segment.len() - 1 {
+                if segment[i] <= 0.0 && segment[i + 1] > 0.0 {
+                    found = Some(i);
+                    break;
+                }
+            }
+
+            if let Some(rel_idx) = found {
+                candidates.push(segment_start + rel_idx);
+                let next_search = rel_idx + 1;
+                if next_search + 1 >= segment.len() {
+                    break;
+                }
+                search_pos = next_search;
+            } else {
+                break;
+            }
+        }
+
+        candidates
+    }
+
+    /// Select the zero-cross candidate whose interval to the next candidate contains the maximum positive peak
+    fn select_candidate_with_max_positive_peak(
+        &self,
+        data: &[f32],
+        segment_start: usize,
+        segment_end: usize,
+        candidates: &[usize],
+    ) -> Option<usize> {
+        if candidates.is_empty() || segment_start >= segment_end || segment_start >= data.len() {
+            return None;
+        }
+
+        let clamped_end = segment_end.min(data.len());
+        let segment = &data[segment_start..clamped_end];
+        if segment.is_empty() {
+            return None;
+        }
+
+        let mut best_candidate: Option<usize> = None;
+        let mut best_peak = f32::MIN;
+
+        for (i, &candidate_abs) in candidates.iter().enumerate() {
+            if candidate_abs < segment_start || candidate_abs >= clamped_end {
+                continue;
+            }
+
+            let next_abs = match candidates.get(i + 1).copied() {
+                Some(next) if next > candidate_abs && next <= clamped_end => next,
+                _ => continue,
+            };
+
+            let rel_start = candidate_abs - segment_start;
+            let rel_end = next_abs - segment_start;
+
+            if rel_start >= rel_end {
+                continue;
+            }
+
+            let mut local_peak: Option<f32> = None;
+            for &value in &segment[rel_start..rel_end] {
+                if value > 0.0 {
+                    local_peak = Some(local_peak.map_or(value, |p| p.max(value)));
+                }
+            }
+
+            if let Some(peak) = local_peak {
+                if peak > best_peak {
+                    best_peak = peak;
+                    best_candidate = Some(candidate_abs);
+                }
+            }
+        }
+
+        best_candidate
     }
     
     /// Find the peak (maximum positive amplitude) in the specified range
