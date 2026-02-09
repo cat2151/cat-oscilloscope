@@ -469,6 +469,43 @@ describe('ComparisonPanelRenderer', () => {
       nowSpy.mockRestore();
     });
 
+    it('should draw a red circle for the nearest candidate the phase marker is moving toward', () => {
+      const currentWaveform = new Float32Array(200).fill(0.3);
+      const fullBuffer = new Float32Array(200).fill(0.3);
+      const candidates = [20, 80, 150];
+      const currCtx = currentCanvas.getContext('2d') as any;
+
+      const fillStyles: string[] = [];
+      let currentFillStyle = '';
+      Object.defineProperty(currCtx, 'fillStyle', {
+        set(val: string) { currentFillStyle = val; },
+        get() { return currentFillStyle; },
+        configurable: true,
+      });
+      currCtx.fill = vi.fn(() => fillStyles.push(currentFillStyle));
+
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(0);
+
+      renderer.updatePanels(
+        null,
+        currentWaveform,
+        0, 200,
+        fullBuffer,
+        0,
+        [],
+        [],
+        [],
+        90, // phaseZeroIndex (nearest candidate should be 80)
+        undefined,
+        undefined,
+        undefined,
+        candidates
+      );
+
+      expect(fillStyles).toContain('#ff0000');
+      nowSpy.mockRestore();
+    });
+
     it('should draw previous waveform (#666600) before current waveform (#00ff00) on current canvas (issue #288)', () => {
       const previousWaveform = new Float32Array(100).fill(0.5);
       const currentWaveform = new Float32Array(200).fill(0.3);

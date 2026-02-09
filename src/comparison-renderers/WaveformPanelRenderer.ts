@@ -113,7 +113,8 @@ export class WaveformPanelRenderer {
     candidates: number[],
     displayStartIndex: number,
     displayEndIndex: number,
-    highlightedCandidate?: number
+    highlightedCandidate?: number,
+    targetCandidate?: number
   ): void {
     const displayLength = displayEndIndex - displayStartIndex;
     if (candidates.length === 0 || displayLength <= 0) {
@@ -143,6 +144,20 @@ export class WaveformPanelRenderer {
       ctx.arc(x, centerY, radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+    }
+
+    if (targetCandidate !== undefined) {
+      const relativeIndex = targetCandidate - displayStartIndex;
+      if (relativeIndex >= 0 && relativeIndex < displayLength) {
+        const x = (relativeIndex / displayLength) * width;
+        ctx.beginPath();
+        ctx.fillStyle = '#ff0000';
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 2;
+        ctx.arc(x, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }
