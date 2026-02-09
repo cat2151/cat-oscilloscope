@@ -4,8 +4,20 @@
 //   import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 import { Oscilloscope, BufferSource } from 'cat-oscilloscope';
 
-// Canvas要素とUI要素を取得
-const canvas = document.getElementById('oscilloscope');
+// Canvas要素とUI要素を取得し、存在チェック
+function getCanvasById(id) {
+  const el = document.getElementById(id);
+  if (!(el instanceof HTMLCanvasElement)) {
+    throw new Error(`Element with id '${id}' must be a HTMLCanvasElement.`);
+  }
+  return el;
+}
+
+const canvas = getCanvasById('oscilloscope');
+const previousWaveformCanvas = getCanvasById('previousWaveformCanvas');
+const currentWaveformCanvas = getCanvasById('currentWaveformCanvas');
+const similarityPlotCanvas = getCanvasById('similarityPlotCanvas');
+const frameBufferCanvas = getCanvasById('frameBufferCanvas');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const statusElement = document.getElementById('status');
@@ -13,17 +25,12 @@ const frequencyElement = document.getElementById('frequency');
 const gainElement = document.getElementById('gain');
 const waveformRadios = document.querySelectorAll('input[name="waveform"]');
 
-// Oscilloscopeインスタンスを作成（簡易版なので比較パネル用のcanvasは隠しcanvasを使用）
-const hiddenCanvas = document.createElement('canvas');
-hiddenCanvas.width = 250;
-hiddenCanvas.height = 120;
-
 const oscilloscope = new Oscilloscope(
   canvas,
-  hiddenCanvas,  // previousWaveformCanvas
-  hiddenCanvas,  // currentWaveformCanvas
-  hiddenCanvas,  // similarityPlotCanvas
-  hiddenCanvas   // frameBufferCanvas
+  previousWaveformCanvas,  // previousWaveformCanvas
+  currentWaveformCanvas,   // currentWaveformCanvas
+  similarityPlotCanvas,    // similarityPlotCanvas
+  frameBufferCanvas        // frameBufferCanvas
 );
 
 // デバッグオーバーレイを無効化（シンプルな表示にするため）

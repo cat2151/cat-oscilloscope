@@ -10,8 +10,18 @@ pub(crate) fn find_phase_zero_in_segment(
     peak_search_multiplier: f32,
     history_search_tolerance_ratio: f32,
 ) -> Option<usize> {
-    // If we don't have history or invalid cycle length, perform initial detection
-    if absolute_phase_offset.is_none() || estimated_cycle_length < f32::EPSILON {
+    // If cycle length is invalid, keep existing history (if still within this segment) and wait for a valid estimate
+    if estimated_cycle_length < f32::EPSILON {
+        if let Some(history_abs) = *absolute_phase_offset {
+            if history_abs >= segment_start_abs && history_abs < segment_start_abs + segment.len() {
+                return Some(history_abs - segment_start_abs);
+            }
+        }
+        return None;
+    }
+
+    // If we don't have history, perform initial detection
+    if absolute_phase_offset.is_none() {
         // Initial detection based on current mode
         let zero_cross_rel = match zero_cross_mode {
             ZeroCrossMode::Standard => {
@@ -235,4 +245,56 @@ pub(crate) fn find_phase_zero_in_segment(
     // This means the red line position represents "moving toward the nearest zero-cross"
     // rather than "exactly at a zero-cross", which is acceptable for visual stability.
     Some(new_rel)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reuses_history_when_cycle_invalid_and_history_inside_segment() {
+        let segment = [0.0f32; 10];
+        let mut history = Some(5usize);
+        let result = find_phase_zero_in_segment(
+            &segment,
+            0,
+            0.0, // invalid cycle length
+            ZeroCrossMode::Standard,
+            &mut history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result, Some(5));
+        assert_eq!(history, Some(5));
+    }
+
+    #[test]
+    fn returns_none_when_cycle_invalid_and_history_not_in_segment() {
+        let segment = [0.0f32; 8];
+        let mut history = Some(20usize);
+        let result = find_phase_zero_in_segment(
+            &segment,
+            0,
+            f32::EPSILON / 2.0, // still treated as invalid
+            ZeroCrossMode::Standard,
+            &mut history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result, None);
+        assert_eq!(history, Some(20));
+
+        let mut no_history: Option<usize> = None;
+        let result_none = find_phase_zero_in_segment(
+            &segment,
+            0,
+            0.0,
+            ZeroCrossMode::Standard,
+            &mut no_history,
+            1.5,
+            0.01,
+        );
+        assert_eq!(result_none, None);
+        assert_eq!(no_history, None);
+    }
 }
