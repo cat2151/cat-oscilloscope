@@ -103,6 +103,7 @@ impl WasmDataProcessor {
 
     /// Find the peak (maximum positive amplitude) in the specified range
     /// Returns None if no peak with positive amplitude (> 0.0) is found in the range
+    #[allow(dead_code)] // Kept for prospective zero-cross refinements
     pub(crate) fn find_peak_in_range(
         &self,
         data: &[f32],
@@ -137,6 +138,7 @@ impl WasmDataProcessor {
     /// Find zero crossing by looking backward from peak
     /// Zero crossing is defined as: before going back >= 0, after going back < 0
     /// Returns the "before going back" position
+    #[allow(dead_code)] // Kept for prospective zero-cross refinements
     pub(crate) fn find_zero_crossing_backward_from_peak(
         &self,
         data: &[f32],

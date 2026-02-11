@@ -11,8 +11,8 @@ impl WasmDataProcessor {
         data: &[f32],
         segment_buffer_position: usize,
         cycle_length: f32,
-        estimated_frequency: f32,
-        sample_rate: f32,
+        _estimated_frequency: f32,
+        _sample_rate: f32,
     ) -> (Option<usize>, Option<usize>, Option<usize>, Option<usize>) {
         let (phase_zero, phase_2pi, phase_minus_quarter_pi, phase_2pi_plus_quarter_pi, _, _, _) =
             self.calculate_phase_markers_with_debug(
