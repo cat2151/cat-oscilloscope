@@ -1,4 +1,4 @@
-Last updated: 2026-02-10
+Last updated: 2026-02-13
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -642,6 +642,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   📄 Cargo.toml
   📁 src/
     📄 bpf.rs
+    📄 candidate_selection.rs
     📄 dft.rs
     📁 frequency_estimation/
       📄 dsp_utils.rs
@@ -658,6 +659,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
       📄 tests.rs
     📄 gain_controller.rs
     📄 lib.rs
+    📄 phase_markers.rs
     📄 waveform_render_data.rs
     📄 waveform_searcher.rs
     📁 zero_cross_detector/
@@ -858,7 +860,7 @@ MITライセンス - 詳細は [LICENSE](LICENSE) ファイルを参照してく
   - 関数: なし
   - インポート: なし
 
-**dist/comparison-renderers/WaveformPanelRenderer.d.ts** (48行, 2672バイト)
+**dist/comparison-renderers/WaveformPanelRenderer.d.ts** (48行, 2727バイト)
   - 関数: なし
   - インポート: なし
 
@@ -1374,4 +1376,4 @@ example-library-usage.html
 
 
 ---
-Generated at: 2026-02-10 07:17:43 JST
+Generated at: 2026-02-13 07:13:47 JST
