@@ -1,4 +1,4 @@
-Last updated: 2026-02-13
+Last updated: 2026-04-07
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -1376,4 +1376,4 @@ example-library-usage.html
 
 
 ---
-Generated at: 2026-02-13 07:13:47 JST
+Generated at: 2026-04-07 07:16:26 JST

@@ -1,4 +1,4 @@
-Last updated: 2026-02-13
+Last updated: 2026-04-07
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -105,8 +105,11 @@ Last updated: 2026-02-13
 ## プロジェクトのファイル一覧
 - .github/CHECK_LARGE_FILES.md
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
+- .github/actions-tmp/.github/workflows/call-check-large-files.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
+- .github/actions-tmp/.github/workflows/call-rust-fmt-commit.yml
+- .github/actions-tmp/.github/workflows/call-rust-windows-cargo-check.yml
 - .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
@@ -114,6 +117,8 @@ Last updated: 2026-02-13
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
+- .github/actions-tmp/.github/workflows/rust-fmt-commit.yml
+- .github/actions-tmp/.github/workflows/rust-windows-cargo-check.yml
 - .github/actions-tmp/.github/workflows/rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/translate-readme.yml
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/callgraph.ql
@@ -134,7 +139,7 @@ Last updated: 2026-02-13
 - .github/actions-tmp/.github_automation/callgraph/scripts/generate-html-graph.cjs
 - .github/actions-tmp/.github_automation/callgraph/scripts/generateHTML.cjs
 - .github/actions-tmp/.github_automation/check-large-files/README.md
-- .github/actions-tmp/.github_automation/check-large-files/check-large-files.toml.example
+- .github/actions-tmp/.github_automation/check-large-files/check-large-files.toml.default
 - .github/actions-tmp/.github_automation/check-large-files/scripts/check_large_files.py
 - .github/actions-tmp/.github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
 - .github/actions-tmp/.github_automation/project_summary/docs/daily-summary-setup.md
@@ -157,6 +162,7 @@ Last updated: 2026-02-13
 - .github/actions-tmp/.github_automation/translate/scripts/translate-readme.cjs
 - .github/actions-tmp/.gitignore
 - .github/actions-tmp/.vscode/settings.json
+- .github/actions-tmp/AGENTS.md
 - .github/actions-tmp/LICENSE
 - .github/actions-tmp/README.ja.md
 - .github/actions-tmp/README.md
@@ -195,6 +201,10 @@ Last updated: 2026-02-13
 - .github/actions-tmp/issue-notes/35.md
 - .github/actions-tmp/issue-notes/38.md
 - .github/actions-tmp/issue-notes/4.md
+- .github/actions-tmp/issue-notes/40.md
+- .github/actions-tmp/issue-notes/44.md
+- .github/actions-tmp/issue-notes/57.md
+- .github/actions-tmp/issue-notes/67.md
 - .github/actions-tmp/issue-notes/7.md
 - .github/actions-tmp/issue-notes/8.md
 - .github/actions-tmp/issue-notes/9.md
@@ -312,7 +322,6 @@ Last updated: 2026-02-13
 - dist/wasm/signal_processor_wasm_bg.wasm
 - dist/wasm/signal_processor_wasm_bg.wasm.d.ts
 - example-library-usage.html
-- generated-docs/project-overview-generated-prompt.md
 - index.html
 - issue-notes/101.md
 - issue-notes/102.md
@@ -554,25 +563,13 @@ Last updated: 2026-02-13
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-2d6a27e Merge pull request #316 from cat2151/codex/fix-5794738-1125020184-93229a32-d720-4ba7-9c3e-993a516b9c90
-e4732f4 fix: silence unused warnings in wasm helpers
-3ad9c83 refactor: split wasm helpers into modules
-94dcb2d Initial plan
-7768520 Update project summaries (overview & development status) [auto]
-1aa394f Merge pull request #314 from cat2151/codex/fix-zero-cross-indicator-visibility
-7fecca5 perf: inline zero-cross filtering in render loop
-4ab5c0f fix: constrain zero-cross markers
-be1b6eb Initial plan
-d3b212f Merge pull request #312 from cat2151/codex/fix-phase-marker-end-offset
+1d49ead Jekyll設定
 
 ### 変更されたファイル:
-dist/ComparisonPanelRenderer.d.ts
+_config.yml
 dist/ComparisonPanelRenderer.d.ts.map
-dist/RenderCoordinator.d.ts.map
 dist/WaveformDataProcessor.d.ts
 dist/WaveformDataProcessor.d.ts.map
-dist/WaveformRenderData.d.ts
-dist/WaveformRenderData.d.ts.map
 dist/assets/Oscilloscope-0AkMdwqr.js
 dist/assets/Oscilloscope-0AkMdwqr.js.map
 dist/assets/Oscilloscope-BiPi-aIi.js
@@ -591,31 +588,20 @@ dist/comparison-renderers/WaveformPanelRenderer.d.ts
 dist/comparison-renderers/WaveformPanelRenderer.d.ts.map
 dist/demo-simple.html
 dist/index.html
-dist/wasm/signal_processor_wasm.d.ts
-dist/wasm/signal_processor_wasm.js
-dist/wasm/signal_processor_wasm_bg.wasm
-dist/wasm/signal_processor_wasm_bg.wasm.d.ts
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/311.md
-public/wasm/signal_processor_wasm.d.ts
-public/wasm/signal_processor_wasm.js
-public/wasm/signal_processor_wasm_bg.wasm
-public/wasm/signal_processor_wasm_bg.wasm.d.ts
 signal-processor-wasm/src/candidate_selection.rs
 signal-processor-wasm/src/lib.rs
 signal-processor-wasm/src/phase_markers.rs
-signal-processor-wasm/src/waveform_render_data.rs
 src/ComparisonPanelRenderer.ts
-src/RenderCoordinator.ts
 src/WaveformDataProcessor.ts
-src/WaveformRenderData.ts
 src/__tests__/comparison-panel-renderer.test.ts
 src/__tests__/waveform-data-processor.test.ts
 src/comparison-renderers/WaveformPanelRenderer.ts
 
 
 ---
-Generated at: 2026-02-13 07:13:47 JST
+Generated at: 2026-04-07 07:16:26 JST
